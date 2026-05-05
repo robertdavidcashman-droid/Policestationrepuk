@@ -2305,7 +2305,7 @@
   {
     "name": "Steven Gilbert",
     "phone": "07759 348024",
-    "email": "enquiries@sdglegal.co.uk",
+    "email": "sdglegalservices@outlook.com",
     "county": "Devon",
     "counties": ["Devon", "Cornwall"],
     "availability": "24/7",
@@ -2335,6 +2335,7 @@
     ],
     "bio": "I am available 24/7 and can cover all police stations in Devon and Cornwall.",
     "slug": "steven-gilbert-sdglegal",
-    "websiteUrl": "https://www.sdglegal.com"
+    "websiteUrl": "https://sdglegalservices.co.uk",
+    "whatsappLink": "https://wa.me/447759348024"
   }
 ]

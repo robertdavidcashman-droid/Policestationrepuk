@@ -11,6 +11,8 @@ export interface ScrapedRepRow {
   phone?: string;
   email?: string;
   county?: string;
+  /** Multi-county coverage (e.g. Devon + Cornwall) — preserved into Representative.counties */
+  counties?: string[];
   availability?: string;
   accreditation?: string;
   featured?: boolean;
@@ -18,6 +20,7 @@ export interface ScrapedRepRow {
   bio?: string;
   slug?: string;
   websiteUrl?: string;
+  whatsappLink?: string;
   yearsExperience?: number;
 }
 
@@ -41,11 +44,17 @@ export function coerceScrapedRows(raw: unknown): ScrapedRepRow[] {
       stations = row.stations.map((s) => trimStr(s)).filter(Boolean);
     }
     const ye = typeof row.yearsExperience === 'number' ? row.yearsExperience : undefined;
+    let counties: string[] | undefined;
+    if (Array.isArray(row.counties)) {
+      const parsed = row.counties.map((s) => trimStr(s)).filter(Boolean);
+      if (parsed.length) counties = Array.from(new Set(parsed));
+    }
     out.push({
       name: name || 'Unknown',
       phone: trimStr(row.phone),
       email: trimStr(row.email),
       county: trimStr(row.county),
+      counties,
       availability: trimStr(row.availability),
       accreditation: trimStr(row.accreditation),
       featured: Boolean(row.featured),
@@ -53,6 +62,7 @@ export function coerceScrapedRows(raw: unknown): ScrapedRepRow[] {
       bio: trimStr(row.bio),
       slug: slug || undefined,
       websiteUrl: trimStr(row.websiteUrl),
+      whatsappLink: trimStr(row.whatsappLink),
       yearsExperience: ye,
     });
   }
@@ -150,6 +160,10 @@ export function scrapedRowToRepresentative(row: ScrapedRepRow): Representative {
       .replace(/[^a-z0-9-]/g, '') ||
     'unknown';
   const name = (row.name || 'Unknown').trim();
+  const counties =
+    Array.isArray(row.counties) && row.counties.length
+      ? Array.from(new Set(row.counties.map((s) => String(s).trim()).filter(Boolean)))
+      : undefined;
   return {
     id: slugRaw,
     slug: slugRaw,
@@ -157,6 +171,7 @@ export function scrapedRowToRepresentative(row: ScrapedRepRow): Representative {
     phone: (row.phone || '').trim(),
     email: (row.email || '').trim(),
     county: (row.county || '').trim(),
+    counties,
     addressCounty: (row.county || '').trim(),
     stations: Array.isArray(row.stations) ? row.stations.map((s) => String(s).trim()).filter(Boolean) : [],
     availability: (row.availability || '').trim(),
@@ -168,7 +183,7 @@ export function scrapedRowToRepresentative(row: ScrapedRepRow): Representative {
     featuredLevel: row.featured ? 'basic' : undefined,
     featuredUntil: null,
     featuredBadgeText: null,
-    whatsappLink: '',
+    whatsappLink: (row.whatsappLink || '').trim(),
     dsccPin: '',
     spotlightNote: '',
     holidayAvailability: [],
@@ -188,6 +203,11 @@ function mergeWithFallback(primary: Representative, fb: Representative | undefin
   m.phone = pick(primary.phone, fb.phone);
   m.email = pick(primary.email, fb.email);
   m.county = pick(primary.county, fb.county);
+  m.counties = !isEmpty(primary.counties)
+    ? [...(primary.counties as string[])]
+    : fb.counties
+      ? [...fb.counties]
+      : undefined;
   m.addressCounty = pick(primary.addressCounty, fb.addressCounty) || pick(primary.county, fb.county);
   m.postcode = pick(primary.postcode, fb.postcode);
   m.stations = !isEmpty(primary.stations) ? [...primary.stations] : [...(fb.stations || [])];

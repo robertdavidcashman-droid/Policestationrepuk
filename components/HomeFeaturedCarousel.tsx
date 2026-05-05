@@ -89,6 +89,16 @@ export function HomeFeaturedCarousel({ featuredReps }: { featuredReps: Represent
                     ✉️ {rep.email}
                   </a>
                 ) : null}
+                {rep.whatsappLink ? (
+                  <a
+                    href={rep.whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 block font-medium text-white no-underline hover:text-[var(--gold)]"
+                  >
+                    💬 WhatsApp
+                  </a>
+                ) : null}
                 {!rep.phone && !rep.email ? (
                   <p>View the full profile for contact details →</p>
                 ) : null}

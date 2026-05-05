@@ -279,6 +279,52 @@ export async function sendMagicCode(email: string, code: string): Promise<boolea
   }
 }
 
+/** Rep-facing notice after listing corrections (reply goes to site owner). */
+export async function sendRepListingUpdateNotice(data: {
+  toEmail: string;
+  repName: string;
+  profileUrl: string;
+  listingEmail: string;
+  websiteHostname: string;
+  websiteHref: string;
+  phoneDisplay: string;
+}): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.info('[Rep listing update notice — no RESEND_API_KEY]', { to: data.toEmail });
+    return false;
+  }
+
+  const profile = escapeHtml(data.profileUrl);
+  try {
+    await client.emails.send({
+      from: FROM_EMAIL,
+      to: data.toEmail,
+      replyTo: ADMIN_EMAIL,
+      subject: 'Your PoliceStationRepUK listing has been updated',
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:20px;color:#0f172a">
+          <p>Hello ${escapeHtml(data.repName)},</p>
+          <p>Your directory listing has been updated as requested:</p>
+          <ul style="line-height:1.65">
+            <li><strong>Email</strong> (quick contact and profile): <a href="mailto:${escapeHtml(data.listingEmail)}">${escapeHtml(data.listingEmail)}</a></li>
+            <li><strong>Website</strong>: <a href="${escapeHtml(data.websiteHref)}">${escapeHtml(data.websiteHostname)}</a></li>
+            <li><strong>WhatsApp</strong> contact link added (your listing mobile ${escapeHtml(data.phoneDisplay)})</li>
+          </ul>
+          <p><strong>Account login:</strong> use <strong>${escapeHtml(data.listingEmail)}</strong> on the Account page to request a login code. The address above is now the one matched to your listing.</p>
+          <p>Your profile: <a href="${profile}">${profile}</a></p>
+          <p style="color:#64748b;font-size:13px;margin-top:24px">If anything still looks wrong, reply to this email.</p>
+          <p style="color:#64748b;font-size:12px">PoliceStationRepUK</p>
+        </div>
+      `,
+    });
+    return true;
+  } catch (err) {
+    console.error('[Rep listing update notice failed]', err);
+    return false;
+  }
+}
+
 interface ProfileUpdateData {
   repName: string;
   repEmail: string;

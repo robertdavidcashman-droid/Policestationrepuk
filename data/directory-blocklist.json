@@ -1,5 +1,5 @@
 {
-  "emails": ["sdglegalservices@outlook.com"],
+  "emails": [],
   "slugs": [],
   "slugPrefixes": ["laurie-learmont", "playwright-test-", "api-test-", "dup-test-"],
   "normalizedNames": ["laurie learmont"]
