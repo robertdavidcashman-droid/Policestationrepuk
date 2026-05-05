@@ -16984,5 +16984,41 @@
     "latitude": 51.464195,
     "longitude": 0.105432,
     "slug": "tesco-welling-police-contact-point"
+  },
+  {
+    "id": "sg-plymouth-crownhill",
+    "name": "Plymouth Crownhill Police Station",
+    "address": "Crownhill, Plymouth, PL6 5BJ",
+    "postcode": "PL6 5BJ",
+    "phone": "",
+    "custodyPhone": "",
+    "custodyPhone2": "",
+    "nonEmergencyPhone": "101",
+    "forceName": "Devon and Cornwall Police",
+    "forceCode": "E23000033",
+    "category": "Police Station",
+    "status": "active",
+    "isCustodyStation": true,
+    "latitude": null,
+    "longitude": null,
+    "slug": "plymouth-crownhill-police-station"
+  },
+  {
+    "id": "sg-plymouth-devonport",
+    "name": "Plymouth Devonport Police Station",
+    "address": "Devonport, Plymouth",
+    "postcode": "",
+    "phone": "",
+    "custodyPhone": "",
+    "custodyPhone2": "",
+    "nonEmergencyPhone": "101",
+    "forceName": "Devon and Cornwall Police",
+    "forceCode": "E23000033",
+    "category": "Police Station",
+    "status": "active",
+    "isCustodyStation": true,
+    "latitude": null,
+    "longitude": null,
+    "slug": "plymouth-devonport-police-station"
   }
 ]

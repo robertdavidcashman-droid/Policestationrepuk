@@ -2301,5 +2301,40 @@
     "bio": "",
     "slug": "zaneta-wojciechowska-lapaj",
     "websiteUrl": ""
+  },
+  {
+    "name": "Steven Gilbert",
+    "phone": "07759 348024",
+    "email": "enquiries@sdglegal.co.uk",
+    "county": "Devon",
+    "counties": ["Devon", "Cornwall"],
+    "availability": "24/7",
+    "accreditation": "Accredited Representative",
+    "featured": true,
+    "stations": [
+      "Plymouth Charles Cross Police Station",
+      "Plymouth Crownhill Police Station",
+      "Plymouth Devonport Police Station",
+      "Exeter Police Station",
+      "Torquay Police Station",
+      "Newton Abbot Police Station",
+      "Paignton Police Station",
+      "Tiverton Police Station",
+      "Okehampton Police Station",
+      "Barnstaple Police Station",
+      "Bideford Police Station",
+      "Truro Police Station",
+      "Bodmin Police Station",
+      "St Austell Police Station",
+      "Liskeard Police Station",
+      "Launceston Police Station",
+      "Falmouth Police Station",
+      "Penzance Police Station",
+      "Camborne Police Station",
+      "Newquay Police Station"
+    ],
+    "bio": "I am available 24/7 and can cover all police stations in Devon and Cornwall.",
+    "slug": "steven-gilbert-sdglegal",
+    "websiteUrl": "https://www.sdglegal.com"
   }
 ]
