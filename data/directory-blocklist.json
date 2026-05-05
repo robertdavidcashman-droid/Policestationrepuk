@@ -1,6 +1,6 @@
 {
-  "emails": [],
-  "slugs": [],
+  "emails": ["enquiries@sdglegal.co.uk"],
+  "slugs": ["steven-gilbert-sdglegal"],
   "slugPrefixes": ["laurie-learmont", "playwright-test-", "api-test-", "dup-test-"],
   "normalizedNames": ["laurie learmont"]
 }

@@ -98,46 +98,6 @@ test.describe('Station Coverage Display — Quality', () => {
     }
   });
 
-  test('Steven Gilbert profile shows grouped Devon & Cornwall stations', async ({ page }) => {
-    await page.goto('/rep/steven-gilbert-sdglegal');
-    await page.waitForLoadState('domcontentloaded');
-    const h1 = page.locator('h1');
-    const h1Text = await h1.textContent().catch(() => '');
-    if (!h1Text?.includes('Steven Gilbert')) {
-      test.skip();
-      return;
-    }
-    const stationSection = page.getByRole('heading', { name: 'Station Coverage' });
-    await expect(stationSection).toBeVisible({ timeout: 10_000 });
-    const forceHeaders = page.locator('section:has(h2:has-text("Station Coverage")) h3');
-    const forceCount = await forceHeaders.count();
-    expect(forceCount).toBeGreaterThan(0);
-    const firstForce = await forceHeaders.first().textContent();
-    expect(firstForce).toContain('Devon & Cornwall Police');
-  });
-
-  test('Steven Gilbert profile shows full-length station names', async ({ page }) => {
-    await page.goto('/rep/steven-gilbert-sdglegal');
-    await page.waitForLoadState('domcontentloaded');
-    const h1Text = await page.locator('h1').textContent().catch(() => '');
-    if (!h1Text?.includes('Steven Gilbert')) { test.skip(); return; }
-    const stationItems = page.locator('section:has(h2:has-text("Station Coverage")) li');
-    const count = await stationItems.count();
-    expect(count).toBeGreaterThanOrEqual(15);
-    for (let i = 0; i < count; i++) {
-      const text = (await stationItems.nth(i).textContent())!.trim();
-      expect(text.length).toBeGreaterThan(3);
-    }
-  });
-
-  test('Steven Gilbert availability shows 24/7 and bio mentions Devon and Cornwall', async ({ page }) => {
-    await page.goto('/rep/steven-gilbert-sdglegal');
-    await page.waitForLoadState('domcontentloaded');
-    const h1Text = await page.locator('h1').textContent().catch(() => '');
-    if (!h1Text?.includes('Steven Gilbert')) { test.skip(); return; }
-    await expect(page.locator('text=24/7').first()).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('#main-content')).toContainText(/Devon and Cornwall/i);
-  });
 });
 
 test.describe('Registration Form — Station Input Fix', () => {
