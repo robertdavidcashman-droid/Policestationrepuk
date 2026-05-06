@@ -176,7 +176,7 @@ if (Array.isArray(hiddenArr)) {
   const lower = hiddenArr.map((e) => String(e).toLowerCase());
   const idx = lower.indexOf(OLD_EMAIL);
   if (idx !== -1) {
-    const next = hiddenArr.map((e) => String(e).toLowerCase());
+    const next = [...hiddenArr];
     next[idx] = NEW_EMAIL;
     await kvSet(KV_HIDDEN_LISTING_EMAILS, next);
     console.log(`  Updated ${KV_HIDDEN_LISTING_EMAILS} (replaced hidden email)`);
