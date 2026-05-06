@@ -360,10 +360,13 @@ function registrationToRep(row: Record<string, unknown>): Representative | null 
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '') || 'rep';
   const shortId = email.replace(/[^a-z0-9]/gi, '').slice(0, 8);
+  const computedSlug = `${baseSlug}-${shortId}`;
+  const storedSlug = trimField(row.slug);
+  const slug = storedSlug || computedSlug;
 
   return {
     id: `newrep:${email}`,
-    slug: `${baseSlug}-${shortId}`,
+    slug,
     name,
     email,
     phone: trimField(row.phone),
