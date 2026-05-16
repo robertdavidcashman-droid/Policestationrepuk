@@ -7,6 +7,7 @@ import {
   CUSTODYNOTE_PRICE_GBP,
   CUSTODYNOTE_TRIAL_HREF,
 } from '@/lib/custodynote-promo';
+import { PSRTRAIN_CTA, PSRTRAIN_FREE_TESTING_NOTE, PSRTRAIN_NAME, PSRTRAIN_TRAINING_HREF } from '@/lib/psrtrain-promo';
 import { SUPPORT_EMAIL, SUPPORT_MAILTO_HREF } from '@/lib/site-contact';
 import {
   FOOTER_COLUMN_TITLES,
@@ -76,9 +77,9 @@ export function Footer() {
           <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--gold)]">
             Tools for Police Station Reps
           </h3>
-          <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-base font-bold text-white">CustodyNote — PACE attendance note software</p>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="rounded-lg border border-white/15 bg-black/20 p-4">
+              <p className="text-sm font-bold text-white">CustodyNote — at the station</p>
               <p className="mt-1 text-xs text-slate-300">
                 Structured custody notes, offline-first, PDF + LAA billing. 30-day free trial · £
                 {CUSTODYNOTE_PRICE_GBP}/mo · PSR UK readers £{CUSTODYNOTE_MEMBER_PRICE_GBP}/mo with code{' '}
@@ -86,22 +87,44 @@ export function Footer() {
                   {CUSTODYNOTE_DISCOUNT_CODE}
                 </span>
               </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <a
+                  href={CUSTODYNOTE_TRIAL_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-[40px] items-center justify-center rounded-lg bg-[var(--gold)] px-4 py-2 text-xs font-bold text-[var(--navy)] no-underline hover:bg-[var(--gold-hover)]"
+                >
+                  Start free trial
+                </a>
+                <Link
+                  href="/CustodyNote"
+                  className="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-white/30 px-4 py-2 text-xs font-semibold text-white no-underline hover:bg-white/10"
+                >
+                  About CustodyNote
+                </Link>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <a
-                href={CUSTODYNOTE_TRIAL_HREF}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[var(--gold)] px-5 py-2.5 text-sm font-bold text-[var(--navy)] no-underline hover:bg-[var(--gold-hover)]"
-              >
-                Start Free Trial
-              </a>
-              <Link
-                href="/CustodyNote"
-                className="inline-flex min-h-[44px] items-center justify-center rounded-lg border-2 border-white/30 px-5 py-2.5 text-sm font-semibold text-white no-underline hover:bg-white/10"
-              >
-                About CustodyNote
-              </Link>
+            <div className="rounded-lg border border-white/15 bg-black/20 p-4">
+              <p className="text-sm font-bold text-white">{PSRTRAIN_NAME} — before accreditation</p>
+              <p className="mt-1 text-xs text-slate-300">
+                Timed MCQs, PACE modules, and CIT-style scenarios. {PSRTRAIN_FREE_TESTING_NOTE}.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <a
+                  href={PSRTRAIN_TRAINING_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-[40px] items-center justify-center rounded-lg bg-white/15 px-4 py-2 text-xs font-bold text-white no-underline hover:bg-white/25"
+                >
+                  {PSRTRAIN_CTA}
+                </a>
+                <Link
+                  href="/PrepareForCIT"
+                  className="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-white/30 px-4 py-2 text-xs font-semibold text-white no-underline hover:bg-white/10"
+                >
+                  CIT guide
+                </Link>
+              </div>
             </div>
           </div>
         </div>

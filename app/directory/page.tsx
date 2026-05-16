@@ -6,6 +6,7 @@ import { DirectorySearch } from '@/components/DirectorySearch';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { DirectoryComplianceNotice } from '@/components/DirectoryComplianceNotice';
 import { AdvertisementLabel } from '@/components/AdvertisementLabel';
+import { PsrTrainPromo } from '@/components/PsrTrainPromo';
 import { SITE_NAME, SITE_URL, socialPreviewImageUrl } from '@/lib/seo-layer/config';
 import { JsonLd } from '@/components/JsonLd';
 import { breadcrumbSchema, directoryItemListSchema } from '@/lib/seo';
@@ -192,6 +193,8 @@ export default async function DirectoryPage() {
             Try Free
           </Link>
         </aside>
+
+        <PsrTrainPromo variant="slim" campaign="directory" className="mb-6" />
 
         <Suspense fallback={<ResultsGridSkeleton />}>
           <DirectorySearch

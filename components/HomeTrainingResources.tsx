@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PsrTrainPromo } from '@/components/PsrTrainPromo';
 
 const GUIDES = [
   {
@@ -54,7 +55,7 @@ export function HomeTrainingResources() {
         {/* What's Available */}
         <div className="mt-10">
           <h3 className="text-lg font-bold text-[var(--navy)]">What&apos;s Available</h3>
-          <div className="mt-4 grid gap-5 sm:grid-cols-3">
+          <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {GUIDES.map((g) => (
               <Link
                 key={g.href}
@@ -67,6 +68,7 @@ export function HomeTrainingResources() {
                 <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">{g.body}</p>
               </Link>
             ))}
+            <PsrTrainPromo variant="card" campaign="homepage_training" />
           </div>
         </div>
 

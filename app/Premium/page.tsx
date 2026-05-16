@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { PsrTrainPromo } from '@/components/PsrTrainPromo';
 import { WikiArticleIndex } from '@/components/WikiArticleIndex';
 import { buildMetadata } from '@/lib/seo';
 import { getAllWikiArticles } from '@/lib/data';
-import { PSRTRAIN_CTA, PSRTRAIN_HOME_HREF, PSRTRAIN_TAGLINE } from '@/lib/psrtrain-promo';
 
 export const metadata = buildMetadata({
   title: 'Premium Guides for Police Station Reps',
@@ -33,9 +33,10 @@ export default async function PremiumPage() {
           <h1 className="text-h1 text-white">Training Guides &amp; Resources</h1>
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-white">
             Browse all {totalArticles} training articles and guides — completely free. Each card
-            opens the full article in the Rep Knowledge Base. Professional development, PACE
-            essentials, billing strategies, and more for police station representatives.
+            opens the full article in the Rep Knowledge Base. Articles are reference material; partner
+            exam prep on PSR Train adds timed practice questions.
           </p>
+          <PsrTrainPromo variant="inline" campaign="premium_wiki" className="mt-6 !border-white/20 !bg-white/10 [&_h3]:!text-white [&_p]:!text-slate-200" />
         </div>
       </section>
 
@@ -53,20 +54,6 @@ export default async function PremiumPage() {
         </div>
 
         <WikiArticleIndex articles={allArticles} variant="cards" />
-
-        <div className="mt-14 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold)]">PSRAS preparation</p>
-          <h2 className="text-h2 mt-2 text-[var(--navy)]">Preparing for accreditation?</h2>
-          <p className="mt-2 text-sm text-[var(--muted)]">{PSRTRAIN_TAGLINE}</p>
-          <a
-            href={PSRTRAIN_HOME_HREF}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-gold mt-4 inline-flex"
-          >
-            {PSRTRAIN_CTA}
-          </a>
-        </div>
 
         <div className="mt-14 border-t border-[var(--border)] pt-10">
           <h2 className="text-h2 text-[var(--navy)]">More Resources</h2>

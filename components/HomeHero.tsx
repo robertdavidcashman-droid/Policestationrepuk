@@ -6,6 +6,7 @@ const HERO_QUICK_LINKS = [
   { href: '/FormsLibrary', label: 'Forms Library' },
   { href: '/Wiki', label: 'Rep Wiki' },
   { href: '/Resources', label: 'Resources' },
+  { href: '/PrepareForCIT', label: 'PSRAS prep' },
 ] as const;
 
 const TRUST_BADGE_COUNT = 258;

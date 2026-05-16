@@ -83,6 +83,7 @@ function MoreDropdown({ links, linkClass }: { links: ReadonlyArray<{ href: strin
             <NavItem
               key={`${link.href}-${link.text}`}
               href={link.href}
+              external={link.href.startsWith('http')}
               onNavigate={() => setOpen(false)}
               className="flex min-h-[40px] items-center px-4 py-2 text-sm font-medium !text-white no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--gold)]"
             >
@@ -180,7 +181,12 @@ export function Header() {
               aria-label="Main navigation"
             >
               {desktopNavPrimary.map((link) => (
-                <NavItem key={`${link.href}-${link.text}`} href={link.href} className={desktopNavLinkClass}>
+                <NavItem
+                  key={`${link.href}-${link.text}`}
+                  href={link.href}
+                  className={desktopNavLinkClass}
+                  external={link.href.startsWith('http')}
+                >
                   {link.text}
                 </NavItem>
               ))}
@@ -245,14 +251,15 @@ export function Header() {
           <div className="max-h-[80vh] overflow-y-auto border-t border-[var(--navy-light)] bg-[var(--navy)] lg:hidden">
             <nav className="flex flex-col px-4 py-3 sm:px-5" aria-label="Mobile navigation">
               {PRIMARY_NAV.map((link) => (
-                <NavItem
-                  key={`${link.href}-${link.text}`}
-                  href={link.href}
-                  onNavigate={() => setOpen(false)}
-                  className="flex min-h-[44px] items-center rounded-lg px-3 py-2.5 text-sm font-medium !text-[var(--header-link)] no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--header-link-hover)]"
-                >
-                  {link.text}
-                </NavItem>
+            <NavItem
+              key={`${link.href}-${link.text}`}
+              href={link.href}
+              external={link.href.startsWith('http')}
+              onNavigate={() => setOpen(false)}
+              className="flex min-h-[44px] items-center rounded-lg px-3 py-2.5 text-sm font-medium !text-[var(--header-link)] no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--header-link-hover)]"
+            >
+              {link.text}
+            </NavItem>
               ))}
               <div className="mt-3 grid gap-2 border-t border-[var(--navy-light)] pt-3">
                 <Link

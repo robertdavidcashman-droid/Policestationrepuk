@@ -14,6 +14,12 @@ import {
   CONTACT_WHATSAPP_HREF,
 } from '@/lib/contact-constants';
 import { WHATSAPP_JOIN_URL, WHATSAPP_JOIN_PHONE } from '@/lib/site-navigation';
+import {
+  PSRTRAIN_CTA,
+  PSRTRAIN_FREE_TESTING_NOTE,
+  PSRTRAIN_NAME,
+  PSRTRAIN_TRAINING_HREF,
+} from '@/lib/psrtrain-promo';
 
 /**
  * Global promos: CustodyNote, Kent police station agent cover, WhatsApp community.
@@ -32,7 +38,7 @@ export function SiteWidePromoStrip() {
         <p className="mb-4 text-center text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--muted)]">
           Advertisements &amp; community
         </p>
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {/* CustodyNote */}
           <div className="flex flex-col rounded-[var(--radius-lg)] border-2 border-[var(--gold)]/40 bg-white p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold)]">Featured product</p>
@@ -63,6 +69,32 @@ export function SiteWidePromoStrip() {
                 className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 text-xs font-semibold text-[var(--navy)] no-underline hover:border-[var(--gold)]"
               >
                 See how it works
+              </Link>
+            </div>
+          </div>
+
+          {/* PSR Train */}
+          <div className="flex flex-col rounded-[var(--radius-lg)] border-2 border-[var(--navy)]/20 bg-white p-5 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--navy)]">Partner — exam prep</p>
+            <h2 className="mt-1 text-base font-extrabold text-[var(--navy)]">{PSRTRAIN_NAME}</h2>
+            <p className="mt-2 flex-1 text-xs leading-relaxed text-[var(--muted)]">
+              Timed MCQs, PACE modules, and CIT-style scenarios for PSRAS candidates.
+            </p>
+            <p className="mt-2 text-[11px] font-medium text-emerald-700">{PSRTRAIN_FREE_TESTING_NOTE}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <a
+                href={PSRTRAIN_TRAINING_HREF}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-lg bg-[var(--navy)] px-3 text-xs font-bold text-white no-underline hover:bg-[var(--navy-light)]"
+              >
+                {PSRTRAIN_CTA}
+              </a>
+              <Link
+                href="/PrepareForCIT"
+                className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 text-xs font-semibold text-[var(--navy)] no-underline hover:border-[var(--gold)]"
+              >
+                CIT guide
               </Link>
             </div>
           </div>

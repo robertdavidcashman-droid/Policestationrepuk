@@ -12,7 +12,9 @@ import type { BlogCategoryId } from '@/lib/blog/types';
 import { getTopicClusterForSlug } from '@/lib/blog/topic-clusters';
 import { BlogAuthorBio } from '@/components/BlogAuthorBio';
 import { BlogBottomAd } from '@/components/BlogBottomAd';
-import { BlogCustodyNotePromo } from '@/components/BlogCustodyNotePromo';
+import { BlogPartnerToolsPromo } from '@/components/BlogPartnerToolsPromo';
+import { PsrTrainPromo } from '@/components/PsrTrainPromo';
+import { prefersPsrTrainBlogPromo } from '@/lib/blog-partner-promo';
 
 export const dynamic = 'force-static';
 export const revalidate = false;
@@ -73,6 +75,12 @@ export default async function BlogArticlePage({ params }: PageProps) {
   const related = getBlogRelatedForSlug(slug, article.relatedSlugs);
   const topicCluster = getTopicClusterForSlug(slug);
   const imageUrl = `${SITE_URL}${article.image.src}`;
+  const psrTrainFocus = prefersPsrTrainBlogPromo({
+    slug,
+    title: article.title,
+    primaryKeyword: article.primaryKeyword,
+    categories: article.categories,
+  });
 
   const bc = breadcrumbSchema([
     { name: 'Home', url: '/' },
@@ -155,7 +163,11 @@ export default async function BlogArticlePage({ params }: PageProps) {
             <BlogArticleMarkdown markdown={article.bodyMarkdown} />
           </article>
 
-          <BlogCustodyNotePromo />
+          {psrTrainFocus ? (
+            <PsrTrainPromo variant="inline" campaign="blog_article" className="mt-10" />
+          ) : (
+            <BlogPartnerToolsPromo />
+          )}
 
           {article.faqs && article.faqs.length > 0 && (
             <section className="mt-12 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--card-bg)] p-6 sm:p-8 shadow-[var(--card-shadow)]">

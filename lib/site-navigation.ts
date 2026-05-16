@@ -1,4 +1,5 @@
 import { SUPPORT_MAILTO_HREF } from '@/lib/site-contact';
+import { PSRTRAIN_TRAINING_HREF } from '@/lib/psrtrain-promo';
 
 /**
  * Navigation & footer definitions locked to policestationrepuk.com structure.
@@ -23,6 +24,7 @@ export const PRIMARY_NAV = [
   { href: '/search', text: '🔎 Search' },
   { href: '/Contact', text: 'Contact Us' },
   { href: '/About', text: 'About' },
+  { href: PSRTRAIN_TRAINING_HREF, text: 'PSRAS prep ↗' },
 ] as const;
 
 /** Community group — WhatsApp number (same as Robert Cashman directory mobile; not shown on generic /Contact). */
@@ -69,12 +71,15 @@ export const FOOTER_FOR_REPRESENTATIVES: FooterLink[] = [
   { href: '/PoliceStationRepJobsUK', label: 'Rep Jobs UK' },
   { href: '/GetWork', label: 'Get Work Guide' },
   { href: '/HowToBecomePoliceStationRep', label: 'How to Become a Rep' },
+  { href: '/PrepareForCIT', label: 'Prepare for the CIT' },
+  { href: PSRTRAIN_TRAINING_HREF, label: 'PSR Train — exam prep', external: true },
   { href: '/PoliceStationCover', label: 'Police Station Cover (Firms)' },
 ];
 
 /** Footer column “Tools & Resources” */
 export const FOOTER_TOOLS: FooterLink[] = [
   { href: 'https://custodynote.com', label: 'Custody Note App', external: true },
+  { href: PSRTRAIN_TRAINING_HREF, label: 'PSR Train (PSRAS prep)', external: true },
   { href: '/police-station-representative', label: 'Police station representative' },
   { href: '/criminal-solicitor-police-station', label: 'Criminal solicitor — police station' },
   { href: '/police-station-rights-uk', label: 'Police station rights UK' },

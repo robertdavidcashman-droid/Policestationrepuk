@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PSRTRAIN_NAME, PSRTRAIN_TRAINING_HREF } from '@/lib/psrtrain-promo';
 import { buildMetadata } from '@/lib/seo';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { RegisterForm } from './RegisterForm';
@@ -157,6 +158,18 @@ export default function RegisterPage() {
                   <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
                     Complete the form below with accurate coverage and contact details. The clearer your information,
                     the easier it is for firms to instruct you.
+                  </p>
+                  <p className="mt-3 text-xs text-[var(--muted)]">
+                    Studying for accreditation?{' '}
+                    <a
+                      href={PSRTRAIN_TRAINING_HREF}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-[var(--navy)] underline"
+                    >
+                      Practice on {PSRTRAIN_NAME}
+                    </a>{' '}
+                    (partner platform — does not replace PSRAS accreditation).
                   </p>
                 </div>
                 <RegisterForm />

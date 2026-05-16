@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { JsonLd } from '@/components/JsonLd';
 import { BlogBottomAd } from '@/components/BlogBottomAd';
-import { BlogCustodyNotePromo } from '@/components/BlogCustodyNotePromo';
+import { BlogPartnerToolsPromo } from '@/components/BlogPartnerToolsPromo';
 import { buildMetadata, breadcrumbSchema } from '@/lib/seo';
 import { getAllBlogPosts } from '@/lib/blog-data';
 import { BLOG_CATEGORIES, categoryLabel } from '@/lib/blog/categories';
@@ -74,7 +74,7 @@ export default async function BlogPage({ searchParams }: { searchParams: SearchP
       </section>
 
       <div className="page-container py-10 sm:py-12">
-        <BlogCustodyNotePromo className="mt-0" />
+        <BlogPartnerToolsPromo className="mt-0" />
 
         <div className="mt-10 flex flex-col gap-3 border-b border-[var(--card-border)] pb-8 lg:flex-row lg:items-end lg:justify-between">
           <div>

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { PsrTrainPromo } from '@/components/PsrTrainPromo';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -169,12 +170,6 @@ const CAREER = [
     external: false,
   },
   {
-    title: 'PSR Train — PSRAS preparation',
-    href: 'https://www.psrtrain.com/training?utm_source=policestationrepuk&utm_medium=web&utm_campaign=training_resources',
-    desc: 'Mock exams, learning modules, and CIT-style scenarios to prepare for PSRAS accreditation.',
-    external: true,
-  },
-  {
     title: 'CustodyNote App',
     href: '/CustodyNote',
     desc: 'Digital custody note app designed for freelance police station representatives.',
@@ -285,6 +280,7 @@ export default function ResourcesPage() {
       <section className="mb-12">
         <h2 className="text-h2 mb-2 text-[var(--navy)]">Career &amp; Professional Development</h2>
         <p className="mb-6 text-sm text-[var(--muted)]">Guides for becoming and succeeding as a police station representative.</p>
+        <PsrTrainPromo variant="card" campaign="training_resources" className="mb-6 max-w-xl" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {CAREER.map((item) => (
             <ResourceCard key={item.href} item={item} />

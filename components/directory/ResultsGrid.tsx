@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { DirectoryCard, type MatchHighlight } from '@/components/DirectoryCard';
 import { JoinCTA } from '@/components/directory/JoinCTA';
 import { CustodyNoteInlineCTA } from '@/components/CustodyNoteInlineCTA';
+import { PsrTrainPromo } from '@/components/PsrTrainPromo';
 import type { Representative } from '@/lib/types';
 
 interface ResultsGridProps {
@@ -50,6 +51,7 @@ export function ResultsGridSkeleton() {
 }
 
 const INLINE_CTA_POSITION = 6;
+const INLINE_PSR_TRAIN_POSITION = 12;
 
 export function ResultsGrid({
   featuredReps,
@@ -189,13 +191,20 @@ function DirectoryCardWithInlineCTA({
   index: number;
   totalPaged: number;
 }) {
-  const showCTA = index === INLINE_CTA_POSITION - 1 && totalPaged > INLINE_CTA_POSITION;
+  const showJoinCTA = index === INLINE_CTA_POSITION - 1 && totalPaged > INLINE_CTA_POSITION;
+  const showPsrTrain =
+    index === INLINE_PSR_TRAIN_POSITION - 1 && totalPaged > INLINE_PSR_TRAIN_POSITION;
   return (
     <>
       <DirectoryCard rep={rep} matchHighlight={matchHighlight} />
-      {showCTA && (
+      {showJoinCTA && (
         <div className="sm:col-span-2">
           <JoinCTA variant="inline" />
+        </div>
+      )}
+      {showPsrTrain && (
+        <div className="sm:col-span-2">
+          <PsrTrainPromo variant="compact" campaign="directory_results" />
         </div>
       )}
     </>
