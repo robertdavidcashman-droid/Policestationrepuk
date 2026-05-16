@@ -3,6 +3,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { WikiArticleIndex } from '@/components/WikiArticleIndex';
 import { buildMetadata } from '@/lib/seo';
 import { getAllWikiArticles } from '@/lib/data';
+import { PSRTRAIN_CTA, PSRTRAIN_HOME_HREF, PSRTRAIN_TAGLINE } from '@/lib/psrtrain-promo';
 
 export const metadata = buildMetadata({
   title: 'Premium Guides for Police Station Reps',
@@ -52,6 +53,20 @@ export default async function PremiumPage() {
         </div>
 
         <WikiArticleIndex articles={allArticles} variant="cards" />
+
+        <div className="mt-14 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold)]">PSRAS preparation</p>
+          <h2 className="text-h2 mt-2 text-[var(--navy)]">Preparing for accreditation?</h2>
+          <p className="mt-2 text-sm text-[var(--muted)]">{PSRTRAIN_TAGLINE}</p>
+          <a
+            href={PSRTRAIN_HOME_HREF}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-gold mt-4 inline-flex"
+          >
+            {PSRTRAIN_CTA}
+          </a>
+        </div>
 
         <div className="mt-14 border-t border-[var(--border)] pt-10">
           <h2 className="text-h2 text-[var(--navy)]">More Resources</h2>

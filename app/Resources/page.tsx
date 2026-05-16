@@ -169,6 +169,12 @@ const CAREER = [
     external: false,
   },
   {
+    title: 'PSR Train — PSRAS preparation',
+    href: 'https://www.psrtrain.com/training?utm_source=policestationrepuk&utm_medium=web&utm_campaign=training_resources',
+    desc: 'Mock exams, learning modules, and CIT-style scenarios to prepare for PSRAS accreditation.',
+    external: true,
+  },
+  {
     title: 'CustodyNote App',
     href: '/CustodyNote',
     desc: 'Digital custody note app designed for freelance police station representatives.',
