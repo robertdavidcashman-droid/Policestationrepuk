@@ -384,7 +384,8 @@ const nextConfig: NextConfig = {
       { source: "/LegalUpdateDetail", destination: "/LegalUpdates", permanent: true },
       { source: "/login", destination: "/Account", permanent: false },
       { source: "/sign-in", destination: "/Account", permanent: false },
-      { source: "/admin", destination: "/", permanent: false },
+      // Note: /admin is a private dashboard for ADMIN_EMAILS only.
+      // Previously redirected to / but now served by app/admin/page.tsx with server-side auth.
 
       // Payment / checkout redirects (checkout handled via Lemon Squeezy)
       { source: "/FeaturedCheckout", destination: "/Account", permanent: false },

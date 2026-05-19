@@ -61,7 +61,7 @@ const EMPTY_PROFILE: ProfileData = {
 
 type Status = 'loading' | 'ready' | 'not-found' | 'saving' | 'saved' | 'error';
 
-export function AccountDashboard({ userEmail }: { userEmail: string }) {
+export function AccountDashboard({ userEmail, isAdmin = false }: { userEmail: string; isAdmin?: boolean }) {
   const [profile, setProfile] = useState<ProfileData>(EMPTY_PROFILE);
   const [original, setOriginal] = useState<ProfileData>(EMPTY_PROFILE);
   const [status, setStatus] = useState<Status>('loading');
@@ -315,6 +315,14 @@ export function AccountDashboard({ userEmail }: { userEmail: string }) {
                 {' · '}
                 <Link href={`/rep/${repSlug}`} className="font-medium text-[var(--gold-link)] hover:underline">
                   View public profile
+                </Link>
+              </>
+            )}
+            {isAdmin && (
+              <>
+                {' · '}
+                <Link href="/admin" className="font-medium text-[var(--gold-link)] hover:underline">
+                  Open admin
                 </Link>
               </>
             )}

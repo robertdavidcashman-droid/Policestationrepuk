@@ -1,4 +1,5 @@
 import { getSession } from '@/lib/auth';
+import { isAdminEmail } from '@/lib/admin-auth';
 import { buildMetadata } from '@/lib/seo';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { LoginForm } from './LoginForm';
@@ -35,7 +36,7 @@ export default async function AccountPage() {
 
       <div className="page-container">
         {email ? (
-          <AccountDashboard userEmail={email} />
+          <AccountDashboard userEmail={email} isAdmin={isAdminEmail(email)} />
         ) : (
           <LoginForm />
         )}

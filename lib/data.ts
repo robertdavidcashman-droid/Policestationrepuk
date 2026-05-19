@@ -333,6 +333,58 @@ export async function hideStaticListingEmail(email: string): Promise<void> {
   invalidateHiddenListingEmailsCache();
 }
 
+/** Admin-only: removes an email from the hidden-listings list. */
+export async function unhideStaticListingEmail(email: string): Promise<void> {
+  const kv = getKV();
+  if (!kv) throw new Error('KV not configured');
+  const lower = email.toLowerCase();
+  const existing = (await kv.get<string[]>(KV_HIDDEN_LISTING_EMAILS)) ?? [];
+  const next = existing.filter((e) => e.toLowerCase() !== lower);
+  if (next.length === existing.length) {
+    invalidateHiddenListingEmailsCache();
+    return;
+  }
+  await kv.set(KV_HIDDEN_LISTING_EMAILS, next);
+  invalidateHiddenListingEmailsCache();
+}
+
+/** Admin-only: returns the set of hidden static-listing emails. */
+export async function getHiddenListingEmails(): Promise<Set<string>> {
+  return loadHiddenListingEmails();
+}
+
+/** Admin-only: returns the raw `newrep:*` rows from KV without trimming into the public `Representative` shape. */
+export async function getAllRegisteredRepsRaw(): Promise<
+  Array<{ key: string; row: Record<string, unknown> }>
+> {
+  if (skipKVInPrerender()) return [];
+  const kv = getKV();
+  if (!kv) return [];
+  try {
+    const keys = await kv.keys('newrep:*');
+    if (keys.length === 0) return [];
+    const pipeline = kv.pipeline();
+    for (const key of keys) pipeline.get(key);
+    const results = await pipeline.exec<(Record<string, unknown> | null)[]>();
+    const out: Array<{ key: string; row: Record<string, unknown> }> = [];
+    for (let i = 0; i < keys.length; i++) {
+      const row = results[i];
+      if (row && typeof row === 'object') {
+        out.push({ key: keys[i], row });
+      }
+    }
+    return out;
+  } catch (err) {
+    console.error('[data] getAllRegisteredRepsRaw failed:', err);
+    return [];
+  }
+}
+
+/** Admin-only: returns all profile-override rows from `profile:*`. */
+export async function getAllProfileOverrides(): Promise<Map<string, Record<string, unknown>>> {
+  return loadProfileOverrides();
+}
+
 function registrationToRep(row: Record<string, unknown>): Representative | null {
   const name = trimField(row.name);
   const email = typeof row.email === 'string' ? row.email.trim().toLowerCase() : '';
