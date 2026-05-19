@@ -2,6 +2,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import {
+  CUSTODYNOTE_ANYWHERE_HREF,
+  CUSTODYNOTE_ANYWHERE_NAME,
+  CUSTODYNOTE_ANYWHERE_TAGLINE,
   CUSTODYNOTE_DISCOUNT_CODE,
   CUSTODYNOTE_DISCOUNT_PCT,
   CUSTODYNOTE_DOWNLOAD_HREF,
@@ -270,6 +273,28 @@ export default function CustodyNotePage() {
           <p className="mt-3 text-xs text-slate-300">
             No credit card for trial · Windows 10+ · £{SUBSCRIPTION_GBP}/mo (PSR UK £{MEMBER_GBP}/mo) · Cancel any time · v{APP_VERSION}
           </p>
+
+          <div className="mt-6 rounded-[var(--radius-lg)] border border-white/25 bg-white/5 p-4 sm:p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-[var(--gold)]">
+              Not on Windows?
+            </p>
+            <p className="mt-2 text-sm font-semibold text-white">
+              {CUSTODYNOTE_ANYWHERE_NAME} — coming soon
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-white/85">
+              {CUSTODYNOTE_ANYWHERE_TAGLINE}. Mac, Chromebook, iPad and Android — the planned
+              browser-based version. Register interest so the team can email you when an
+              early-access build is ready.
+            </p>
+            <a
+              href={CUSTODYNOTE_ANYWHERE_HREF}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex min-h-[40px] items-center rounded-lg border border-[var(--gold)] px-4 py-2 text-xs font-bold !text-[var(--gold)] no-underline transition-colors hover:bg-[var(--gold)] hover:!text-[var(--navy)]"
+            >
+              Register interest in {CUSTODYNOTE_ANYWHERE_NAME} →
+            </a>
+          </div>
         </div>
       </section>
 

@@ -75,6 +75,26 @@ const nextConfig: NextConfig = {
   async redirects() {
     const blogLegacyHub = "https://policestationrepuk.org/Blog";
     return [
+      // Apex domain — .com is deprecated; always send users to the canonical .org host.
+      // Only fires once .com DNS points at Vercel (currently still on Wix); harmless until then.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "policestationrepuk.com" }],
+        destination: "https://policestationrepuk.org/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.policestationrepuk.com" }],
+        destination: "https://policestationrepuk.org/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.policestationrepuk.org" }],
+        destination: "https://policestationrepuk.org/:path*",
+        permanent: true,
+      },
       { source: "/PoliceStationRepsKent", destination: "/directory/kent", permanent: true },
       { source: "/PoliceStationRepsLondon", destination: "/directory/london", permanent: true },
       { source: "/PoliceStationRepsEssex", destination: "/directory/essex", permanent: true },

@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import {
+  CUSTODYNOTE_ANYWHERE_HREF,
+  CUSTODYNOTE_ANYWHERE_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
   CUSTODYNOTE_PRICE_GBP,
@@ -103,6 +105,17 @@ export function Footer() {
                   About CustodyNote
                 </Link>
               </div>
+              <p className="mt-3 border-t border-white/10 pt-3 text-[11px] text-slate-300">
+                On Mac, Chromebook, iPad or Android?{' '}
+                <a
+                  href={CUSTODYNOTE_ANYWHERE_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-[var(--gold)] underline-offset-2 hover:underline"
+                >
+                  Register interest in {CUSTODYNOTE_ANYWHERE_NAME} →
+                </a>
+              </p>
             </div>
             <div className="rounded-lg border border-white/15 bg-black/20 p-4">
               <p className="text-sm font-bold text-white">{PSRTRAIN_NAME} — before accreditation</p>
@@ -187,6 +200,15 @@ export function Footer() {
             >
               About CustodyNote →
             </Link>
+            <span className="mx-1 text-xs text-slate-500">·</span>
+            <a
+              href={CUSTODYNOTE_ANYWHERE_HREF}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block text-xs font-semibold !text-[var(--gold)] no-underline hover:!text-white"
+            >
+              {CUSTODYNOTE_ANYWHERE_NAME} (Mac/iPad waitlist) →
+            </a>
           </div>
           <div>
             <h4 className="text-sm font-bold text-white">WhatsApp — reps &amp; firms</h4>

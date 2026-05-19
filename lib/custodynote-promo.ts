@@ -4,6 +4,11 @@ const UTM = 'utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory
 export const CUSTODYNOTE_SITE = 'https://custodynote.com';
 export const CUSTODYNOTE_TRIAL_HREF = `${CUSTODYNOTE_SITE}/?${UTM}`;
 export const CUSTODYNOTE_PRICING_HREF = `${CUSTODYNOTE_SITE}/pricing?${UTM}`;
+/** Mac / Chromebook / iPad / Android waitlist landing page (planned browser-based version). */
+export const CUSTODYNOTE_ANYWHERE_HREF = `${CUSTODYNOTE_SITE}/custodynote-anywhere?${UTM}`;
+export const CUSTODYNOTE_ANYWHERE_NAME = 'CustodyNote Anywhere';
+export const CUSTODYNOTE_ANYWHERE_TAGLINE =
+  'Planned browser-based version for Mac, Chromebook, iPad and Android — register interest';
 
 /** Current installer version published on custodynote.com. */
 export const CUSTODYNOTE_VERSION = '1.4.219';
