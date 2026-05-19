@@ -39,6 +39,8 @@ export const revalidate = false;
 const DEDICATED_ROUTES = new Set([
   'About', 'about',
   'Account', 'account',
+  /** Private admin dashboard — `app/admin/page.tsx` */
+  'admin', 'Admin',
   'Accessibility', 'accessibility',
   'Blog', 'blog',
   'Complaints', 'complaints',
@@ -217,8 +219,14 @@ export default async function SlugPage({ params }: PageProps) {
   const title = pathToTitle(slug);
 
   const countySlugs = getCountySlugSet();
-  const mirrorPaths = hasMirrorData() ? getMirrorPaths().filter((p) => p !== '/' && !p.includes('/')) : [];
-  const livePaths = getLiveSiteSingleSegmentPaths();
+  const mirrorPaths = hasMirrorData()
+    ? getMirrorPaths().filter(
+        (p) => p !== '/' && !p.includes('/') && !DEDICATED_ROUTES.has(p) && !DEDICATED_ROUTES.has(p.toLowerCase()),
+      )
+    : [];
+  const livePaths = getLiveSiteSingleSegmentPaths().filter(
+    (p) => !DEDICATED_ROUTES.has(p) && !DEDICATED_ROUTES.has(p.toLowerCase()),
+  );
   const allowedSlugs = Array.from(new Set([...mirrorPaths, ...livePaths])).filter((s) => !countySlugs.has(s));
   if (countySlugs.has(slug) || !allowedSlugs.includes(slug)) notFound();
 
