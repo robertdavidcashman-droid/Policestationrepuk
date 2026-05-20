@@ -8,6 +8,7 @@ import { pathToTitle } from '@/lib/sitemap-paths';
 import { getCountySlugSet } from '@/lib/county-slugs';
 import { normalizeMirrorNavHref } from '@/lib/internal-link-normalize';
 import { buildMetadata } from '@/lib/seo';
+import { segmentCrawlContent } from '@/components/CrawlContent';
 
 const SITE_TITLE = 'PoliceStationRepUK';
 
@@ -238,12 +239,11 @@ export default async function SlugPage({ params }: PageProps) {
 
   if (page && !('error' in page && page.error)) {
     const h1 = page.headings?.find((h) => h.level === 1)?.text ?? title;
-    const subHeadings = page.headings?.filter((h) => h.level > 1) ?? [];
-    const contentParagraphs = page.content
-      .split(/\n{2,}/)
-      .map((p: string) => p.trim())
-      .filter(Boolean);
-    const chunkSize = subHeadings.length > 0 ? Math.ceil(contentParagraphs.length / (subHeadings.length + 1)) : contentParagraphs.length;
+    const segmented = segmentCrawlContent({
+      title: h1,
+      headings: page.headings,
+      content: page.content,
+    });
 
     return (
       <div className="page-container">
@@ -253,34 +253,29 @@ export default async function SlugPage({ params }: PageProps) {
           </header>
 
           <article className="content-section">
-            {subHeadings.length > 0 ? (
+            {segmented.sections.length > 0 ? (
               <>
-                {contentParagraphs.length > 0 && chunkSize > 0 && (
+                {segmented.intro.length > 0 && (
                   <div className="mb-6 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] sm:p-8">
                     <div className="space-y-4 leading-[1.8] text-[var(--muted)]">
-                      {contentParagraphs.slice(0, chunkSize).map((p: string, i: number) => (
+                      {segmented.intro.map((p, i) => (
                         <p key={i} className="whitespace-pre-line">{p}</p>
                       ))}
                     </div>
                   </div>
                 )}
-                {subHeadings.map((h, idx) => {
-                  const start = chunkSize * (idx + 1);
-                  const end = chunkSize * (idx + 2);
-                  const sectionParas = contentParagraphs.slice(start, end);
-                  return (
-                    <section key={idx} className="mb-6 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] sm:p-8">
-                      <Heading level={h.level} text={h.text} />
-                      {sectionParas.length > 0 && (
-                        <div className="mt-3 space-y-4 leading-[1.8] text-[var(--muted)]">
-                          {sectionParas.map((p: string, i: number) => (
-                            <p key={i} className="whitespace-pre-line">{p}</p>
-                          ))}
-                        </div>
-                      )}
-                    </section>
-                  );
-                })}
+                {segmented.sections.map((section, idx) => (
+                  <section key={idx} className="mb-6 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] sm:p-8">
+                    <Heading level={section.level} text={section.text} />
+                    {section.paragraphs.length > 0 && (
+                      <div className="mt-3 space-y-4 leading-[1.8] text-[var(--muted)]">
+                        {section.paragraphs.map((p, i) => (
+                          <p key={i} className="whitespace-pre-line">{p}</p>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                ))}
               </>
             ) : (
               <div className="rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] sm:p-8">

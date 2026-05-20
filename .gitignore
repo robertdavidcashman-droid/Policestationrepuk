@@ -11,6 +11,10 @@
 # testing
 /coverage
 test-results/
+/reports/playwright-html/
+/reports/playwright-artifacts/
+/reports/playwright-audit.json
+/reports/article-rendering/
 
 # next.js
 /.next/

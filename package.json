@@ -59,7 +59,16 @@
     "audit:validate": "node scripts/audit-validate.mjs",
     "audit:validate:fix": "node scripts/audit-validate.mjs --fix",
     "validate:articles": "npx tsx scripts/validate-articles.ts",
-    "validate:articles:fix": "npx tsx scripts/validate-articles.ts --fix"
+    "validate:articles:fix": "npx tsx scripts/validate-articles.ts --fix",
+    "audit:site": "node scripts/audit/site-audit-run.mjs",
+    "audit:site:report": "node scripts/audit/site-audit-report.mjs",
+    "test:audit": "playwright test --config=playwright.audit.config.ts",
+    "test:audit:articles": "playwright test --config=playwright.audit.config.ts tests/audit/how-to-become.spec.ts tests/audit/article-rendering.spec.ts",
+    "test:audit:links": "playwright test --config=playwright.audit.config.ts tests/audit/link-audit.spec.ts tests/audit/nav-footer.spec.ts",
+    "test:audit:a11y": "playwright test --config=playwright.audit.config.ts tests/audit/a11y.spec.ts",
+    "test:audit:seo": "playwright test --config=playwright.audit.config.ts tests/audit/seo.spec.ts",
+    "test:audit:responsive": "playwright test --config=playwright.audit.config.ts tests/audit/responsive.spec.ts",
+    "test:audit:console": "playwright test --config=playwright.audit.config.ts tests/audit/console-errors.spec.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
@@ -72,6 +81,7 @@
     "resend": "^6.9.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@base44/sdk": "^0.8.22",
     "@eslint/eslintrc": "^3.3.5",
     "@lhci/cli": "^0.15.1",

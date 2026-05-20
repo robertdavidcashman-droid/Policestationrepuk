@@ -171,10 +171,10 @@ export default async function DirectoryPage() {
         <FeaturedListingFaq className="mb-6" />
 
         {/* Custody Note — promoted product */}
-        <aside className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-[var(--gold)]/25 bg-gradient-to-r from-[var(--navy)] to-[#152e6e] px-5 py-3 shadow-sm">
-          <div className="flex items-center gap-3">
+        <aside className="mb-6 flex flex-col items-stretch gap-3 rounded-xl border border-[var(--gold)]/25 bg-gradient-to-r from-[var(--navy)] to-[#152e6e] px-5 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <AdvertisementLabel variant="dark" label="Featured product" />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold text-white">
                 CustodyNote — PACE-aligned police station attendance notes
               </p>
@@ -188,7 +188,7 @@ export default async function DirectoryPage() {
             href="https://custodynote.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-gold shrink-0 !px-4 !py-2 !text-xs no-underline"
+            className="btn-gold shrink-0 self-start !px-4 !py-2 !text-xs no-underline sm:self-auto"
           >
             Try Free
           </Link>
