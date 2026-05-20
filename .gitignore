@@ -15,6 +15,12 @@ test-results/
 /reports/playwright-artifacts/
 /reports/playwright-audit.json
 /reports/article-rendering/
+# Per-run aggregated audit outputs (CI uploads as artifacts). The human-authored
+# summary `reports/site-audit-final.md` is the source of truth and is tracked.
+/reports/site-audit.json
+/reports/site-audit.md
+/reports/broken-links.json
+/reports/article-rendering-audit.json
 
 # next.js
 /.next/
