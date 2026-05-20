@@ -35,6 +35,21 @@ export default function HowToBecomePage() {
 
       <div className="page-container">
         <div className="mx-auto max-w-4xl">
+          <div className="mb-8 rounded-[var(--radius-lg)] border border-[var(--gold)]/30 bg-amber-50/80 p-5 sm:p-6">
+            <p className="text-sm font-semibold text-[var(--navy)]">
+              Struggling to find a supervising solicitor?
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+              We have a dedicated guide on why supervision is hard to secure, what firms actually want,
+              and how to approach SCC crime practices professionally.
+            </p>
+            <Link
+              href="/FindSupervisingSolicitor"
+              className="mt-3 inline-flex text-sm font-semibold text-[var(--navy)] underline decoration-[var(--gold)] underline-offset-2 hover:text-[var(--gold-link)]"
+            >
+              How to find a supervising solicitor →
+            </Link>
+          </div>
           <CrawlContent slug="HowToBecomePoliceStationRep" />
 
           <PsrTrainPromo variant="hero" campaign="how_to_become" className="mt-10" />

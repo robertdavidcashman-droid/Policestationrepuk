@@ -158,6 +158,12 @@ const CAREER = [
     external: false,
   },
   {
+    title: 'How to Find a Supervising Solicitor',
+    href: '/FindSupervisingSolicitor',
+    desc: 'Why supervision is hard to secure, what SCC firms want, and how to approach firms professionally.',
+    external: false,
+  },
+  {
     title: "Beginner's Guide for New Reps",
     href: '/BeginnersGuide',
     desc: 'Essential reading for those new to police station representation work.',

@@ -8,6 +8,11 @@ const GUIDES = [
     href: '/HowToBecomePoliceStationRep',
   },
   {
+    title: 'Find a Supervising Solicitor',
+    body: 'Practical guide to securing PSRAS supervision: why firms say no, employment vs paid supervision, outreach that works, and official SRA/LAA requirements.',
+    href: '/FindSupervisingSolicitor',
+  },
+  {
     title: 'Get Work as a Police Station Rep',
     body: 'Comprehensive business development guide: setting up as a freelance rep, active outreach strategies, firm relationship building, pricing structures, service delivery excellence, client retention techniques, and scaling your practice.',
     href: '/GetWork',

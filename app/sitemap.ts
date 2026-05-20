@@ -53,6 +53,7 @@ const HIGH_PRIORITY_PAGES = [
   { path: 'Firms', priority: 0.7, freq: 'monthly' as const },
   { path: 'GetWork', priority: 0.7, freq: 'monthly' as const },
   { path: 'HowToBecomePoliceStationRep', priority: 0.85, freq: 'monthly' as const },
+  { path: 'FindSupervisingSolicitor', priority: 0.8, freq: 'monthly' as const },
   { path: 'PoliceStationRates', priority: 0.7, freq: 'monthly' as const },
   { path: 'PACE', priority: 0.7, freq: 'monthly' as const },
   { path: 'WhatsApp', priority: 0.6, freq: 'monthly' as const },

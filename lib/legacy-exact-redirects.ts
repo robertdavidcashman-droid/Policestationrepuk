@@ -34,6 +34,8 @@ export const LEGACY_EXACT_REDIRECTS: Record<string, string> = {
   '/terms-and-conditions': '/Terms',
   '/howtobecome': '/HowToBecome',
   '/getwork': '/GetWork',
+  '/findsupervisingsolicitor': '/FindSupervisingSolicitor',
+  '/howtofindsupervisingsolicitor': '/FindSupervisingSolicitor',
   '/gofeatured': '/GoFeatured',
   '/escapefeecalculator': '/EscapeFeeCalculator',
   '/policestationrates': '/PoliceStationRates',
