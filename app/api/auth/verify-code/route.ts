@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isAdminEmail } from '@/lib/admin-auth';
 import { getRawReps, getRegisteredRepByEmail } from '@/lib/data';
 import { verifyMagicCode, createSession, getSessionCookieName } from '@/lib/auth';
 
@@ -20,8 +21,9 @@ export async function POST(request: Request) {
   const reps = getRawReps();
   const rep = reps.find((r) => r.email.toLowerCase() === email);
   const registeredRep = !rep ? await getRegisteredRepByEmail(email) : null;
+  const adminLogin = isAdminEmail(email);
 
-  if (!rep && !registeredRep) {
+  if (!rep && !registeredRep && !adminLogin) {
     return NextResponse.json({ error: 'Invalid code' }, { status: 401 });
   }
 
