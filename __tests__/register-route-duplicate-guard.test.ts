@@ -23,16 +23,22 @@ describe('register route — duplicate-rep guard (anti-impersonation)', () => {
     expect(source).toMatch(/already (registered|in our directory)/i);
   });
 
-  it('rejects before calling kv.set on the newrep key', () => {
+  it('rejects before persisting the newrep row', () => {
+    // Persistence is delegated to lib/data.ts:saveRegistration (which writes
+    // the `newrep:{email}` KV row internally). The guard must precede that
+    // call so a duplicate cannot overwrite an existing rep listing.
     const guardIndex = source.search(/kv\.get\(\s*['"`]newrep:/);
-    const setIndex = source.search(/kv\.set\(\s*`newrep:/);
+    const persistIndex = source.search(/saveRegistration\(/);
     expect(guardIndex).toBeGreaterThan(0);
-    expect(setIndex).toBeGreaterThan(guardIndex);
+    expect(persistIndex).toBeGreaterThan(guardIndex);
   });
 
   it('rejects before sending the admin registration email', () => {
+    // Notification has been split into sendRepAutoPublishAdminAlert /
+    // sendRepHeldForReviewAlert (depending on the risk outcome). The guard
+    // must precede whichever of the two would fire.
     const guardIndex = source.search(/kv\.get\(\s*['"`]newrep:/);
-    const sendIndex = source.search(/sendRegistrationNotification\(/);
+    const sendIndex = source.search(/sendRep(AutoPublishAdminAlert|HeldForReviewAlert)\(/);
     expect(guardIndex).toBeGreaterThan(0);
     expect(sendIndex).toBeGreaterThan(guardIndex);
   });

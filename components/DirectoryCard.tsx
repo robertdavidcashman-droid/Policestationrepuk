@@ -53,9 +53,9 @@ export function DirectoryCard({ rep, matchHighlight, compact }: DirectoryCardPro
   const stationCount = (rep.stations || []).length;
   const accLabel = (rep.accreditation || '').includes('Duty')
     ? 'Duty solicitor'
-    : (rep.accreditation || '').includes('Probationary')
-      ? 'Probationary'
-      : 'Accredited rep';
+    : (rep.accreditation || '').toLowerCase().includes('solicitor')
+      ? 'Solicitor'
+      : 'Verified rep';
 
   const isFeatured = rep.featured;
 

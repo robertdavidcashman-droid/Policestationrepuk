@@ -40,8 +40,8 @@ const AVAILABILITY_OPTIONS = [
 const ACCREDITATION_OPTIONS: { value: AccreditationFilterKey; label: string }[] = [
   { value: '', label: 'All types' },
   { value: 'duty', label: 'Duty solicitor' },
-  { value: 'accredited', label: 'Accredited rep' },
-  { value: 'probationary', label: 'Probationary' },
+  { value: 'solicitor', label: 'Solicitor' },
+  { value: 'accredited', label: 'Accredited PSRAS rep' },
 ];
 
 const EXPERIENCE_OPTIONS: { value: ExperienceTier; label: string }[] = [

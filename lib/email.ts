@@ -469,6 +469,271 @@ export async function sendFeaturedOwnerNotification(data: {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/*  Self-serve registration alerts                                     */
+/* ------------------------------------------------------------------ */
+
+export interface RegistrationDecisionFields {
+  name: string;
+  email: string;
+  phone: string;
+  category: string;
+  accreditation: string;
+  pinNumber?: string;
+  sraNumber?: string;
+  firmName?: string;
+  professionalProfileUrl?: string;
+  proofUrl?: string;
+  counties?: string;
+  stations?: string;
+  availability?: string;
+  publicNotes?: string;
+  fullPostalAddress?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  profileUrl?: string;
+  riskCategory: string;
+  riskReasons: string[];
+  registeredAt: string;
+}
+
+function registrationFieldRows(d: RegistrationDecisionFields): string {
+  const row = (label: string, value: string | undefined) =>
+    value
+      ? `<tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #e5e7eb;vertical-align:top;width:200px">${escapeHtml(label)}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb;">${escapeHtml(value).replace(/\n/g, '<br>')}</td></tr>`
+      : '';
+  return [
+    row('Name', d.name),
+    row('Email', d.email),
+    row('Phone', d.phone),
+    row('Category', d.category),
+    row('Accreditation (free text)', d.accreditation),
+    row('DSCC / PIN number', d.pinNumber),
+    row('SRA number', d.sraNumber),
+    row('Firm', d.firmName),
+    row('Professional webpage', d.professionalProfileUrl),
+    row('Proof of accreditation (URL)', d.proofUrl),
+    row('Counties covered', d.counties),
+    row('Police stations covered', d.stations),
+    row('Availability', d.availability),
+    row('Public notes', d.publicNotes),
+    row('Full postal address (PRIVATE)', d.fullPostalAddress),
+    row('IP address', d.ipAddress),
+    row('User agent', d.userAgent),
+    row('Registered at', d.registeredAt),
+  ]
+    .filter(Boolean)
+    .join('');
+}
+
+/**
+ * Admin notification: low-risk registration was auto-published.
+ * FYI only — the profile is already live. Admin can still suspend it
+ * from the Rep Verification Audit view at any time.
+ */
+export async function sendRepAutoPublishAdminAlert(
+  data: RegistrationDecisionFields,
+): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.info('[Auto-publish admin alert — no RESEND_API_KEY]', { name: data.name, email: data.email });
+    return false;
+  }
+  try {
+    await client.emails.send({
+      from: FROM_EMAIL,
+      to: ADMIN_EMAIL,
+      replyTo: data.email,
+      subject: `[Auto-published] ${data.name} (${data.category}) — registered on PoliceStationRepUK`,
+      html: `
+        <div style="font-family:sans-serif;max-width:640px;margin:0 auto;color:#0f172a">
+          <h2 style="color:#0f172a">New rep auto-published</h2>
+          <p style="color:#475569;font-size:14px;line-height:1.55">
+            ${escapeHtml(data.name)} has just registered through the self-serve form. They passed
+            all eligibility and completeness checks, so their profile is <strong>already live</strong>
+            in the public directory.
+          </p>
+          ${
+            data.profileUrl
+              ? `<p style="margin:16px 0"><a href="${escapeHtml(data.profileUrl)}" style="color:#1d4ed8">View public profile</a></p>`
+              : ''
+          }
+          <p style="margin:16px 0">
+            <a href="https://policestationrepuk.org/admin" style="color:#1d4ed8">Open the Rep Verification Audit</a>
+            to suspend, re-flag or remove this profile if anything looks wrong.
+          </p>
+          <table style="border-collapse:collapse;width:100%;max-width:640px;margin-top:16px">${registrationFieldRows(data)}</table>
+          <p style="margin-top:16px;color:#6b7280;font-size:12px;">
+            Risk category at submission: <strong>${escapeHtml(data.riskCategory)}</strong>${data.riskReasons.length ? ' &mdash; ' + escapeHtml(data.riskReasons.join('; ')) : ''}.
+          </p>
+        </div>
+      `,
+    });
+    return true;
+  } catch (err) {
+    console.error('[Auto-publish admin alert failed]', err);
+    return false;
+  }
+}
+
+/**
+ * Admin notification: registration was held back for manual review.
+ * Triggered whenever risk scoring flags ANY doubt — missing PIN/SRA/proof,
+ * suspicious wording, disposable email, unrealistic coverage, etc.
+ */
+export async function sendRepHeldForReviewAlert(
+  data: RegistrationDecisionFields,
+): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.info('[Held-for-review admin alert — no RESEND_API_KEY]', { name: data.name, email: data.email });
+    return false;
+  }
+  try {
+    await client.emails.send({
+      from: FROM_EMAIL,
+      to: ADMIN_EMAIL,
+      replyTo: data.email,
+      subject: `[ACTION REQUIRED] ${data.name} — held for review (${data.riskCategory} risk)`,
+      html: `
+        <div style="font-family:sans-serif;max-width:640px;margin:0 auto;color:#0f172a">
+          <h2 style="color:#b45309">Held for manual review</h2>
+          <p style="color:#475569;font-size:14px;line-height:1.55">
+            ${escapeHtml(data.name)} has registered through the self-serve form but their submission
+            was flagged for review. Their profile is <strong>NOT</strong> currently visible in the
+            public directory. Open the Rep Verification Audit to approve, reject or request more
+            evidence.
+          </p>
+          <p style="margin:16px 0">
+            <a href="https://policestationrepuk.org/admin" style="color:#1d4ed8;font-weight:bold">Review this submission &rarr;</a>
+          </p>
+          <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px;margin:16px 0">
+            <p style="margin:0;font-size:13px;color:#92400e">
+              <strong>Risk category:</strong> ${escapeHtml(data.riskCategory)}
+            </p>
+            ${
+              data.riskReasons.length
+                ? `<ul style="margin:8px 0 0;padding-left:20px;color:#92400e;font-size:13px;line-height:1.55">${data.riskReasons.map((r) => `<li>${escapeHtml(r)}</li>`).join('')}</ul>`
+                : ''
+            }
+          </div>
+          <table style="border-collapse:collapse;width:100%;max-width:640px;margin-top:16px">${registrationFieldRows(data)}</table>
+        </div>
+      `,
+    });
+    return true;
+  } catch (err) {
+    console.error('[Held-for-review admin alert failed]', err);
+    return false;
+  }
+}
+
+/** Applicant-facing email: "you're now live" (auto-published) or "we're reviewing" (held). */
+export async function sendApplicantRegistrationOutcome(opts: {
+  toEmail: string;
+  name: string;
+  published: boolean;
+  profileUrl: string;
+}): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.info('[Applicant registration outcome — no RESEND_API_KEY]', opts);
+    return false;
+  }
+  const subject = opts.published
+    ? 'Your PoliceStationRepUK listing is now live'
+    : 'Your PoliceStationRepUK application is being reviewed';
+  const body = opts.published
+    ? `
+        <p>Hi ${escapeHtml(opts.name)},</p>
+        <p>Thanks for registering with <strong>PoliceStationRepUK</strong>. Your profile
+        passed our automatic verification checks and is <strong>now live</strong> in the
+        public directory:</p>
+        <p style="margin:16px 0"><a href="${escapeHtml(opts.profileUrl)}" style="color:#1d4ed8">${escapeHtml(opts.profileUrl)}</a></p>
+        <p>You can sign in to your account at any time to update your details, add coverage areas
+        or upgrade to a Featured listing:</p>
+        <p style="margin:16px 0"><a href="https://policestationrepuk.org/Account" style="color:#1d4ed8">policestationrepuk.org/Account</a></p>
+        <p>If you spot anything wrong with your profile, just reply to this email and we'll fix it.</p>
+      `
+    : `
+        <p>Hi ${escapeHtml(opts.name)},</p>
+        <p>Thanks for registering with <strong>PoliceStationRepUK</strong>. We've received your
+        application and it's currently with our admin team for a quick manual review &mdash; this
+        usually happens within 24 hours.</p>
+        <p>You don't need to do anything right now. If we need any further evidence (e.g. a copy of
+        your PSRAS accreditation certificate or proof of your SRA registration) we'll email you
+        directly.</p>
+        <p>Once approved, your profile will appear in the directory automatically and you'll get a
+        confirmation email.</p>
+      `;
+  try {
+    await client.emails.send({
+      from: FROM_EMAIL,
+      to: opts.toEmail,
+      replyTo: ADMIN_EMAIL,
+      subject,
+      html: `
+        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:20px;color:#0f172a;line-height:1.6;font-size:14px">
+          ${body}
+          <hr style="margin:24px 0;border:none;border-top:1px solid #e5e7eb">
+          <p style="color:#94a3b8;font-size:12px">
+            PoliceStationRepUK &mdash; the directory for accredited police station representatives.<br>
+            <a href="https://policestationrepuk.org" style="color:#94a3b8">policestationrepuk.org</a>
+          </p>
+        </div>
+      `,
+    });
+    return true;
+  } catch (err) {
+    console.error('[Applicant registration outcome failed]', err);
+    return false;
+  }
+}
+
+/**
+ * One-time code sent to verify an email address on the public enquiry form.
+ * Wholly separate from the magic-login code in `sendMagicCode` so the two
+ * flows cannot be confused.
+ */
+export async function sendEnquiryEmailCode(email: string, code: string): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.info('[Enquiry email code — no RESEND_API_KEY]', { email });
+    return false;
+  }
+  try {
+    await client.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: `Confirm your PoliceStationRepUK enquiry: ${code}`,
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:20px">
+          <h2 style="color:#0f172a;margin-bottom:8px">Confirm your email address</h2>
+          <p style="color:#475569;font-size:14px;margin-bottom:16px">
+            Please enter this 6-digit code on the enquiry form to confirm your email
+            address. The code expires in 15 minutes.
+          </p>
+          <div style="background:#f8fafc;border:2px solid #e2e8f0;border-radius:8px;padding:24px;text-align:center;margin-bottom:20px">
+            <span style="font-family:monospace;font-size:32px;letter-spacing:0.3em;font-weight:bold;color:#0f172a">${escapeHtml(code)}</span>
+          </div>
+          <p style="color:#475569;font-size:13px;line-height:1.6">
+            Confirming your email is the first step. Submitting an enquiry does not create a
+            public directory profile &mdash; PoliceStationRepUK only lists fully verified
+            and accredited representatives after manual admin review.
+          </p>
+          <p style="color:#94a3b8;font-size:12px;margin-top:16px">
+            If you did not request this enquiry, you can safely ignore this email.
+          </p>
+        </div>
+      `,
+    });
+    return true;
+  } catch (err) {
+    console.error('[Enquiry email code failed]', err);
+    return false;
+  }
+}
+
 function escapeHtml(val: unknown): string {
   const str = typeof val === 'string' ? val : Array.isArray(val) ? val.join(', ') : String(val ?? '');
   return str

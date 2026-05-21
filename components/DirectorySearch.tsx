@@ -116,7 +116,7 @@ export function DirectorySearch({
     const nextUrgent = searchParams.get('urgent') === '1';
     const nextComplete = searchParams.get('complete') === '1';
     const nextSortRaw = searchParams.get('sort') ?? '';
-    const allowedAcc: AccreditationFilterKey[] = ['', 'duty', 'accredited', 'probationary'];
+    const allowedAcc: AccreditationFilterKey[] = ['', 'duty', 'solicitor', 'accredited'];
     const allowedExp: ExperienceTier[] = ['', 'senior', 'mid', 'junior', 'unspecified'];
     const allowedSort: SortKey[] = ['smart', 'relevance', 'name', 'county'];
 

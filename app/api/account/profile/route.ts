@@ -6,6 +6,15 @@ import type { Representative } from '@/lib/types';
 import { sendProfileUpdateNotification } from '@/lib/email';
 import { validateEnglishCountySelections } from '@/lib/english-counties';
 
+/**
+ * Fields a logged-in rep can self-edit on their own profile. Verification gate
+ * fields (`verificationStatus`, `adminApproved`, `isPublic`, `lastVerifiedDate`)
+ * are deliberately excluded — only the admin can change those.
+ *
+ * Free-text `accreditation` is also restricted via a server-side allow-list
+ * inside the handler so a self-editor cannot promote themselves from
+ * "probationary" to "duty solicitor".
+ */
 const ALLOWED_FIELDS = new Set([
   'name',
   'phone',
@@ -23,6 +32,17 @@ const ALLOWED_FIELDS = new Set([
   'languages',
   'specialisms',
   'years_experience',
+]);
+
+/** Hard reject any attempt to bypass the verification gate via the self-edit endpoint. */
+const PROTECTED_FIELDS = new Set([
+  'verificationStatus',
+  'adminApproved',
+  'isPublic',
+  'lastVerifiedDate',
+  'review',
+  'riskCategory',
+  'riskReasons',
 ]);
 
 async function findRep(email: string): Promise<Representative | null> {
@@ -98,6 +118,36 @@ export async function PUT(request: Request) {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  for (const key of Object.keys(body)) {
+    if (PROTECTED_FIELDS.has(key)) {
+      return NextResponse.json(
+        {
+          error:
+            'You cannot change verification or publication fields here. Only the PoliceStationRepUK admin can promote a profile to public.',
+        },
+        { status: 403 },
+      );
+    }
+  }
+
+  // Reject any attempt to self-declare a probationary / trainee / unaccredited status.
+  if (typeof body.accreditation === 'string') {
+    const a = body.accreditation.toLowerCase();
+    if (
+      /probation|trainee|student|studying|working\s*towards|awaiting\s*accreditation|unaccredited/.test(
+        a,
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'PoliceStationRepUK does not list probationary representatives, trainees or unaccredited applicants. Please contact admin if your status has changed.',
+        },
+        { status: 400 },
+      );
+    }
   }
 
   const update: Record<string, unknown> = {};

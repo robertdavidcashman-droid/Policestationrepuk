@@ -15,6 +15,17 @@ import {
   repIsAutomatedDirectoryTest,
   repMatchesDirectoryBlocklist,
 } from './directory-blocklist';
+import {
+  loadAllReviews,
+  reviewBlocksPublication,
+  type RepReview,
+} from './admin-review';
+import {
+  isPubliclyVisible,
+  looksIneligible,
+  PUBLIC_VERIFIED_STATUSES,
+  type RepVerificationStatus,
+} from './rep-status';
 
 const KV_HIDDEN_LISTING_EMAILS = 'directory:hidden_listing_emails';
 
@@ -385,24 +396,23 @@ export async function getAllProfileOverrides(): Promise<Map<string, Record<strin
   return loadProfileOverrides();
 }
 
+function splitList(raw: unknown): string[] {
+  const s = trimField(raw);
+  if (!s) return [];
+  return Array.from(
+    new Set(
+      s.split(/[,;\n]+/).map((x) => x.trim()).filter(Boolean),
+    ),
+  );
+}
+
 function registrationToRep(row: Record<string, unknown>): Representative | null {
   const name = trimField(row.name);
   const email = typeof row.email === 'string' ? row.email.trim().toLowerCase() : '';
   if (!name || !email) return null;
 
-  const countiesRaw = trimField(row.counties);
-  const stationsRaw = trimField(row.stations);
-  const stationList = stationsRaw ? stationsRaw.split(/[,;]+/).map((s) => s.trim()).filter(Boolean) : [];
-  const countyList = countiesRaw
-    ? Array.from(
-        new Set(
-          countiesRaw
-            .split(/[,;]+/)
-            .map((s) => s.trim())
-            .filter(Boolean),
-        ),
-      )
-    : [];
+  const countyList = splitList(row.counties);
+  const stationList = splitList(row.stations);
   const county = countyList[0] || '';
 
   const baseSlug = name
@@ -415,6 +425,14 @@ function registrationToRep(row: Record<string, unknown>): Representative | null 
   const computedSlug = `${baseSlug}-${shortId}`;
   const storedSlug = trimField(row.slug);
   const slug = storedSlug || computedSlug;
+
+  const yearsRaw = row.years_experience;
+  const yearsExperience =
+    typeof yearsRaw === 'number' && Number.isFinite(yearsRaw)
+      ? yearsRaw
+      : typeof yearsRaw === 'string' && yearsRaw.trim() && Number.isFinite(Number(yearsRaw))
+        ? Number(yearsRaw)
+        : undefined;
 
   return {
     id: `newrep:${email}`,
@@ -431,7 +449,76 @@ function registrationToRep(row: Record<string, unknown>): Representative | null 
     accreditation: trimField(row.accreditation) || 'Accredited Representative',
     notes: trimField(row.message),
     coverageAreas: trimField(row.coverage_areas),
+    websiteUrl: trimField(row.website_url) || undefined,
+    whatsappLink: trimField(row.whatsapp_link) || undefined,
+    dsccPin: trimField(row.dscc_pin) || undefined,
+    languages: splitList(row.languages).length ? splitList(row.languages) : undefined,
+    specialisms: splitList(row.specialisms).length ? splitList(row.specialisms) : undefined,
+    holidayAvailability: splitList(row.holiday_availability).length
+      ? splitList(row.holiday_availability)
+      : undefined,
+    yearsExperience,
   };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Save a new self-serve registration. Writes the row to KV and       */
+/*  busts the in-process cache so the public directory picks it up on  */
+/*  next request (subject to the publication gate).                    */
+/* ------------------------------------------------------------------ */
+
+export interface SaveRegistrationInput {
+  email: string;
+  name: string;
+  phone: string;
+  /** Free-text accreditation string (the public `accreditation` column). */
+  accreditation: string;
+  counties?: string;
+  stations?: string;
+  availability?: string;
+  message?: string;
+  coverage_areas?: string;
+  website_url?: string;
+  whatsapp_link?: string;
+  dscc_pin?: string;
+  sra_number?: string;
+  firm_name?: string;
+  firm_address?: string;
+  firm_email?: string;
+  proof_url?: string;
+  professional_profile_url?: string;
+  languages?: string;
+  specialisms?: string;
+  years_experience?: number;
+  /** Private — never shown publicly. */
+  full_postal_address?: string;
+  /** IP/UA captured for audit trail. */
+  ipAddress?: string;
+  userAgent?: string;
+  /** Admin-set publication fields (only used by /api/register itself). */
+  verificationStatus?: string;
+  adminApproved?: boolean;
+  isPublic?: boolean;
+  lastVerifiedDate?: string;
+  registeredAt?: string;
+}
+
+export async function saveRegistration(input: SaveRegistrationInput): Promise<void> {
+  const kv = getKV();
+  if (!kv) {
+    console.warn('[data] saveRegistration: KV not configured, registration not persisted');
+    return;
+  }
+  const email = input.email.trim().toLowerCase();
+  if (!email) throw new Error('saveRegistration: missing email');
+  const now = new Date().toISOString();
+  const row: Record<string, unknown> = {
+    ...input,
+    email,
+    registeredAt: input.registeredAt || now,
+  };
+  await kv.set(`newrep:${email}`, row);
+  invalidateRegisteredRepsCache();
 }
 
 async function loadRegisteredReps(): Promise<Representative[]> {
@@ -547,14 +634,87 @@ export function getRawReps(): Representative[] {
   return file?.reps ?? [];
 }
 
+/**
+ * Whether legacy static (data/reps.json) profiles should remain publicly
+ * visible during the migration to the strict verification model.
+ *
+ * IMPORTANT: this defaults to `false`. Once flipped on, the public directory
+ * will only show profiles where the admin has explicitly approved the row in
+ * KV (via the Rep Verification Audit) and assigned a verified status. The
+ * legacy seed of 176 reps will all need re-verification.
+ *
+ * To temporarily allow the legacy reps to remain visible while migration is
+ * in flight, set `LEGACY_REPS_PUBLIC=1` in the deployment environment. They
+ * will still be hidden if an admin explicitly marks them
+ * suspended/rejected/ineligible.
+ */
+const LEGACY_REPS_PUBLIC =
+  process.env.LEGACY_REPS_PUBLIC === '1' ||
+  process.env.LEGACY_REPS_PUBLIC === 'true';
+
+interface VisibilityContext {
+  reviews: Map<string, RepReview>;
+}
+
+/**
+ * Decide whether a single Representative may appear in /directory and
+ * /rep/[slug] right now.
+ *
+ * Hard rule (matches PoliceStationRepUK security directive):
+ *   - status must be one of the three verified public statuses; AND
+ *   - adminApproved === true; AND
+ *   - isPublic === true; AND
+ *   - lastVerifiedDate exists and is within the re-verification window.
+ *
+ * Legacy `data/reps.json` rows that pre-date the directive may be allowed
+ * through when `LEGACY_REPS_PUBLIC=1` so we can roll out the new model
+ * without immediately wiping the directory. Even then, any review record
+ * with adminApproved=false / status=rejected etc. always wins.
+ */
+function shouldShowPublicly(
+  rep: Representative,
+  ctx: VisibilityContext,
+): boolean {
+  const review = ctx.reviews.get(rep.email.toLowerCase()) ?? null;
+
+  // Hard veto from admin review record (always wins).
+  if (reviewBlocksPublication(review)) return false;
+
+  // Reject any free-text indication of probationary / trainee / unaccredited.
+  if (looksIneligible(rep.accreditation, rep.notes, rep.bio)) return false;
+
+  // Compose the canonical gate from review record + any inline fields.
+  const status: RepVerificationStatus | null =
+    review?.verificationStatus ?? rep.verificationStatus ?? null;
+  const adminApproved =
+    review?.adminApproved ?? rep.adminApproved ?? null;
+  const isPublic = review?.isPublic ?? rep.isPublic ?? null;
+  const lastVerifiedDate =
+    review?.lastVerifiedDate ?? rep.lastVerifiedDate ?? null;
+
+  if (isPubliclyVisible({ status, adminApproved, isPublic, lastVerifiedDate })) {
+    return true;
+  }
+
+  // Legacy fallback: allow static-seed rows ONLY when explicitly enabled and
+  // never blocked by an admin review.
+  if (LEGACY_REPS_PUBLIC && !rep.id.startsWith('newrep:')) {
+    return true;
+  }
+
+  return false;
+}
+
 export async function getAllReps(): Promise<Representative[]> {
   const reps = getRawReps();
-  const [overrides, registered, featuredFlags, hiddenEmails] = await Promise.all([
-    loadProfileOverrides(),
-    loadRegisteredReps(),
-    loadFeaturedFlags(),
-    loadHiddenListingEmails(),
-  ]);
+  const [overrides, registered, featuredFlags, hiddenEmails, reviews] =
+    await Promise.all([
+      loadProfileOverrides(),
+      loadRegisteredReps(),
+      loadFeaturedFlags(),
+      loadHiddenListingEmails(),
+      loadAllReviews(),
+    ]);
 
   const withOverrides = reps.map((r) => {
     const o = overrides.get(r.email.toLowerCase());
@@ -577,12 +737,72 @@ export async function getAllReps(): Promise<Representative[]> {
 
   const featured = applyFeaturedFlags(all, featuredFlags);
   const bl = loadDirectoryBlocklistFile();
-  return featured.filter((r) => {
+  const ctx: VisibilityContext = { reviews };
+
+  const allowed = featured.filter((r) => {
     if (hiddenEmails.has(r.email.toLowerCase())) return false;
     if (repIsAutomatedDirectoryTest(r)) return false;
     if (repMatchesDirectoryBlocklist(r, bl)) return false;
+    // Strict publication gate — only verified, admin-approved reps.
+    if (!shouldShowPublicly(r, ctx)) return false;
     return true;
   });
+  // Defence-in-depth: strip private fields from anything that leaves this
+  // function. Admin pages should call `getAllRepsForAdmin()` instead.
+  return allowed.map(stripPrivateFields);
+}
+
+/** Admin / internal: returns all reps WITHOUT the public-visibility gate. */
+export async function getAllRepsForAdmin(): Promise<Representative[]> {
+  const reps = getRawReps();
+  const [overrides, registered, featuredFlags] = await Promise.all([
+    loadProfileOverrides(),
+    loadRegisteredReps(),
+    loadFeaturedFlags(),
+  ]);
+  const withOverrides = reps.map((r) => {
+    const o = overrides.get(r.email.toLowerCase());
+    return o ? applyOverrides(r, o) : r;
+  });
+  const existingEmails = new Set(withOverrides.map((r) => r.email.toLowerCase()));
+  const newReps = registered
+    .filter((r) => !existingEmails.has(r.email.toLowerCase()))
+    .map((r) => {
+      const o = overrides.get(r.email.toLowerCase());
+      return o ? applyOverrides(r, o) : r;
+    });
+  return applyFeaturedFlags([...withOverrides, ...newReps], featuredFlags);
+}
+
+/** Exposed for tests / scripts. Indicates whether the legacy seed remains visible. */
+export function legacyRepsAreCurrentlyPublic(): boolean {
+  return LEGACY_REPS_PUBLIC;
+}
+
+export { PUBLIC_VERIFIED_STATUSES };
+
+/**
+ * Defence-in-depth: strip any field that must never appear in a public API
+ * response or be rendered on a public page. Pages and components should still
+ * be careful not to render private fields, but this gives us a single chokepoint.
+ */
+export function stripPrivateFields(rep: Representative): Representative {
+  const out: Representative = {
+    ...rep,
+    postcode: '',
+    dsccPin: '',
+  };
+  // Strip lingering review/verification metadata from anything that goes out.
+  delete out.verificationStatus;
+  delete out.adminApproved;
+  delete out.isPublic;
+  delete out.lastVerifiedDate;
+  return out;
+}
+
+/** Strip private fields from a list of reps. */
+export function stripPrivateFieldsAll(reps: Representative[]): Representative[] {
+  return reps.map(stripPrivateFields);
 }
 
 /**

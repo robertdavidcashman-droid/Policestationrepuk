@@ -40,7 +40,12 @@ export function repMatchesPoliceForce(
   return false;
 }
 
-export type AccreditationFilterKey = '' | 'duty' | 'accredited' | 'probationary';
+/**
+ * Public directory accreditation filters. Note: the `probationary` key is
+ * intentionally removed — PoliceStationRepUK no longer lists probationary
+ * representatives.
+ */
+export type AccreditationFilterKey = '' | 'duty' | 'solicitor' | 'accredited';
 
 export function repMatchesAccreditationFilter(rep: Representative, filterKey: AccreditationFilterKey): boolean {
   if (!filterKey) return true;
@@ -48,11 +53,11 @@ export function repMatchesAccreditationFilter(rep: Representative, filterKey: Ac
   switch (filterKey) {
     case 'duty':
       return /\bduty\b/i.test(rep.accreditation || '');
-    case 'probationary':
-      return /probationary/i.test(a);
+    case 'solicitor':
+      return /\bsolicitor\b/i.test(a) && !/probationary|trainee/i.test(a);
     case 'accredited':
-      if (/probationary/i.test(a)) return false;
-      return /\bduty\b|law society|accredited|higher rights/i.test(a);
+      if (/probationary|trainee/i.test(a)) return false;
+      return /\bduty\b|law society|accredited|higher rights|psras/i.test(a);
     default:
       return true;
   }

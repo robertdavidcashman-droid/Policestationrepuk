@@ -1,43 +1,53 @@
 import Link from 'next/link';
-import { PSRTRAIN_NAME, PSRTRAIN_TRAINING_HREF } from '@/lib/psrtrain-promo';
 import { buildMetadata } from '@/lib/seo';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { RegisterForm } from './RegisterForm';
+import { turnstileSiteKey } from '@/lib/turnstile';
+import { enquiryEmailVerificationEnabled } from '@/lib/enquiry-email-verify';
 
-const REGISTER_BENEFITS = [
+const TRUST_POINTS = [
   {
-    title: 'Be found by firms quickly',
-    body: 'Your profile appears in the public directory so criminal defence firms can search by county, station, and name.',
+    title: 'Free directory listing',
+    body: 'Submitting this form creates your public directory profile. There is no charge to be listed.',
   },
   {
-    title: 'Stay free to join',
-    body: 'There are no listing fees for a standard profile while the platform is in this testing phase.',
+    title: 'Private, gated form',
+    body: 'The full registration form only unlocks after a quick server-side eligibility check on your PIN / SRA / proof URL — so the public site never exposes a fillable form to scrapers or bots.',
   },
   {
-    title: 'Show real coverage clearly',
-    body: 'Counties, stations, availability, and accreditation are displayed so firms can instruct with confidence.',
+    title: 'Automatic verification',
+    body: 'If you provide your PIN, SRA number, or proof of accreditation and everything checks out, your profile goes live immediately.',
+  },
+  {
+    title: 'Manual review where needed',
+    body: 'If anything looks incomplete, suspicious or borderline, your profile is held while an admin reviews it and you get an email when a decision is made.',
   },
 ];
 
-const WHAT_YOU_NEED = [
-  'Your full contact details and preferred work email',
-  'Accreditation status and any key practice notes',
-  'The counties and custody suites you actually cover',
-  'A realistic summary of your availability',
+const WHO_IS_ELIGIBLE = [
+  'Fully accredited PSRAS police station representatives',
+  'Duty solicitors (with SRA number and professional details)',
+  'Solicitors (with SRA number and professional details)',
 ];
 
-const RESOURCE_LINKS = [
-  { href: '/GetWork', label: 'Get Work Guide', desc: 'The full step-by-step plan for winning instructions.' },
-  { href: '/WhatsApp', label: 'WhatsApp Group', desc: 'Real-time job notifications and rep community updates.' },
-  { href: '/FormsLibrary', label: 'Forms Library', desc: 'Templates and practical paperwork for day-to-day work.' },
-  { href: '/Wiki', label: 'Rep Knowledge Base', desc: 'Training materials, guides, and operational resources.' },
+const NOT_ELIGIBLE = [
+  'Probationary representatives',
+  'Trainees',
+  'Anyone &ldquo;studying for accreditation&rdquo; or &ldquo;working towards accreditation&rdquo;',
+  'Students',
+  'Anyone otherwise unaccredited',
 ];
 
 export const metadata = buildMetadata({
-  title: 'Register as a Police Station Representative',
+  title: 'Register free — list your practice on PoliceStationRepUK',
   description:
-    'Register with the PoliceStationRepUK directory. Free for accredited police station representatives. Connect with criminal solicitors seeking cover across England and Wales.',
+    'Register free on PoliceStationRepUK. Add your PIN or SRA number, coverage and availability. Fully accredited PSRAS police station representatives, duty solicitors and solicitors go live immediately; borderline applications are held for manual admin review.',
   path: '/register',
+  // The page exists as the destination of public CTAs, but the full
+  // registration form is gated behind a server-issued one-shot eligibility
+  // token (see app/api/register/gate). We do not want the gate landing page
+  // crawled — robots.ts also disallows it.
+  noIndex: true,
 });
 
 export default function RegisterPage() {
@@ -53,11 +63,12 @@ export default function RegisterPage() {
               { label: 'Register' },
             ]}
           />
-          <h1 className="mt-3 text-h1 text-white">
-            Register as a Police Station Representative
-          </h1>
+          <h1 className="mt-3 text-h1 text-white">Register free on PoliceStationRepUK</h1>
           <p className="mt-3 max-w-2xl text-lg text-white">
-            Join our free directory. Connect with criminal defence firms and solicitors seeking cover across England and Wales.
+            Registration is a two-step process. First we run a quick eligibility check on your
+            email, accreditation type and PIN / SRA / proof URL. If you pass, the full
+            registration form unlocks below. Fully accredited reps with verifiable details go
+            live immediately; anything borderline is held for manual admin review.
           </p>
         </div>
       </section>
@@ -66,32 +77,36 @@ export default function RegisterPage() {
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
-              {/* Trust badges */}
-              <div className="flex flex-wrap gap-3">
-                <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-                  ✓ Free to register
-                </span>
-                <span className="flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
-                  ✓ Listed within 24 hours
-                </span>
-                <span className="flex items-center gap-1.5 rounded-full bg-yellow-50 px-3 py-1.5 text-xs font-semibold text-yellow-700">
-                  ✓ No hidden fees
-                </span>
-              </div>
-
-              <div className="mt-8 rounded-[var(--radius-lg)] border border-yellow-300 bg-yellow-50 p-6">
-                <h2 className="text-base font-bold text-yellow-900">Important before you register</h2>
-                <p className="mt-2 text-sm leading-relaxed text-yellow-800">
-                  This directory is intended for <strong>fully accredited police station representatives</strong> and
-                  duty solicitors who can accept work independently. If you are still probationary, work should remain
-                  under the supervision arrangements required by your firm and regulator.
+              <div className="rounded-[var(--radius-lg)] border border-amber-300 bg-amber-50 p-6">
+                <h2 className="text-base font-bold text-amber-900">How this works</h2>
+                <ol className="mt-3 space-y-2 text-sm leading-relaxed text-amber-800">
+                  <li>
+                    <strong>1.</strong> Complete the short <strong>eligibility check</strong> in
+                    the panel opposite: email, accreditation type, and your{' '}
+                    <strong>DSCC / PIN</strong>, <strong>SRA number</strong> or proof URL.
+                  </li>
+                  <li>
+                    <strong>2.</strong> We verify your details on the server. Pass and the full
+                    registration form unlocks in place; fail and your details are forwarded to
+                    the admin for a manual decision instead.
+                  </li>
+                  <li>
+                    <strong>3.</strong> If you&rsquo;re a fully accredited PSRAS rep, duty
+                    solicitor or solicitor with verifiable evidence, your profile is published
+                    immediately. Borderline submissions are held for manual admin review and
+                    you&rsquo;ll hear back by email within 24 hours.
+                  </li>
+                </ol>
+                <p className="mt-4 text-sm leading-relaxed text-amber-800">
+                  Probationary representatives, trainees and unaccredited applicants are not
+                  eligible and will be rejected at the eligibility check.
                 </p>
               </div>
 
               <section className="mt-8">
-                <h2 className="text-h2 text-[var(--navy)]">Why join PoliceStationRepUK?</h2>
+                <h2 className="text-h2 text-[var(--navy)]">What happens after you register</h2>
                 <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                  {REGISTER_BENEFITS.map((item) => (
+                  {TRUST_POINTS.map((item) => (
                     <div
                       key={item.title}
                       className="rounded-[var(--radius)] border border-[var(--card-border)] bg-[var(--card-bg)] p-5 shadow-[var(--card-shadow)]"
@@ -104,75 +119,53 @@ export default function RegisterPage() {
               </section>
 
               <section className="mt-8 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--gold-pale)] p-6">
-                <h2 className="text-lg font-bold text-[var(--navy)]">What you should have ready</h2>
-                <ul className="mt-4 space-y-3 text-sm leading-relaxed text-[var(--muted)]">
-                  {WHAT_YOU_NEED.map((item) => (
+                <h3 className="text-base font-bold text-[var(--navy)]">Eligible to register</h3>
+                <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[var(--muted)]">
+                  {WHO_IS_ELIGIBLE.map((item) => (
                     <li key={item} className="flex gap-2">
-                      <span className="mt-0.5 shrink-0 text-emerald-600">✓</span>
+                      <span className="mt-0.5 shrink-0 text-emerald-600">&#10003;</span>
                       {item}
+                    </li>
+                  ))}
+                </ul>
+                <h3 className="mt-6 text-base font-bold text-red-700">Not eligible</h3>
+                <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[var(--muted)]">
+                  {NOT_ELIGIBLE.map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <span className="mt-0.5 shrink-0 text-red-600">&#10005;</span>
+                      <span dangerouslySetInnerHTML={{ __html: item }} />
                     </li>
                   ))}
                 </ul>
               </section>
 
-              <section className="mt-8">
-                <h2 className="text-h2 text-[var(--navy)]">Useful resources before you submit</h2>
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  {RESOURCE_LINKS.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="rounded-[var(--radius)] border border-[var(--card-border)] bg-[var(--card-bg)] p-5 no-underline shadow-[var(--card-shadow)] transition-all hover:border-[var(--gold)]/40 hover:shadow-[var(--card-shadow-hover)]"
-                    >
-                      <p className="font-medium text-[var(--foreground)]">{link.label}</p>
-                      <p className="mt-1 text-sm text-[var(--muted)]">{link.desc}</p>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-
               <section className="mt-8 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--navy)] p-6 text-white">
-                <h2 className="text-lg font-bold">What happens after you register?</h2>
-                <ol className="mt-4 space-y-3 text-sm text-slate-300">
-                  <li className="flex gap-3">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--gold)] text-xs font-bold text-[var(--navy)]">1</span>
-                    We review your details and make sure the listing reads clearly for firms searching by area.
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--gold)] text-xs font-bold text-[var(--navy)]">2</span>
-                    Your profile is published in the directory with your contact details, availability, and coverage.
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--gold)] text-xs font-bold text-[var(--navy)]">3</span>
-                    Criminal defence firms can contact you directly when they need police station cover.
-                  </li>
-                </ol>
+                <h3 className="text-lg font-bold">Privacy</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  We never display your full postal address, PIN number, SRA number, proof
+                  document or any other private field in the public directory. Those details are
+                  used only for verification by the PoliceStationRepUK admin team. See our{' '}
+                  <Link href="/Privacy" className="text-[var(--gold)] no-underline hover:underline">
+                    privacy policy
+                  </Link>{' '}
+                  for full details.
+                </p>
               </section>
             </div>
 
             <div>
-              {/* Form card */}
               <div className="rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-white p-6 shadow-[var(--card-shadow)] sm:p-8 lg:sticky lg:top-28">
                 <div className="mb-5">
-                  <h2 className="text-xl font-bold text-[var(--navy)]">Create your free directory profile</h2>
+                  <h2 className="text-xl font-bold text-[var(--navy)]">Your details</h2>
                   <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-                    Complete the form below with accurate coverage and contact details. The clearer your information,
-                    the easier it is for firms to instruct you.
-                  </p>
-                  <p className="mt-3 text-xs text-[var(--muted)]">
-                    Studying for accreditation?{' '}
-                    <a
-                      href={PSRTRAIN_TRAINING_HREF}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-semibold text-[var(--navy)] underline"
-                    >
-                      Practice on {PSRTRAIN_NAME}
-                    </a>{' '}
-                    (partner platform — does not replace PSRAS accreditation).
+                    Use the same name and email you&rsquo;d like to appear on your public profile.
+                    Required fields are marked with <span className="text-red-600">*</span>.
                   </p>
                 </div>
-                <RegisterForm />
+                <RegisterForm
+                  turnstileSiteKey={turnstileSiteKey()}
+                  requireEmailCode={enquiryEmailVerificationEnabled()}
+                />
               </div>
             </div>
           </div>

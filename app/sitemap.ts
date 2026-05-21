@@ -31,15 +31,20 @@ function safeLastModified(input: string | Date | undefined | null, fallback: Dat
 /** Lowercase path segments that must not appear twice with different casing (SEO). */
 const CANONICAL_PATH_LOWER = new Map<string, string>([
   ['directory', 'directory'],
-  ['register', 'register'],
   ['blog', 'Blog'],
 ]);
 
+/**
+ * `/register` is intentionally omitted from the sitemap. The page exists as a
+ * destination for the public "Register free" CTAs but the registration form
+ * itself is gated behind a server-issued one-shot eligibility token (see
+ * app/api/register/gate). We do not want search engines indexing the gate
+ * landing page; robots.ts also disallows it.
+ */
 const HIGH_PRIORITY_PAGES = [
   { path: '', priority: 1, freq: 'daily' as const },
   { path: 'directory', priority: 0.95, freq: 'daily' as const },
   { path: 'search', priority: 0.9, freq: 'daily' as const },
-  { path: 'register', priority: 0.9, freq: 'weekly' as const },
   { path: 'Blog', priority: 0.85, freq: 'daily' as const },
   { path: 'StationsDirectory', priority: 0.85, freq: 'weekly' as const },
   { path: 'FormsLibrary', priority: 0.8, freq: 'monthly' as const },

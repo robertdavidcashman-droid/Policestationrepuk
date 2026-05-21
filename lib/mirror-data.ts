@@ -115,5 +115,10 @@ export function shouldIncludeMirrorPathInSitemap(path: string): boolean {
   if (lower === 'not available' || lower === 'not publicly available') return false;
   if (/^not\s+available$/i.test(decoded.trim())) return false;
   if (/^not\s+publicly\s+available$/i.test(decoded.trim())) return false;
+  // /register and its case variants — see app/api/register/gate. The page
+  // exists as the destination of public CTAs but the registration form is
+  // gated behind a server-issued one-shot token, so we do not want search
+  // engines indexing it. robots.ts also disallows it.
+  if (lower === 'register' || lower.startsWith('register/')) return false;
   return true;
 }

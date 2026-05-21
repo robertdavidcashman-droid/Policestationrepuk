@@ -16,7 +16,7 @@ export function JoinCTA({ variant = 'inline', totalReps, countyName }: JoinCTAPr
           href="/register"
           className="inline-flex items-center gap-2 rounded-lg bg-[var(--gold)] px-5 py-2.5 text-sm font-bold text-[var(--ink)] no-underline shadow-lg shadow-[var(--gold)]/20 transition-all hover:bg-[var(--gold-hover)] hover:shadow-xl hover:shadow-[var(--gold)]/30"
         >
-          List your practice free
+          Register free
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
           </svg>
@@ -40,16 +40,17 @@ export function JoinCTA({ variant = 'inline', totalReps, countyName }: JoinCTAPr
           </svg>
         </div>
         <h3 className="text-lg font-bold text-[var(--navy)]">
-          Are you a rep{countyName ? ` in ${countyName}` : ''}?
+          Accredited rep{countyName ? ` in ${countyName}` : ''}?
         </h3>
         <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-600">
-          Get discovered by solicitor firms looking for police station cover. Listing is free.
+          Register your free profile in minutes. Fully accredited PSRAS reps, duty solicitors and
+          solicitors with verifiable details go live immediately.
         </p>
         <Link
           href="/register"
           className="btn-gold mt-4 inline-flex items-center gap-2 !text-sm no-underline"
         >
-          Join the directory
+          Register free
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
           </svg>
@@ -63,8 +64,8 @@ export function JoinCTA({ variant = 'inline', totalReps, countyName }: JoinCTAPr
       <div className="rounded-xl border border-[var(--navy)]/10 bg-gradient-to-b from-[var(--navy)] to-[#0f1d45] p-5 shadow-sm">
         <h3 className="text-sm font-extrabold text-white">Get more police station work</h3>
         <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
-          {totalReps ? `${totalReps} reps listed. ` : ''}Solicitor firms use this directory to
-          find cover reps. Listing is free.
+          {totalReps ? `${totalReps} verified reps listed. ` : ''}Fully accredited PSRAS reps,
+          duty solicitors and solicitors only. Free to list &mdash; with automatic verification.
         </p>
         <Link
           href="/register"
@@ -88,9 +89,10 @@ export function JoinCTA({ variant = 'inline', totalReps, countyName }: JoinCTAPr
   return (
     <div className="rounded-xl border border-[var(--navy)]/10 bg-gradient-to-r from-[var(--navy)] to-[#152e6e] px-6 py-5 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-4">
       <div className="min-w-0">
-        <p className="text-sm font-extrabold text-white">Get more police station work</p>
+        <p className="text-sm font-extrabold text-white">Accredited reps welcome</p>
         <p className="mt-1 text-xs leading-relaxed text-slate-300">
-          Join the UK directory used by solicitor firms to find cover. Listing is free.
+          Free to list. Fully accredited PSRAS reps, duty solicitors and solicitors with
+          verifiable details go live immediately.
         </p>
       </div>
       <div className="mt-3 flex shrink-0 gap-2 sm:mt-0">

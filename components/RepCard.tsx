@@ -12,7 +12,7 @@ export function RepCard({ rep }: { rep: Representative }) {
     <article className="flex flex-col rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-white p-5 shadow-[var(--card-shadow)] transition-all duration-200 hover:shadow-[var(--card-shadow-hover)] hover:border-[var(--gold)]/40">
       <div className="mb-2 flex flex-wrap gap-1.5">
         <span className="rounded-full bg-[var(--navy)]/5 px-2.5 py-0.5 text-[11px] font-bold text-[var(--navy)]">
-          {acc.includes('Duty') ? 'Duty Solicitor' : acc.includes('Probationary') ? 'Probationary' : 'Accredited'}
+          {acc.includes('Duty') ? 'Duty Solicitor' : acc.toLowerCase().includes('solicitor') ? 'Solicitor' : 'Accredited'}
         </span>
         <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
           {avail === 'full-time' ? '24/7' : avail.replace(/-/g, ' ') || '—'}

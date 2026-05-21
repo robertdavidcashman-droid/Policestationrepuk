@@ -18,5 +18,11 @@
       "destination": "https://policestationrepuk.org/$1",
       "statusCode": 301
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/reverification-sweep",
+      "schedule": "0 3 * * *"
+    }
   ]
 }

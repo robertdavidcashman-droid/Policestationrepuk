@@ -10,6 +10,11 @@ export interface Representative {
   /** Towns, boroughs, or extra locality detail beyond selected counties (e.g. specific London boroughs). */
   coverageAreas?: string;
   addressCounty?: string;
+  /**
+   * @deprecated Postcode is treated as private (sole-trader home postcodes). The
+   * public directory must not render this; it is retained only for legacy data
+   * lookups and admin display.
+   */
   postcode?: string;
   stations: string[];
   stationsCovered?: string[];
@@ -22,6 +27,7 @@ export interface Representative {
   featuredBadgeText?: string | null;
   whatsappLink?: string;
   websiteUrl?: string;
+  /** @deprecated PIN numbers are private and must never be rendered publicly. */
   dsccPin?: string;
   spotlightNote?: string;
   holidayAvailability?: string[];
@@ -31,6 +37,84 @@ export interface Representative {
   yearsExperience?: number;
   languages?: string[];
   specialisms?: string[];
+  /* -------------------------------------------------------------- */
+  /*  Verification / publication gate (added 2026-05 — see          */
+  /*  lib/rep-status.ts + lib/admin-review.ts)                      */
+  /* -------------------------------------------------------------- */
+  /** Canonical verification lifecycle status. */
+  verificationStatus?: import('./rep-status').RepVerificationStatus | null;
+  /** True iff an admin has manually approved this profile for publication. */
+  adminApproved?: boolean | null;
+  /** Whether the rep consented to being listed publicly at all. */
+  isPublic?: boolean | null;
+  /** ISO date of the most recent successful admin verification. */
+  lastVerifiedDate?: string | null;
+}
+
+/** Private, admin-only enquiry record produced by the public enquiry form. */
+export interface RepEnquiryRecord {
+  id: string;
+  email: string;
+  fullName: string;
+  mobile: string;
+  countyArea: string;
+  category: import('./rep-status').ApplicantCategory;
+  shortMessage: string;
+  status: import('./rep-status').RepVerificationStatus;
+  ipAddress: string;
+  userAgent: string;
+  createdAt: string;
+  /** Set when an admin issues the secure verification token. */
+  verificationLinkSentAt?: string | null;
+  /** Set when the applicant completes the secure verification form. */
+  verificationSubmittedAt?: string | null;
+}
+
+/**
+ * Private, admin-only secure-verification record. Stored under
+ * `verification:{email}` in KV. NEVER exposed to public APIs.
+ */
+export interface RepVerificationRecord {
+  email: string;
+  fullLegalName: string;
+  publicDisplayName: string;
+  mobile: string;
+  fullPostalAddress: string;
+  firmName: string;
+  firmAddress: string;
+  firmEmail: string;
+  sraNumber: string;
+  pinNumber: string;
+  accreditationProofFile: string;
+  professionalProfileUrl: string;
+  category: import('./rep-status').ApplicantCategory;
+  countiesCovered: string[];
+  townsCovered: string;
+  stationsCovered: string[];
+  availability: string;
+  travelRadius: string;
+  overnightAvailability: boolean;
+  weekendAvailability: boolean;
+  languages: string;
+  publicProfileNotes: string;
+  acceptsDirectFirmInstructions: boolean;
+  publicPhoneConsent: boolean;
+  publicEmailConsent: boolean;
+  publicPhone: string;
+  publicEmail: string;
+  consents: {
+    confirmsAccurate: boolean;
+    confirmsEligible: boolean;
+    understandsIneligibility: boolean;
+    consentsToVerificationChecks: boolean;
+    understandsPrivacy: boolean;
+    willKeepDetailsCurrent: boolean;
+    understandsConsequencesOfFalseInfo: boolean;
+  };
+  ipAddress: string;
+  userAgent: string;
+  submittedAt: string;
+  updatedAt?: string | null;
 }
 
 export interface PoliceStation {

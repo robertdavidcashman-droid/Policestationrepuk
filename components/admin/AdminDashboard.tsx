@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { AdminRepDetail } from '@/components/admin/AdminRepDetail';
+import { RepVerificationAudit } from '@/components/admin/RepVerificationAudit';
 
 export interface AdminRepSummary {
   email: string;
@@ -87,6 +88,7 @@ function reviewBadgeClass(status: AdminRepSummary['review']['status']): string {
 }
 
 export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
+  const [tab, setTab] = useState<'audit' | 'reps'>('audit');
   const [data, setData] = useState<AdminListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -215,7 +217,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   return (
     <section className="bg-slate-50 py-8">
       <div className="page-container">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--gold)]">
               Private admin
@@ -232,6 +234,33 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
           </div>
         </div>
 
+        <div className="mb-4 inline-flex overflow-hidden rounded-lg border border-slate-200 bg-white">
+          <button
+            type="button"
+            onClick={() => setTab('audit')}
+            className={`px-4 py-2 text-sm font-semibold ${
+              tab === 'audit' ? 'bg-[var(--navy)] text-white' : 'text-[var(--navy)] hover:bg-slate-100'
+            }`}
+          >
+            Rep Verification Audit
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab('reps')}
+            className={`px-4 py-2 text-sm font-semibold ${
+              tab === 'reps' ? 'bg-[var(--navy)] text-white' : 'text-[var(--navy)] hover:bg-slate-100'
+            }`}
+          >
+            Legacy rep manager
+          </button>
+        </div>
+
+        {tab === 'audit' && (
+          <RepVerificationAudit />
+        )}
+
+        {tab === 'reps' && (
+        <>
         {data && (
           <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
             <Stat label="Total" value={data.counts.total} />
@@ -478,6 +507,8 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
               ))}
             </div>
           </>
+        )}
+        </>
         )}
       </div>
 

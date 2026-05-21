@@ -1,13 +1,16 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getRepBySlug } from '@/lib/data';
+import { getRepBySlug, stripPrivateFields } from '@/lib/data';
 import { buildMetadata, legalServiceSchema, breadcrumbSchema, personSchema } from '@/lib/seo';
 import { JsonLd } from '@/components/JsonLd';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { RepTrustBadges } from '@/components/RepTrustBadges';
 import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCredentialVerificationNotice';
+import { ReportProfileButton } from '@/components/ReportProfileButton';
 import { phoneToTelHref } from '@/lib/phone';
 import { availabilityBucket, isUrgentCoverCapable, profileCompleteness } from '@/lib/directory-ranking';
+import { looksIneligible } from '@/lib/rep-status';
+import { turnstileSiteKey } from '@/lib/turnstile';
 
 export const revalidate = 60;
 
@@ -65,8 +68,20 @@ function availabilitySummary(raw: string): { label: string; detail: string; chip
 
 export default async function RepPage({ params }: PageProps) {
   const { slug } = await params;
-  const rep = await getRepBySlug(slug);
-  if (!rep) notFound();
+  const found = await getRepBySlug(slug);
+  if (!found) notFound();
+
+  // Defence-in-depth: never render private fields (PIN, postcode, etc.) on a
+  // public profile page. The visibility gate in getAllReps() already hides
+  // unverified profiles; stripPrivateFields scrubs anything that slipped
+  // through the merge.
+  const rep = stripPrivateFields(found);
+
+  // If the merged record still smells of probationary / trainee / unaccredited
+  // text (legacy data) treat the slug as not found rather than render a page.
+  if (looksIneligible(rep.accreditation, rep.notes, rep.bio)) {
+    notFound();
+  }
 
   const avail = availabilitySummary(rep.availability || '');
   const urgentCapable = isUrgentCoverCapable(rep);
@@ -119,9 +134,9 @@ export default async function RepPage({ params }: PageProps) {
             <span className="rounded-full bg-[var(--navy-light)]/90 px-3 py-1 text-xs font-semibold text-white">
               {(rep.accreditation || '').includes('Duty')
                 ? 'Duty solicitor'
-                : (rep.accreditation || '').includes('Probationary')
-                  ? 'Probationary representative'
-                  : 'Accredited representative'}
+                : (rep.accreditation || '').toLowerCase().includes('solicitor')
+                  ? 'Solicitor'
+                  : 'Verified police station representative'}
             </span>
             {urgentCapable && (
               <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-100">
@@ -262,13 +277,28 @@ export default async function RepPage({ params }: PageProps) {
                       <dd className="mt-0.5 font-medium text-slate-900">{rep.yearsExperience} years</dd>
                     </div>
                   )}
-                  {rep.postcode?.trim() && (
-                    <div>
-                      <dt className="text-xs font-bold uppercase tracking-wider text-slate-500">Postcode (listing)</dt>
-                      <dd className="mt-0.5 font-medium text-slate-900">{rep.postcode}</dd>
-                    </div>
-                  )}
                 </dl>
+                <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
+                  Postal address, PIN number and accreditation evidence are private and never
+                  shown publicly.
+                </p>
+              </section>
+
+              <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[var(--card-shadow)]">
+                <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--navy)]">
+                  See something wrong?
+                </h2>
+                <p className="mt-2 text-xs text-slate-600">
+                  If this listing is inaccurate, impersonates someone else, or this person should
+                  not be listed, please report it. PoliceStationRepUK admins review every report.
+                </p>
+                <div className="mt-3">
+                  <ReportProfileButton
+                    targetSlug={rep.slug}
+                    targetEmail={rep.email}
+                    turnstileSiteKey={turnstileSiteKey()}
+                  />
+                </div>
               </section>
 
               {rep.websiteUrl && (

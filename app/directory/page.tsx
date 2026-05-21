@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { getAllReps, getAllCounties, getAllStations } from '@/lib/data';
+import { getAllReps, getAllCounties, getAllStations, stripPrivateFieldsAll } from '@/lib/data';
 import { DirectorySearch } from '@/components/DirectorySearch';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { DirectoryComplianceNotice } from '@/components/DirectoryComplianceNotice';
@@ -50,11 +50,15 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function DirectoryPage() {
-  const [reps, counties, stations] = await Promise.all([
+  const [repsRaw, counties, stations] = await Promise.all([
     getAllReps(),
     getAllCounties(),
     getAllStations(),
   ]);
+
+  // Defence-in-depth: scrub PIN, postcode and verification metadata before
+  // anything is rendered or serialised into the page.
+  const reps = stripPrivateFieldsAll(repsRaw);
 
   const bc = breadcrumbSchema([
     { name: 'Home', url: '/' },
@@ -148,9 +152,11 @@ export default async function DirectoryPage() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-xs leading-relaxed text-yellow-700">
-                <strong className="font-bold text-yellow-800">Full accreditation required.</strong>{' '}
-                Only fully accredited police station representatives (or Duty Solicitors) may be listed.
-                Probationary representatives are not eligible to work as freelance agents.{' '}
+                <strong className="font-bold text-yellow-800">Verified directory.</strong>{' '}
+                Only fully accredited PSRAS police station representatives, duty solicitors and
+                solicitors are listed. Every profile is manually approved by an admin before
+                publication. Probationary representatives, trainees and unaccredited applicants
+                are <strong>not</strong> eligible.{' '}
                 <Link
                   href="/AccreditedRepresentativeGuide"
                   className="font-semibold text-yellow-800 no-underline hover:text-yellow-600"
