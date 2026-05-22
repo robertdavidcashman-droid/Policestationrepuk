@@ -12,6 +12,14 @@ import { availabilityBucket, isUrgentCoverCapable, profileCompleteness } from '@
 import { looksIneligible } from '@/lib/rep-status';
 import { turnstileSiteKey } from '@/lib/turnstile';
 
+// Render every rep slug on demand. The previous setup combined
+// `revalidate = 60` with `generateStaticParams()` returning ~180 known
+// slugs — Next.js 15.5 then served unknown slugs (e.g. registered reps
+// like Wayne Thomas, or genuinely unknown URLs) through a broken ISR
+// fallback that returned the legacy /500 page instead of either rendering
+// the rep or calling notFound() cleanly. Forcing dynamic rendering and
+// removing generateStaticParams sidesteps the bug; the in-process caches
+// in lib/data + lib/featured keep KV traffic low.
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
@@ -19,19 +27,14 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps) {
-  try {
-    const { slug } = await params;
-    const rep = await getRepBySlug(slug);
-    if (!rep) return {};
-    return buildMetadata({
-      title: `${rep.name} | Police Station Representative`,
-      description: `Accredited police station representative ${rep.name}. Covers ${rep.county}. ${rep.accreditation}. Contact direct for attendance and availability — operates under solicitor instruction where required.`,
-      path: `/rep/${rep.slug}`,
-    });
-  } catch (err) {
-    console.error('[rep/[slug]] generateMetadata threw:', err);
-    return { title: 'Police Station Representative' };
-  }
+  const { slug } = await params;
+  const rep = await getRepBySlug(slug);
+  if (!rep) return {};
+  return buildMetadata({
+    title: `${rep.name} | Police Station Representative`,
+    description: `Accredited police station representative ${rep.name}. Covers ${rep.county}. ${rep.accreditation}. Contact direct for attendance and availability — operates under solicitor instruction where required.`,
+    path: `/rep/${rep.slug}`,
+  });
 }
 
 function availabilitySummary(raw: string): { label: string; detail: string; chip: string } {
@@ -67,31 +70,18 @@ function availabilitySummary(raw: string): { label: string; detail: string; chip
 }
 
 export default async function RepPage({ params }: PageProps) {
-  try {
-    return await renderRepPage(params);
-  } catch (err) {
-    // TEMP: surface the actual error in the rendered HTML so we can diagnose
-    // the Wayne Thomas dynamic-rep 500. Remove once root cause is fixed.
-    const message = err instanceof Error ? err.message : String(err);
-    const stack = err instanceof Error ? err.stack || '' : '';
-    if (message === 'NEXT_NOT_FOUND' || message === 'NEXT_HTTP_ERROR_FALLBACK;404') {
-      throw err; // legitimate notFound(); let Next.js handle.
-    }
-    return (
-      <pre style={{ whiteSpace: 'pre-wrap', padding: 20, fontFamily: 'monospace' }}>
-        {`DIAG: caught error during /rep/[slug] render\n\n${message}\n\n${stack}`}
-      </pre>
-    );
-  }
-}
-
-async function renderRepPage(params: PageProps['params']) {
   const { slug } = await params;
   const found = await getRepBySlug(slug);
   if (!found) notFound();
 
+  // Defence-in-depth: never render private fields (PIN, postcode, etc.) on a
+  // public profile page. The visibility gate in getAllReps() already hides
+  // unverified profiles; stripPrivateFields scrubs anything that slipped
+  // through the merge.
   const rep = stripPrivateFields(found);
 
+  // If the merged record still smells of probationary / trainee / unaccredited
+  // text (legacy data) treat the slug as not found rather than render a page.
   if (looksIneligible(rep.accreditation, rep.notes, rep.bio)) {
     notFound();
   }

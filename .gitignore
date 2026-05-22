@@ -42,6 +42,10 @@ yarn-error.log*
 # env files
 .env
 .env*.local
+# never commit any .env-derived backups, exports, or `vercel env pull` outputs
+.env.tmp*
+.env.local.bak*
+.env*.bak*
 
 # vercel
 .vercel
@@ -63,3 +67,15 @@ next-env.d.ts
 .vercel
 .env*.local
 .lighthouseci/
+
+# transient CLI / debug artefacts (one-off scripts under scripts/tmp-*,
+# log files captured during incidents, ad-hoc curl response captures)
+/scripts/tmp-*
+/migration-log.txt
+/swap-log.txt
+/runtime-logs.txt
+/runtime-logs.err.txt
+/inspect-log.txt
+/wayne-page.html
+/wayne-diag.json
+/home.html
