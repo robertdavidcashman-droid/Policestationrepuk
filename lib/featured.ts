@@ -36,7 +36,13 @@ export interface FeaturedMeta {
 
 let _featuredFlags: Map<string, FeaturedMeta> | null = null;
 let _featuredFlagsAt = 0;
-const CACHE_MS = 60_000;
+// 5 minute in-process cache. Lemon Squeezy webhooks call
+// `invalidateFeaturedCache()` immediately on every subscription state change,
+// so subscribers see featured boost activate within seconds; the longer TTL
+// just prevents idle traffic from re-scanning KV every 60s. Override with
+// FEATURED_CACHE_TTL_SECONDS.
+const CACHE_MS =
+  Math.max(30, Number(process.env.FEATURED_CACHE_TTL_SECONDS) || 300) * 1000;
 
 export async function loadFeaturedFlags(): Promise<Map<string, FeaturedMeta>> {
   const now = Date.now();

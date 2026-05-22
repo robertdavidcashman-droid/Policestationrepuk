@@ -235,7 +235,14 @@ export async function getRepBySlug(slug: string): Promise<Representative | undef
 
 let _profileOverrides: Map<string, Record<string, unknown>> | null = null;
 let _profileOverridesAt = 0;
-const PROFILE_OVERRIDES_CACHE_MS = 60_000;
+// 5 minute in-process cache. Each profile load does `KEYS profile:*` plus an
+// N-key pipeline GET, which is the single biggest contributor to KV request
+// count. At 60s TTL we were saturating Upstash free tier (500k req/day);
+// 300s gives us ~5x headroom and is invalidated immediately on profile / admin
+// writes via `invalidateProfileCache()`, so users still see their changes
+// instantly. Override with PROFILE_CACHE_TTL_SECONDS to tune.
+const PROFILE_OVERRIDES_CACHE_MS =
+  Math.max(30, Number(process.env.PROFILE_CACHE_TTL_SECONDS) || 300) * 1000;
 
 async function loadProfileOverrides(): Promise<Map<string, Record<string, unknown>>> {
   const now = Date.now();
@@ -283,7 +290,10 @@ export function invalidateProfileCache(): void {
 
 let _registeredReps: Representative[] | null = null;
 let _registeredRepsAt = 0;
-const REGISTERED_CACHE_MS = 60_000;
+// Same reasoning as PROFILE_OVERRIDES_CACHE_MS above. Override with
+// REGISTERED_CACHE_TTL_SECONDS.
+const REGISTERED_CACHE_MS =
+  Math.max(30, Number(process.env.REGISTERED_CACHE_TTL_SECONDS) || 300) * 1000;
 
 let _hiddenListingEmails: Set<string> | null = null;
 let _hiddenListingEmailsAt = 0;
