@@ -48,6 +48,10 @@ import { scoreRepRisk } from '@/lib/rep-risk';
 import { consumeRegisterGateToken } from '@/lib/rep-verification';
 import { getKV } from '@/lib/kv';
 import {
+  issueDecisionToken,
+  DEFAULT_TOKEN_TTL_SECONDS,
+} from '@/lib/admin-decision-token';
+import {
   countiesToStorageString,
   validateEnglishCountySelections,
 } from '@/lib/english-counties';
@@ -523,7 +527,29 @@ export async function POST(request: Request) {
         console.warn('[register] auto-publish admin alert failed:', err),
       );
     } else {
-      sendRepHeldForReviewAlert(summary).catch((err) =>
+      // Mint single-use Approve / Decline tokens so the email contains
+      // one-click action buttons. If token issuance fails (KV down or secret
+      // unset), fall through with no decisionLinks — the email helper will
+      // gracefully fall back to the legacy "Review this submission" link.
+      let decisionLinks: { approveUrl: string; declineUrl: string; expiresLabel: string } | undefined;
+      try {
+        const [approveTok, declineTok] = await Promise.all([
+          issueDecisionToken({ email, action: 'approve', category }),
+          issueDecisionToken({ email, action: 'decline', category }),
+        ]);
+        const base =
+          process.env.APP_BASE_URL ||
+          process.env.NEXT_PUBLIC_SITE_URL ||
+          'https://policestationrepuk.org';
+        decisionLinks = {
+          approveUrl: `${base}/admin/decision/${approveTok.token}`,
+          declineUrl: `${base}/admin/decision/${declineTok.token}`,
+          expiresLabel: `in ${Math.round(DEFAULT_TOKEN_TTL_SECONDS / 86400)} days`,
+        };
+      } catch (err) {
+        console.warn('[register] decision token issuance failed:', err);
+      }
+      sendRepHeldForReviewAlert(summary, decisionLinks).catch((err) =>
         console.warn('[register] held-for-review admin alert failed:', err),
       );
     }

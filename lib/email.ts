@@ -576,19 +576,75 @@ export async function sendRepAutoPublishAdminAlert(
   }
 }
 
+export interface HeldForReviewDecisionLinks {
+  /** Full https URL to the Approve interstitial. */
+  approveUrl: string;
+  /** Full https URL to the Decline interstitial. */
+  declineUrl: string;
+  /** When the underlying tokens expire (display only, e.g. "in 7 days"). */
+  expiresLabel?: string;
+}
+
 /**
  * Admin notification: registration was held back for manual review.
  * Triggered whenever risk scoring flags ANY doubt — missing PIN/SRA/proof,
  * suspicious wording, disposable email, unrealistic coverage, etc.
+ *
+ * Pass `decisionLinks` to embed one-click Approve / Decline buttons that
+ * open a confirmation page. Without `decisionLinks` (e.g. if KV is down or
+ * `ADMIN_DECISION_TOKEN_SECRET` is unset) the email falls back to the legacy
+ * "Review this submission" link to /admin.
  */
 export async function sendRepHeldForReviewAlert(
   data: RegistrationDecisionFields,
+  decisionLinks?: HeldForReviewDecisionLinks,
 ): Promise<boolean> {
   const client = getResend();
   if (!client) {
     console.info('[Held-for-review admin alert — no RESEND_API_KEY]', { name: data.name, email: data.email });
     return false;
   }
+
+  const buttonsBlock = decisionLinks
+    ? `
+        <div style="margin:24px 0;padding:18px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc">
+          <p style="margin:0 0 14px;font-size:14px;color:#0f172a;font-weight:600">
+            One-click decision:
+          </p>
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0">
+            <tr>
+              <td style="padding-right:12px">
+                <a href="${escapeHtml(decisionLinks.approveUrl)}"
+                   style="display:inline-block;padding:12px 22px;background:#059669;color:#ffffff;
+                          text-decoration:none;font-weight:700;font-size:14px;border-radius:8px;
+                          border:1px solid #047857">
+                  Approve &amp; publish
+                </a>
+              </td>
+              <td>
+                <a href="${escapeHtml(decisionLinks.declineUrl)}"
+                   style="display:inline-block;padding:12px 22px;background:#b91c1c;color:#ffffff;
+                          text-decoration:none;font-weight:700;font-size:14px;border-radius:8px;
+                          border:1px solid #991b1b">
+                  Decline
+                </a>
+              </td>
+            </tr>
+          </table>
+          <p style="margin:14px 0 0;font-size:12px;color:#64748b;line-height:1.5">
+            Each button opens a confirmation page that requires one more click before
+            anything is actioned${decisionLinks.expiresLabel ? ` (links expire ${escapeHtml(decisionLinks.expiresLabel)})` : ''}.
+            Decisions take effect immediately and are reversible from
+            <a href="https://policestationrepuk.org/admin" style="color:#1d4ed8">/admin</a>.
+          </p>
+        </div>
+      `
+    : `
+        <p style="margin:16px 0">
+          <a href="https://policestationrepuk.org/admin" style="color:#1d4ed8;font-weight:bold">Review this submission &rarr;</a>
+        </p>
+      `;
+
   try {
     await client.emails.send({
       from: FROM_EMAIL,
@@ -601,12 +657,9 @@ export async function sendRepHeldForReviewAlert(
           <p style="color:#475569;font-size:14px;line-height:1.55">
             ${escapeHtml(data.name)} has registered through the self-serve form but their submission
             was flagged for review. Their profile is <strong>NOT</strong> currently visible in the
-            public directory. Open the Rep Verification Audit to approve, reject or request more
-            evidence.
+            public directory.
           </p>
-          <p style="margin:16px 0">
-            <a href="https://policestationrepuk.org/admin" style="color:#1d4ed8;font-weight:bold">Review this submission &rarr;</a>
-          </p>
+          ${buttonsBlock}
           <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px;margin:16px 0">
             <p style="margin:0;font-size:13px;color:#92400e">
               <strong>Risk category:</strong> ${escapeHtml(data.riskCategory)}
@@ -624,6 +677,51 @@ export async function sendRepHeldForReviewAlert(
     return true;
   } catch (err) {
     console.error('[Held-for-review admin alert failed]', err);
+    return false;
+  }
+}
+
+/**
+ * Polite "we couldn't list you" email sent to the applicant when the admin
+ * declines a held-for-review registration via the email Decline button.
+ */
+export async function sendApplicantRegistrationDeclined(opts: {
+  toEmail: string;
+  name: string;
+}): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.info('[Applicant decline — no RESEND_API_KEY]', opts);
+    return false;
+  }
+  try {
+    await client.emails.send({
+      from: FROM_EMAIL,
+      to: opts.toEmail,
+      replyTo: ADMIN_EMAIL,
+      subject: 'Update on your PoliceStationRepUK application',
+      html: `
+        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:20px;color:#0f172a;line-height:1.6;font-size:14px">
+          <p>Hi ${escapeHtml(opts.name)},</p>
+          <p>Thank you for applying to be listed on <strong>PoliceStationRepUK</strong>.</p>
+          <p>After review, we are not able to publish your profile in the directory at this time.
+          PoliceStationRepUK only lists fully accredited PSRAS representatives, duty solicitors and
+          solicitors, and we need clear evidence (DSCC PIN, SRA number or a verifiable proof-of-
+          accreditation URL) before a profile can go live.</p>
+          <p>If you believe this decision is wrong, or if your accreditation status has changed,
+          please reply to this email with the supporting evidence and we will reconsider your
+          application.</p>
+          <hr style="margin:24px 0;border:none;border-top:1px solid #e5e7eb">
+          <p style="color:#94a3b8;font-size:12px">
+            PoliceStationRepUK &mdash; the directory for accredited police station representatives.<br>
+            <a href="https://policestationrepuk.org" style="color:#94a3b8">policestationrepuk.org</a>
+          </p>
+        </div>
+      `,
+    });
+    return true;
+  } catch (err) {
+    console.error('[Applicant decline email failed]', err);
     return false;
   }
 }
