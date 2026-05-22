@@ -147,15 +147,18 @@ async function main() {
     record('POST /api/register/gate with no evidence', false, String(e));
   }
 
-  // 7. gate with PIN — should pass and mint a token. Two legitimate dev-only
-  //    outcomes exist:
-  //      a) 200 ok + gateToken (KV configured) — this is the happy path.
-  //      b) 503 / reason=temporary-unavailable (KV not configured locally so
-  //         the token cannot be persisted).
-  //    Both confirm the gate is wired up; only an UNEXPECTED status (e.g.
-  //    500, or a 200 with no token field) counts as a failure.
-  //    Turnstile is no longer part of the registration flow, so there is no
-  //    longer a "bot-check-failed" branch here.
+  // 7. gate with PIN — should pass and either mint a token or ask for the
+  //    email code. Three legitimate outcomes exist:
+  //      a) 200 ok + gateToken (KV configured, REQUIRE_ENQUIRY_EMAIL_VERIFICATION
+  //         off) — this is the dev-server happy path.
+  //      b) 400 EMAIL_CODE_REQUIRED (KV configured, REQUIRE_ENQUIRY_EMAIL_VERIFICATION
+  //         on) — this is the production happy path: the gate accepted the
+  //         submission without a Turnstile token and is now asking for the
+  //         emailed 6-digit code, exactly as designed.
+  //      c) 503 / reason=temporary-unavailable (KV not configured) — gate
+  //         path otherwise correct, KV simply unavailable.
+  //    All three confirm the gate is wired up AND that Turnstile is no
+  //    longer required (any `bot-check-*` reason would be a regression).
   let gateToken = null;
   try {
     const r = await postJson('/api/register/gate', {
@@ -171,6 +174,16 @@ async function main() {
         `token=${String(gateToken).slice(0, 12)}…`,
       );
     } else if (
+      r.status === 400 &&
+      r.json &&
+      r.json.code === 'EMAIL_CODE_REQUIRED'
+    ) {
+      record(
+        'POST /api/register/gate with PIN -> 400 EMAIL_CODE_REQUIRED (production: email verification enabled)',
+        true,
+        'Turnstile is gone; gate now waits on the email code as expected',
+      );
+    } else if (
       r.status === 503 ||
       (r.status === 200 && r.json && r.json.ok === false && r.json.reason === 'temporary-unavailable')
     ) {
@@ -183,7 +196,7 @@ async function main() {
       record(
         'POST /api/register/gate with PIN -> 200 ok + gateToken',
         false,
-        `status=${r.status} ok=${r.json?.ok} reason=${r.json?.reason || '?'}`,
+        `status=${r.status} ok=${r.json?.ok} reason=${r.json?.reason || '?'} code=${r.json?.code || '?'}`,
       );
     }
   } catch (e) {
