@@ -4,10 +4,10 @@
  * Two-stage public registration UX.
  *
  *   Stage 1 ("gate")   — a tiny eligibility form (email + accreditation type
- *                        + PIN/SRA/proof URL + Turnstile + optional email
- *                        code). On submit we POST to /api/register/gate which
- *                        risk-scores the partial payload and, on pass, mints
- *                        a single-use gate token bound to that email.
+ *                        + PIN/SRA/proof URL + optional email code). On submit
+ *                        we POST to /api/register/gate which risk-scores the
+ *                        partial payload and, on pass, mints a single-use
+ *                        gate token bound to that email.
  *
  *   Stage 2 ("form")   — the full registration form. The HTML for this stage
  *                        is NEVER mounted unless stage 1 returned a valid
@@ -23,16 +23,27 @@
  *                        invite them.
  *
  *   Stage 4 ("success")— rendered after the full form is accepted.
+ *
+ * Bot mitigation here relies on:
+ *   - the silent honeypot (`_hp`) that bots typically fill in,
+ *   - per-IP rate limits in the API routes,
+ *   - mandatory PIN / SRA / proof-URL evidence at the gate stage,
+ *   - server-side risk scoring on the partial payload.
+ *
+ * We deliberately do NOT use Cloudflare Turnstile on the registration flow:
+ * it broke the form for legitimate accredited reps whose browsers blocked the
+ * widget, was the most common cause of "I entered the email code but the
+ * form never opened" bug reports, and added no real friction for the bots
+ * we actually see in the rate-limit logs.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   APPLICANT_CATEGORY_LABELS,
   APPLICANT_CATEGORY_VALUES,
   type ApplicantCategory,
 } from '@/lib/rep-status';
-import { TurnstileWidget, type TurnstileStatus } from '@/components/TurnstileWidget';
 
 const PUBLIC_NOTES_MAX = 1500;
 
@@ -101,7 +112,6 @@ const FORM_EMPTY: FormState = {
 };
 
 interface RegisterFormProps {
-  turnstileSiteKey: string | null;
   requireEmailCode: boolean;
 }
 
@@ -127,7 +137,7 @@ interface BlockedInfo {
   message: string;
 }
 
-export function RegisterForm({ turnstileSiteKey, requireEmailCode }: RegisterFormProps) {
+export function RegisterForm({ requireEmailCode }: RegisterFormProps) {
   const [stage, setStage] = useState<Stage>('gate');
   const [gate, setGate] = useState<GateState>(GATE_EMPTY);
   const [gatePass, setGatePass] = useState<GatePassPayload | null>(null);
@@ -157,7 +167,6 @@ export function RegisterForm({ turnstileSiteKey, requireEmailCode }: RegisterFor
         gatePass={gatePass}
         form={form}
         setForm={setForm}
-        turnstileSiteKey={turnstileSiteKey}
         onSuccess={(result) => {
           setSuccess(result);
           setForm(FORM_EMPTY);
@@ -176,7 +185,6 @@ export function RegisterForm({ turnstileSiteKey, requireEmailCode }: RegisterFor
     <GateForm
       gate={gate}
       setGate={setGate}
-      turnstileSiteKey={turnstileSiteKey}
       requireEmailCode={requireEmailCode}
       onPass={(payload) => {
         setGatePass(payload);
@@ -197,14 +205,12 @@ export function RegisterForm({ turnstileSiteKey, requireEmailCode }: RegisterFor
 function GateForm({
   gate,
   setGate,
-  turnstileSiteKey,
   requireEmailCode,
   onPass,
   onBlocked,
 }: {
   gate: GateState;
   setGate: React.Dispatch<React.SetStateAction<GateState>>;
-  turnstileSiteKey: string | null;
   requireEmailCode: boolean;
   onPass: (payload: GatePassPayload) => void;
   onBlocked: (info: BlockedInfo) => void;
@@ -212,16 +218,6 @@ function GateForm({
   const [status, setStatus] = useState<'idle' | 'sending' | 'error'>('idle');
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [hp, setHp] = useState('');
-  const [turnstileToken, setTurnstileToken] = useState('');
-  const [turnstileStatus, setTurnstileStatus] = useState<TurnstileStatus>('idle');
-  const [turnstileTokenAt, setTurnstileTokenAt] = useState<number | null>(null);
-  const handleTurnstileToken = useCallback((t: string) => {
-    setTurnstileToken(t);
-    setTurnstileTokenAt(t ? Date.now() : null);
-  }, []);
-  const handleTurnstileStatus = useCallback((s: TurnstileStatus) => {
-    setTurnstileStatus(s);
-  }, []);
   const [codeStatus, setCodeStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [codeError, setCodeError] = useState<string | null>(null);
   const [lastApiEndpoint, setLastApiEndpoint] = useState<string | null>(null);
@@ -242,38 +238,11 @@ function GateForm({
     setDebugEnabled(isDev || debugFlag === '1');
   }, []);
 
-  function turnstileBlocked(): boolean {
-    if (!turnstileSiteKey) return false;
-    return !turnstileToken;
-  }
-
-  function turnstileStatusMessage(): string | null {
-    if (!turnstileSiteKey) return null;
-    if (turnstileStatus === 'script-error' || turnstileStatus === 'render-error') {
-      return 'Bot-protection check could not load. Please disable any tracker-blocking extensions for this page, then refresh.';
-    }
-    if (turnstileStatus === 'expired') {
-      return 'The bot-protection check has expired. Please tick the box again.';
-    }
-    if (!turnstileToken) {
-      return 'Please complete the bot-protection check.';
-    }
-    return null;
-  }
-
   async function handleSendCode() {
     setCodeError(null);
     if (!gate.email.trim()) {
       setCodeStatus('error');
       setCodeError('Please enter your email address first.');
-      return;
-    }
-    if (turnstileBlocked()) {
-      setCodeStatus('error');
-      setCodeError(
-        turnstileStatusMessage() ||
-          'Please complete the bot-protection check before requesting a code.',
-      );
       return;
     }
     setCodeStatus('sending');
@@ -283,7 +252,6 @@ function GateForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: gate.email.trim().toLowerCase(),
-          turnstileToken,
           _hp: hp,
         }),
       });
@@ -353,14 +321,6 @@ function GateForm({
       );
       return;
     }
-    if (turnstileBlocked()) {
-      setStatus('error');
-      setErrorDetail(
-        turnstileStatusMessage() ||
-          'Please complete the bot-protection check before submitting.',
-      );
-      return;
-    }
     if (requireEmailCode && !gate.emailCode.trim()) {
       setStatus('error');
       setErrorDetail(
@@ -381,7 +341,6 @@ function GateForm({
           sraNumber,
           proofUrl,
           emailCode: gate.emailCode.trim(),
-          turnstileToken,
           _hp: hp,
         }),
       });
@@ -444,10 +403,6 @@ function GateForm({
     }
   }
 
-  const tokenAgeSec =
-    turnstileTokenAt != null
-      ? Math.round((Date.now() - turnstileTokenAt) / 1000)
-      : null;
   const sraValid = /^\d{4,7}$/.test(gate.sraNumber.trim());
   const proofValid = /^https?:\/\/[^\s]+\.[^\s]+$/i.test(gate.proofUrl.trim());
 
@@ -455,7 +410,6 @@ function GateForm({
     status === 'sending' ||
     !gate.email.trim() ||
     !gate.category ||
-    (Boolean(turnstileSiteKey) && !turnstileToken) ||
     (requireEmailCode && gate.emailCode.trim().length !== 6);
 
   return (
@@ -639,18 +593,6 @@ function GateForm({
           </div>
         </fieldset>
 
-        {turnstileSiteKey && (
-          <div>
-            <p className="text-xs text-[var(--muted)]">Bot-protection check (Cloudflare):</p>
-            <TurnstileWidget
-              siteKey={turnstileSiteKey}
-              onToken={handleTurnstileToken}
-              onStatus={handleTurnstileStatus}
-              action="register-gate"
-            />
-          </div>
-        )}
-
         {requireEmailCode && (
           <div className="rounded-lg border border-[var(--border)] bg-white p-4">
             <p className="text-sm font-medium text-[var(--foreground)]">
@@ -732,14 +674,6 @@ function GateForm({
               <dd>
                 <code>/register</code> (canonical)
               </dd>
-              <dt className="font-semibold">Turnstile site key configured</dt>
-              <dd>{turnstileSiteKey ? 'yes' : 'no'}</dd>
-              <dt className="font-semibold">Turnstile widget status</dt>
-              <dd>
-                <code>{turnstileStatus}</code>
-              </dd>
-              <dt className="font-semibold">Turnstile token present</dt>
-              <dd>{turnstileToken ? `yes (age ${tokenAgeSec}s)` : 'no'}</dd>
               <dt className="font-semibold">Email verification required</dt>
               <dd>{requireEmailCode ? 'yes' : 'no (env disabled)'}</dd>
               <dt className="font-semibold">Email code sent</dt>
@@ -766,8 +700,7 @@ function GateForm({
               <dd className="break-words">{errorDetail || '(none)'}</dd>
             </dl>
             <p className="mt-2 text-[11px] text-slate-500">
-              Diagnostics never include the Turnstile token value, the email code, or any other
-              secret.
+              Diagnostics never include the email code or any other secret.
             </p>
           </details>
         )}
@@ -784,29 +717,18 @@ function FullForm({
   gatePass,
   form,
   setForm,
-  turnstileSiteKey,
   onSuccess,
   onTokenExpired,
 }: {
   gatePass: GatePassPayload;
   form: FormState;
   setForm: React.Dispatch<React.SetStateAction<FormState>>;
-  turnstileSiteKey: string | null;
   onSuccess: (s: SuccessResult) => void;
   onTokenExpired: () => void;
 }) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'error'>('idle');
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [hp, setHp] = useState('');
-
-  // Turnstile is optional at stage 2 — the gate already cleared a bot check.
-  // We still render the widget when configured so the second submission gets
-  // a fresh token; the API route does not require it but it's a useful extra
-  // signal in the access logs.
-  const [turnstileToken, setTurnstileToken] = useState('');
-  const handleTurnstileToken = useCallback((t: string) => setTurnstileToken(t), []);
-  void turnstileToken; // currently unused server-side at stage 2 — kept for future use.
-  void turnstileSiteKey;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -1350,15 +1272,6 @@ function FullForm({
           </Link>
           .
         </p>
-
-        {/* Render the turnstile widget hook so that an existing widget instance on the page
-            can be reused if needed; it is mounted invisibly so the second submission can
-            attach a fresh token in future iterations without extra work. */}
-        {turnstileSiteKey && (
-          <div hidden>
-            <TurnstileWidget siteKey={turnstileSiteKey} onToken={handleTurnstileToken} />
-          </div>
-        )}
       </form>
     </>
   );

@@ -2,13 +2,19 @@
  * Mint and email a 6-digit one-time code so the applicant can confirm they
  * own the email address they're registering with.
  *
+ * The Cloudflare Turnstile gate that used to live here was removed; abuse
+ * mitigation now relies on the silent honeypot, the per-IP rate limit (5
+ * sends per 15 minutes), and the fact that the code only authorises the
+ * downstream `/api/register/gate` call which itself rate-limits. Removing
+ * Turnstile fixed the recurring "I entered the email code but the form
+ * never opened" bug for legitimate applicants whose browsers / extensions
+ * silently dropped the widget script.
+ *
  * Stable error codes (returned as `body.code`):
  *   INVALID_JSON
  *   HONEYPOT_TRIGGERED
  *   INVALID_EMAIL
  *   RATE_LIMITED
- *   TURNSTILE_MISSING / TURNSTILE_EXPIRED / TURNSTILE_FAILED /
- *     TURNSTILE_NETWORK_ERROR (from lib/turnstile)
  *   EMAIL_VERIFICATION_DISABLED — REQUIRE_ENQUIRY_EMAIL_VERIFICATION not set;
  *     client may still proceed (the gate route won't insist on a code).
  *   EMAIL_CODE_STORE_UNAVAILABLE — KV is down so the code cannot be persisted.
@@ -23,19 +29,17 @@ import {
   issueEnquiryEmailCode,
 } from '@/lib/enquiry-email-verify';
 import { sendEnquiryEmailCode } from '@/lib/email';
-import { verifyTurnstile } from '@/lib/turnstile';
 
 export const dynamic = 'force-dynamic';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function safeLog(event: string, payload: Record<string, unknown> = {}): void {
-  // eslint-disable-next-line no-console
   console.info('[register-send-code]', JSON.stringify({ event, ...payload }));
 }
 
 export async function POST(request: Request) {
-  let raw: { email?: unknown; _hp?: unknown; turnstileToken?: unknown };
+  let raw: { email?: unknown; _hp?: unknown };
   try {
     raw = (await request.json()) as typeof raw;
   } catch {
@@ -77,18 +81,6 @@ export async function POST(request: Request) {
         error: 'Too many requests. Please wait a few minutes before requesting another code.',
       },
       { status: 429 },
-    );
-  }
-
-  const ts = await verifyTurnstile(
-    typeof raw.turnstileToken === 'string' ? raw.turnstileToken : null,
-    ip,
-  );
-  if (!ts.ok) {
-    safeLog('turnstile_failed', { code: ts.code });
-    return NextResponse.json(
-      { ok: false, code: ts.code, error: ts.message },
-      { status: ts.code === 'TURNSTILE_NETWORK_ERROR' ? 503 : 400 },
     );
   }
 

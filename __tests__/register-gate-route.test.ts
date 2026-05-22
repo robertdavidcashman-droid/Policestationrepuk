@@ -1,8 +1,11 @@
 /**
  * Integration tests for POST /api/register/gate.
  *
- * These exercise the full request handler against a fake KV, with Turnstile
- * disabled (so we don't hit the network) and the email-verification flag off.
+ * These exercise the full request handler against a fake KV. The Cloudflare
+ * Turnstile gate has been removed from the registration flow (the widget was
+ * the dominant cause of "I entered the email code but the form never opened"
+ * support tickets), so abuse mitigation is now: honeypot + rate-limit +
+ * mandatory PIN/SRA/proof + risk scoring + optional email-code verification.
  *
  * Key behaviours under test:
  *   - missing email / invalid category / no evidence → HTTP 400 + structured `code`
@@ -11,6 +14,7 @@
  *   - solicitor with PROOF URL only → HTTP 200 + gateToken (no SRA required)
  *   - honeypot tripped → HTTP 400 + code=HONEYPOT_TRIGGERED
  *   - ineligible category-label edge cases bubble up to the blocked panel
+ *   - email-code wiring (enabled-but-missing) still rejects with EMAIL_CODE_REQUIRED
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -54,8 +58,6 @@ beforeEach(() => {
   fakeKV = new FakeKV();
   // Use stubEnv so the env mutation is reverted per-test, which keeps these
   // specs deterministic when vitest runs files in parallel.
-  vi.stubEnv('ENABLE_TURNSTILE', '');
-  vi.stubEnv('TURNSTILE_SECRET', '');
   vi.stubEnv('REQUIRE_ENQUIRY_EMAIL_VERIFICATION', '');
   vi.resetModules();
   vi.doMock('@/lib/kv', () => ({
@@ -207,20 +209,7 @@ describe('POST /api/register/gate — happy paths', () => {
   });
 });
 
-describe('POST /api/register/gate — Turnstile + email code wiring', () => {
-  it('rejects with TURNSTILE_MISSING when Turnstile is enabled but the client sent no token', async () => {
-    vi.stubEnv('ENABLE_TURNSTILE', '1');
-    vi.stubEnv('TURNSTILE_SECRET', 'secret');
-    const r = await callGate({
-      email: 'a@b.co',
-      category: 'solicitor',
-      sraNumber: '190283',
-    });
-    expect(r.status).toBe(400);
-    expect(r.body.code).toBe('TURNSTILE_MISSING');
-    expect(r.body.message).toMatch(/bot-protection check/i);
-  });
-
+describe('POST /api/register/gate — email code wiring', () => {
   it('rejects with EMAIL_CODE_REQUIRED when verification is enabled but no code is sent', async () => {
     vi.stubEnv('REQUIRE_ENQUIRY_EMAIL_VERIFICATION', '1');
     const r = await callGate({
@@ -230,5 +219,20 @@ describe('POST /api/register/gate — Turnstile + email code wiring', () => {
     });
     expect(r.status).toBe(400);
     expect(r.body.code).toBe('EMAIL_CODE_REQUIRED');
+  });
+
+  it('ignores any legacy turnstileToken field in the request body and still mints a gate token', async () => {
+    // Older clients may still send a `turnstileToken` field; the new gate must
+    // accept the request and ignore the field rather than 400ing.
+    const r = await callGate({
+      email: 'legacy@example.com',
+      category: 'solicitor',
+      sraNumber: '190283',
+      turnstileToken: 'this-field-should-be-ignored',
+    });
+    expect(r.status).toBe(200);
+    expect(r.body.ok).toBe(true);
+    expect(r.body.code).toBe('GATE_OK');
+    expect(typeof r.body.gateToken).toBe('string');
   });
 });

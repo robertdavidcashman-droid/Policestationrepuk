@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { buildMetadata } from '@/lib/seo';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { RegisterForm } from './RegisterForm';
-import { turnstileSiteKey } from '@/lib/turnstile';
 import { enquiryEmailVerificationEnabled } from '@/lib/enquiry-email-verify';
 
 const TRUST_POINTS = [
@@ -192,7 +191,6 @@ export default function RegisterPage() {
                   </p>
                 </div>
                 <RegisterForm
-                  turnstileSiteKey={turnstileSiteKey()}
                   requireEmailCode={enquiryEmailVerificationEnabled()}
                 />
               </div>

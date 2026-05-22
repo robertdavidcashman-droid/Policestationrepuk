@@ -1,12 +1,13 @@
 /**
  * Regression guard: the production CSP `script-src` and `frame-src`
  * directives MUST include `https://challenges.cloudflare.com` so the
- * Cloudflare Turnstile widget loads on /register, /Contact and the
- * "Report this profile" form.
+ * Cloudflare Turnstile widget loads on the forms that still use it
+ * (the secure rep-verification page and the "Report this profile" button).
  *
- * If this test ever fails, the public registration form will silently break
- * — the widget will never appear, no token will be issued, and every
- * applicant will see the generic "couldn't verify your details" error.
+ * /register no longer uses Turnstile — the widget broke too many genuine
+ * applicants and was the dominant cause of "I entered the email code but the
+ * form never opened" support tickets — but the CSP must still allow the
+ * other surfaces.
  */
 
 import { describe, expect, it } from 'vitest';

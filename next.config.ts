@@ -53,10 +53,11 @@ const nextConfig: NextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           // NOTE: `https://challenges.cloudflare.com` MUST be present in
           // `script-src` and `frame-src` for the Cloudflare Turnstile widget
-          // (used on /register, /Contact and the report-this-profile button)
-          // to load. Removing it will break the public eligibility gate and
-          // block every new registration. See lib/turnstile.ts +
-          // components/TurnstileWidget.tsx.
+          // (used on the secure rep-verification page and the
+          // "Report this profile" button) to load. /register no longer uses
+          // Turnstile — the widget caused too many "I entered the code but
+          // the form never opened" support tickets — but the other surfaces
+          // still need it. See lib/turnstile.ts + components/TurnstileWidget.tsx.
           { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://esm.sh https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: http:; connect-src 'self' https: wss:; frame-src 'self' https://challenges.cloudflare.com https:; object-src 'none'; base-uri 'self'" },
         ],
       },

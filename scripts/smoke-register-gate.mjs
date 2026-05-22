@@ -147,16 +147,15 @@ async function main() {
     record('POST /api/register/gate with no evidence', false, String(e));
   }
 
-  // 7. gate with PIN — should pass and mint a token. Three legitimate dev-only
+  // 7. gate with PIN — should pass and mint a token. Two legitimate dev-only
   //    outcomes exist:
-  //      a) 200 ok + gateToken (KV configured, Turnstile disabled or token
-  //         supplied) — this is the happy path.
-  //      b) 400 reason=bot-check-failed (Turnstile is enabled via env but the
-  //         smoke test does not have a real token to supply).
-  //      c) 503 / reason=temporary-unavailable (KV not configured locally so
+  //      a) 200 ok + gateToken (KV configured) — this is the happy path.
+  //      b) 503 / reason=temporary-unavailable (KV not configured locally so
   //         the token cannot be persisted).
-  //    All three confirm the gate is wired up; only an UNEXPECTED status
-  //    (e.g. 500, or a 200 with no token field) counts as a failure.
+  //    Both confirm the gate is wired up; only an UNEXPECTED status (e.g.
+  //    500, or a 200 with no token field) counts as a failure.
+  //    Turnstile is no longer part of the registration flow, so there is no
+  //    longer a "bot-check-failed" branch here.
   let gateToken = null;
   try {
     const r = await postJson('/api/register/gate', {
@@ -170,17 +169,6 @@ async function main() {
         'POST /api/register/gate with PIN -> 200 ok + gateToken',
         true,
         `token=${String(gateToken).slice(0, 12)}…`,
-      );
-    } else if (
-      r.status === 400 &&
-      r.json &&
-      r.json.ok === false &&
-      r.json.reason === 'bot-check-failed'
-    ) {
-      record(
-        'POST /api/register/gate with PIN -> 400 bot-check-failed (Turnstile env enabled, no token in smoke)',
-        true,
-        'gate path otherwise correct; Turnstile guard fires as designed',
       );
     } else if (
       r.status === 503 ||

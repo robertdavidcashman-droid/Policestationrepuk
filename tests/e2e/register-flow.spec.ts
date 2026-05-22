@@ -2,21 +2,18 @@
  * End-to-end coverage for the public registration journey.
  *
  * These specs target both:
- *   - the /register page (HTML + Turnstile loader visibility)
+ *   - the /register page (HTML + initial gate UI visibility)
  *   - the /api/register/gate API (every documented failure code + happy path)
  *
- * Most assertions hit the API directly via `request.post` because the
- * Cloudflare Turnstile challenge is impossible to solve in a headless
- * browser. The Turnstile setup is tested at three layers:
+ * Cloudflare Turnstile has been removed from the registration flow because it
+ * was the dominant cause of "I entered the email code but the form never
+ * opened" support tickets. Bot mitigation now relies on the silent honeypot,
+ * per-IP rate limits, mandatory PIN/SRA/proof URL evidence and the server
+ * risk-scoring step. Other forms on the site (Contact, secure rep
+ * verification, report-this-profile) still use Turnstile; the CSP test for
+ * `challenges.cloudflare.com` lives there instead of here.
  *
- *   1. The CSP header includes `challenges.cloudflare.com` so the widget
- *      script can load.
- *   2. The browser actually receives a `<script ... challenges.cloudflare.com ...>`
- *      tag once the gate UI initialises.
- *   3. The API rejects submissions that lack a token with the structured
- *      `TURNSTILE_MISSING` code (only when Turnstile is enabled).
- *
- * To run against the deployed site (default):
+ * To run against the deployed site:
  *   PW_BASE_URL=https://policestationrepuk.org npx playwright test register-flow.spec.ts
  *
  * To run against a local dev server (recommended in CI):
@@ -41,13 +38,22 @@ test.describe('GET /register — gate landing page', () => {
     await expect(page.locator('#firmName')).toHaveCount(0);
   });
 
-  test('Content-Security-Policy header allows challenges.cloudflare.com', async ({
-    request,
+  test('register page no longer ships the Turnstile widget script', async ({
+    page,
   }) => {
-    const response = await request.get('/register');
-    expect(response.status()).toBe(200);
-    const csp = response.headers()['content-security-policy'] || '';
-    expect(csp).toMatch(/script-src[^;]+challenges\.cloudflare\.com/);
+    // The /register page used to include `<script src="…challenges.cloudflare.com…">`
+    // via the TurnstileWidget component. After the rip-out it must not load
+    // any Turnstile/Cloudflare challenge script — that's the regression we
+    // care about, not the CSP header (other forms still need Turnstile in
+    // CSP).
+    const turnstileRequests: string[] = [];
+    page.on('request', (req) => {
+      const url = req.url();
+      if (url.includes('challenges.cloudflare.com')) turnstileRequests.push(url);
+    });
+    await page.goto('/register', { waitUntil: 'networkidle' });
+    expect(turnstileRequests, turnstileRequests.join('\n')).toEqual([]);
+    await expect(page.locator('[data-cf-turnstile]')).toHaveCount(0);
   });
 
   test('robots.txt disallows /register so the gate landing page is not indexed', async ({
@@ -122,13 +128,9 @@ test.describe('POST /api/register/gate — structured error codes', () => {
     expect(body.code).toBe('INVALID_PROOF_URL');
   });
 
-  test('400 TURNSTILE_MISSING when Turnstile is enabled but no token is supplied', async ({
+  test('200 GATE_OK for a valid solicitor with no Turnstile token (Turnstile is gone)', async ({
     request,
   }) => {
-    // Probe the response — if Turnstile is disabled in this env the gate
-    // returns 200/GATE_OK instead. Both outcomes are acceptable; we just
-    // assert the response is one of the two valid states so this spec
-    // works locally (no Turnstile) and in production (Turnstile enforced).
     const response = await request.post('/api/register/gate', {
       data: {
         email: `pw-${Date.now()}@example.com`,
@@ -138,13 +140,10 @@ test.describe('POST /api/register/gate — structured error codes', () => {
       failOnStatusCode: false,
     });
     const body = await response.json();
-    if (response.status() === 200 && body.ok) {
-      expect(body.code).toBe('GATE_OK');
-      expect(typeof body.gateToken).toBe('string');
-    } else {
-      expect(response.status()).toBeGreaterThanOrEqual(400);
-      expect(['TURNSTILE_MISSING', 'TURNSTILE_FAILED']).toContain(body.code);
-    }
+    expect(response.status()).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.code).toBe('GATE_OK');
+    expect(typeof body.gateToken).toBe('string');
   });
 });
 
@@ -190,18 +189,16 @@ test.describe('POST /api/register — gate-token enforcement', () => {
 });
 
 /**
- * Happy-path browser test that only runs when REGISTER_BYPASS_TURNSTILE=1 is
- * set on a local dev server. The dev server can short-circuit the Turnstile
- * + email checks for a single hard-coded test email so we can exercise the
- * full UI flow end-to-end without real Cloudflare keys.
- *
- * The bypass mode is NEVER enabled in production. If you find this test
- * skipped in CI that is expected.
+ * Happy-path browser test. With Turnstile removed from the registration flow
+ * this can run against any environment without env-var tricks: we just hit
+ * the public gate endpoint via the UI and assert that Step 2 of the form
+ * unlocks. (Email-code verification is gated on REQUIRE_ENQUIRY_EMAIL_VERIFICATION,
+ * so we skip when that flag is on — the test cannot read inboxes.)
  */
-test.describe('Happy path with test bypass (local only)', () => {
+test.describe('Happy path — Step 1 unlocks Step 2', () => {
   test.skip(
-    !process.env.REGISTER_BYPASS_TURNSTILE,
-    'Skipping — REGISTER_BYPASS_TURNSTILE not set',
+    process.env.REQUIRE_ENQUIRY_EMAIL_VERIFICATION === '1',
+    'Skipping — email-code verification is on; this UI test cannot read inboxes',
   );
 
   test('completes Step 1 with SRA 190283 and unlocks Step 2', async ({ page }) => {

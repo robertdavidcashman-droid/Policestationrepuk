@@ -1,14 +1,18 @@
 /**
  * Integration tests for POST /api/register/send-code.
  *
+ * The Cloudflare Turnstile gate has been removed from the registration flow,
+ * so abuse mitigation is now: honeypot + per-IP rate limit only. The email
+ * code itself is validated downstream in /api/register/gate.
+ *
  * Validates the structured error contract:
  *   - INVALID_EMAIL when email is missing / malformed
  *   - HONEYPOT_TRIGGERED is silently treated as success
  *   - EMAIL_VERIFICATION_DISABLED when the env flag is off
- *   - TURNSTILE_MISSING when Turnstile is on but no token was supplied
  *   - EMAIL_CODE_STORE_UNAVAILABLE when KV is down
  *   - EMAIL_CODE_SEND_FAILED when Resend rejects the email
  *   - EMAIL_CODE_SENT on the happy path
+ *   - legacy `turnstileToken` field on the request body is ignored
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -50,8 +54,6 @@ let sendEnquiryEmailCodeMock: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   fakeKV = new FakeKV();
-  vi.stubEnv('ENABLE_TURNSTILE', '');
-  vi.stubEnv('TURNSTILE_SECRET', '');
   vi.stubEnv('REQUIRE_ENQUIRY_EMAIL_VERIFICATION', '');
   sendEnquiryEmailCodeMock = vi.fn().mockResolvedValue(true);
   vi.resetModules();
@@ -149,12 +151,14 @@ describe('POST /api/register/send-code', () => {
     expect(r.body.code).toBe('EMAIL_CODE_STORE_UNAVAILABLE');
   });
 
-  it('400 TURNSTILE_MISSING when Turnstile is enabled but no token is supplied', async () => {
-    vi.stubEnv('ENABLE_TURNSTILE', '1');
-    vi.stubEnv('TURNSTILE_SECRET', 'secret');
+  it('ignores any legacy turnstileToken field in the request body', async () => {
     vi.stubEnv('REQUIRE_ENQUIRY_EMAIL_VERIFICATION', '1');
-    const r = await callSendCode({ email: 'a@b.co' });
-    expect(r.status).toBe(400);
-    expect(r.body.code).toBe('TURNSTILE_MISSING');
+    const r = await callSendCode({
+      email: 'a@b.co',
+      turnstileToken: 'should-be-ignored',
+    });
+    expect(r.status).toBe(200);
+    expect(r.body.code).toBe('EMAIL_CODE_SENT');
+    expect(sendEnquiryEmailCodeMock).toHaveBeenCalledTimes(1);
   });
 });

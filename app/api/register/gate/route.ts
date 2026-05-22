@@ -3,7 +3,7 @@
  *
  * The full registration form is no longer rendered until the server mints a
  * one-shot gate token. This endpoint accepts the minimal eligibility payload
- * (email + category + PIN/SRA/proof + Turnstile + email-code) and:
+ * (email + category + PIN/SRA/proof + optional email-code) and:
  *
  *   - rejects obviously ineligible / spam / honeypot / malformed submissions
  *     outright (HTTP 400) with a precise error code so the client UI can show
@@ -18,6 +18,17 @@
  * Without this token POST /api/register refuses to persist anything, so the
  * full registration form is never reachable by scraping or direct curl.
  *
+ * Bot mitigation here relies on:
+ *   - the silent honeypot (`_hp`) field that bots reliably fill in;
+ *   - per-IP rate limits (6 / 15 minutes / scope=register-gate);
+ *   - mandatory PIN / SRA / proof-URL evidence;
+ *   - server-side risk scoring on the partial payload.
+ *
+ * The Cloudflare Turnstile gate that used to live here was removed because it
+ * blocked legitimate accredited reps whose browsers / extensions silently
+ * dropped the widget script and produced the long-running "I entered the
+ * email code but the form never opened" bug.
+ *
  * Stable error codes (returned as `body.code`):
  *   INVALID_JSON
  *   HONEYPOT_TRIGGERED
@@ -26,8 +37,6 @@
  *   INVALID_PROOF_URL
  *   MISSING_EVIDENCE        — neither PIN/SRA nor proof URL supplied
  *   RATE_LIMITED
- *   TURNSTILE_MISSING / TURNSTILE_EXPIRED / TURNSTILE_FAILED /
- *     TURNSTILE_NETWORK_ERROR / TURNSTILE_NOT_CONFIGURED (from lib/turnstile)
  *   EMAIL_CODE_REQUIRED / EMAIL_CODE_INVALID / EMAIL_CODE_EXPIRED /
  *     EMAIL_CODE_TOO_MANY_ATTEMPTS / EMAIL_CODE_DISABLED
  *   INELIGIBLE_CATEGORY     — applicant flagged as probationary/trainee/etc.
@@ -41,7 +50,6 @@ import {
   consumeEnquiryEmailCode,
   enquiryEmailVerificationEnabled,
 } from '@/lib/enquiry-email-verify';
-import { verifyTurnstile } from '@/lib/turnstile';
 import { scoreRepRisk } from '@/lib/rep-risk';
 import { createRegisterGateToken } from '@/lib/rep-verification';
 import { sendRepHeldForReviewAlert } from '@/lib/email';
@@ -61,7 +69,6 @@ interface GateBody {
   sraNumber?: unknown;
   proofUrl?: unknown;
   emailCode?: unknown;
-  turnstileToken?: unknown;
   _hp?: unknown;
 }
 
@@ -81,8 +88,6 @@ function safeLog(event: string, payload: Record<string, unknown> = {}): void {
   const safe = { event, ...payload };
   // Never log full tokens / codes / secrets — strip anything that looks like one.
   delete (safe as { emailCode?: unknown }).emailCode;
-  delete (safe as { turnstileToken?: unknown }).turnstileToken;
-  // eslint-disable-next-line no-console
   console.info('[register-gate]', JSON.stringify(safe));
 }
 
@@ -203,29 +208,6 @@ export async function POST(request: Request) {
         message: 'Too many requests. Please wait a few minutes and try again.',
       },
       { status: 429 },
-    );
-  }
-
-  const ts = await verifyTurnstile(
-    typeof raw.turnstileToken === 'string' ? raw.turnstileToken : null,
-    ip,
-  );
-  if (!ts.ok) {
-    safeLog('turnstile_failed', { code: ts.code, errorCodes: ts.errorCodes });
-    const httpStatus = ts.code === 'TURNSTILE_NETWORK_ERROR' ? 503 : 400;
-    return NextResponse.json(
-      {
-        ok: false,
-        code: ts.code,
-        reason:
-          ts.code === 'TURNSTILE_MISSING'
-            ? 'bot-check-missing'
-            : ts.code === 'TURNSTILE_EXPIRED'
-              ? 'bot-check-expired'
-              : 'bot-check-failed',
-        message: ts.message,
-      },
-      { status: httpStatus },
     );
   }
 
