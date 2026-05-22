@@ -12,26 +12,26 @@ import { availabilityBucket, isUrgentCoverCapable, profileCompleteness } from '@
 import { looksIneligible } from '@/lib/rep-status';
 import { turnstileSiteKey } from '@/lib/turnstile';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-  const { getAllRepPathSlugs } = await import('@/lib/data');
-  return getAllRepPathSlugs().map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: PageProps) {
-  const { slug } = await params;
-  const rep = await getRepBySlug(slug);
-  if (!rep) return {};
-  return buildMetadata({
-    title: `${rep.name} | Police Station Representative`,
-    description: `Accredited police station representative ${rep.name}. Covers ${rep.county}. ${rep.accreditation}. Contact direct for attendance and availability — operates under solicitor instruction where required.`,
-    path: `/rep/${rep.slug}`,
-  });
+  try {
+    const { slug } = await params;
+    const rep = await getRepBySlug(slug);
+    if (!rep) return {};
+    return buildMetadata({
+      title: `${rep.name} | Police Station Representative`,
+      description: `Accredited police station representative ${rep.name}. Covers ${rep.county}. ${rep.accreditation}. Contact direct for attendance and availability — operates under solicitor instruction where required.`,
+      path: `/rep/${rep.slug}`,
+    });
+  } catch (err) {
+    console.error('[rep/[slug]] generateMetadata threw:', err);
+    return { title: 'Police Station Representative' };
+  }
 }
 
 function availabilitySummary(raw: string): { label: string; detail: string; chip: string } {
