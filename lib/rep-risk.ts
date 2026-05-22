@@ -149,15 +149,36 @@ export function scoreRepRisk(rep: RiskInputProfile): RepRiskAssessment {
   if (!nonEmpty(rep.phone)) high.push('No phone number');
   if (!nonEmpty(rep.email)) high.push('No email address');
 
-  if (isPsras && !nonEmpty(rep.pinNumber)) high.push('PSRAS claimed but no PIN supplied');
-  if (isPsras && !nonEmpty(rep.accreditationProofFile)) {
-    high.push('PSRAS claimed but no proof of accreditation');
+  // PSRAS reps need EITHER a PIN OR a proof URL — supplying one alone is fine.
+  // Treat the "no PIN" / "no proof" flags as MEDIUM individually; only flag
+  // HIGH when neither has been supplied (i.e. zero accreditation evidence).
+  if (isPsras && !nonEmpty(rep.pinNumber) && !nonEmpty(rep.accreditationProofFile)) {
+    high.push('PSRAS claimed but no PIN and no proof of accreditation');
+  } else {
+    if (isPsras && !nonEmpty(rep.pinNumber)) medium.push('PSRAS claimed but no PIN supplied');
+    if (isPsras && !nonEmpty(rep.accreditationProofFile)) {
+      medium.push('PSRAS claimed but no proof of accreditation URL');
+    }
   }
-  if ((isDuty || isSolicitor) && !nonEmpty(rep.sraNumber)) {
+
+  // Solicitors / duty solicitors need EITHER an SRA number OR a proof URL.
+  // Having an SRA number is by far the stronger signal — accept it on its
+  // own and only flag HIGH when both are missing.
+  if (
+    (isDuty || isSolicitor) &&
+    !nonEmpty(rep.sraNumber) &&
+    !nonEmpty(rep.accreditationProofFile)
+  ) {
     high.push(
       isDuty
-        ? 'Duty solicitor claimed but no SRA number'
-        : 'Solicitor claimed but no SRA number',
+        ? 'Duty solicitor claimed but no SRA number and no proof URL'
+        : 'Solicitor claimed but no SRA number and no proof URL',
+    );
+  } else if ((isDuty || isSolicitor) && !nonEmpty(rep.sraNumber)) {
+    medium.push(
+      isDuty
+        ? 'Duty solicitor claimed without an SRA number (proof URL supplied instead)'
+        : 'Solicitor claimed without an SRA number (proof URL supplied instead)',
     );
   }
 

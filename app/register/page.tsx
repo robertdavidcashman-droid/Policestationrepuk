@@ -151,6 +151,35 @@ export default function RegisterPage() {
                   for full details.
                 </p>
               </section>
+
+              <section className="mt-6 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-white p-6">
+                <h3 className="text-base font-bold text-[var(--navy)]">
+                  Your professional responsibility
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+                  By registering you confirm that <strong>you</strong> are responsible for your
+                  own accreditation, professional indemnity insurance, regulatory compliance
+                  (SRA, PSRAS, DSCC, ICO, etc.) and the work you carry out for any instructing
+                  firm. PoliceStationRepUK does not check, renew or guarantee any of these on
+                  your behalf. Please keep your listing details accurate and let us know
+                  promptly if your status changes.
+                </p>
+              </section>
+
+              <section className="mt-6 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--gold-pale)] p-6">
+                <h3 className="text-base font-bold text-[var(--navy)]">
+                  About PoliceStationRepUK
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+                  PoliceStationRepUK is an independent <strong>directory and connection
+                  platform</strong>. We are not a law firm. We do not provide legal advice or
+                  regulated legal services, we do not guarantee any representative&rsquo;s
+                  accreditation, we do not supervise representatives once they are instructed,
+                  and we are not a party to the contract between an instructing firm and a
+                  representative. Verification means we have reviewed the evidence supplied at
+                  registration; it does not replace the firm&rsquo;s own onboarding checks.
+                </p>
+              </section>
             </div>
 
             <div>

@@ -1,3 +1,21 @@
+/**
+ * Mint and email a 6-digit one-time code so the applicant can confirm they
+ * own the email address they're registering with.
+ *
+ * Stable error codes (returned as `body.code`):
+ *   INVALID_JSON
+ *   HONEYPOT_TRIGGERED
+ *   INVALID_EMAIL
+ *   RATE_LIMITED
+ *   TURNSTILE_MISSING / TURNSTILE_EXPIRED / TURNSTILE_FAILED /
+ *     TURNSTILE_NETWORK_ERROR (from lib/turnstile)
+ *   EMAIL_VERIFICATION_DISABLED — REQUIRE_ENQUIRY_EMAIL_VERIFICATION not set;
+ *     client may still proceed (the gate route won't insist on a code).
+ *   EMAIL_CODE_STORE_UNAVAILABLE — KV is down so the code cannot be persisted.
+ *   EMAIL_CODE_SEND_FAILED — Resend rejected the email.
+ *   EMAIL_CODE_SENT — happy path.
+ */
+
 import { NextResponse } from 'next/server';
 import { getClientIp, rateLimitOk } from '@/lib/contact-guards';
 import {
@@ -11,33 +29,53 @@ export const dynamic = 'force-dynamic';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/**
- * Mints a 15-minute one-time code and emails it to the applicant. Only used
- * when `REQUIRE_ENQUIRY_EMAIL_VERIFICATION=1` is set; otherwise the route
- * still works but the enquiry handler will not require the code.
- */
+function safeLog(event: string, payload: Record<string, unknown> = {}): void {
+  // eslint-disable-next-line no-console
+  console.info('[register-send-code]', JSON.stringify({ event, ...payload }));
+}
+
 export async function POST(request: Request) {
   let raw: { email?: unknown; _hp?: unknown; turnstileToken?: unknown };
   try {
     raw = (await request.json()) as typeof raw;
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return NextResponse.json(
+      {
+        ok: false,
+        code: 'INVALID_JSON',
+        error: 'The request was malformed. Please refresh the page and try again.',
+      },
+      { status: 400 },
+    );
   }
 
   if (raw._hp) {
-    return NextResponse.json({ ok: true, sent: true });
+    safeLog('honeypot_triggered');
+    // Pretend success so the bot doesn't learn anything useful.
+    return NextResponse.json({ ok: true, sent: true, code: 'EMAIL_CODE_SENT' });
   }
 
   const email = typeof raw.email === 'string' ? raw.email.trim().toLowerCase() : '';
   if (!email || !EMAIL_RE.test(email)) {
-    return NextResponse.json({ error: 'Invalid email address.' }, { status: 400 });
+    return NextResponse.json(
+      {
+        ok: false,
+        code: 'INVALID_EMAIL',
+        error: 'Please enter a valid email address before requesting a verification code.',
+      },
+      { status: 400 },
+    );
   }
 
   const ip = getClientIp(request);
   const rl = await rateLimitOk({ ip, scope: 'enquiry-code', max: 5, windowMs: 15 * 60 * 1000 });
   if (!rl.ok) {
     return NextResponse.json(
-      { error: 'Too many requests. Please wait a few minutes before requesting another code.' },
+      {
+        ok: false,
+        code: 'RATE_LIMITED',
+        error: 'Too many requests. Please wait a few minutes before requesting another code.',
+      },
       { status: 429 },
     );
   }
@@ -46,29 +84,57 @@ export async function POST(request: Request) {
     typeof raw.turnstileToken === 'string' ? raw.turnstileToken : null,
     ip,
   );
-  if (!ts.ok && ts.reason !== 'disabled') {
+  if (!ts.ok) {
+    safeLog('turnstile_failed', { code: ts.code });
     return NextResponse.json(
-      { error: 'Bot-protection check failed. Please refresh and try again.' },
-      { status: 400 },
+      { ok: false, code: ts.code, error: ts.message },
+      { status: ts.code === 'TURNSTILE_NETWORK_ERROR' ? 503 : 400 },
     );
   }
 
   if (!enquiryEmailVerificationEnabled()) {
-    // No-op success — keep the client simple and let the main enquiry route
-    // do the work. The client can still display "code sent" UI in case the
-    // feature is enabled later.
-    return NextResponse.json({ ok: true, sent: false, reason: 'disabled' });
+    // No-op success — the gate route won't require a code, but we still
+    // signal it to the client so the UI can show a friendly message.
+    safeLog('email_send_skipped_disabled', { email });
+    return NextResponse.json({
+      ok: true,
+      sent: false,
+      code: 'EMAIL_VERIFICATION_DISABLED',
+      message:
+        'Email verification is not required in this environment. You can continue to the eligibility check.',
+    });
   }
 
+  safeLog('email_send_requested', { email });
   const code = await issueEnquiryEmailCode(email);
   if (!code) {
+    safeLog('email_code_store_unavailable', { email });
     return NextResponse.json(
-      { error: 'Email verification is temporarily unavailable. Please try again shortly.' },
+      {
+        ok: false,
+        code: 'EMAIL_CODE_STORE_UNAVAILABLE',
+        error:
+          'Email verification is temporarily unavailable. Please try again in a few minutes.',
+      },
       { status: 503 },
     );
   }
-  await sendEnquiryEmailCode(email, code).catch((err) =>
-    console.warn('[enquiry-send-code] email send failed:', err),
-  );
-  return NextResponse.json({ ok: true, sent: true });
+  const sent = await sendEnquiryEmailCode(email, code).catch((err) => {
+    console.warn('[register-send-code] email send failed:', err);
+    return false;
+  });
+  if (!sent) {
+    safeLog('email_send_failed', { email });
+    return NextResponse.json(
+      {
+        ok: false,
+        code: 'EMAIL_CODE_SEND_FAILED',
+        error:
+          'We could not send the verification code to that address. Please check the email and try again, or contact us if the problem persists.',
+      },
+      { status: 502 },
+    );
+  }
+  safeLog('email_send_success', { email });
+  return NextResponse.json({ ok: true, sent: true, code: 'EMAIL_CODE_SENT' });
 }

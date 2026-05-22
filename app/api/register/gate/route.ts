@@ -5,14 +5,34 @@
  * one-shot gate token. This endpoint accepts the minimal eligibility payload
  * (email + category + PIN/SRA/proof + Turnstile + email-code) and:
  *
- *   - rejects obviously ineligible / high-risk / incomplete submissions
- *     outright (and pings the admin so they can manually invite the rep);
- *   - mints a short-lived single-use token tied to the email when the
- *     applicant passes all checks. The client then unlocks the full form and
- *     submits to /api/register with that token in the body.
+ *   - rejects obviously ineligible / spam / honeypot / malformed submissions
+ *     outright (HTTP 400) with a precise error code so the client UI can show
+ *     a useful message and the next action;
+ *   - mints a short-lived single-use token bound to the email when the
+ *     applicant passes the basic eligibility checks. Borderline applicants
+ *     (e.g. solicitor with an SRA number but no automatic proof) still get a
+ *     token but the resulting `repreview:{email}` row is marked
+ *     `pending-manual-review`, so the listing is HELD for admin review rather
+ *     than auto-published.
  *
  * Without this token POST /api/register refuses to persist anything, so the
  * full registration form is never reachable by scraping or direct curl.
+ *
+ * Stable error codes (returned as `body.code`):
+ *   INVALID_JSON
+ *   HONEYPOT_TRIGGERED
+ *   INVALID_EMAIL
+ *   INVALID_CATEGORY
+ *   INVALID_PROOF_URL
+ *   MISSING_EVIDENCE        — neither PIN/SRA nor proof URL supplied
+ *   RATE_LIMITED
+ *   TURNSTILE_MISSING / TURNSTILE_EXPIRED / TURNSTILE_FAILED /
+ *     TURNSTILE_NETWORK_ERROR / TURNSTILE_NOT_CONFIGURED (from lib/turnstile)
+ *   EMAIL_CODE_REQUIRED / EMAIL_CODE_INVALID / EMAIL_CODE_EXPIRED /
+ *     EMAIL_CODE_TOO_MANY_ATTEMPTS / EMAIL_CODE_DISABLED
+ *   INELIGIBLE_CATEGORY     — applicant flagged as probationary/trainee/etc.
+ *   GATE_STORE_UNAVAILABLE  — could not mint the gate token (KV down)
+ *   GATE_OK                 — happy path
  */
 
 import { NextResponse } from 'next/server';
@@ -57,18 +77,41 @@ function isApplicantCategory(v: unknown): v is ApplicantCategory {
   return typeof v === 'string' && (APPLICANT_CATEGORY_VALUES as string[]).includes(v);
 }
 
+function safeLog(event: string, payload: Record<string, unknown> = {}): void {
+  const safe = { event, ...payload };
+  // Never log full tokens / codes / secrets — strip anything that looks like one.
+  delete (safe as { emailCode?: unknown }).emailCode;
+  delete (safe as { turnstileToken?: unknown }).turnstileToken;
+  // eslint-disable-next-line no-console
+  console.info('[register-gate]', JSON.stringify(safe));
+}
+
 export async function POST(request: Request) {
   let raw: GateBody;
   try {
     raw = (await request.json()) as GateBody;
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return NextResponse.json(
+      {
+        ok: false,
+        code: 'INVALID_JSON',
+        reason: 'invalid-json',
+        message: 'The eligibility form sent invalid data. Please refresh the page and try again.',
+      },
+      { status: 400 },
+    );
   }
 
   // Honeypot — bots get a permissive-looking 200 but no token.
   if (raw._hp) {
+    safeLog('honeypot_triggered');
     return NextResponse.json(
-      { ok: false, reason: 'blocked', message: 'Request blocked.' },
+      {
+        ok: false,
+        code: 'HONEYPOT_TRIGGERED',
+        reason: 'blocked',
+        message: 'Request blocked.',
+      },
       { status: 400 },
     );
   }
@@ -80,7 +123,12 @@ export async function POST(request: Request) {
 
   if (!email || !EMAIL_RE.test(email)) {
     return NextResponse.json(
-      { ok: false, reason: 'invalid-email', message: 'Please enter a valid email address.' },
+      {
+        ok: false,
+        code: 'INVALID_EMAIL',
+        reason: 'invalid-email',
+        message: 'Please enter a valid email address.',
+      },
       { status: 400 },
     );
   }
@@ -88,6 +136,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
+        code: 'INVALID_CATEGORY',
         reason: 'not-eligible',
         message:
           'Please select your professional status. We do not list probationary representatives, trainees or unaccredited applicants.',
@@ -101,6 +150,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
+        code: 'INVALID_PROOF_URL',
         reason: 'invalid-proof-url',
         message: 'Proof-of-accreditation URL must be a full https:// link.',
       },
@@ -113,6 +163,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
+        code: 'MISSING_EVIDENCE',
         reason: 'missing-evidence',
         message:
           'PSRAS-accredited representatives must supply either their DSCC / PIN number or a URL to proof of accreditation before continuing.',
@@ -124,6 +175,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
+        code: 'MISSING_EVIDENCE',
         reason: 'missing-evidence',
         message:
           (category === 'duty-solicitor' ? 'Duty solicitors' : 'Solicitors') +
@@ -146,6 +198,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
+        code: 'RATE_LIMITED',
         reason: 'rate-limited',
         message: 'Too many requests. Please wait a few minutes and try again.',
       },
@@ -157,14 +210,22 @@ export async function POST(request: Request) {
     typeof raw.turnstileToken === 'string' ? raw.turnstileToken : null,
     ip,
   );
-  if (!ts.ok && ts.reason !== 'disabled') {
+  if (!ts.ok) {
+    safeLog('turnstile_failed', { code: ts.code, errorCodes: ts.errorCodes });
+    const httpStatus = ts.code === 'TURNSTILE_NETWORK_ERROR' ? 503 : 400;
     return NextResponse.json(
       {
         ok: false,
-        reason: 'bot-check-failed',
-        message: 'Bot-protection check failed. Please refresh and try again.',
+        code: ts.code,
+        reason:
+          ts.code === 'TURNSTILE_MISSING'
+            ? 'bot-check-missing'
+            : ts.code === 'TURNSTILE_EXPIRED'
+              ? 'bot-check-expired'
+              : 'bot-check-failed',
+        message: ts.message,
       },
-      { status: 400 },
+      { status: httpStatus },
     );
   }
 
@@ -174,31 +235,58 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           ok: false,
+          code: 'EMAIL_CODE_REQUIRED',
           reason: 'email-code-required',
           requiresEmailCode: true,
           message:
-            'Please verify your email address. Request a code first, then submit it with this form.',
+            'Please verify your email address. Tap "Send verification code" first, then enter the 6-digit code we email you.',
         },
         { status: 400 },
       );
     }
     const verdict = await consumeEnquiryEmailCode(email, code);
     if (!verdict.ok) {
-      const msg =
-        verdict.reason === 'expired'
-          ? 'Your verification code has expired. Please request a new one.'
-          : verdict.reason === 'too-many-attempts'
-            ? 'Too many incorrect attempts. Please request a new verification code.'
-            : verdict.reason === 'missing'
-              ? 'No verification code on file for this email. Please request one first.'
-              : verdict.reason === 'disabled-no-kv'
-                ? 'Email verification is temporarily unavailable. Please try again shortly.'
-                : 'Verification code did not match. Please check the code and try again.';
+      safeLog('email_code_failed', { reason: verdict.reason });
+      const codeMap: Record<typeof verdict.reason, { code: string; status: number; msg: string }> = {
+        expired: {
+          code: 'EMAIL_CODE_EXPIRED',
+          status: 400,
+          msg: 'Your verification code has expired. Please request a new one and try again.',
+        },
+        'too-many-attempts': {
+          code: 'EMAIL_CODE_TOO_MANY_ATTEMPTS',
+          status: 429,
+          msg: 'Too many incorrect attempts. Please request a brand-new verification code.',
+        },
+        missing: {
+          code: 'EMAIL_CODE_REQUIRED',
+          status: 400,
+          msg: 'No verification code on file for this email. Please request one first.',
+        },
+        'disabled-no-kv': {
+          code: 'EMAIL_CODE_DISABLED',
+          status: 503,
+          msg: 'Email verification is temporarily unavailable. Please try again shortly.',
+        },
+        wrong: {
+          code: 'EMAIL_CODE_INVALID',
+          status: 400,
+          msg: 'That verification code is incorrect. Please check your inbox and try again.',
+        },
+      };
+      const mapped = codeMap[verdict.reason];
       return NextResponse.json(
-        { ok: false, reason: 'email-code-invalid', requiresEmailCode: true, message: msg },
-        { status: 400 },
+        {
+          ok: false,
+          code: mapped.code,
+          reason: 'email-code-invalid',
+          requiresEmailCode: true,
+          message: mapped.msg,
+        },
+        { status: mapped.status },
       );
     }
+    safeLog('email_code_verified', { email });
   }
 
   /* ----- Eligibility / risk scoring on the partial profile ----- */
@@ -207,12 +295,11 @@ export async function POST(request: Request) {
   const issuedAt = new Date().toISOString();
 
   if (looksIneligible(accreditationText)) {
-    // Defence in depth — category labels themselves should never trip this, but
-    // keeping the check guards against future additions to the labels map.
     return rejectWithAdminAlert({
       reason: 'not-eligible',
+      code: 'INELIGIBLE_CATEGORY',
       message:
-        'We do not list probationary representatives, trainees or unaccredited applicants.',
+        'PoliceStationRepUK does not list probationary representatives, trainees or unaccredited applicants. If this is wrong, please contact the directory team.',
       email,
       category,
       pinNumber,
@@ -243,32 +330,52 @@ export async function POST(request: Request) {
     ipAddress: ip,
   });
 
-  // Drop the risk flags that we cannot evaluate before the full form is
-  // submitted — they would otherwise force every applicant to "medium"/"high"
-  // even when the eligibility evidence is perfectly fine.
+  // The full form has not yet been submitted, so a lot of the risk flags are
+  // expected to be present at the gate stage. Drop the ones that can only be
+  // known after the applicant fills in Step 2 — they would otherwise trigger
+  // a needless manual-review fallback for every genuine applicant.
   const SOFT_FLAGS = new Set([
     'No phone number',
     'Only first name supplied',
     'Lists counties but no specific police stations',
+    // "Recently created (<48h) with incomplete accreditation evidence" — fires
+    // for every brand-new registration; not useful at the gate stage.
+    'Recently created (<48h) with incomplete accreditation evidence',
   ]);
   const decisiveFlags = assessment.highRiskFlags.filter((f) => !SOFT_FLAGS.has(f));
-  const passes = decisiveFlags.length === 0;
 
-  if (!passes) {
-    return rejectWithAdminAlert({
-      reason: 'high-risk',
-      message:
-        'We could not auto-verify your details. Our admin team has been notified and will contact you shortly to complete the listing manually.',
+  // Decision tree:
+  //   - decisiveFlags empty                  -> mint a "clean" gate token
+  //   - decisiveFlags only contain "no PIN
+  //     and no proof"-style evidence flags    -> already rejected above by
+  //                                            MISSING_EVIDENCE; nothing to do
+  //   - decisiveFlags contain anything else  -> still mint a token, but
+  //                                            mark `riskCategory='medium'`
+  //                                            so the full form persists as
+  //                                            `pending-manual-review`.
+  //
+  // The KEY behaviour change vs. the previous version: we never hard-reject
+  // a genuine solicitor / PSRAS rep at the gate just because automatic
+  // verification is unavailable. Step 2 always unlocks; whether the listing
+  // auto-publishes or sits in the admin queue is decided later by
+  // /api/register based on the same risk score on the full payload.
+
+  // A PIN (for PSRAS) or an SRA number (for solicitors / duty solicitors) is
+  // the strong identifier we can run automatic checks against. When only a
+  // proof URL is supplied we cannot auto-verify, so the listing should be
+  // marked `pending-manual-review` even if no decisive high-risk flag fired.
+  const lacksStrongIdentifier =
+    (category === 'psras-accredited' && !pinNumber) ||
+    ((category === 'solicitor' || category === 'duty-solicitor') && !sraNumber);
+
+  const riskCategory: 'low' | 'medium' =
+    decisiveFlags.length === 0 && !lacksStrongIdentifier ? 'low' : 'medium';
+  if (riskCategory === 'medium') {
+    safeLog('gate_pending_manual_review', {
       email,
       category,
-      pinNumber,
-      sraNumber,
-      proofUrl,
-      issuedAt,
-      ipAddress: ip,
-      userAgent: request.headers.get('user-agent') || '',
-      riskCategory: assessment.category,
-      riskReasons: decisiveFlags.length ? decisiveFlags : assessment.reasons,
+      lacksStrongIdentifier,
+      flags: decisiveFlags,
     });
   }
 
@@ -280,26 +387,38 @@ export async function POST(request: Request) {
     pinNumber,
     sraNumber,
     proofUrl,
-    riskCategory: assessment.category,
+    riskCategory,
     ipAddress: ip,
   });
 
   if (!tokenRecord) {
+    safeLog('gate_store_unavailable', { email });
     return NextResponse.json(
       {
         ok: false,
+        code: 'GATE_STORE_UNAVAILABLE',
         reason: 'temporary-unavailable',
         message:
-          'Registration is temporarily unavailable. Please try again in a few minutes or email us.',
+          'Registration storage is temporarily unavailable. Please try again in a few minutes or email us.',
       },
       { status: 503 },
     );
   }
 
+  safeLog('gate_passed', {
+    email,
+    category,
+    riskCategory,
+    tokenIssued: true,
+  });
+
   return NextResponse.json({
     ok: true,
+    code: 'GATE_OK',
     gateToken: tokenRecord.token,
     expiresAt: tokenRecord.expiresAt,
+    riskCategory,
+    pendingManualReview: riskCategory === 'medium',
     gateData: {
       email,
       category,
@@ -312,6 +431,7 @@ export async function POST(request: Request) {
 
 function rejectWithAdminAlert(args: {
   reason: 'not-eligible' | 'high-risk';
+  code: string;
   message: string;
   email: string;
   category: ApplicantCategory;
@@ -343,6 +463,7 @@ function rejectWithAdminAlert(args: {
   return NextResponse.json(
     {
       ok: false,
+      code: args.code,
       reason: args.reason,
       message: args.message,
     },

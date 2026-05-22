@@ -25,14 +25,14 @@
  *   Stage 4 ("success")— rendered after the full form is accepted.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   APPLICANT_CATEGORY_LABELS,
   APPLICANT_CATEGORY_VALUES,
   type ApplicantCategory,
 } from '@/lib/rep-status';
-import { TurnstileWidget } from '@/components/TurnstileWidget';
+import { TurnstileWidget, type TurnstileStatus } from '@/components/TurnstileWidget';
 
 const PUBLIC_NOTES_MAX = 1500;
 
@@ -112,6 +112,7 @@ interface GatePassPayload {
   pinNumber: string;
   sraNumber: string;
   proofUrl: string;
+  pendingManualReview: boolean;
 }
 
 interface SuccessResult {
@@ -212,13 +213,53 @@ function GateForm({
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [hp, setHp] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
-  const handleTurnstileToken = useCallback((t: string) => setTurnstileToken(t), []);
+  const [turnstileStatus, setTurnstileStatus] = useState<TurnstileStatus>('idle');
+  const [turnstileTokenAt, setTurnstileTokenAt] = useState<number | null>(null);
+  const handleTurnstileToken = useCallback((t: string) => {
+    setTurnstileToken(t);
+    setTurnstileTokenAt(t ? Date.now() : null);
+  }, []);
+  const handleTurnstileStatus = useCallback((s: TurnstileStatus) => {
+    setTurnstileStatus(s);
+  }, []);
   const [codeStatus, setCodeStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [codeError, setCodeError] = useState<string | null>(null);
+  const [lastApiEndpoint, setLastApiEndpoint] = useState<string | null>(null);
+  const [lastApiStatus, setLastApiStatus] = useState<number | null>(null);
+  const [lastApiCode, setLastApiCode] = useState<string | null>(null);
 
   const isPsras = gate.category === 'psras-accredited';
   const isSolicitorOrDuty =
     gate.category === 'solicitor' || gate.category === 'duty-solicitor';
+
+  // Diagnostics panel is dev-only OR when ?debug=1 is in the URL. This must
+  // run as an effect to read window safely on the client.
+  const [debugEnabled, setDebugEnabled] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isDev = process.env.NODE_ENV !== 'production';
+    const debugFlag = new URLSearchParams(window.location.search).get('debug');
+    setDebugEnabled(isDev || debugFlag === '1');
+  }, []);
+
+  function turnstileBlocked(): boolean {
+    if (!turnstileSiteKey) return false;
+    return !turnstileToken;
+  }
+
+  function turnstileStatusMessage(): string | null {
+    if (!turnstileSiteKey) return null;
+    if (turnstileStatus === 'script-error' || turnstileStatus === 'render-error') {
+      return 'Bot-protection check could not load. Please disable any tracker-blocking extensions for this page, then refresh.';
+    }
+    if (turnstileStatus === 'expired') {
+      return 'The bot-protection check has expired. Please tick the box again.';
+    }
+    if (!turnstileToken) {
+      return 'Please complete the bot-protection check.';
+    }
+    return null;
+  }
 
   async function handleSendCode() {
     setCodeError(null);
@@ -227,9 +268,12 @@ function GateForm({
       setCodeError('Please enter your email address first.');
       return;
     }
-    if (turnstileSiteKey && !turnstileToken) {
+    if (turnstileBlocked()) {
       setCodeStatus('error');
-      setCodeError('Please complete the bot-protection check before requesting a code.');
+      setCodeError(
+        turnstileStatusMessage() ||
+          'Please complete the bot-protection check before requesting a code.',
+      );
       return;
     }
     setCodeStatus('sending');
@@ -243,17 +287,26 @@ function GateForm({
           _hp: hp,
         }),
       });
+      setLastApiEndpoint('/api/register/send-code');
+      setLastApiStatus(res.status);
       const body = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         sent?: boolean;
+        code?: string;
         error?: string;
+        message?: string;
       };
+      setLastApiCode(body.code || null);
       if (res.ok && body.ok) {
         setCodeStatus('sent');
         return;
       }
       setCodeStatus('error');
-      setCodeError(body.error || 'Could not send a verification code. Please try again.');
+      setCodeError(
+        body.error ||
+          body.message ||
+          'Could not send a verification code. Please try again.',
+      );
     } catch {
       setCodeStatus('error');
       setCodeError('Could not send a verification code. Please try again.');
@@ -300,9 +353,12 @@ function GateForm({
       );
       return;
     }
-    if (turnstileSiteKey && !turnstileToken) {
+    if (turnstileBlocked()) {
       setStatus('error');
-      setErrorDetail('Please complete the bot-protection check before submitting.');
+      setErrorDetail(
+        turnstileStatusMessage() ||
+          'Please complete the bot-protection check before submitting.',
+      );
       return;
     }
     if (requireEmailCode && !gate.emailCode.trim()) {
@@ -329,9 +385,13 @@ function GateForm({
           _hp: hp,
         }),
       });
+      setLastApiEndpoint('/api/register/gate');
+      setLastApiStatus(res.status);
       const body = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
+        code?: string;
         gateToken?: string;
+        pendingManualReview?: boolean;
         gateData?: {
           email?: string;
           category?: ApplicantCategory;
@@ -343,15 +403,19 @@ function GateForm({
         message?: string;
         error?: string;
       };
+      setLastApiCode(body.code || null);
 
       if (res.ok && body.ok && body.gateToken && body.gateData) {
         onPass({
           gateToken: body.gateToken,
           email: body.gateData.email ?? email,
-          category: (body.gateData.category as ApplicantCategory) ?? (gate.category as ApplicantCategory),
+          category:
+            (body.gateData.category as ApplicantCategory) ??
+            (gate.category as ApplicantCategory),
           pinNumber: body.gateData.pinNumber ?? pinNumber,
           sraNumber: body.gateData.sraNumber ?? sraNumber,
           proofUrl: body.gateData.proofUrl ?? proofUrl,
+          pendingManualReview: Boolean(body.pendingManualReview),
         });
         return;
       }
@@ -362,14 +426,37 @@ function GateForm({
         return;
       }
 
-      // Anything else is a soft validation error — stay on the gate.
+      // Anything else is a soft validation error — stay on the gate and show
+      // a precise message. The structured `code` is captured by `lastApiCode`
+      // for the dev diagnostics panel; it is NOT surfaced in the public alert.
       setStatus('error');
-      setErrorDetail(body.message || body.error || 'Something went wrong. Please try again.');
+      setErrorDetail(
+        body.message ||
+          body.error ||
+          'Something went wrong. Please try again.',
+      );
     } catch {
       setStatus('error');
-      setErrorDetail('Something went wrong. Please try again.');
+      setLastApiCode('NETWORK_ERROR');
+      setErrorDetail(
+        'Could not reach the registration service. Please check your connection and try again.',
+      );
     }
   }
+
+  const tokenAgeSec =
+    turnstileTokenAt != null
+      ? Math.round((Date.now() - turnstileTokenAt) / 1000)
+      : null;
+  const sraValid = /^\d{4,7}$/.test(gate.sraNumber.trim());
+  const proofValid = /^https?:\/\/[^\s]+\.[^\s]+$/i.test(gate.proofUrl.trim());
+
+  const submitDisabled =
+    status === 'sending' ||
+    !gate.email.trim() ||
+    !gate.category ||
+    (Boolean(turnstileSiteKey) && !turnstileToken) ||
+    (requireEmailCode && gate.emailCode.trim().length !== 6);
 
   return (
     <>
@@ -386,8 +473,15 @@ function GateForm({
 
       {status === 'error' && (
         <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-          <p className="font-semibold">We couldn&rsquo;t verify your details</p>
+          <p className="font-semibold">We couldn&rsquo;t continue your registration</p>
           {errorDetail && <p className="mt-2 text-sm">{errorDetail}</p>}
+          {/*
+            The structured `errorCode` (e.g. TURNSTILE_MISSING) is intentionally
+            NOT rendered in the public alert — it exposes internal architecture
+            and adds nothing for the applicant. The code is still returned by
+            the API and surfaced inside the dev / ?debug=1 diagnostics panel
+            below for support purposes.
+          */}
         </div>
       )}
 
@@ -548,7 +642,12 @@ function GateForm({
         {turnstileSiteKey && (
           <div>
             <p className="text-xs text-[var(--muted)]">Bot-protection check (Cloudflare):</p>
-            <TurnstileWidget siteKey={turnstileSiteKey} onToken={handleTurnstileToken} />
+            <TurnstileWidget
+              siteKey={turnstileSiteKey}
+              onToken={handleTurnstileToken}
+              onStatus={handleTurnstileStatus}
+              action="register-gate"
+            />
           </div>
         )}
 
@@ -603,20 +702,75 @@ function GateForm({
 
         <button
           type="submit"
-          disabled={status === 'sending'}
+          disabled={submitDisabled}
+          aria-disabled={submitDisabled}
           className="w-full min-h-[44px] rounded-lg bg-[var(--accent)] px-6 py-3 font-bold text-[var(--navy)] shadow-sm hover:bg-[var(--accent-hover)] disabled:opacity-70"
         >
           {status === 'sending' ? 'Checking eligibility…' : 'Verify eligibility & continue'}
         </button>
 
         <p className="mt-2 text-xs leading-relaxed text-[var(--muted)]">
-          The full registration form only unlocks if your details pass our automatic checks. By
-          continuing you consent to PoliceStationRepUK verification checks and acknowledge our{' '}
+          The full registration form only unlocks once your details pass our automatic checks.
+          Borderline submissions still unlock the form but the listing is held for admin review.
+          By continuing you consent to PoliceStationRepUK verification checks and acknowledge our{' '}
           <Link href="/Privacy" className="underline">
             privacy policy
           </Link>
           .
         </p>
+
+        {debugEnabled && (
+          <details
+            open
+            className="mt-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-xs leading-relaxed text-slate-700"
+          >
+            <summary className="cursor-pointer font-semibold text-slate-900">
+              Registration diagnostics (dev / ?debug=1 only)
+            </summary>
+            <dl className="mt-3 grid gap-1 sm:grid-cols-2">
+              <dt className="font-semibold">Route</dt>
+              <dd>
+                <code>/register</code> (canonical)
+              </dd>
+              <dt className="font-semibold">Turnstile site key configured</dt>
+              <dd>{turnstileSiteKey ? 'yes' : 'no'}</dd>
+              <dt className="font-semibold">Turnstile widget status</dt>
+              <dd>
+                <code>{turnstileStatus}</code>
+              </dd>
+              <dt className="font-semibold">Turnstile token present</dt>
+              <dd>{turnstileToken ? `yes (age ${tokenAgeSec}s)` : 'no'}</dd>
+              <dt className="font-semibold">Email verification required</dt>
+              <dd>{requireEmailCode ? 'yes' : 'no (env disabled)'}</dd>
+              <dt className="font-semibold">Email code sent</dt>
+              <dd>{codeStatus === 'sent' ? 'yes' : 'no'}</dd>
+              <dt className="font-semibold">Email code entered</dt>
+              <dd>{gate.emailCode ? `yes (${gate.emailCode.length} digits)` : 'no'}</dd>
+              <dt className="font-semibold">Category selected</dt>
+              <dd>{gate.category || '(none)'}</dd>
+              <dt className="font-semibold">SRA field valid format</dt>
+              <dd>{gate.sraNumber ? (sraValid ? 'yes' : 'no') : '(empty)'}</dd>
+              <dt className="font-semibold">Proof URL valid format</dt>
+              <dd>{gate.proofUrl ? (proofValid ? 'yes' : 'no') : '(empty)'}</dd>
+              <dt className="font-semibold">Last API endpoint</dt>
+              <dd>
+                <code>{lastApiEndpoint || '(none)'}</code>
+              </dd>
+              <dt className="font-semibold">Last API HTTP status</dt>
+              <dd>{lastApiStatus ?? '(none)'}</dd>
+              <dt className="font-semibold">Last backend error code</dt>
+              <dd>
+                <code>{lastApiCode || '(none)'}</code>
+              </dd>
+              <dt className="font-semibold">Last backend message</dt>
+              <dd className="break-words">{errorDetail || '(none)'}</dd>
+            </dl>
+            <p className="mt-2 text-[11px] text-slate-500">
+              Diagnostics never include the Turnstile token value, the email code, or any other
+              secret.
+            </p>
+          </details>
+        )}
       </form>
     </>
   );
@@ -741,13 +895,29 @@ function FullForm({
 
   return (
     <>
-      <div className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-emerald-900">
+      <div
+        className={`mb-5 rounded-lg border p-4 ${
+          gatePass.pendingManualReview
+            ? 'border-amber-200 bg-amber-50'
+            : 'border-emerald-200 bg-emerald-50'
+        }`}
+      >
+        <p
+          className={`text-xs font-bold uppercase tracking-widest ${
+            gatePass.pendingManualReview ? 'text-amber-900' : 'text-emerald-900'
+          }`}
+        >
           Step 2 of 2 — full profile
         </p>
-        <p className="mt-2 text-sm leading-relaxed text-emerald-900">
-          Eligibility check passed. The form below is private and only visible to you. Submit it
-          to publish your free listing. Verified, low-risk profiles go live immediately.
+        <p
+          className={`mt-2 text-sm leading-relaxed ${
+            gatePass.pendingManualReview ? 'text-amber-900' : 'text-emerald-900'
+          }`}
+        >
+          Eligibility check passed. The form below is private and only visible to you.{' '}
+          {gatePass.pendingManualReview
+            ? 'Because automatic verification of your details was incomplete, your listing will be held for manual admin review after you submit. You will get an email within 24 hours.'
+            : 'Verified, low-risk profiles go live immediately after submission.'}
         </p>
         <dl className="mt-3 grid gap-1 text-xs text-emerald-900 sm:grid-cols-2">
           <div>

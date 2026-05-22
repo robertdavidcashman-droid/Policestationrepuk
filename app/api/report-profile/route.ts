@@ -47,10 +47,10 @@ export async function POST(request: Request) {
     typeof body.turnstileToken === 'string' ? body.turnstileToken : null,
     ip,
   );
-  if (!ts.ok && ts.reason !== 'disabled') {
+  if (!ts.ok) {
     return NextResponse.json(
-      { error: 'Bot-protection check failed. Please refresh and try again.' },
-      { status: 400 },
+      { error: ts.message, code: ts.code },
+      { status: ts.code === 'TURNSTILE_NETWORK_ERROR' ? 503 : 400 },
     );
   }
 

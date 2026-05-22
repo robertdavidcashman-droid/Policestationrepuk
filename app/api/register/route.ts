@@ -398,12 +398,21 @@ export async function POST(request: Request) {
     });
 
     // Decision: auto-publish iff category is verifiable AND risk is low AND
-    // the applicant supplied at least one strong evidence signal.
+    // the applicant supplied at least one strong evidence signal AND the gate
+    // stage did not already mark this submission as pending manual review.
+    //
+    // The gate route persists `riskCategory='medium'` on the gate token when
+    // any decisive risk flag fired (e.g. solicitor without SRA number).
+    // Even if the full payload looks clean, we honour that decision so the
+    // listing always lands in the admin queue rather than auto-publishing.
+    const gateMarkedPending =
+      gateRecord.riskCategory && gateRecord.riskCategory !== 'low';
     const hasStrongEvidence = Boolean(
       (category === 'psras-accredited' && (pinNumber || proofUrl)) ||
         (category !== 'psras-accredited' && (sraNumber || proofUrl)),
     );
     const autoPublish =
+      !gateMarkedPending &&
       hasStrongEvidence &&
       assessment.category === 'low' &&
       assessment.highRiskFlags.length === 0;
