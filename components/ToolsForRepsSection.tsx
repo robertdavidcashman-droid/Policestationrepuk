@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import {
+  CUSTODYNOTE_APPS_LINE,
   CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
+  CUSTODYNOTE_DOWNLOAD_APPS_CTA,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
-  CUSTODYNOTE_PLATFORM_LINE,
   CUSTODYNOTE_PRICE_GBP,
   CUSTODYNOTE_TRIAL_HREF,
 } from '@/lib/custodynote-promo';
@@ -43,8 +44,8 @@ export function ToolsForRepsSection() {
               </span>
               <h3 className="mt-4 text-xl font-extrabold sm:text-2xl">{CUSTODYNOTE_BRAND_NAME}</h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-200">
-                PACE-aligned custody and attendance notes — structured fields, works offline, AES-256 encryption, PDF
-                export and LAA billing. Native desktop app for {CUSTODYNOTE_PLATFORM_LINE.toLowerCase()}.
+                {CUSTODYNOTE_APPS_LINE}. PACE-aligned custody and attendance notes — structured fields, works offline,
+                AES-256 encryption, PDF export and LAA billing.
               </p>
               <ul className="mt-4 space-y-2 text-sm text-slate-200">
                 <li className="flex gap-2">
@@ -75,7 +76,7 @@ export function ToolsForRepsSection() {
                   rel="noopener noreferrer"
                   className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[var(--gold)] px-6 py-3 text-sm font-bold text-[var(--navy)] no-underline hover:bg-[var(--gold-hover)]"
                 >
-                  Start Free Trial
+                  {CUSTODYNOTE_DOWNLOAD_APPS_CTA}
                 </a>
                 <Link
                   href="/CustodyNote"

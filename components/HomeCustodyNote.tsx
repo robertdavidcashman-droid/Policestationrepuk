@@ -1,15 +1,16 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import {
+  CUSTODYNOTE_APPS_DETAIL,
+  CUSTODYNOTE_APPS_LINE,
   CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
   CUSTODYNOTE_DISCOUNT_PCT,
+  CUSTODYNOTE_DOWNLOAD_APPS_CTA,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
-  CUSTODYNOTE_PLATFORM_LINE,
   CUSTODYNOTE_PRICE_GBP,
   CUSTODYNOTE_PRICING_HREF,
   CUSTODYNOTE_TAGLINE,
-  CUSTODYNOTE_TRIAL_CTA,
   CUSTODYNOTE_TRIAL_HREF,
 } from '@/lib/custodynote-promo';
 import { AdvertisementLabel } from './AdvertisementLabel';
@@ -28,12 +29,12 @@ export function HomeCustodyNote() {
 
             <h2 className="text-h2 mt-4 text-white">{CUSTODYNOTE_BRAND_NAME}</h2>
             <p className="mt-1 text-base font-medium text-[var(--gold)]">
-              {CUSTODYNOTE_TAGLINE}
+              {CUSTODYNOTE_APPS_LINE}
             </p>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/90">
-              Disclosure → advice → interview → outcome in one structured record. Built for
-              accredited reps and defence solicitors. Offline at the custody desk, PDF for the
-              firm file, LAA-oriented billing fields — native desktop app for {CUSTODYNOTE_PLATFORM_LINE.toLowerCase()}.
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/90">
+              {CUSTODYNOTE_TAGLINE}. Disclosure → advice → interview → outcome in one structured
+              record — offline at the custody desk, PDF for the firm file, LAA-oriented billing
+              fields. {CUSTODYNOTE_APPS_DETAIL}
             </p>
 
             <div className="mx-auto mt-8 grid max-w-xl gap-3 sm:grid-cols-3">
@@ -82,7 +83,7 @@ export function HomeCustodyNote() {
                 rel="noopener noreferrer"
                 className="btn-gold w-full sm:w-auto"
               >
-                {CUSTODYNOTE_TRIAL_CTA} →
+                {CUSTODYNOTE_DOWNLOAD_APPS_CTA} →
               </Link>
               <Link
                 href="/CustodyNote"

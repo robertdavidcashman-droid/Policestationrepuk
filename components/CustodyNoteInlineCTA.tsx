@@ -4,6 +4,8 @@ import Link from 'next/link';
 import {
   CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
+  CUSTODYNOTE_APPS_LINE,
+  CUSTODYNOTE_DOWNLOAD_APPS_CTA,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
   CUSTODYNOTE_PRICE_GBP,
   CUSTODYNOTE_TRIAL_HREF,
@@ -18,6 +20,7 @@ export function CustodyNoteInlineCTA({ variant = 'full' }: { variant?: Variant }
     return (
       <aside className="rounded-xl border-2 border-[var(--gold)]/40 bg-gradient-to-br from-[var(--navy)] to-[#152e6e] p-4 text-white shadow-lg">
         <p className="text-xs font-bold uppercase tracking-wide text-[var(--gold)]">{CUSTODYNOTE_BRAND_NAME}</p>
+        <p className="mt-1 text-xs font-medium text-[var(--gold)]">{CUSTODYNOTE_APPS_LINE}</p>
         <p className="mt-1 text-sm font-semibold leading-snug">{INLINE_CTA_HEADLINE}</p>
         <ul className="mt-2 space-y-0.5 text-xs text-slate-200">
           {INLINE_CTA_BULLETS.map((b) => (
@@ -30,7 +33,7 @@ export function CustodyNoteInlineCTA({ variant = 'full' }: { variant?: Variant }
           ))}
         </ul>
         <p className="mt-3 text-[11px] text-white/85">
-          30-day free trial · then £{CUSTODYNOTE_PRICE_GBP}/mo · PSR UK readers £
+          30-day free trial · Windows PC &amp; Mac · then £{CUSTODYNOTE_PRICE_GBP}/mo · PSR UK readers £
           {CUSTODYNOTE_MEMBER_PRICE_GBP} with code{' '}
           <span className="rounded bg-[var(--gold)]/20 px-1 font-mono text-[var(--gold)]">
             {CUSTODYNOTE_DISCOUNT_CODE}
@@ -43,7 +46,7 @@ export function CustodyNoteInlineCTA({ variant = 'full' }: { variant?: Variant }
             rel="noopener noreferrer"
             className="inline-flex flex-1 min-w-[8rem] items-center justify-center rounded-lg bg-[var(--gold)] px-3 py-2 text-center text-xs font-bold text-[var(--navy)] no-underline transition-colors hover:bg-[var(--gold-hover)]"
           >
-            Start Free Trial
+            {CUSTODYNOTE_DOWNLOAD_APPS_CTA}
           </a>
           <Link
             href="/CustodyNote"
@@ -64,6 +67,7 @@ export function CustodyNoteInlineCTA({ variant = 'full' }: { variant?: Variant }
       <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[var(--gold)]/10 blur-2xl" />
       <div className="relative">
         <p className="text-xs font-bold uppercase tracking-widest text-[var(--gold)]">Recommended for reps</p>
+        <p className="mt-2 text-sm font-medium text-[var(--gold)]">{CUSTODYNOTE_APPS_LINE}</p>
         <h2 id="cn-inline-cta-heading" className="mt-2 text-xl font-extrabold tracking-tight text-white sm:text-2xl">
           {INLINE_CTA_HEADLINE}
         </h2>
@@ -96,7 +100,7 @@ export function CustodyNoteInlineCTA({ variant = 'full' }: { variant?: Variant }
             rel="noopener noreferrer"
             className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[var(--gold)] px-8 py-3 text-base font-bold text-[var(--navy)] no-underline shadow-md transition-colors hover:bg-[var(--gold-hover)]"
           >
-            Start Free Trial
+            {CUSTODYNOTE_DOWNLOAD_APPS_CTA}
           </a>
           <Link
             href="/CustodyNote"

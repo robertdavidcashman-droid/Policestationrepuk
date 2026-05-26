@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import {
-  CUSTODYNOTE_ANYWHERE_HREF,
-  CUSTODYNOTE_ANYWHERE_NAME,
-  CUSTODYNOTE_ANYWHERE_NOTE,
   CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
+  CUSTODYNOTE_APPS_LINE,
+  CUSTODYNOTE_DOWNLOAD_APPS_CTA,
+  CUSTODYNOTE_DOWNLOAD_HREF,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
   CUSTODYNOTE_PLATFORM_LINE,
   CUSTODYNOTE_PRICE_GBP,
@@ -100,7 +100,7 @@ export function Footer() {
                   rel="noopener noreferrer"
                   className="inline-flex min-h-[40px] items-center justify-center rounded-lg bg-[var(--gold)] px-4 py-2 text-xs font-bold text-[var(--navy)] no-underline hover:bg-[var(--gold-hover)]"
                 >
-                  Start free trial
+                  {CUSTODYNOTE_DOWNLOAD_APPS_CTA}
                 </a>
                 <Link
                   href="/CustodyNote"
@@ -110,14 +110,14 @@ export function Footer() {
                 </Link>
               </div>
               <p className="mt-3 border-t border-white/10 pt-3 text-[11px] text-slate-300">
-                {CUSTODYNOTE_ANYWHERE_NOTE}{' '}
+                {CUSTODYNOTE_APPS_LINE}.{' '}
                 <a
-                  href={CUSTODYNOTE_ANYWHERE_HREF}
+                  href={CUSTODYNOTE_DOWNLOAD_HREF}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-semibold text-[var(--gold)] underline-offset-2 hover:underline"
                 >
-                  Learn about {CUSTODYNOTE_ANYWHERE_NAME} →
+                  Download for Windows &amp; Mac →
                 </a>
               </p>
             </div>
@@ -206,12 +206,12 @@ export function Footer() {
             </Link>
             <span className="mx-1 text-xs text-slate-500">·</span>
             <a
-              href={CUSTODYNOTE_ANYWHERE_HREF}
+              href={CUSTODYNOTE_DOWNLOAD_HREF}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 inline-block text-xs font-semibold !text-[var(--gold)] no-underline hover:!text-white"
             >
-              {CUSTODYNOTE_ANYWHERE_NAME} (browser/PWA) →
+              Download for Windows &amp; Mac →
             </a>
           </div>
           <div>

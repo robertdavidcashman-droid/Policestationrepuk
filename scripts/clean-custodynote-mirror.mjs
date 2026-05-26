@@ -17,12 +17,10 @@ const REPLACEMENTS = [
   [/No credit card for trial · Windows 10\+ ·/g, 'No credit card for trial · Windows 10+ and macOS 11+ ·'],
   [/in one Windows app/g, 'on Windows and Mac'],
   [/one Windows app/g, 'Windows and Mac desktop apps'],
-  [/Mac\/iPad waitlist/g, 'browser/PWA early access'],
-  [/Register interest in Custody Note Anywhere/g, 'Learn about Custody Note Anywhere'],
-  [
-    /Custody Note Anywhere — coming soon/gi,
-    'Custody Note Anywhere — early-access browser option',
-  ],
+  [/Custody Note Anywhere[^\n]*/gi, 'Custody Note for Windows PC and Mac — download at custodynote.com/download'],
+  [/custodynote-anywhere/gi, 'custodynote.com/download'],
+  [/Windows only/gi, 'Windows PC and Mac'],
+  [/one Windows app/gi, 'Windows PC and Mac desktop apps'],
   [
     /try Custody Note free for 30 days PSR UK readers £11\.99\/mo · code A2MJY2NQ/g,
     'try Custody Note free for 30 days — download for Windows and Mac at custodynote.com/download',

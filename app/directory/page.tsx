@@ -15,8 +15,10 @@ import { JoinCTA } from '@/components/directory/JoinCTA';
 import { FeaturedListingAdvert } from '@/components/FeaturedListingAdvert';
 import { FeaturedListingFaq } from '@/components/FeaturedListingFaq';
 import {
+  CUSTODYNOTE_APPS_LINE,
   CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
+  CUSTODYNOTE_DOWNLOAD_APPS_CTA,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
   CUSTODYNOTE_PRICE_GBP,
   CUSTODYNOTE_TRIAL_HREF,
@@ -189,10 +191,10 @@ export default async function DirectoryPage() {
             <AdvertisementLabel variant="dark" label="Featured product" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold text-white">
-                {CUSTODYNOTE_BRAND_NAME} — PACE-aligned police station attendance notes
+                {CUSTODYNOTE_BRAND_NAME} — {CUSTODYNOTE_APPS_LINE}
               </p>
               <p className="mt-0.5 text-xs text-white/70">
-                30-day free trial &middot; &pound;{CUSTODYNOTE_PRICE_GBP}/mo &middot; PSR UK readers &pound;
+                30-day free trial &middot; Windows PC &amp; Mac &middot; &pound;{CUSTODYNOTE_PRICE_GBP}/mo &middot; PSR UK readers &pound;
                 {CUSTODYNOTE_MEMBER_PRICE_GBP}/mo with code{' '}
                 <span className="font-mono font-semibold text-[var(--gold)]">{CUSTODYNOTE_DISCOUNT_CODE}</span>
               </p>
@@ -204,7 +206,7 @@ export default async function DirectoryPage() {
             rel="noopener noreferrer"
             className="btn-gold shrink-0 self-start !px-4 !py-2 !text-xs no-underline sm:self-auto"
           >
-            Try Free
+            {CUSTODYNOTE_DOWNLOAD_APPS_CTA}
           </a>
         </aside>
 

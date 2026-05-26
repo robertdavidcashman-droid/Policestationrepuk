@@ -9,15 +9,16 @@ export const CUSTODYNOTE_DOWNLOAD_HREF = `${CUSTODYNOTE_SITE}/download?${UTM}`;
 /** Primary trial CTA — custodynote.com/download is the canonical install path. */
 export const CUSTODYNOTE_TRIAL_HREF = CUSTODYNOTE_DOWNLOAD_HREF;
 export const CUSTODYNOTE_PRICING_HREF = `${CUSTODYNOTE_SITE}/pricing?${UTM}`;
-/** Browser/PWA early-access landing page for non-desktop platforms. */
-export const CUSTODYNOTE_ANYWHERE_HREF = `${CUSTODYNOTE_SITE}/custodynote-anywhere?${UTM}`;
-export const CUSTODYNOTE_ANYWHERE_NAME = 'Custody Note Anywhere';
-export const CUSTODYNOTE_ANYWHERE_TAGLINE =
-  'Early-access browser/PWA option for Chromebook, iPad and Android — when you cannot install desktop software';
+/** Mac section on the custodynote.com download page (Apple Silicon + Intel pickers). */
+export const CUSTODYNOTE_MAC_DOWNLOAD_HREF = `${CUSTODYNOTE_DOWNLOAD_HREF}#mac`;
 
 /** Current release published on custodynote.com (see custody-note-website/data/releases.json). */
 export const CUSTODYNOTE_VERSION = '1.9.11';
 
+/** Plain-language — use in headlines and promos. */
+export const CUSTODYNOTE_APPS_LINE = 'Native desktop apps for Windows PC and Mac';
+
+/** Technical requirements — use in footnotes and fine print. */
 export const CUSTODYNOTE_PLATFORM_LINE =
   'Windows 10+ and macOS 11+ (Apple Silicon and Intel)';
 
@@ -45,14 +46,13 @@ export const CUSTODYNOTE_SHORT_DESCRIPTION =
 export const CUSTODYNOTE_MEMBER_DEAL =
   `PSR UK readers pay £${CUSTODYNOTE_MEMBER_PRICE_GBP}/mo with code ${CUSTODYNOTE_DISCOUNT_CODE} (${CUSTODYNOTE_DISCOUNT_PCT}% off)`;
 
-export const CUSTODYNOTE_MAC_NOTE =
-  'Native Mac and Windows desktop apps — download from custodynote.com';
+export const CUSTODYNOTE_DOWNLOAD_APPS_CTA = 'Download for Windows & Mac';
 
-export const CUSTODYNOTE_ANYWHERE_NOTE =
-  'On Chromebook, iPad or Android? Custody Note Anywhere is an early-access browser alternative.';
+export const CUSTODYNOTE_APPS_DETAIL =
+  'Install on your Windows PC or Mac (Apple Silicon and Intel). Signed Mac builds, automatic updates on both platforms.';
 
 export const TOP_BANNER_TEXT =
-  'Structured custody attendance notes for criminal defence work — try Custody Note free for 30 days';
+  'Custody Note for Windows PC & Mac — structured attendance notes, 30-day free trial';
 
 export const INLINE_CTA_HEADLINE = 'Stop rewriting custody notes at 2am';
 export const INLINE_CTA_BULLETS = [

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import {
+  CUSTODYNOTE_APPS_LINE,
   CUSTODYNOTE_DISCOUNT_CODE,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
   CUSTODYNOTE_TRIAL_HREF,
@@ -37,7 +38,11 @@ export function CustodyNoteTopBanner() {
           {TOP_BANNER_TEXT}
         </a>
         <span className="hidden h-4 w-px bg-white/30 sm:inline-block" aria-hidden />
-        <span className="hidden text-[11px] font-medium text-white/85 sm:inline">
+        <span className="hidden text-[11px] font-medium text-white/85 md:inline">
+          {CUSTODYNOTE_APPS_LINE}
+        </span>
+        <span className="hidden h-4 w-px bg-white/30 md:inline-block" aria-hidden />
+        <span className="hidden text-[11px] font-medium text-white/85 lg:inline">
           PSR UK readers £{CUSTODYNOTE_MEMBER_PRICE_GBP}/mo · code{' '}
           <span className="rounded bg-[var(--gold)]/20 px-1.5 py-0.5 font-mono font-bold text-[var(--gold)]">
             {CUSTODYNOTE_DISCOUNT_CODE}

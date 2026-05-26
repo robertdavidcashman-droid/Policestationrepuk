@@ -2,15 +2,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import {
-  CUSTODYNOTE_ANYWHERE_HREF,
-  CUSTODYNOTE_ANYWHERE_NAME,
-  CUSTODYNOTE_ANYWHERE_NOTE,
-  CUSTODYNOTE_ANYWHERE_TAGLINE,
   CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
   CUSTODYNOTE_DISCOUNT_PCT,
   CUSTODYNOTE_DOWNLOAD_CTA,
   CUSTODYNOTE_DOWNLOAD_HREF,
+  CUSTODYNOTE_APPS_DETAIL,
+  CUSTODYNOTE_APPS_LINE,
+  CUSTODYNOTE_DOWNLOAD_APPS_CTA,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
   CUSTODYNOTE_PLATFORM_LINE,
   CUSTODYNOTE_PRICE_GBP,
@@ -204,7 +203,7 @@ export default function CustodyNotePage() {
               Available Now
             </span>
             <span className="inline-flex items-center rounded-full border border-white bg-[var(--navy-light)] px-3 py-1 text-xs font-medium text-white">
-              Desktop App
+              Windows PC &amp; Mac
             </span>
             <span className="inline-flex items-center rounded-full bg-green-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
               30-Day Free Trial
@@ -216,10 +215,10 @@ export default function CustodyNotePage() {
           </h1>
 
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-white">
-            {CUSTODYNOTE_BRAND_NAME} is desktop software built for criminal defence solicitors and accredited
-            police station representatives. {CUSTODYNOTE_SHORT_DESCRIPTION} Disclosure → advice → interview → outcome in one
-            structured record — offline at the custody desk, PDF for the firm file, LAA-oriented
-            billing fields built in.
+            {CUSTODYNOTE_BRAND_NAME} is {CUSTODYNOTE_APPS_LINE.toLowerCase()} for criminal defence solicitors
+            and accredited police station representatives. {CUSTODYNOTE_SHORT_DESCRIPTION} Disclosure →
+            advice → interview → outcome in one structured record — offline at the custody desk, PDF for
+            the firm file, LAA-oriented billing fields built in.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -280,25 +279,21 @@ export default function CustodyNotePage() {
             No credit card for trial · {CUSTODYNOTE_PLATFORM_LINE} · £{SUBSCRIPTION_GBP}/mo (PSR UK £{MEMBER_GBP}/mo) · Cancel any time · v{APP_VERSION}
           </p>
 
-          <div className="mt-6 rounded-[var(--radius-lg)] border border-white/25 bg-white/5 p-4 sm:p-5">
+          <div className="mt-6 rounded-[var(--radius-lg)] border border-[var(--gold)]/40 bg-[var(--gold)]/10 p-4 sm:p-5">
             <p className="text-xs font-bold uppercase tracking-widest text-[var(--gold)]">
-              Other devices
+              Download
             </p>
-            <p className="mt-2 text-sm font-semibold text-white">
-              {CUSTODYNOTE_ANYWHERE_NAME}
+            <p className="mt-2 text-sm font-semibold text-white">{CUSTODYNOTE_APPS_LINE}</p>
+            <p className="mt-1 text-xs leading-relaxed text-white/90">
+              {CUSTODYNOTE_APPS_DETAIL} 30-day free trial on both platforms — no credit card.
             </p>
-            <p className="mt-1 text-xs leading-relaxed text-white/85">
-              {CUSTODYNOTE_ANYWHERE_TAGLINE}. MacBooks and iMacs are best served by the native Mac
-              desktop app above — download from custodynote.com alongside Windows.
-            </p>
-            <p className="mt-2 text-xs text-white/75">{CUSTODYNOTE_ANYWHERE_NOTE}</p>
             <a
-              href={CUSTODYNOTE_ANYWHERE_HREF}
+              href={CUSTODYNOTE_DOWNLOAD_HREF}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex min-h-[40px] items-center rounded-lg border border-[var(--gold)] px-4 py-2 text-xs font-bold !text-[var(--gold)] no-underline transition-colors hover:bg-[var(--gold)] hover:!text-[var(--navy)]"
+              className="mt-3 inline-flex min-h-[40px] items-center rounded-lg bg-[var(--gold)] px-4 py-2 text-xs font-bold text-[var(--navy)] no-underline transition-colors hover:bg-[var(--gold-hover)]"
             >
-              Learn about {CUSTODYNOTE_ANYWHERE_NAME} →
+              {CUSTODYNOTE_DOWNLOAD_APPS_CTA} →
             </a>
           </div>
         </div>
