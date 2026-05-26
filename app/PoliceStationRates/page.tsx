@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -40,6 +41,8 @@ export default function PoliceStationRatesPage() {
       </section>
 
       <div className="page-container">
+      <CustodyNotePagePromo variant="compact" className="mb-10" />
+
       {/* Key Figures */}
       <div className="mb-14 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {KEY_FIGURES.map((fig) => (

@@ -115,6 +115,8 @@ export default async function HomePage() {
         />
       </div>
 
+      <HomeCustodyNote />
+
       <HomeTopLocations counties={topCountiesForLinks} />
 
       <HomeCommunityWhatsAppPromo />
@@ -147,8 +149,6 @@ export default async function HomePage() {
       <div className="cv-auto">
         <HomeBlogPreview />
       </div>
-
-      <HomeCustodyNote />
 
       <ToolsForRepsSection />
 

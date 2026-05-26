@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { buildMetadata } from '@/lib/seo';
 import { getAllFormDocuments } from '@/lib/data';
+import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import type { FormDocument } from '@/lib/types';
 
 export const metadata = buildMetadata({
@@ -85,6 +86,8 @@ export default async function FormsLibraryPage() {
       </section>
 
       <div className="page-container">
+        <CustodyNotePagePromo variant="full" className="mb-10" />
+
         {sortedCategories.map((category) => (
           <section key={category} className="mb-12">
             <h2 className="text-h2 mb-2 text-[var(--navy)]">{category}</h2>
@@ -119,6 +122,15 @@ export default async function FormsLibraryPage() {
               <p className="font-medium text-[var(--navy)]">🌐 Legal Resources</p>
               <p className="mt-1 text-sm text-[var(--muted)]">
                 PACE codes, CPS guidance, and more
+              </p>
+            </Link>
+            <Link
+              href="/CustodyNote"
+              className="block rounded-[var(--radius)] border border-[var(--gold)]/40 bg-[var(--gold-pale)] p-5 no-underline shadow-[var(--card-shadow)] hover:border-[var(--gold)]"
+            >
+              <p className="font-medium text-[var(--navy)]">Custody Note software</p>
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                Structured digital attendance notes — Windows and Mac
               </p>
             </Link>
             <Link

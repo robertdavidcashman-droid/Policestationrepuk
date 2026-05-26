@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { CrawlContent } from '@/components/CrawlContent';
+import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -22,6 +23,7 @@ export default function PoliceDisclosureGuidePage() {
       <div className="page-container">
         <div className="mx-auto max-w-4xl">
           <CrawlContent slug="PoliceDisclosureGuide" />
+          <CustodyNotePagePromo variant="compact" className="mt-10" />
           <section className="mt-10 rounded-[var(--radius-lg)] bg-[var(--navy)] p-8 text-center">
             <h2 className="text-xl font-bold text-white">Need Help?</h2>
             <p className="mt-3 text-slate-300">Find an accredited police station representative or get in touch.</p>

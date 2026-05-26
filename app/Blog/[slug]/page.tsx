@@ -12,7 +12,7 @@ import type { BlogCategoryId } from '@/lib/blog/types';
 import { getTopicClusterForSlug } from '@/lib/blog/topic-clusters';
 import { BlogAuthorBio } from '@/components/BlogAuthorBio';
 import { BlogBottomAd } from '@/components/BlogBottomAd';
-import { BlogPartnerToolsPromo } from '@/components/BlogPartnerToolsPromo';
+import { BlogCustodyNotePromo } from '@/components/BlogCustodyNotePromo';
 import { PsrTrainPromo } from '@/components/PsrTrainPromo';
 import { prefersPsrTrainBlogPromo } from '@/lib/blog-partner-promo';
 
@@ -166,7 +166,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
           {psrTrainFocus ? (
             <PsrTrainPromo variant="inline" campaign="blog_article" className="mt-10" />
           ) : (
-            <BlogPartnerToolsPromo />
+            <BlogCustodyNotePromo />
           )}
 
           {article.faqs && article.faqs.length > 0 && (

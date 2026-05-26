@@ -52,7 +52,7 @@ const HIGH_PRIORITY_PAGES = [
   { path: 'About', priority: 0.7, freq: 'monthly' as const },
   { path: 'Contact', priority: 0.7, freq: 'monthly' as const },
   { path: 'FAQ', priority: 0.7, freq: 'monthly' as const },
-  { path: 'CustodyNote', priority: 0.7, freq: 'monthly' as const },
+  { path: 'CustodyNote', priority: 0.85, freq: 'weekly' as const },
   { path: 'Premium', priority: 0.75, freq: 'weekly' as const },
   { path: 'Forces', priority: 0.7, freq: 'monthly' as const },
   { path: 'Firms', priority: 0.7, freq: 'monthly' as const },

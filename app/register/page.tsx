@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { buildMetadata } from '@/lib/seo';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { RegisterForm } from './RegisterForm';
+import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { enquiryEmailVerificationEnabled } from '@/lib/enquiry-email-verify';
 
 const TRUST_POINTS = [
@@ -194,6 +195,7 @@ export default function RegisterPage() {
                   requireEmailCode={enquiryEmailVerificationEnabled()}
                 />
               </div>
+              <CustodyNotePagePromo variant="compact" className="mt-6" />
             </div>
           </div>
         </div>

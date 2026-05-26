@@ -11,6 +11,7 @@ import { phoneToTelHref } from '@/lib/phone';
 import { availabilityBucket, isUrgentCoverCapable, profileCompleteness } from '@/lib/directory-ranking';
 import { looksIneligible } from '@/lib/rep-status';
 import { turnstileSiteKey } from '@/lib/turnstile';
+import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 
 // Render every rep slug on demand. The previous setup combined
 // `revalidate = 60` with `generateStaticParams()` returning ~180 known
@@ -303,6 +304,8 @@ export default async function RepPage({ params }: PageProps) {
                   />
                 </div>
               </section>
+
+              <CustodyNotePagePromo variant="compact" className="!my-0" />
 
               {rep.websiteUrl && (
                 <a

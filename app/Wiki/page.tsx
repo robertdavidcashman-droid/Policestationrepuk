@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { WikiArticleIndex } from '@/components/WikiArticleIndex';
+import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { buildMetadata } from '@/lib/seo';
 import { getAllWikiArticles } from '@/lib/data';
 
@@ -35,6 +36,8 @@ export default async function WikiPage() {
       </section>
 
       <div className="page-container">
+        <CustodyNotePagePromo variant="compact" className="mb-10" />
+
         <WikiArticleIndex articles={allArticles} variant="list" />
 
         <section className="mx-auto mt-12 max-w-5xl rounded-[var(--radius-lg)] bg-[var(--navy)] p-8 text-center">

@@ -11,6 +11,7 @@ import { JsonLd } from '@/components/JsonLd';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { RepCard } from '@/components/RepCard';
 import { StationCard } from '@/components/StationCard';
+import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 
 export const dynamic = 'force-static';
 export const revalidate = false;
@@ -74,6 +75,8 @@ export default async function CountyPage({ params }: PageProps) {
           <p className="mt-4 max-w-3xl text-base leading-relaxed text-[var(--muted)]">
             {content.intro}
           </p>
+
+          <CustodyNotePagePromo variant="compact" className="mt-8" />
 
           {content.sections.map((section, i) => (
             <section key={i} className="mt-8 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--card-bg)] p-[var(--card-padding)] shadow-[var(--card-shadow)]">

@@ -5,6 +5,7 @@ import { getAllReps, getAllCounties, getAllStations } from '@/lib/data';
 import { DirectorySearch } from '@/components/DirectorySearch';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { DirectoryComplianceNotice } from '@/components/DirectoryComplianceNotice';
+import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { SITE_NAME, SITE_URL, socialPreviewImageUrl } from '@/lib/seo-layer/config';
 import { ResultsGridSkeleton } from '@/components/directory/ResultsGrid';
 
@@ -74,6 +75,7 @@ export default async function SearchPage() {
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <DirectoryComplianceNotice className="mb-6" />
+        <CustodyNotePagePromo variant="compact" className="mb-6" />
         <Suspense fallback={<ResultsGridSkeleton />}>
           <DirectorySearch
             reps={reps}

@@ -1,3 +1,4 @@
+import { CUSTODYNOTE_TRIAL_HREF } from '@/lib/custodynote-promo';
 import { SUPPORT_MAILTO_HREF } from '@/lib/site-contact';
 import { PSRTRAIN_TRAINING_HREF } from '@/lib/psrtrain-promo';
 
@@ -80,7 +81,8 @@ export const FOOTER_FOR_REPRESENTATIVES: FooterLink[] = [
 
 /** Footer column “Tools & Resources” */
 export const FOOTER_TOOLS: FooterLink[] = [
-  { href: 'https://custodynote.com', label: 'Custody Note App', external: true },
+  { href: '/CustodyNote', label: 'Custody Note — overview' },
+  { href: CUSTODYNOTE_TRIAL_HREF, label: 'Custody Note — free trial', external: true },
   { href: PSRTRAIN_TRAINING_HREF, label: 'PSR Train (PSRAS prep)', external: true },
   { href: '/police-station-representative', label: 'Police station representative' },
   { href: '/criminal-solicitor-police-station', label: 'Criminal solicitor — police station' },

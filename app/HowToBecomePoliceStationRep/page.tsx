@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { PsrTrainPromo } from '@/components/PsrTrainPromo';
+import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -240,6 +241,8 @@ export default function HowToBecomePage() {
 
       <div className="page-container">
         <div className="mx-auto max-w-4xl">
+          <CustodyNotePagePromo variant="compact" className="mb-10" />
+
           {/* Read this first */}
           <div className="mb-10 rounded-[var(--radius-lg)] border border-amber-300 bg-amber-50 p-6">
             <h2 className="text-base font-bold text-amber-900">Read this first</h2>
