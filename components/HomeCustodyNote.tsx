@@ -1,11 +1,15 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import {
+  CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
   CUSTODYNOTE_DISCOUNT_PCT,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
+  CUSTODYNOTE_PLATFORM_LINE,
   CUSTODYNOTE_PRICE_GBP,
   CUSTODYNOTE_PRICING_HREF,
+  CUSTODYNOTE_TAGLINE,
+  CUSTODYNOTE_TRIAL_CTA,
   CUSTODYNOTE_TRIAL_HREF,
 } from '@/lib/custodynote-promo';
 import { AdvertisementLabel } from './AdvertisementLabel';
@@ -14,7 +18,7 @@ export function HomeCustodyNote() {
   return (
     <section
       className="relative overflow-hidden bg-gradient-to-br from-[var(--navy)] via-[#152e6e] to-[var(--navy)]"
-      aria-label="CustodyNote — promoted product"
+      aria-label={`${CUSTODYNOTE_BRAND_NAME} — promoted product`}
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(250,204,21,0.08),transparent_60%)]" />
       <div className="section-pad relative">
@@ -22,15 +26,14 @@ export function HomeCustodyNote() {
           <div className="mx-auto max-w-3xl text-center">
             <AdvertisementLabel variant="dark" label="Featured product" />
 
-            <h2 className="text-h2 mt-4 text-white">CustodyNote</h2>
+            <h2 className="text-h2 mt-4 text-white">{CUSTODYNOTE_BRAND_NAME}</h2>
             <p className="mt-1 text-base font-medium text-[var(--gold)]">
-              Police station attendance notes that match how UK custody work actually runs
+              {CUSTODYNOTE_TAGLINE}
             </p>
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/90">
-              Disclosure → advice → interview → outcome in one structured record. Built by a
-              practising criminal solicitor for accredited reps and defence solicitors. Offline
-              at the custody desk, PDF for the firm file, LAA-oriented billing fields when you
-              are back online — all in one Windows app.
+              Disclosure → advice → interview → outcome in one structured record. Built for
+              accredited reps and defence solicitors. Offline at the custody desk, PDF for the
+              firm file, LAA-oriented billing fields — native desktop app for {CUSTODYNOTE_PLATFORM_LINE.toLowerCase()}.
             </p>
 
             <div className="mx-auto mt-8 grid max-w-xl gap-3 sm:grid-cols-3">
@@ -79,7 +82,7 @@ export function HomeCustodyNote() {
                 rel="noopener noreferrer"
                 className="btn-gold w-full sm:w-auto"
               >
-                Start 30-day free trial →
+                {CUSTODYNOTE_TRIAL_CTA} →
               </Link>
               <Link
                 href="/CustodyNote"
@@ -100,7 +103,7 @@ export function HomeCustodyNote() {
             <div className="mt-8 overflow-hidden rounded-xl border border-white/10 shadow-2xl">
               <Image
                 src="/images/custodynote/custodynote-app-dashboard.png"
-                alt="CustodyNote desktop app dashboard — Custody Attendance, Voluntary Attendance, Telephone Advice and Quick Capture workflows"
+                alt="Custody Note desktop app dashboard — Custody Attendance, Voluntary Attendance, Telephone Advice and Quick Capture workflows"
                 width={1536}
                 height={960}
                 className="h-auto w-full"
@@ -108,7 +111,7 @@ export function HomeCustodyNote() {
             </div>
 
             <p className="mt-5 text-xs text-white/60">
-              CustodyNote is developed by Defence Legal Services Ltd. This is a promoted product —
+              {CUSTODYNOTE_BRAND_NAME} is developed by Defence Legal Services Ltd. This is a promoted product —
               not part of the directory service.
             </p>
           </div>

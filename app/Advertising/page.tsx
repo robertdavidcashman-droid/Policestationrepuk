@@ -1,5 +1,14 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import {
+  CUSTODYNOTE_BRAND_NAME,
+  CUSTODYNOTE_DISCOUNT_CODE,
+  CUSTODYNOTE_DISCOUNT_PCT,
+  CUSTODYNOTE_MEMBER_PRICE_GBP,
+  CUSTODYNOTE_PLATFORM_LINE,
+  CUSTODYNOTE_PRICE_GBP,
+  CUSTODYNOTE_SITE,
+} from '@/lib/custodynote-promo';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -49,19 +58,20 @@ export default function AdvertisingPage() {
             <h2 className="text-h2 text-[var(--navy)]">Current promoted services</h2>
             <div className="mt-4 space-y-4">
               <div className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-5">
-                <h3 className="font-bold text-[var(--navy)]">CustodyNote</h3>
+                <h3 className="font-bold text-[var(--navy)]">{CUSTODYNOTE_BRAND_NAME}</h3>
                 <p className="mt-1 text-sm text-[var(--muted)]">
                   Desktop attendance note software for criminal defence solicitors and accredited
-                  police station representatives. Developed by Defence Legal Services Ltd (trading as
-                  Police Station Agent). Headline pricing: £15.99/month after a 30-day free trial,
+                  police station representatives. Available for {CUSTODYNOTE_PLATFORM_LINE.toLowerCase()}.
+                  Developed by Defence Legal Services Ltd (trading as
+                  Police Station Agent). Headline pricing: £{CUSTODYNOTE_PRICE_GBP}/month after a 30-day free trial,
                   with 6-month and annual options at checkout. PoliceStationRepUK readers pay
-                  £11.99/month using code{' '}
-                  <span className="font-mono font-semibold text-[var(--navy)]">A2MJY2NQ</span>{' '}
-                  (25% off).
+                  £{CUSTODYNOTE_MEMBER_PRICE_GBP}/month using code{' '}
+                  <span className="font-mono font-semibold text-[var(--navy)]">{CUSTODYNOTE_DISCOUNT_CODE}</span>{' '}
+                  ({CUSTODYNOTE_DISCOUNT_PCT}% off).
                 </p>
                 <p className="mt-2 text-xs text-[var(--muted)]">
                   Website:{' '}
-                  <a href="https://custodynote.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--navy)] underline">
+                  <a href={CUSTODYNOTE_SITE} target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--navy)] underline">
                     custodynote.com
                   </a>
                 </p>

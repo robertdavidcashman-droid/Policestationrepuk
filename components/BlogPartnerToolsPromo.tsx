@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import {
-  CUSTODYNOTE_TRIAL_HREF,
+  CUSTODYNOTE_BRAND_NAME,
+  CUSTODYNOTE_DISCOUNT_CODE,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
+  CUSTODYNOTE_PRICE_GBP,
+  CUSTODYNOTE_TRIAL_HREF,
   INLINE_CTA_HEADLINE,
 } from '@/lib/custodynote-promo';
 import { PSRTRAIN_CTA, PSRTRAIN_NAME, PSRTRAIN_TRAINING_HREF } from '@/lib/psrtrain-promo';
@@ -20,7 +23,7 @@ export function BlogPartnerToolsPromo({ className = '' }: { className?: string }
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-xl border border-[var(--gold)]/35 bg-gradient-to-br from-[var(--navy)] to-[#152e6e] p-4 text-white">
           <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold)]">At the station</p>
-          <h3 className="mt-1 text-base font-bold">CustodyNote</h3>
+          <h3 className="mt-1 text-base font-bold">{CUSTODYNOTE_BRAND_NAME}</h3>
           <p className="mt-2 text-xs leading-relaxed text-slate-200">{INLINE_CTA_HEADLINE}</p>
           <p className="mt-2 text-[11px] text-white/80">
             30-day free trial · PSR UK readers £{CUSTODYNOTE_MEMBER_PRICE_GBP}/mo

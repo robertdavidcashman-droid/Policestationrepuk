@@ -11,6 +11,14 @@ import { phoneToTelHref } from '@/lib/phone';
 import { classifyPhone, displayPhoneNumber } from '@/lib/station-search';
 import { countRepsForStation, shouldIndexPoliceStationPage } from '@/lib/station-indexing';
 import { directoryHrefForAreaName } from '@/lib/county-links';
+import {
+  CUSTODYNOTE_BRAND_NAME,
+  CUSTODYNOTE_DISCOUNT_CODE,
+  CUSTODYNOTE_MEMBER_PRICE_GBP,
+  CUSTODYNOTE_PLATFORM_LINE,
+  CUSTODYNOTE_PRICE_GBP,
+  CUSTODYNOTE_TRIAL_HREF,
+} from '@/lib/custodynote-promo';
 
 export const dynamic = 'force-static';
 /** ISR: refresh station pages periodically so rep counts and index flags stay fresh. */
@@ -242,21 +250,26 @@ export default async function PoliceStationPage({ params }: PageProps) {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold-link)]">
                   Featured product
                 </p>
-                <h3 className="mt-1 font-bold text-[var(--navy)]">CustodyNote</h3>
+                <h3 className="mt-1 font-bold text-[var(--navy)]">{CUSTODYNOTE_BRAND_NAME}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--navy)]/85">
                   PACE-aligned attendance note software for accredited reps and defence solicitors —
                   structured custody, voluntary and telephone forms, offline-first, instant PDF, and
-                  LAA billing in one Windows app.
+                  LAA billing in one desktop app ({CUSTODYNOTE_PLATFORM_LINE.toLowerCase()}).
                 </p>
                 <p className="mt-2 text-xs font-semibold text-[var(--navy)]">
-                  £15.99/mo · PSR UK readers £11.99/mo with code{' '}
+                  £{CUSTODYNOTE_PRICE_GBP}/mo · PSR UK readers £{CUSTODYNOTE_MEMBER_PRICE_GBP}/mo with code{' '}
                   <span className="rounded bg-white px-1.5 py-0.5 font-mono text-[var(--navy)]">
-                    A2MJY2NQ
+                    {CUSTODYNOTE_DISCOUNT_CODE}
                   </span>
                 </p>
-                <Link href="/CustodyNote" className="btn-gold mt-3 w-full !text-sm no-underline">
+                <a
+                  href={CUSTODYNOTE_TRIAL_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-gold mt-3 block w-full !text-sm no-underline text-center"
+                >
                   Start free trial →
-                </Link>
+                </a>
               </section>
             </div>
           </div>

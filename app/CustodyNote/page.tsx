@@ -4,21 +4,27 @@ import { Breadcrumbs } from '@/components/Breadcrumbs';
 import {
   CUSTODYNOTE_ANYWHERE_HREF,
   CUSTODYNOTE_ANYWHERE_NAME,
+  CUSTODYNOTE_ANYWHERE_NOTE,
   CUSTODYNOTE_ANYWHERE_TAGLINE,
+  CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
   CUSTODYNOTE_DISCOUNT_PCT,
+  CUSTODYNOTE_DOWNLOAD_CTA,
   CUSTODYNOTE_DOWNLOAD_HREF,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
+  CUSTODYNOTE_PLATFORM_LINE,
   CUSTODYNOTE_PRICE_GBP,
   CUSTODYNOTE_PRICING_HREF,
+  CUSTODYNOTE_SHORT_DESCRIPTION,
+  CUSTODYNOTE_TAGLINE,
   CUSTODYNOTE_VERSION,
 } from '@/lib/custodynote-promo';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
-  title: `CustodyNote — UK Police Station Attendance Note Software (£${CUSTODYNOTE_PRICE_GBP}/mo)`,
+  title: `${CUSTODYNOTE_BRAND_NAME} — UK Police Station Attendance Note Software (£${CUSTODYNOTE_PRICE_GBP}/mo)`,
   description:
-    `CustodyNote: PACE-aligned Windows software for criminal solicitors and accredited police station reps — structured custody, voluntary and telephone notes, PDF export, LAA billing fields, offline-first. £${CUSTODYNOTE_PRICE_GBP}/mo (PSR UK readers £${CUSTODYNOTE_MEMBER_PRICE_GBP}/mo with code ${CUSTODYNOTE_DISCOUNT_CODE}). 30-day free trial, no credit card.`,
+    `${CUSTODYNOTE_BRAND_NAME}: PACE-aligned desktop software for criminal solicitors and accredited police station reps — structured custody, voluntary and telephone notes, PDF export, LAA billing fields, offline-first. ${CUSTODYNOTE_PLATFORM_LINE}. £${CUSTODYNOTE_PRICE_GBP}/mo (PSR UK readers £${CUSTODYNOTE_MEMBER_PRICE_GBP}/mo with code ${CUSTODYNOTE_DISCOUNT_CODE}). 30-day free trial, no credit card.`,
   path: '/CustodyNote',
 });
 
@@ -190,7 +196,7 @@ export default function CustodyNotePage() {
             light
             items={[
               { label: 'Home', href: '/' },
-              { label: 'CustodyNote' },
+              { label: CUSTODYNOTE_BRAND_NAME },
             ]}
           />
           <div className="mb-4 mt-3 flex flex-wrap items-center gap-2">
@@ -206,14 +212,14 @@ export default function CustodyNotePage() {
           </div>
 
           <h1 className="text-h1 text-white">
-            PACE attendance notes that match how UK custody work actually runs
+            {CUSTODYNOTE_TAGLINE}
           </h1>
 
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-white">
-            CustodyNote is Windows software built for criminal defence solicitors and accredited
-            police station representatives. Disclosure → advice → interview → outcome in one
+            {CUSTODYNOTE_BRAND_NAME} is desktop software built for criminal defence solicitors and accredited
+            police station representatives. {CUSTODYNOTE_SHORT_DESCRIPTION} Disclosure → advice → interview → outcome in one
             structured record — offline at the custody desk, PDF for the firm file, LAA-oriented
-            billing fields built in. No more rewriting the same facts at 2am.
+            billing fields built in.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -259,7 +265,7 @@ export default function CustodyNotePage() {
               rel="noopener noreferrer"
               className="btn-gold inline-flex min-h-[44px] items-center no-underline"
             >
-              Download Free 30-Day Trial →
+              {CUSTODYNOTE_DOWNLOAD_CTA} →
             </a>
             <a
               href={CUSTODYNOTE_PRICING}
@@ -271,28 +277,28 @@ export default function CustodyNotePage() {
             </a>
           </div>
           <p className="mt-3 text-xs text-slate-300">
-            No credit card for trial · Windows 10+ · £{SUBSCRIPTION_GBP}/mo (PSR UK £{MEMBER_GBP}/mo) · Cancel any time · v{APP_VERSION}
+            No credit card for trial · {CUSTODYNOTE_PLATFORM_LINE} · £{SUBSCRIPTION_GBP}/mo (PSR UK £{MEMBER_GBP}/mo) · Cancel any time · v{APP_VERSION}
           </p>
 
           <div className="mt-6 rounded-[var(--radius-lg)] border border-white/25 bg-white/5 p-4 sm:p-5">
             <p className="text-xs font-bold uppercase tracking-widest text-[var(--gold)]">
-              Not on Windows?
+              Other devices
             </p>
             <p className="mt-2 text-sm font-semibold text-white">
-              {CUSTODYNOTE_ANYWHERE_NAME} — coming soon
+              {CUSTODYNOTE_ANYWHERE_NAME}
             </p>
             <p className="mt-1 text-xs leading-relaxed text-white/85">
-              {CUSTODYNOTE_ANYWHERE_TAGLINE}. Mac, Chromebook, iPad and Android — the planned
-              browser-based version. Register interest so the team can email you when an
-              early-access build is ready.
+              {CUSTODYNOTE_ANYWHERE_TAGLINE}. MacBooks and iMacs are best served by the native Mac
+              desktop app above — download from custodynote.com alongside Windows.
             </p>
+            <p className="mt-2 text-xs text-white/75">{CUSTODYNOTE_ANYWHERE_NOTE}</p>
             <a
               href={CUSTODYNOTE_ANYWHERE_HREF}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 inline-flex min-h-[40px] items-center rounded-lg border border-[var(--gold)] px-4 py-2 text-xs font-bold !text-[var(--gold)] no-underline transition-colors hover:bg-[var(--gold)] hover:!text-[var(--navy)]"
             >
-              Register interest in {CUSTODYNOTE_ANYWHERE_NAME} →
+              Learn about {CUSTODYNOTE_ANYWHERE_NAME} →
             </a>
           </div>
         </div>
@@ -430,7 +436,7 @@ export default function CustodyNotePage() {
           Designed to support LAA record-keeping
         </h2>
         <p className="mb-6 max-w-2xl text-[var(--muted)]">
-          CustodyNote captures the information you need for Legal Aid Agency compliance. Every field
+          {CUSTODYNOTE_BRAND_NAME} captures the information you need for Legal Aid Agency compliance. Every field
           is mapped to LAA requirements so your records are audit-ready from day one.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -452,7 +458,7 @@ export default function CustodyNotePage() {
           Your records are too important to risk
         </h2>
         <p className="mb-6 max-w-2xl text-[var(--muted)]">
-          Client records demand the highest levels of security. CustodyNote is built with data
+          Client records demand the highest levels of security. {CUSTODYNOTE_BRAND_NAME} is built with data
           protection at its core.
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -537,7 +543,7 @@ export default function CustodyNotePage() {
 
       {/* Bottom CTA */}
       <section className="mb-14 rounded-[var(--radius-lg)] bg-[var(--navy)] p-8 text-center sm:p-10">
-        <h2 className="text-h2 text-white">Ready to try CustodyNote?</h2>
+        <h2 className="text-h2 text-white">Ready to try {CUSTODYNOTE_BRAND_NAME}?</h2>
         <p className="mx-auto mt-3 max-w-xl text-slate-300">
           Start a 30-day free trial today — no credit card, all features included. £{SUBSCRIPTION_GBP}/mo
           after the trial. PSR UK readers pay £{MEMBER_GBP}/mo with code{' '}
@@ -565,7 +571,7 @@ export default function CustodyNotePage() {
           </a>
         </div>
         <p className="mt-3 text-xs text-[var(--muted)]">
-          No credit card for trial · Windows 10+ · £{SUBSCRIPTION_GBP}/mo (PSR UK £{MEMBER_GBP}/mo) · Cancel any time · v{APP_VERSION}
+          No credit card for trial · {CUSTODYNOTE_PLATFORM_LINE} · £{SUBSCRIPTION_GBP}/mo (PSR UK £{MEMBER_GBP}/mo) · Cancel any time · v{APP_VERSION}
         </p>
       </section>
 

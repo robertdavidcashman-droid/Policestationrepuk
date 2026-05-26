@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
   CUSTODYNOTE_PRICE_GBP,
@@ -42,7 +43,7 @@ export function SiteWidePromoStrip() {
           {/* CustodyNote */}
           <div className="flex flex-col rounded-[var(--radius-lg)] border-2 border-[var(--gold)]/40 bg-white p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold)]">Featured product</p>
-            <h2 className="mt-1 text-base font-extrabold text-[var(--navy)]">CustodyNote</h2>
+            <h2 className="mt-1 text-base font-extrabold text-[var(--navy)]">{CUSTODYNOTE_BRAND_NAME}</h2>
             <p className="mt-2 flex-1 text-xs leading-relaxed text-[var(--muted)]">
               PACE-aligned attendance notes — disclosure → advice → interview → outcome in one
               structured record. Offline at the custody desk, PDF for the file, LAA billing fields

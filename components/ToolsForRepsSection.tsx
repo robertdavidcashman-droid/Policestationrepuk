@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import {
+  CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
+  CUSTODYNOTE_PLATFORM_LINE,
   CUSTODYNOTE_PRICE_GBP,
   CUSTODYNOTE_TRIAL_HREF,
 } from '@/lib/custodynote-promo';
@@ -39,10 +41,10 @@ export function ToolsForRepsSection() {
               <span className="inline-flex w-fit rounded-full bg-[var(--gold)] px-3 py-1 text-xs font-bold text-[var(--navy)]">
                 #1 for practising reps
               </span>
-              <h3 className="mt-4 text-xl font-extrabold sm:text-2xl">CustodyNote</h3>
+              <h3 className="mt-4 text-xl font-extrabold sm:text-2xl">{CUSTODYNOTE_BRAND_NAME}</h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-200">
                 PACE-aligned custody and attendance notes — structured fields, works offline, AES-256 encryption, PDF
-                export and LAA billing. Built by a practising criminal solicitor for accredited reps.
+                export and LAA billing. Native desktop app for {CUSTODYNOTE_PLATFORM_LINE.toLowerCase()}.
               </p>
               <ul className="mt-4 space-y-2 text-sm text-slate-200">
                 <li className="flex gap-2">
@@ -79,7 +81,7 @@ export function ToolsForRepsSection() {
                   href="/CustodyNote"
                   className="inline-flex min-h-[44px] items-center justify-center rounded-xl border-2 border-white/30 px-5 py-3 text-sm font-semibold text-white no-underline hover:bg-white/10"
                 >
-                  About CustodyNote
+                  About {CUSTODYNOTE_BRAND_NAME}
                 </Link>
               </div>
               <p className="mt-4 text-xs text-slate-400">Advertisement — see our disclosure.</p>

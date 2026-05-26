@@ -13,7 +13,7 @@ const MAIN_LINKS = [
   { href: '/', text: 'Home' },
   { href: '/directory', text: 'Find a Rep' },
   { href: '/search', text: 'Search directory' },
-  { href: '/CustodyNote', text: 'CustodyNote' },
+  { href: '/CustodyNote', text: 'Custody Note' },
   { href: '/register', text: 'Register' },
   { href: '/Contact', text: 'Contact' },
   { href: '/About', text: 'About' },

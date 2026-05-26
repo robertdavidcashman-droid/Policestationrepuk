@@ -14,6 +14,13 @@ import { ResultsGridSkeleton } from '@/components/directory/ResultsGrid';
 import { JoinCTA } from '@/components/directory/JoinCTA';
 import { FeaturedListingAdvert } from '@/components/FeaturedListingAdvert';
 import { FeaturedListingFaq } from '@/components/FeaturedListingFaq';
+import {
+  CUSTODYNOTE_BRAND_NAME,
+  CUSTODYNOTE_DISCOUNT_CODE,
+  CUSTODYNOTE_MEMBER_PRICE_GBP,
+  CUSTODYNOTE_PRICE_GBP,
+  CUSTODYNOTE_TRIAL_HREF,
+} from '@/lib/custodynote-promo';
 
 const directoryTitle = 'Police Station Rep Directory — County & Station';
 const directoryDescription =
@@ -182,22 +189,23 @@ export default async function DirectoryPage() {
             <AdvertisementLabel variant="dark" label="Featured product" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold text-white">
-                CustodyNote — PACE-aligned police station attendance notes
+                {CUSTODYNOTE_BRAND_NAME} — PACE-aligned police station attendance notes
               </p>
               <p className="mt-0.5 text-xs text-white/70">
-                30-day free trial &middot; &pound;15.99/mo &middot; PSR UK readers &pound;11.99/mo with code{' '}
-                <span className="font-mono font-semibold text-[var(--gold)]">A2MJY2NQ</span>
+                30-day free trial &middot; &pound;{CUSTODYNOTE_PRICE_GBP}/mo &middot; PSR UK readers &pound;
+                {CUSTODYNOTE_MEMBER_PRICE_GBP}/mo with code{' '}
+                <span className="font-mono font-semibold text-[var(--gold)]">{CUSTODYNOTE_DISCOUNT_CODE}</span>
               </p>
             </div>
           </div>
-          <Link
-            href="https://custodynote.com"
+          <a
+            href={CUSTODYNOTE_TRIAL_HREF}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-gold shrink-0 self-start !px-4 !py-2 !text-xs no-underline sm:self-auto"
           >
             Try Free
-          </Link>
+          </a>
         </aside>
 
         <PsrTrainPromo variant="slim" campaign="directory" className="mb-6" />

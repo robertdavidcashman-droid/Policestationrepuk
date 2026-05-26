@@ -4,8 +4,11 @@ import Link from 'next/link';
 import {
   CUSTODYNOTE_ANYWHERE_HREF,
   CUSTODYNOTE_ANYWHERE_NAME,
+  CUSTODYNOTE_ANYWHERE_NOTE,
+  CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
+  CUSTODYNOTE_PLATFORM_LINE,
   CUSTODYNOTE_PRICE_GBP,
   CUSTODYNOTE_TRIAL_HREF,
 } from '@/lib/custodynote-promo';
@@ -81,13 +84,14 @@ export function Footer() {
           </h3>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div className="rounded-lg border border-white/15 bg-black/20 p-4">
-              <p className="text-sm font-bold text-white">CustodyNote — at the station</p>
+              <p className="text-sm font-bold text-white">{CUSTODYNOTE_BRAND_NAME} — at the station</p>
               <p className="mt-1 text-xs text-slate-300">
                 Structured custody notes, offline-first, PDF + LAA billing. 30-day free trial · £
                 {CUSTODYNOTE_PRICE_GBP}/mo · PSR UK readers £{CUSTODYNOTE_MEMBER_PRICE_GBP}/mo with code{' '}
                 <span className="rounded bg-[var(--gold)]/20 px-1.5 py-0.5 font-mono font-bold text-[var(--gold)]">
                   {CUSTODYNOTE_DISCOUNT_CODE}
                 </span>
+                · {CUSTODYNOTE_PLATFORM_LINE}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <a
@@ -102,18 +106,18 @@ export function Footer() {
                   href="/CustodyNote"
                   className="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-white/30 px-4 py-2 text-xs font-semibold text-white no-underline hover:bg-white/10"
                 >
-                  About CustodyNote
+                  About {CUSTODYNOTE_BRAND_NAME}
                 </Link>
               </div>
               <p className="mt-3 border-t border-white/10 pt-3 text-[11px] text-slate-300">
-                On Mac, Chromebook, iPad or Android?{' '}
+                {CUSTODYNOTE_ANYWHERE_NOTE}{' '}
                 <a
                   href={CUSTODYNOTE_ANYWHERE_HREF}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-semibold text-[var(--gold)] underline-offset-2 hover:underline"
                 >
-                  Register interest in {CUSTODYNOTE_ANYWHERE_NAME} →
+                  Learn about {CUSTODYNOTE_ANYWHERE_NAME} →
                 </a>
               </p>
             </div>
@@ -175,7 +179,7 @@ export function Footer() {
             </a>
           </div>
           <div>
-            <h4 className="text-sm font-bold text-white">CustodyNote — PACE attendance note software</h4>
+            <h4 className="text-sm font-bold text-white">{CUSTODYNOTE_BRAND_NAME} — PACE attendance note software</h4>
             <p className="mt-1 text-xs text-white">
               PACE-aligned notes, offline-first, PDF + LAA billing, AES-256 encryption. £
               {CUSTODYNOTE_PRICE_GBP}/mo after a 30-day free trial. PSR UK readers £
@@ -198,7 +202,7 @@ export function Footer() {
               href="/CustodyNote"
               className="mt-2 inline-block text-xs font-semibold !text-[var(--gold)] no-underline hover:!text-white"
             >
-              About CustodyNote →
+              About {CUSTODYNOTE_BRAND_NAME} →
             </Link>
             <span className="mx-1 text-xs text-slate-500">·</span>
             <a
@@ -207,7 +211,7 @@ export function Footer() {
               rel="noopener noreferrer"
               className="mt-2 inline-block text-xs font-semibold !text-[var(--gold)] no-underline hover:!text-white"
             >
-              {CUSTODYNOTE_ANYWHERE_NAME} (Mac/iPad waitlist) →
+              {CUSTODYNOTE_ANYWHERE_NAME} (browser/PWA) →
             </a>
           </div>
           <div>

@@ -120,5 +120,6 @@ export function shouldIncludeMirrorPathInSitemap(path: string): boolean {
   // gated behind a server-issued one-shot token, so we do not want search
   // engines indexing it. robots.ts also disallows it.
   if (lower === 'register' || lower.startsWith('register/')) return false;
+  if (lower === 'custodynote') return false;
   return true;
 }

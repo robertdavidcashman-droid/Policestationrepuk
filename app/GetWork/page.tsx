@@ -283,7 +283,7 @@ const RELATED = [
   { href: '/DSCCRegistrationGuide', label: 'DSCC Registration Guide', desc: 'How the duty call flow really works' },
   { href: '/PoliceStationRates', label: 'Police station rates', desc: 'Current LAA fixed fees by area' },
   { href: '/EscapeFeeCalculator', label: 'Escape fee calculator', desc: 'Does your case escape the fixed fee?' },
-  { href: '/CustodyNote', label: 'CustodyNote app', desc: 'Digital attendance notes built for reps' },
+  { href: '/CustodyNote', label: 'Custody Note app', desc: 'Structured attendance notes for Windows and Mac' },
 ];
 
 function SectionHeading({ id, children }: { id: string; children: React.ReactNode }) {

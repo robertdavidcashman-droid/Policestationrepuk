@@ -176,9 +176,9 @@ const CAREER = [
     external: false,
   },
   {
-    title: 'CustodyNote App',
+    title: 'Custody Note App',
     href: '/CustodyNote',
-    desc: 'Digital custody note app designed for freelance police station representatives.',
+    desc: 'Structured attendance note software for Windows and Mac — built for criminal defence professionals.',
     external: false,
   },
   {

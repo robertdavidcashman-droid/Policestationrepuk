@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import {
+  CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
   CUSTODYNOTE_MEMBER_PRICE_GBP,
   CUSTODYNOTE_PRICE_GBP,
@@ -16,14 +17,14 @@ export function BlogCustodyNotePromo({ className }: { className?: string }) {
       <h2 className="mt-2 text-lg font-bold leading-snug sm:text-xl">
         Stop rewriting custody notes at 2am —{' '}
         <Link href="/CustodyNote" className="text-[var(--gold)] underline-offset-2 hover:underline">
-          CustodyNote
+          {CUSTODYNOTE_BRAND_NAME}
         </Link>
       </h2>
       <p className="mt-3 text-sm leading-relaxed text-slate-200">
         PACE-aligned structured sections, offline-first at the custody desk, instant PDF export and
         LAA billing fields in one record. See our{' '}
         <Link href="/CustodyNote" className="font-semibold text-white underline hover:text-[var(--gold)]">
-          CustodyNote overview
+          {CUSTODYNOTE_BRAND_NAME} overview
         </Link>{' '}
         or start a{' '}
         <a
@@ -64,7 +65,7 @@ export function BlogCustodyNotePromo({ className }: { className?: string }) {
         </Link>
       </div>
       <p className="mt-4 text-xs text-slate-400">
-        <span className="font-medium text-slate-300">Advertisement.</span> CustodyNote is a product of Defence Legal
+        <span className="font-medium text-slate-300">Advertisement.</span> {CUSTODYNOTE_BRAND_NAME} is a product of Defence Legal
         Services Ltd.{' '}
         <Link href="/Advertising" className="text-[var(--gold)] underline hover:text-white">
           Advertising disclosure
