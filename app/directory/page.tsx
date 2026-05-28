@@ -14,6 +14,7 @@ import { ResultsGridSkeleton } from '@/components/directory/ResultsGrid';
 import { JoinCTA } from '@/components/directory/JoinCTA';
 import { FeaturedListingAdvert } from '@/components/FeaturedListingAdvert';
 import { FeaturedListingFaq } from '@/components/FeaturedListingFaq';
+import { LegalDirectoryPromo } from '@/components/legal-directory/LegalDirectoryPromo';
 import {
   CUSTODYNOTE_APPS_LINE,
   CUSTODYNOTE_BRAND_NAME,
@@ -181,6 +182,8 @@ export default async function DirectoryPage() {
       {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <DirectoryComplianceNotice className="mb-6" />
+
+        <LegalDirectoryPromo className="mb-6" />
 
         <FeaturedListingAdvert className="mb-4" />
         <FeaturedListingFaq className="mb-6" />

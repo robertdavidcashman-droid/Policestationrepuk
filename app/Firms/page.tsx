@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { FirmDirectory } from '@/components/FirmDirectory';
+import { LegalDirectoryPromo } from '@/components/legal-directory/LegalDirectoryPromo';
 import { buildMetadata } from '@/lib/seo';
 import { getAllLawFirms } from '@/lib/data';
 import { FACEBOOK_GROUP_URL } from '@/lib/site-navigation';
@@ -68,6 +69,8 @@ export default async function FirmsPage() {
           before relying on this information. Are we missing your firm, or is something out
           of date? <a href={`${MAILTO_BASE}?subject=Firm%20Directory%20Correction`} className="font-semibold underline">Let us know</a>.
         </div>
+
+        <LegalDirectoryPromo className="mb-8" />
 
         {/* Searchable directory */}
         <section className="mb-12">

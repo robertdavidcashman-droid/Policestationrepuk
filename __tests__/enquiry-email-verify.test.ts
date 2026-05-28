@@ -137,6 +137,10 @@ describe('enquiry email verification — no KV configured', () => {
       getKV: () => null,
       skipKVInPrerender: () => false,
     }));
+    // Reset again AFTER re-mocking so the dynamic import below picks up the
+    // null-KV mock regardless of whether the module graph was cached earlier
+    // (deterministic across vitest worker scheduling).
+    vi.resetModules();
     const { consumeEnquiryEmailCode } = await import('@/lib/enquiry-email-verify');
     const r = await consumeEnquiryEmailCode('test@example.com', '123456');
     expect(r.ok).toBe(false);

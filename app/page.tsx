@@ -22,6 +22,7 @@ import { HomeHomepageFaq } from '@/components/HomeHomepageFaq';
 import { FeaturedListingAdvert } from '@/components/FeaturedListingAdvert';
 import { FeaturedListingFaq } from '@/components/FeaturedListingFaq';
 import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCredentialVerificationNotice';
+import { LegalDirectoryPromo } from '@/components/legal-directory/LegalDirectoryPromo';
 import { getAllReps, getAllCounties, getFeaturedRepsSorted } from '@/lib/data';
 import {
   organizationSchema,
@@ -122,6 +123,10 @@ export default async function HomePage() {
       <HomeCommunityWhatsAppPromo />
 
       <HomeRecentlyJoined reps={reps} />
+
+      <div className="cv-auto">
+        <LegalDirectoryPromo variant="section" />
+      </div>
 
       <div className="page-container py-8">
         <FeaturedListingAdvert />

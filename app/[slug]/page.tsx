@@ -71,6 +71,8 @@ const DEDICATED_ROUTES = new Set([
   'WhatsApp', 'whatsapp',
   'register', 'Register',
   'directory', 'Directory',
+  /** New Legal Services Directory section — app/legal-services-directory/** */
+  'legal-services-directory',
   'EscapeFeeCalculator', 'escapefeecalculator',
   'Wiki', 'wiki',
   /** Dedicated `app/search/page.tsx` — must not collide with [slug] static params */

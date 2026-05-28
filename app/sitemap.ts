@@ -16,6 +16,10 @@ import {
   countRepsForStation,
   shouldIncludePoliceStationInSitemap,
 } from '@/lib/station-indexing';
+import { listApprovedListings } from '@/lib/legal-directory/storage';
+import { LEGAL_DIRECTORY_CATEGORIES } from '@/lib/legal-directory/categories';
+import { LEGAL_DIRECTORY_LOCATIONS } from '@/lib/legal-directory/locations';
+import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
 
 const now = new Date();
 
@@ -56,6 +60,7 @@ const HIGH_PRIORITY_PAGES = [
   { path: 'Premium', priority: 0.75, freq: 'weekly' as const },
   { path: 'Forces', priority: 0.7, freq: 'monthly' as const },
   { path: 'Firms', priority: 0.7, freq: 'monthly' as const },
+  { path: 'legal-services-directory', priority: 0.82, freq: 'weekly' as const },
   { path: 'GetWork', priority: 0.7, freq: 'monthly' as const },
   { path: 'HowToBecomePoliceStationRep', priority: 0.85, freq: 'monthly' as const },
   { path: 'FindSupervisingSolicitor', priority: 0.8, freq: 'monthly' as const },
@@ -254,6 +259,39 @@ async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/directory/counties`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
   ];
 
+  let legalDirUrls: MetadataRoute.Sitemap = [
+    { url: `${BASE}${LEGAL_DIRECTORY_BASE}/search`, lastModified: now, changeFrequency: 'daily', priority: 0.78 },
+    { url: `${BASE}${LEGAL_DIRECTORY_BASE}/categories`, lastModified: now, changeFrequency: 'weekly', priority: 0.75 },
+    { url: `${BASE}${LEGAL_DIRECTORY_BASE}/locations`, lastModified: now, changeFrequency: 'weekly', priority: 0.75 },
+    { url: `${BASE}${LEGAL_DIRECTORY_BASE}/add-listing`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+  ];
+  try {
+    const legalListings = await listApprovedListings();
+    legalDirUrls = [
+      ...legalDirUrls,
+      ...LEGAL_DIRECTORY_CATEGORIES.map((c) => ({
+        url: `${BASE}${LEGAL_DIRECTORY_BASE}/category/${c.slug}`,
+        lastModified: now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.72,
+      })),
+      ...LEGAL_DIRECTORY_LOCATIONS.map((l) => ({
+        url: `${BASE}${LEGAL_DIRECTORY_BASE}/location/${l.slug}`,
+        lastModified: now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.68,
+      })),
+      ...legalListings.map((l) => ({
+        url: `${BASE}${LEGAL_DIRECTORY_BASE}/listing/${l.slug}`,
+        lastModified: safeLastModified(l.lastUpdated, now),
+        changeFrequency: 'monthly' as const,
+        priority: l.featured ? 0.74 : 0.65,
+      })),
+    ];
+  } catch (legalErr) {
+    console.error('[sitemap] legal directory URLs skipped:', legalErr);
+  }
+
   const combined = [
     ...entries,
     ...directoryCountyUrls,
@@ -263,6 +301,7 @@ async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
     ...legalUpdateUrls,
     ...blogPostUrls,
     ...extraPages,
+    ...legalDirUrls,
   ];
   const seen = new Set<string>();
   return combined.filter((e) => {
