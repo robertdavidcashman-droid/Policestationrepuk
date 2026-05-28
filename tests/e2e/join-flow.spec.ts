@@ -76,10 +76,11 @@ test.describe('Public entry points', () => {
     expect(href).toBe('/Account');
   });
 
-  test('homepage shows WhatsApp group promo (reps + firms) with procedure link', async ({ page }) => {
+  test('homepage shows WhatsApp group promo (firms-first) with procedure link', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: /Join the WhatsApp group/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /^Full joining procedure/ }).first()).toHaveAttribute('href', '/WhatsApp');
+    await expect(page.getByRole('heading', { name: /Need police station cover out of hours/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /^How firms join/ }).first()).toHaveAttribute('href', '/WhatsApp');
+    await expect(page.getByRole('link', { name: /^Join as a firm$/ }).first()).toBeVisible();
   });
 
   test('/Join page loads and links to /register', async ({ page }) => {

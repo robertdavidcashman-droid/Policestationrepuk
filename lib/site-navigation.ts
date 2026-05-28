@@ -36,8 +36,11 @@ export const WHATSAPP_JOIN_PHONE = '07535 494446';
 /** Single community group for accredited reps and verified criminal defence firms (same chat). */
 export const WHATSAPP_JOIN_URL =
   'https://wa.me/447535494446?text=Hi%2C%20I%27d%20like%20to%20join%20the%20PoliceStationRepUK%20WhatsApp%20group%20(reps%20and%20firms).%20My%20name%20is%20';
-/** @deprecated Same as WHATSAPP_JOIN_URL — one group for everyone. Kept for older links. */
-export const WHATSAPP_FIRMS_JOIN_URL = WHATSAPP_JOIN_URL;
+/** Pre-filled message when a criminal defence firm requests to join (same group as WHATSAPP_JOIN_URL). */
+export const WHATSAPP_FIRM_JOIN_URL =
+  'https://wa.me/447535494446?text=Hi%2C%20we%20are%20a%20criminal%20defence%20firm%20and%20would%20like%20to%20join%20the%20PoliceStationRepUK%20WhatsApp%20group%20for%20police%20station%20cover.%20Firm%20name%3A%20';
+/** @deprecated Use WHATSAPP_FIRM_JOIN_URL for firm CTAs. Same group; firm-specific prefill. */
+export const WHATSAPP_FIRMS_JOIN_URL = WHATSAPP_FIRM_JOIN_URL;
 export const FACEBOOK_GROUP_URL =
   'https://www.facebook.com/groups/policestationrepuk';
 
