@@ -8,6 +8,7 @@ import {
 } from '@/lib/data';
 import { loadFeaturedFlags, type FeaturedMeta } from '@/lib/featured';
 import { loadAllReviews, type RepReview } from '@/lib/admin-review';
+import { matchesAutomatedSmokeRep } from '@/lib/directory-blocklist';
 import type { Representative } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -169,7 +170,18 @@ export async function GET() {
       reviews.get(email),
       hiddenSet.has(email),
     );
-    if (summary) out.push(summary);
+    if (!summary) continue;
+    if (
+      matchesAutomatedSmokeRep({
+        email: summary.email,
+        name: summary.name,
+        slug: summary.slug,
+        notes: summary.notes,
+      })
+    ) {
+      continue;
+    }
+    out.push(summary);
   }
 
   const registeredEmails = new Set(out.map((r) => r.email));

@@ -215,26 +215,9 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   };
 
   return (
-    <section className="bg-slate-50 py-8">
-      <div className="page-container">
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--gold)]">
-              Private admin
-            </p>
-            <h1 className="mt-1 text-h1 text-[var(--navy)]">Police Station Rep Admin</h1>
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              Private review area for registered reps. Signed in as <strong>{adminEmail}</strong>.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={reload} className="btn-outline !text-sm" disabled={loading}>
-              {loading ? 'Refreshing…' : 'Refresh'}
-            </button>
-          </div>
-        </div>
-
-        <div className="mb-4 inline-flex overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="inline-flex overflow-hidden rounded-lg border border-slate-200 bg-white">
           <button
             type="button"
             onClick={() => setTab('audit')}
@@ -253,6 +236,12 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
           >
             Legacy rep manager
           </button>
+          </div>
+          {tab === 'reps' && (
+            <button onClick={reload} className="btn-outline !text-sm" disabled={loading}>
+              {loading ? 'Refreshing…' : 'Refresh'}
+            </button>
+          )}
         </div>
 
         {tab === 'audit' && (
@@ -392,8 +381,8 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
 
         {!loading && filtered.length > 0 && (
           <>
-            <div className="mt-4 hidden overflow-x-auto rounded-xl border border-[var(--card-border)] bg-white shadow-sm lg:block">
-              <table className="w-full text-sm">
+            <div className="mt-4 hidden min-w-0 overflow-x-auto rounded-xl border border-[var(--card-border)] bg-white shadow-sm lg:block">
+              <table className="min-w-[1100px] w-full text-sm">
                 <thead className="border-b border-[var(--card-border)] bg-slate-50 text-left text-xs uppercase tracking-wider text-[var(--muted)]">
                   <tr>
                     <th className="px-3 py-2">Name</th>
@@ -510,7 +499,6 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
         )}
         </>
         )}
-      </div>
 
       {selectedEmail && (
         <AdminRepDetail
@@ -522,7 +510,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
           }}
         />
       )}
-    </section>
+    </>
   );
 }
 

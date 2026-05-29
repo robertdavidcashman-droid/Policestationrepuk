@@ -15,6 +15,7 @@ import {
   scoreRepRisk,
   type RepRiskAssessment,
 } from '@/lib/rep-risk';
+import { matchesAutomatedSmokeRep } from '@/lib/directory-blocklist';
 import {
   REP_STATUS_LABELS,
   PUBLIC_VERIFIED_STATUSES,
@@ -123,6 +124,17 @@ export async function GET() {
 
   for (const rep of reps) {
     const email = rep.email.toLowerCase();
+    if (
+      matchesAutomatedSmokeRep({
+        email,
+        name: rep.name,
+        slug: rep.slug,
+        notes: rep.notes ?? rep.bio ?? '',
+      })
+    ) {
+      handled.add(email);
+      continue;
+    }
     handled.add(email);
     const review = reviews.get(email) ?? null;
     const enquiry = enquiryByEmail.get(email);
@@ -145,6 +157,17 @@ export async function GET() {
   for (const enquiry of enquiries) {
     const email = enquiry.email.toLowerCase();
     if (handled.has(email)) continue;
+    if (
+      matchesAutomatedSmokeRep({
+        email,
+        name: enquiry.fullName,
+        slug: '',
+        notes: enquiry.shortMessage ?? '',
+      })
+    ) {
+      handled.add(email);
+      continue;
+    }
     handled.add(email);
     const review = reviews.get(email) ?? null;
     const verification = verificationByEmail.get(email);
@@ -166,6 +189,17 @@ export async function GET() {
   for (const verification of verifications) {
     const email = verification.email.toLowerCase();
     if (handled.has(email)) continue;
+    if (
+      matchesAutomatedSmokeRep({
+        email,
+        name: verification.fullLegalName,
+        slug: '',
+        notes: verification.publicProfileNotes ?? '',
+      })
+    ) {
+      handled.add(email);
+      continue;
+    }
     handled.add(email);
     const review = reviews.get(email) ?? null;
     const row = buildFromVerification(verification, review);
@@ -207,8 +241,22 @@ export async function GET() {
     low: rows.filter((r) => r.risk.category === 'low').length,
     publiclyVisible: rows.filter((r) => r.publiclyVisible).length,
     hiddenPending: rows.filter((r) => !r.publiclyVisible).length,
-    enquiries: enquiries.length,
-    verifications: verifications.length,
+    enquiries: enquiries.filter((e) =>
+      !matchesAutomatedSmokeRep({
+        email: e.email,
+        name: e.fullName,
+        slug: '',
+        notes: e.shortMessage ?? '',
+      }),
+    ).length,
+    verifications: verifications.filter((v) =>
+      !matchesAutomatedSmokeRep({
+        email: v.email,
+        name: v.fullLegalName,
+        slug: '',
+        notes: v.publicProfileNotes ?? '',
+      }),
+    ).length,
   };
 
   return NextResponse.json({ counts, rows }, { headers: { 'Cache-Control': 'no-store' } });

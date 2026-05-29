@@ -24,7 +24,7 @@ export function AdminShell({
 }) {
   return (
     <section className="bg-slate-50 py-10">
-      <div className="page-container">
+      <div className="admin-container">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--gold)]">Admin</p>

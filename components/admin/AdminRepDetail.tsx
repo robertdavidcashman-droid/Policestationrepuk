@@ -249,7 +249,7 @@ export function AdminRepDetail({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
-      <div className="flex h-full w-full max-w-3xl flex-col bg-white shadow-2xl">
+      <div className="flex h-full w-full max-w-4xl flex-col bg-white shadow-2xl">
         <div className="flex items-start justify-between border-b border-[var(--card-border)] px-6 py-4">
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--gold)]">
@@ -365,8 +365,8 @@ export function AdminRepDetail({
                 ) : (
                   <p className="text-xs text-[var(--muted)]">No featured record.</p>
                 )}
-                <div className="mt-3 flex flex-wrap items-end gap-3">
-                  <label className="block">
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  <label className="block sm:col-span-2 lg:col-span-3">
                     <span className="block text-xs font-semibold text-[var(--muted)]">
                       Expires at (activate / cancel)
                     </span>
@@ -374,16 +374,16 @@ export function AdminRepDetail({
                       type="datetime-local"
                       value={featuredExpires}
                       onChange={(e) => setFeaturedExpires(e.target.value)}
-                      className="mt-1 rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
+                      className="mt-1 w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
                     />
                   </label>
-                  <button onClick={() => handleFeaturedAction('activate')} disabled={saving} className="btn-gold !text-sm">
+                  <button onClick={() => handleFeaturedAction('activate')} disabled={saving} className="btn-gold w-full !text-sm">
                     Activate
                   </button>
-                  <button onClick={() => handleFeaturedAction('cancel')} disabled={saving} className="btn-outline !text-sm">
+                  <button onClick={() => handleFeaturedAction('cancel')} disabled={saving} className="btn-outline w-full !text-sm">
                     Cancel
                   </button>
-                  <button onClick={() => handleFeaturedAction('expire')} disabled={saving} className="btn-outline !text-sm">
+                  <button onClick={() => handleFeaturedAction('expire')} disabled={saving} className="btn-outline w-full !text-sm">
                     Expire now
                   </button>
                 </div>
@@ -396,11 +396,11 @@ export function AdminRepDetail({
                 <p className="text-xs text-[var(--muted)]">
                   Toggle hidden flag for this email (uses <code>directory:hidden_listing_emails</code>).
                 </p>
-                <div className="mt-3 flex gap-2">
-                  <button onClick={() => handleHide(true)} disabled={saving} className="btn-outline !text-sm">
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                  <button onClick={() => handleHide(true)} disabled={saving} className="btn-outline w-full !text-sm sm:w-auto">
                     Hide from directory
                   </button>
-                  <button onClick={() => handleHide(false)} disabled={saving} className="btn-outline !text-sm">
+                  <button onClick={() => handleHide(false)} disabled={saving} className="btn-outline w-full !text-sm sm:w-auto">
                     Restore to directory
                   </button>
                 </div>

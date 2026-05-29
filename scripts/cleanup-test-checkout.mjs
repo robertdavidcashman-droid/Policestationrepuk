@@ -23,11 +23,11 @@ function readEnvLocal() {
 }
 
 const env = { ...readEnvLocal(), ...process.env };
-const KV_URL = env.KV_REST_API_URL;
-const KV_TOKEN = env.KV_REST_API_TOKEN;
+const KV_URL = env.UPSTASH_REDIS_REST_URL ?? env.KV_REST_API_URL;
+const KV_TOKEN = env.UPSTASH_REDIS_REST_TOKEN ?? env.KV_REST_API_TOKEN;
 const TEST_EMAIL = (process.env.TEST_EMAIL || 'cursor-test+featured@policestationrepuk.org').toLowerCase();
 const SESSION_TOKEN = process.env.SESSION_TOKEN;
-if (!KV_URL || !KV_TOKEN) { console.error('Missing KV creds'); process.exit(2); }
+if (!KV_URL || !KV_TOKEN) { console.error('Missing KV creds: set UPSTASH_REDIS_REST_URL/TOKEN or KV_REST_API_URL/TOKEN'); process.exit(2); }
 
 async function kvDel(key) {
   const res = await fetch(`${KV_URL}/del/${encodeURIComponent(key)}`, {

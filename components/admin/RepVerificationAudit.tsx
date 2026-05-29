@@ -235,8 +235,8 @@ export function RepVerificationAudit() {
       )}
 
       {data && (
-        <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white">
-          <table className="w-full text-xs">
+        <div className="mt-4 min-w-0 overflow-x-auto rounded-lg border border-slate-200 bg-white">
+          <table className="min-w-[1400px] w-full text-xs">
             <thead className="bg-slate-50 text-left text-[10px] uppercase tracking-wider text-slate-500">
               <tr>
                 <th className="px-2 py-2">Risk</th>
@@ -421,7 +421,7 @@ function AuditDetailDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
-      <div className="flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl">
+      <div className="flex h-full w-full max-w-4xl flex-col bg-white shadow-2xl">
         <div className="flex items-start justify-between border-b border-slate-200 px-5 py-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--gold)]">
@@ -562,11 +562,11 @@ function AuditDetailDrawer({
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Apply admin action
                 </h4>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                   <select
                     value={action}
                     onChange={(e) => setAction(e.target.value)}
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs"
+                    className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs sm:min-w-[16rem]"
                   >
                     <option value="">Pick an action…</option>
                     {ACTION_OPTIONS.map((o) => (
@@ -578,10 +578,26 @@ function AuditDetailDrawer({
                   <button
                     onClick={() => runAction(action)}
                     disabled={working || !action}
-                    className="btn-gold !text-xs"
+                    className="btn-gold shrink-0 !text-xs"
                   >
                     Apply
                   </button>
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {ACTION_OPTIONS.map((o) => (
+                    <button
+                      key={o.value}
+                      type="button"
+                      onClick={() => {
+                        setAction(o.value);
+                        void runAction(o.value);
+                      }}
+                      disabled={working}
+                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-[11px] font-medium text-[var(--navy)] hover:border-[var(--gold)] disabled:opacity-60"
+                    >
+                      {o.label}
+                    </button>
+                  ))}
                 </div>
                 <p className="mt-2 text-[10px] text-slate-500">
                   Approving sets adminApproved=true, isPublic=true, lastVerifiedDate=now and

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { repIsAutomatedDirectoryTest } from '@/lib/directory-blocklist';
+import {
+  isKeptTestRep,
+  KEPT_TEST_REP_EMAIL,
+  matchesAutomatedSmokeRep,
+  repIsAutomatedDirectoryTest,
+} from '@/lib/directory-blocklist';
 import type { Representative } from '@/lib/types';
 
 function rep(partial: Partial<Representative>): Representative {
@@ -51,6 +56,39 @@ describe('repIsAutomatedDirectoryTest', () => {
   it('hides reserved documentation email domains', () => {
     expect(repIsAutomatedDirectoryTest(rep({ email: 'x@example.com', name: 'Real Name' }))).toBe(true);
     expect(repIsAutomatedDirectoryTest(rep({ email: 'x@example.co.uk', name: 'Real Name' }))).toBe(true);
+  });
+
+  it('hides production smoke script registrations', () => {
+    expect(
+      matchesAutomatedSmokeRep({
+        email: 'smoketest@policestationrepuk.org',
+        name: 'Smoke Test',
+        slug: 'smoke-test-fake-rep',
+        notes: 'Synthetic smoke-test rep. Safe to delete.',
+      }),
+    ).toBe(true);
+    expect(
+      matchesAutomatedSmokeRep({
+        email: 'cursor-test+featured@policestationrepuk.org',
+        name: 'Cursor Test Rep (DELETE ME)',
+        slug: 'cursor-test-rep',
+        notes: 'Synthetic rep for production smoke test. Safe to delete.',
+      }),
+    ).toBe(true);
+  });
+
+  it('keeps the canonical test rep account', () => {
+    expect(isKeptTestRep(KEPT_TEST_REP_EMAIL)).toBe(true);
+    expect(
+      repIsAutomatedDirectoryTest(
+        rep({
+          name: 'Test Representative Account',
+          email: KEPT_TEST_REP_EMAIL,
+          slug: 'test-representative-account',
+          notes: 'TEST ACCOUNT - For Stripe payment testing and feature verification.',
+        }),
+      ),
+    ).toBe(false);
   });
 
   it('does not hide normal reps', () => {

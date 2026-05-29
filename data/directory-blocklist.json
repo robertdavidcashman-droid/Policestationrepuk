@@ -1,6 +1,11 @@
 {
-  "emails": [],
+  "emails": [
+    "smoketest@policestationrepuk.org",
+    "smoketest+featured@policestationrepuk.org",
+    "cursor-test+featured@policestationrepuk.org",
+    "audit-test@policestationrepuk.test"
+  ],
   "slugs": [],
-  "slugPrefixes": ["laurie-learmont", "playwright-test-", "api-test-", "dup-test-"],
+  "slugPrefixes": ["laurie-learmont", "playwright-test-", "api-test-", "dup-test-", "smoke-test-"],
   "normalizedNames": ["laurie learmont"]
 }
