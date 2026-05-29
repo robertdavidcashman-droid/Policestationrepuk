@@ -2,6 +2,8 @@ import { Resend } from 'resend';
 import { phoneToTelHref } from '@/lib/phone';
 
 const ADMIN_EMAIL = 'robertcashman@defencelegalservices.co.uk';
+const REGULATORY_ALERT_EMAIL =
+  process.env.REGULATORY_ALERT_EMAIL?.trim() || 'robertdavidcashman@gmail.com';
 const FROM_EMAIL = 'PoliceStationRepUK <noreply@policestationrepuk.org>';
 
 let resend: Resend | null = null;
@@ -572,6 +574,86 @@ export async function sendRepAutoPublishAdminAlert(
     return true;
   } catch (err) {
     console.error('[Auto-publish admin alert failed]', err);
+    return false;
+  }
+}
+
+export interface RegulatoryNoMatchAlertData {
+  name: string;
+  email: string;
+  sraNumber?: string;
+  pinNumber?: string;
+  firmName?: string;
+  profileUrl?: string;
+  source: 'register' | 'secure-verification';
+  sraMatched: boolean;
+  lawSocietyMatched: boolean;
+  dsccMatched: boolean;
+  note: string;
+}
+
+/**
+ * Alert when a new rep is not found on the SRA, Law Society, or DSCC registers.
+ */
+export async function sendRegulatoryRegisterNoMatchAlert(
+  data: RegulatoryNoMatchAlertData,
+): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.info('[Regulatory no-match alert — no RESEND_API_KEY]', {
+      name: data.name,
+      email: data.email,
+    });
+    return false;
+  }
+
+  const statusRow = (label: string, matched: boolean) =>
+    `<tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #e5e7eb;width:220px">${escapeHtml(label)}</td>` +
+    `<td style="padding:8px;border-bottom:1px solid #e5e7eb;color:${matched ? '#059669' : '#b91c1c'}">` +
+    `${matched ? 'Match found' : 'No match'}</td></tr>`;
+
+  const sourceLabel =
+    data.source === 'register' ? 'Self-serve registration' : 'Secure verification form';
+
+  try {
+    await client.emails.send({
+      from: FROM_EMAIL,
+      to: REGULATORY_ALERT_EMAIL,
+      replyTo: data.email,
+      subject: `[No register match] ${data.name} — SRA / Law Society / DSCC`,
+      html: `
+        <div style="font-family:sans-serif;max-width:640px;margin:0 auto;color:#0f172a">
+          <h2 style="color:#b91c1c">No public register match</h2>
+          <p style="color:#475569;font-size:14px;line-height:1.55">
+            A new rep joined via <strong>${escapeHtml(sourceLabel)}</strong> but was not found on
+            the SRA Solicitors Register, the Law Society Find a Solicitor database, or the DSCC
+            accredited representative register. Manual review is required before publishing.
+          </p>
+          ${
+            data.profileUrl
+              ? `<p style="margin:16px 0"><a href="${escapeHtml(data.profileUrl)}" style="color:#1d4ed8">View profile (if created)</a></p>`
+              : ''
+          }
+          <p style="margin:16px 0">
+            <a href="https://policestationrepuk.org/admin" style="color:#1d4ed8;font-weight:bold">Open Rep Verification Audit &rarr;</a>
+          </p>
+          <table style="border-collapse:collapse;width:100%;max-width:640px;margin-top:16px">
+            ${statusRow('SRA Solicitors Register', data.sraMatched)}
+            ${statusRow('Law Society Find a Solicitor', data.lawSocietyMatched)}
+            ${statusRow('DSCC accredited register', data.dsccMatched)}
+            <tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #e5e7eb;vertical-align:top">Name</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(data.name)}</td></tr>
+            <tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #e5e7eb;vertical-align:top">Email</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(data.email)}</td></tr>
+            ${data.sraNumber ? `<tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #e5e7eb">SRA number supplied</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(data.sraNumber)}</td></tr>` : ''}
+            ${data.pinNumber ? `<tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #e5e7eb">DSCC PIN supplied</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(data.pinNumber)}</td></tr>` : ''}
+            ${data.firmName ? `<tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #e5e7eb">Firm</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(data.firmName)}</td></tr>` : ''}
+          </table>
+          <p style="margin-top:16px;color:#64748b;font-size:12px;line-height:1.5">${escapeHtml(data.note)}</p>
+        </div>
+      `,
+    });
+    return true;
+  } catch (err) {
+    console.error('[Regulatory no-match alert failed]', err);
     return false;
   }
 }

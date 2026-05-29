@@ -44,7 +44,7 @@ import {
   type PublicVerifiedStatus,
   looksIneligible,
 } from '@/lib/rep-status';
-import { scoreRepRisk } from '@/lib/rep-risk';
+import { applyRegisterVerifiedLowRisk, scoreRepRisk } from '@/lib/rep-risk';
 import { consumeRegisterGateToken } from '@/lib/rep-verification';
 import { getKV } from '@/lib/kv';
 import {
@@ -55,6 +55,8 @@ import {
   countiesToStorageString,
   validateEnglishCountySelections,
 } from '@/lib/english-counties';
+import { checkRegulatoryDirectories } from '@/lib/regulatory-auto-pass';
+import { sendRegulatoryRegisterNoMatchAlert } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -415,11 +417,26 @@ export async function POST(request: Request) {
       (category === 'psras-accredited' && (pinNumber || proofUrl)) ||
         (category !== 'psras-accredited' && (sraNumber || proofUrl)),
     );
+    const regulatoryCheck = await checkRegulatoryDirectories({
+      email,
+      name: fullName,
+      sraNumber,
+      category,
+    });
+    const regulatoryAutoPass = regulatoryCheck.passed;
+    const finalAssessment = applyRegisterVerifiedLowRisk(
+      assessment,
+      regulatoryAutoPass,
+      regulatoryCheck.passSource,
+      regulatoryCheck.note,
+    );
+
     const autoPublish =
-      !gateMarkedPending &&
-      hasStrongEvidence &&
-      assessment.category === 'low' &&
-      assessment.highRiskFlags.length === 0;
+      regulatoryAutoPass ||
+      (!gateMarkedPending &&
+        hasStrongEvidence &&
+        finalAssessment.category === 'low' &&
+        finalAssessment.highRiskFlags.length === 0);
 
     const userAgent = (request.headers.get('user-agent') || '').slice(0, 500);
     const slug = slugForRep(fullName, email);
@@ -456,7 +473,10 @@ export async function POST(request: Request) {
 
     /* ----------------- Update admin review record ----------------- */
 
-    const verifiedStatus = categoryToVerifiedStatus(category);
+    const verifiedStatus =
+      regulatoryAutoPass && regulatoryCheck.suggestedStatus
+        ? regulatoryCheck.suggestedStatus
+        : categoryToVerifiedStatus(category);
     await setReview(
       email,
       autoPublish
@@ -466,13 +486,15 @@ export async function POST(request: Request) {
             adminApproved: true,
             isPublic: consentPublic !== false,
             lastVerifiedDate: registeredAt,
-            riskCategory: assessment.category,
-            riskReasons: assessment.reasons,
+            riskCategory: finalAssessment.category,
+            riskReasons: finalAssessment.reasons,
             adminNotes:
-              `Auto-published via /register on ${registeredAt}. ` +
-              `Risk: ${assessment.category}. ` +
-              (assessment.lowRiskIndicators.length
-                ? `Low-risk indicators: ${assessment.lowRiskIndicators.join('; ')}. `
+              (regulatoryAutoPass
+                ? `Auto-published via /register on ${registeredAt} — matched ${regulatoryCheck.passSource} public register. ${regulatoryCheck.note} `
+                : `Auto-published via /register on ${registeredAt}. `) +
+              `Risk: ${finalAssessment.category}. ` +
+              (finalAssessment.lowRiskIndicators.length
+                ? `Low-risk indicators: ${finalAssessment.lowRiskIndicators.join('; ')}. `
                 : ''),
           }
         : {
@@ -481,8 +503,8 @@ export async function POST(request: Request) {
             adminApproved: false,
             isPublic: false,
             lastVerifiedDate: null,
-            riskCategory: assessment.category,
-            riskReasons: assessment.reasons,
+            riskCategory: finalAssessment.category,
+            riskReasons: finalAssessment.reasons,
             adminNotes:
               `Held for review via /register on ${registeredAt}. ` +
               `Risk: ${assessment.category}. ` +
@@ -517,8 +539,8 @@ export async function POST(request: Request) {
       ipAddress: ip,
       userAgent,
       profileUrl,
-      riskCategory: assessment.category,
-      riskReasons: assessment.reasons,
+      riskCategory: finalAssessment.category,
+      riskReasons: finalAssessment.reasons,
       registeredAt,
     } as const;
 
@@ -561,11 +583,27 @@ export async function POST(request: Request) {
       profileUrl,
     }).catch((err) => console.warn('[register] applicant email failed:', err));
 
+    if (!regulatoryAutoPass) {
+      sendRegulatoryRegisterNoMatchAlert({
+        name: fullName,
+        email,
+        sraNumber,
+        pinNumber,
+        firmName,
+        profileUrl,
+        source: 'register',
+        sraMatched: regulatoryCheck.sra.matched,
+        lawSocietyMatched: regulatoryCheck.lawSociety.matched,
+        dsccMatched: regulatoryCheck.dscc.matched,
+        note: regulatoryCheck.note,
+      }).catch((err) => console.warn('[register] regulatory no-match alert failed:', err));
+    }
+
     return NextResponse.json({
       ok: true,
       published: autoPublish,
       profileUrl: autoPublish ? profileUrl : null,
-      riskCategory: assessment.category,
+      riskCategory: finalAssessment.category,
     });
   } catch (err) {
     console.error('[register] unexpected error:', err);

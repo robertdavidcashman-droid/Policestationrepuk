@@ -6,8 +6,9 @@ import {
   saveVerification,
   updateEnquiryStatus,
 } from '@/lib/rep-verification';
-import { setReview } from '@/lib/admin-review';
+import { setReview, getReview } from '@/lib/admin-review';
 import { sendContactNotification } from '@/lib/email';
+import { runNewRepRegulatoryVerification } from '@/lib/regulatory-auto-pass';
 import {
   APPLICANT_CATEGORY_VALUES,
   type ApplicantCategory,
@@ -237,8 +238,41 @@ export async function POST(request: Request) {
     console.warn('[secure-rep-verification] enquiry status update failed:', err);
   }
 
-  // Set the review record to a non-public "submitted" state. This must not
-  // approve the profile — admin must explicitly do that via the audit view.
+  // Regulatory directory check (SRA + Law Society + DSCC). On match, auto-approve;
+  // otherwise email robertdavidcashman@gmail.com and hold for manual review.
+  try {
+    const existingReview = await getReview(tokenRecord.email);
+    const autoPass = await runNewRepRegulatoryVerification({
+      email: tokenRecord.email,
+      name: fullLegalName,
+      sraNumber,
+      pinNumber,
+      category,
+      firmName,
+      existingReview,
+      reviewer: 'system:secure-verification',
+      source: 'secure-verification',
+    });
+    if (autoPass.applied) {
+      sendContactNotification({
+        name: `Auto-verified: ${fullLegalName}`,
+        email: tokenRecord.email,
+        subject: 'PoliceStationRepUK — directory verification passed',
+        message: [
+          `Email: ${tokenRecord.email}`,
+          `Register match: ${autoPass.check.passSource}`,
+          autoPass.check.note,
+          '',
+          'Profile is now public pending any admin override.',
+        ].join('\n'),
+      }).catch((err) => console.warn('[secure-rep-verification] notify failed:', err));
+      return NextResponse.json({ ok: true, autoVerified: true });
+    }
+  } catch (err) {
+    console.warn('[secure-rep-verification] regulatory auto-pass failed:', err);
+  }
+
+  // No register match — hold for manual admin review (no-match email already sent).
   try {
     await setReview(
       tokenRecord.email,
@@ -247,7 +281,7 @@ export async function POST(request: Request) {
         verificationStatus: 'verification-submitted',
         adminApproved: false,
         isPublic: false,
-        adminNotes: `[auto] Verification submitted ${record.submittedAt} from ip=${ip}. Awaiting admin approval.`,
+        adminNotes: `[auto] Verification submitted ${record.submittedAt} from ip=${ip}. Awaiting admin approval (no SRA/DSCC register match).`,
       },
       'system@policestationrepuk',
     );
@@ -274,5 +308,5 @@ export async function POST(request: Request) {
     ].join('\n'),
   }).catch((err) => console.warn('[secure-rep-verification] notify failed:', err));
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, autoVerified: false });
 }

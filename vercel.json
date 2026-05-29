@@ -23,6 +23,14 @@
     {
       "path": "/api/cron/reverification-sweep",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/sync-dscc-register",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/regulatory-verify",
+      "schedule": "0 4 * * *"
     }
   ]
 }

@@ -13,6 +13,8 @@ import {
   buildDuplicateIndex,
   duplicateReasons,
   scoreRepRisk,
+  isPublicRegisterVerifiedReview,
+  lowRiskForPublicRegisterMatch,
   type RepRiskAssessment,
 } from '@/lib/rep-risk';
 import { matchesAutomatedSmokeRep } from '@/lib/directory-blocklist';

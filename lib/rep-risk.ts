@@ -276,6 +276,63 @@ export function scoreRepRisk(rep: RiskInputProfile): RepRiskAssessment {
   };
 }
 
+/** Human-readable label for which public register matched. */
+export function publicRegisterMatchLabel(
+  source?: 'sra' | 'dscc' | 'law-society' | 'multiple' | null,
+): string {
+  switch (source) {
+    case 'sra':
+      return 'SRA Solicitors Register';
+    case 'law-society':
+      return 'Law Society Find a Solicitor';
+    case 'dscc':
+      return 'DSCC accredited register';
+    case 'multiple':
+      return 'multiple public registers';
+    default:
+      return 'a public register (SRA, Law Society, or DSCC)';
+  }
+}
+
+/**
+ * Reps matched on the SRA, Law Society, or DSCC public registers are treated
+ * as low risk — the register match is stronger evidence than heuristic flags.
+ */
+export function lowRiskForPublicRegisterMatch(
+  source?: 'sra' | 'dscc' | 'law-society' | 'multiple' | null,
+  detail?: string,
+): RepRiskAssessment {
+  const label = publicRegisterMatchLabel(source);
+  const reasons = [`Verified on ${label}`];
+  if (detail) reasons.push(detail);
+  return {
+    category: 'low',
+    reasons,
+    highRiskFlags: [],
+    mediumRiskFlags: [],
+    lowRiskIndicators: [`Matched ${label}`],
+    shouldHide: false,
+  };
+}
+
+/** Override heuristic risk scoring when a public register match exists. */
+export function applyRegisterVerifiedLowRisk(
+  assessment: RepRiskAssessment,
+  registerVerified: boolean,
+  source?: 'sra' | 'dscc' | 'law-society' | 'multiple' | null,
+  detail?: string,
+): RepRiskAssessment {
+  if (!registerVerified || assessment.category === 'ineligible') return assessment;
+  return lowRiskForPublicRegisterMatch(source, detail);
+}
+
+/** True when admin review notes record an automatic public-register verification. */
+export function isPublicRegisterVerifiedReview(adminNotes: string | null | undefined): boolean {
+  if (!adminNotes) return false;
+  if (adminNotes.includes('Passed regulatory directory check')) return true;
+  return /matched (?:sra|dscc|law-society|multiple) public register/i.test(adminNotes);
+}
+
 /** Convenience overload that scores a fully merged `Representative`. */
 export function scoreRepresentativeRisk(
   rep: Representative,
