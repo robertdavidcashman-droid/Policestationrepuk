@@ -79,3 +79,4 @@ next-env.d.ts
 /wayne-page.html
 /wayne-diag.json
 /home.html
+.env*
