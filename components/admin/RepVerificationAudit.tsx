@@ -76,6 +76,60 @@ const RISK_COLOR: Record<RepAuditRow['risk']['category'], string> = {
   ineligible: 'bg-purple-100 text-purple-800 border-purple-200',
 };
 
+function PublicVisibilityBadge({
+  row,
+  size = 'sm',
+}: {
+  row: RepAuditRow;
+  size?: 'sm' | 'lg';
+}) {
+  const large = size === 'lg';
+  if (row.publiclyVisible) {
+    return (
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-lg border-2 border-emerald-600 bg-emerald-50 font-bold uppercase tracking-wide text-emerald-900 ${
+          large ? 'px-4 py-2 text-sm' : 'px-2 py-1 text-[10px]'
+        }`}
+        title="Visible on the public directory right now"
+      >
+        <span className={`rounded-full bg-emerald-600 ${large ? 'h-2.5 w-2.5' : 'h-2 w-2'}`} aria-hidden />
+        Public — live
+      </span>
+    );
+  }
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-lg border-2 border-slate-400 bg-slate-100 font-bold uppercase tracking-wide text-slate-800 ${
+        large ? 'px-4 py-2 text-sm' : 'px-2 py-1 text-[10px]'
+      }`}
+      title="Not shown on the public directory"
+    >
+      <span className={`rounded-full bg-slate-400 ${large ? 'h-2.5 w-2.5' : 'h-2 w-2'}`} aria-hidden />
+      Not public
+    </span>
+  );
+}
+
+function visibilityBreakdown(row: RepAuditRow): string[] {
+  if (row.publiclyVisible) return ['All publication gates passed — listing is live.'];
+  const missing: string[] = [];
+  const verified =
+    row.verificationStatus === 'verified-psras' ||
+    row.verificationStatus === 'verified-duty-solicitor' ||
+    row.verificationStatus === 'verified-solicitor';
+  if (!verified) {
+    missing.push(
+      row.verificationStatusLabel
+        ? `Status: ${row.verificationStatusLabel}`
+        : 'No verified status (PSRAS / duty solicitor / solicitor)',
+    );
+  }
+  if (row.adminApproved !== true) missing.push('Not admin-approved');
+  if (row.isPublic !== true) missing.push('isPublic flag is not true');
+  if (!row.lastVerifiedDate) missing.push('No last-verified date');
+  return missing.length ? missing : ['Hidden by legacy gate, blocklist, or review veto'];
+}
+
 function fmtDate(value: string | null): string {
   if (!value) return '—';
   try {
@@ -235,100 +289,168 @@ export function RepVerificationAudit() {
       )}
 
       {data && (
-        <div className="mt-4 min-w-0 overflow-x-auto rounded-lg border border-slate-200 bg-white">
-          <table className="min-w-[1400px] w-full text-xs">
-            <thead className="bg-slate-50 text-left text-[10px] uppercase tracking-wider text-slate-500">
-              <tr>
-                <th className="px-2 py-2">Risk</th>
-                <th className="px-2 py-2">Name / Email</th>
-                <th className="px-2 py-2">Phone</th>
-                <th className="px-2 py-2">Claimed status</th>
-                <th className="px-2 py-2">PIN</th>
-                <th className="px-2 py-2">SRA</th>
-                <th className="px-2 py-2">Proof</th>
-                <th className="px-2 py-2">Addr</th>
-                <th className="px-2 py-2">Counties</th>
-                <th className="px-2 py-2">Stations</th>
-                <th className="px-2 py-2">Registered</th>
-                <th className="px-2 py-2">IP</th>
-                <th className="px-2 py-2">Public?</th>
-                <th className="px-2 py-2">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((r) => (
-                <tr key={`${r.source}:${r.email}`} className="border-b border-slate-100 align-top">
-                  <td className="px-2 py-2">
-                    <span
-                      className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${RISK_COLOR[r.risk.category]}`}
-                    >
-                      {r.risk.category}
-                    </span>
-                  </td>
-                  <td className="px-2 py-2">
-                    <div className="font-semibold text-[var(--navy)]">{r.name || '—'}</div>
-                    <div className="text-[10px] text-slate-500">{r.email}</div>
-                    {r.slug && (
-                      <a
-                        href={`/rep/${r.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[10px] text-[var(--gold-link)] underline"
+        <>
+          <p className="mt-4 text-xs text-slate-500 xl:hidden">
+            {filtered.length} row{filtered.length === 1 ? '' : 's'} — tap Review to act on a rep.
+          </p>
+
+          {/* Card layout — phones & tablets */}
+          <div className="mt-3 space-y-3 xl:hidden">
+            {filtered.map((r) => (
+              <article
+                key={`card:${r.source}:${r.email}`}
+                className={`rounded-xl border p-4 shadow-sm ${
+                  r.publiclyVisible
+                    ? 'border-emerald-300 bg-emerald-50/30'
+                    : 'border-slate-200 bg-white'
+                }`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <PublicVisibilityBadge row={r} size="lg" />
+                      <span
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${RISK_COLOR[r.risk.category]}`}
                       >
-                        /rep/{r.slug}
-                      </a>
-                    )}
-                  </td>
-                  <td className="px-2 py-2">{r.phone || '—'}</td>
-                  <td className="px-2 py-2 max-w-[160px]">
-                    <div className="break-words">{r.claimedStatus || '—'}</div>
-                    {r.verificationStatusLabel && (
-                      <div className="mt-0.5 text-[10px] uppercase text-slate-500">
-                        {r.verificationStatusLabel}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-2 py-2 text-center">{r.pinSupplied ? '✓' : '✗'}</td>
-                  <td className="px-2 py-2 text-center">{r.sraSupplied ? '✓' : '✗'}</td>
-                  <td className="px-2 py-2 text-center">{r.proofSupplied ? '✓' : '✗'}</td>
-                  <td className="px-2 py-2 text-center">{r.addressSupplied ? '✓' : '✗'}</td>
-                  <td className="px-2 py-2 text-center">{r.countiesCount}</td>
-                  <td className="px-2 py-2 text-center">{r.stationsCount}</td>
-                  <td className="px-2 py-2 whitespace-nowrap">{fmtDate(r.dateRegistered)}</td>
-                  <td className="px-2 py-2 whitespace-nowrap text-[10px] text-slate-500">
-                    {r.ipAddress || '—'}
-                  </td>
-                  <td className="px-2 py-2 text-center">
-                    {r.publiclyVisible ? (
-                      <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">
-                        LIVE
+                        {r.risk.category} risk
                       </span>
-                    ) : (
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-700">
-                        hidden
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-2 py-2 text-right">
-                    <button
-                      onClick={() => setOpenEmail(r.email)}
-                      className="btn-outline !px-2 !py-1 !text-[10px]"
-                    >
-                      Review
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
+                    </div>
+                    <h3 className="font-bold text-[var(--navy)]">{r.name || '—'}</h3>
+                    <p className="truncate text-xs text-slate-500">{r.email}</p>
+                  </div>
+                  <button
+                    onClick={() => setOpenEmail(r.email)}
+                    className="btn-gold shrink-0 !px-4 !py-2 !text-sm"
+                  >
+                    Review &amp; act
+                  </button>
+                </div>
+                {!r.publiclyVisible && (
+                  <ul className="mt-2 list-inside list-disc text-[11px] text-slate-600">
+                    {visibilityBreakdown(r).map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                )}
+                <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                  <dt className="text-slate-500">Phone</dt>
+                  <dd>{r.phone || '—'}</dd>
+                  <dt className="text-slate-500">Status</dt>
+                  <dd className="truncate">{r.verificationStatusLabel ?? r.claimedStatus ?? '—'}</dd>
+                  <dt className="text-slate-500">Evidence</dt>
+                  <dd>
+                    PIN {r.pinSupplied ? '✓' : '✗'} · SRA {r.sraSupplied ? '✓' : '✗'} · Proof{' '}
+                    {r.proofSupplied ? '✓' : '✗'}
+                  </dd>
+                  <dt className="text-slate-500">Coverage</dt>
+                  <dd>
+                    {r.countiesCount} counties · {r.stationsCount} stations
+                  </dd>
+                </dl>
+              </article>
+            ))}
+            {filtered.length === 0 && (
+              <p className="rounded-lg border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                No rows match the current filters.
+              </p>
+            )}
+          </div>
+
+          {/* Table — wide screens; Public + Action stay pinned on the right */}
+          <div className="admin-audit-scroll mt-4 hidden min-w-0 xl:block">
+            <p className="mb-2 text-[10px] text-slate-500">
+              Scroll horizontally for extra columns — Public and Review stay fixed on the right.
+            </p>
+            <table className="admin-audit-table w-full min-w-[900px] text-xs">
+              <thead className="bg-slate-50 text-left text-[10px] uppercase tracking-wider text-slate-500">
                 <tr>
-                  <td colSpan={14} className="px-3 py-6 text-center text-sm text-slate-500">
-                    No rows match the current filters.
-                  </td>
+                  <th className="admin-audit-sticky-left px-2 py-2">Risk</th>
+                  <th className="admin-audit-sticky-left-2 px-2 py-2 min-w-[180px]">Name / Email</th>
+                  <th className="px-2 py-2">Phone</th>
+                  <th className="px-2 py-2 min-w-[120px]">Claimed status</th>
+                  <th className="px-2 py-2 text-center">PIN</th>
+                  <th className="px-2 py-2 text-center">SRA</th>
+                  <th className="px-2 py-2 text-center">Proof</th>
+                  <th className="px-2 py-2 text-center">Counties</th>
+                  <th className="px-2 py-2 text-center">Stations</th>
+                  <th className="px-2 py-2 whitespace-nowrap">Registered</th>
+                  <th className="admin-audit-sticky-right-2 px-2 py-2 min-w-[120px]">Directory</th>
+                  <th className="admin-audit-sticky-right px-2 py-2 min-w-[100px]">Action</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filtered.map((r) => (
+                  <tr
+                    key={`${r.source}:${r.email}`}
+                    className={`border-b border-slate-100 align-top ${
+                      r.publiclyVisible ? 'bg-emerald-50/20' : ''
+                    }`}
+                  >
+                    <td className="admin-audit-sticky-left px-2 py-2">
+                      <span
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${RISK_COLOR[r.risk.category]}`}
+                      >
+                        {r.risk.category}
+                      </span>
+                    </td>
+                    <td className="admin-audit-sticky-left-2 px-2 py-2">
+                      <div className="font-semibold text-[var(--navy)]">{r.name || '—'}</div>
+                      <div className="text-[10px] text-slate-500">{r.email}</div>
+                      {r.slug && (
+                        <a
+                          href={`/rep/${r.slug}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[10px] text-[var(--gold-link)] underline"
+                        >
+                          /rep/{r.slug}
+                        </a>
+                      )}
+                    </td>
+                    <td className="px-2 py-2">{r.phone || '—'}</td>
+                    <td className="px-2 py-2 max-w-[160px]">
+                      <div className="break-words">{r.claimedStatus || '—'}</div>
+                      {r.verificationStatusLabel && (
+                        <div className="mt-0.5 text-[10px] uppercase text-slate-500">
+                          {r.verificationStatusLabel}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-2 py-2 text-center">{r.pinSupplied ? '✓' : '✗'}</td>
+                    <td className="px-2 py-2 text-center">{r.sraSupplied ? '✓' : '✗'}</td>
+                    <td className="px-2 py-2 text-center">{r.proofSupplied ? '✓' : '✗'}</td>
+                    <td className="px-2 py-2 text-center">{r.countiesCount}</td>
+                    <td className="px-2 py-2 text-center">{r.stationsCount}</td>
+                    <td className="px-2 py-2 whitespace-nowrap">{fmtDate(r.dateRegistered)}</td>
+                    <td className="admin-audit-sticky-right-2 px-2 py-2">
+                      <PublicVisibilityBadge row={r} />
+                      {!r.publiclyVisible && (
+                        <p className="mt-1 max-w-[140px] text-[9px] leading-tight text-slate-500">
+                          {visibilityBreakdown(r)[0]}
+                        </p>
+                      )}
+                    </td>
+                    <td className="admin-audit-sticky-right px-2 py-2">
+                      <button
+                        onClick={() => setOpenEmail(r.email)}
+                        className="btn-gold w-full !px-2 !py-1.5 !text-[11px]"
+                      >
+                        Review &amp; act
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={12} className="px-3 py-6 text-center text-sm text-slate-500">
+                      No rows match the current filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {openEmail && (
@@ -420,27 +542,58 @@ function AuditDetailDrawer({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
-      <div className="flex h-full w-full max-w-4xl flex-col bg-white shadow-2xl">
-        <div className="flex items-start justify-between border-b border-slate-200 px-5 py-3">
-          <div>
+    <div className="fixed inset-0 z-50 flex items-stretch justify-end bg-black/40 backdrop-blur-sm p-0 sm:p-2">
+      <div className="flex h-full w-full max-w-full flex-col bg-white shadow-2xl sm:max-w-2xl lg:max-w-4xl">
+        <div className="flex shrink-0 items-start justify-between border-b border-slate-200 px-4 py-3 sm:px-5">
+          <div className="min-w-0 pr-2">
             <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--gold)]">
               Verification audit
             </p>
-            <h3 className="text-base font-bold text-[var(--navy)]">{email}</h3>
+            <h3 className="truncate text-base font-bold text-[var(--navy)]">{email}</h3>
           </div>
-          <button onClick={onClose} className="rounded-lg border border-slate-200 px-3 py-1 text-sm">
+          <button onClick={onClose} className="shrink-0 rounded-lg border border-slate-200 px-3 py-1 text-sm">
             Close
           </button>
         </div>
 
+        {row && (
+          <div
+            className={`shrink-0 border-b px-4 py-3 sm:px-5 ${
+              row.publiclyVisible
+                ? 'border-emerald-300 bg-emerald-50'
+                : 'border-slate-300 bg-slate-100'
+            }`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <PublicVisibilityBadge row={row} size="lg" />
+              {row.slug && (
+                <a
+                  href={`/rep/${row.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-semibold text-[var(--gold-link)] underline"
+                >
+                  View profile →
+                </a>
+              )}
+            </div>
+            {!row.publiclyVisible && (
+              <ul className="mt-2 list-inside list-disc text-xs text-slate-700">
+                {visibilityBreakdown(row).map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
         {message && (
-          <div className="border-b border-amber-200 bg-amber-50 px-5 py-2 text-sm text-amber-900">
+          <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 sm:px-5">
             {message}
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto px-5 py-4 text-sm">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 text-sm sm:px-5">
           {!row && <p>Loading…</p>}
           {row && (
             <>

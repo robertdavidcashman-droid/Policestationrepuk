@@ -237,6 +237,67 @@ footer .text-slate-600 {
     padding-bottom: 3rem;
   }
 }
+
+/* Rep verification audit table — horizontal scroll with pinned columns */
+.admin-audit-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  background: white;
+}
+
+.admin-audit-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.admin-audit-sticky-left {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: white;
+  box-shadow: 2px 0 6px rgba(15, 23, 42, 0.06);
+}
+
+.admin-audit-sticky-left-2 {
+  position: sticky;
+  left: 4.5rem;
+  z-index: 2;
+  background: white;
+  box-shadow: 2px 0 6px rgba(15, 23, 42, 0.06);
+}
+
+.admin-audit-sticky-right {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  background: white;
+  box-shadow: -4px 0 8px rgba(15, 23, 42, 0.08);
+}
+
+.admin-audit-sticky-right-2 {
+  position: sticky;
+  right: 6.5rem;
+  z-index: 2;
+  background: white;
+  box-shadow: -4px 0 8px rgba(15, 23, 42, 0.08);
+}
+
+.admin-audit-table thead .admin-audit-sticky-left,
+.admin-audit-table thead .admin-audit-sticky-left-2,
+.admin-audit-table thead .admin-audit-sticky-right,
+.admin-audit-table thead .admin-audit-sticky-right-2 {
+  background: rgb(248 250 252);
+}
+
+.admin-audit-table tbody tr.bg-emerald-50\/20 .admin-audit-sticky-left,
+.admin-audit-table tbody tr.bg-emerald-50\/20 .admin-audit-sticky-left-2,
+.admin-audit-table tbody tr.bg-emerald-50\/20 .admin-audit-sticky-right,
+.admin-audit-table tbody tr.bg-emerald-50\/20 .admin-audit-sticky-right-2 {
+  background: rgb(236 253 245 / 0.5);
+}
+
 @media (min-width: 640px) {
   .page-container {
     padding-left: 1.5rem;
