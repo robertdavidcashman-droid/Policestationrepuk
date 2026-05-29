@@ -36,3 +36,26 @@ export function namesLikelyMatch(a: string, b: string): boolean {
   }
   return false;
 }
+
+/**
+ * Looser match for DSCC register rows: same surname plus any overlapping
+ * forename token (including prefix matches for abbreviations).
+ */
+export function namePartiallyMatches(a: string, b: string): boolean {
+  if (namesLikelyMatch(a, b)) return true;
+
+  const ta = nameTokens(a);
+  const tb = nameTokens(b);
+  if (ta.length === 0 || tb.length === 0) return false;
+
+  if (ta[ta.length - 1] !== tb[tb.length - 1]) return false;
+
+  const givenA = ta.slice(0, -1);
+  const givenB = tb.slice(0, -1);
+  for (const ga of givenA) {
+    for (const gb of givenB) {
+      if (ga === gb || ga.startsWith(gb) || gb.startsWith(ga)) return true;
+    }
+  }
+  return false;
+}

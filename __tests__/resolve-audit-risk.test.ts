@@ -41,6 +41,20 @@ describe('resolveAuditRiskAssessment', () => {
     expect(resolved.highRiskFlags).toEqual([]);
   });
 
+  it('shows low risk when DSCC PIN matches register name', () => {
+    const heuristic = highRiskHeuristic();
+    const resolved = resolveAuditRiskAssessment(
+      heuristic,
+      null,
+      {
+        matched: true,
+        note: 'DSCC PIN 1650: name matched on accredited register — JONATHAN MARK SALTER.',
+      },
+    );
+    expect(resolved.category).toBe('low');
+    expect(resolved.highRiskFlags).toEqual([]);
+  });
+
   it('shows low risk for publicly verified reps without register notes', () => {
     const heuristic = highRiskHeuristic();
     const resolved = resolveAuditRiskAssessment(heuristic, {

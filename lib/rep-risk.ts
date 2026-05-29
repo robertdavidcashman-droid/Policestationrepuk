@@ -333,6 +333,22 @@ export function isPublicRegisterVerifiedReview(adminNotes: string | null | undef
   return /matched (?:sra|dscc|law-society|multiple) public register/i.test(adminNotes);
 }
 
+/** True when admin review notes record DSCC PIN verification on the accredited register. */
+export function isDsccPinVerifiedReview(adminNotes: string | null | undefined): boolean {
+  if (!adminNotes) return false;
+  return /DSCC PIN \d+.*name matched on accredited register/i.test(adminNotes);
+}
+
+/** Override heuristic risk when a supplied DSCC PIN matches the accredited register. */
+export function applyDsccPinVerifiedLowRisk(
+  assessment: RepRiskAssessment,
+  pinVerified: boolean,
+  detail?: string,
+): RepRiskAssessment {
+  if (!pinVerified || assessment.category === 'ineligible') return assessment;
+  return lowRiskForPublicRegisterMatch('dscc', detail);
+}
+
 export interface AuditRiskReviewInput {
   riskCategory?: string | null;
   riskReasons?: string[];
@@ -371,10 +387,21 @@ function parseRegisterPassSourceFromNotes(
 export function resolveAuditRiskAssessment(
   heuristic: RepRiskAssessment,
   review: AuditRiskReviewInput | null | undefined,
+  dsccPinMatch?: { matched: boolean; note?: string } | null,
 ): RepRiskAssessment {
-  if (!review || heuristic.category === 'ineligible') return heuristic;
+  if (heuristic.category === 'ineligible') return heuristic;
+
+  if (dsccPinMatch?.matched) {
+    return lowRiskForPublicRegisterMatch('dscc', dsccPinMatch.note);
+  }
+
+  if (!review) return heuristic;
 
   const adminNotes = review.adminNotes ?? '';
+
+  if (isDsccPinVerifiedReview(adminNotes)) {
+    return lowRiskForPublicRegisterMatch('dscc', review.riskReasons?.join('; '));
+  }
 
   if (isPublicRegisterVerifiedReview(adminNotes)) {
     const source = parseRegisterPassSourceFromNotes(adminNotes);

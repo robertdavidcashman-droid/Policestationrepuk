@@ -1,5 +1,5 @@
 import { getKV, skipKVInPrerender } from '@/lib/kv';
-import { namesLikelyMatch, normalizePersonName } from '@/lib/name-match';
+import { namesLikelyMatch, namePartiallyMatches, normalizePersonName } from '@/lib/name-match';
 
 const DSCC_REGISTER_URL = 'https://www.dutysolicitors.org/ords/f?p=109:45::::::';
 const DSCC_AJAX_URL = 'https://www.dutysolicitors.org/ords/wwv_flow.ajax';
@@ -215,6 +215,21 @@ export async function ensureDsccRegisterCache(
   return refreshDsccRegisterCache();
 }
 
+export interface DsccPinLookupResult {
+  pinSupplied: string;
+  found: boolean;
+  matched: boolean;
+  entries: DsccRegisterEntry[];
+  note: string;
+}
+
+/** Normalise a DSCC PIN to digits only. */
+export function normalizeDsccPin(pin: string | undefined | null): string | null {
+  if (!pin) return null;
+  const digits = pin.replace(/\D/g, '');
+  return digits.length >= 3 ? digits : null;
+}
+
 function entryDisplayName(entry: DsccRegisterEntry): string {
   return `${entry.forename} ${entry.surname}`.replace(/\s+/g, ' ').trim();
 }
@@ -222,15 +237,84 @@ function entryDisplayName(entry: DsccRegisterEntry): string {
 export function findDsccRegisterMatches(
   name: string,
   entries: DsccRegisterEntry[],
+  options: { allowPartial?: boolean } = {},
 ): DsccRegisterEntry[] {
   const target = normalizePersonName(name);
   if (!target) return [];
 
+  const matchName = options.allowPartial ? namePartiallyMatches : namesLikelyMatch;
+
   return entries.filter((entry) => {
     const display = entryDisplayName(entry);
     if (normalizePersonName(display) === target) return true;
-    return namesLikelyMatch(name, display);
+    return matchName(name, display);
   });
+}
+
+/**
+ * When a DSCC PIN is supplied, confirm the rep's name (full or partial match)
+ * appears on the DSCC accredited representative register.
+ *
+ * The public DSCC table is name-only (PIN is not published in the scrape), so
+ * a supplied PIN triggers a name match against the cached accredited register.
+ */
+export function checkDsccPinAgainstRegister(
+  name: string,
+  pinNumber: string,
+  entries: DsccRegisterEntry[],
+): DsccPinLookupResult {
+  const pinSupplied = normalizeDsccPin(pinNumber) ?? pinNumber.trim();
+  if (!pinSupplied) {
+    return {
+      pinSupplied: pinNumber,
+      found: false,
+      matched: false,
+      entries: [],
+      note: 'DSCC PIN: invalid or missing.',
+    };
+  }
+
+  const matches = findDsccRegisterMatches(name, entries, { allowPartial: true });
+  if (matches.length === 0) {
+    return {
+      pinSupplied,
+      found: false,
+      matched: false,
+      entries: [],
+      note: `DSCC PIN ${pinSupplied} supplied but no matching name on the accredited register.`,
+    };
+  }
+
+  const sample = matches[0];
+  const display = entryDisplayName(sample);
+  return {
+    pinSupplied,
+    found: true,
+    matched: true,
+    entries: matches,
+    note:
+      `DSCC PIN ${pinSupplied}: name matched on accredited register — ${display}` +
+      (sample.firm ? ` (${sample.firm})` : '') +
+      (matches.length > 1 ? ` +${matches.length - 1} more` : '') +
+      '.',
+  };
+}
+
+export async function lookupDsccPersonByPinAndName(
+  name: string,
+  pinNumber: string,
+): Promise<DsccPinLookupResult> {
+  const cache = await ensureDsccRegisterCache();
+  if (!cache?.entries?.length) {
+    return {
+      pinSupplied: pinNumber,
+      found: false,
+      matched: false,
+      entries: [],
+      note: 'DSCC PIN check unavailable (register cache missing).',
+    };
+  }
+  return checkDsccPinAgainstRegister(name, pinNumber, cache.entries);
 }
 
 export async function lookupDsccPersonByName(name: string): Promise<DsccLookupResult> {

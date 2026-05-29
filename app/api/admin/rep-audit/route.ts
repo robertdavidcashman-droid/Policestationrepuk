@@ -16,6 +16,11 @@ import {
   resolveAuditRiskAssessment,
   type RepRiskAssessment,
 } from '@/lib/rep-risk';
+import {
+  checkDsccPinAgainstRegister,
+  getDsccRegisterCache,
+  type DsccRegisterEntry,
+} from '@/lib/dscc-register-lookup';
 import { matchesAutomatedSmokeRep } from '@/lib/directory-blocklist';
 import {
   REP_STATUS_LABELS,
@@ -78,13 +83,15 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const [reps, registeredRaw, enquiries, verifications, reviews] = await Promise.all([
+  const [reps, registeredRaw, enquiries, verifications, reviews, dsccCache] = await Promise.all([
     getAllRepsForAdmin(),
     getAllRegisteredRepsRaw(),
     listAllEnquiries(),
     listAllVerifications(),
     loadAllReviews(),
+    getDsccRegisterCache(),
   ]);
+  const dsccEntries: DsccRegisterEntry[] = dsccCache?.entries ?? [];
 
   const enquiryByEmail = new Map<string, RepEnquiryRecord>();
   for (const e of enquiries) enquiryByEmail.set(e.email.toLowerCase(), e);
@@ -140,7 +147,7 @@ export async function GET() {
     const review = reviews.get(email) ?? null;
     const enquiry = enquiryByEmail.get(email);
     const verification = verificationByEmail.get(email);
-    const row = buildFromRep(rep, registeredByEmail.get(email), enquiry, verification, review);
+    const row = buildFromRep(rep, registeredByEmail.get(email), enquiry, verification, review, dsccEntries);
     row.duplicateReasons = duplicateReasons(
       {
         email,
@@ -172,7 +179,7 @@ export async function GET() {
     handled.add(email);
     const review = reviews.get(email) ?? null;
     const verification = verificationByEmail.get(email);
-    const row = buildFromEnquiry(enquiry, verification, review);
+    const row = buildFromEnquiry(enquiry, verification, review, dsccEntries);
     row.duplicateReasons = duplicateReasons(
       {
         email,
@@ -203,7 +210,7 @@ export async function GET() {
     }
     handled.add(email);
     const review = reviews.get(email) ?? null;
-    const row = buildFromVerification(verification, review);
+    const row = buildFromVerification(verification, review, dsccEntries);
     row.duplicateReasons = duplicateReasons(
       {
         email,
@@ -291,6 +298,7 @@ function commonRiskFromInputs(
     isPublic?: boolean | null;
     lastVerifiedDate?: string | null;
   } | null,
+  dsccEntries: DsccRegisterEntry[],
 ) {
   const heuristic = scoreRepRisk({
     email,
@@ -313,7 +321,15 @@ function commonRiskFromInputs(
     adminApproved,
     isPublic,
   });
-  return resolveAuditRiskAssessment(heuristic, review);
+  const dsccPinMatch =
+    pinNumber && dsccEntries.length > 0
+      ? checkDsccPinAgainstRegister(name, pinNumber, dsccEntries)
+      : null;
+  return resolveAuditRiskAssessment(
+    heuristic,
+    review,
+    dsccPinMatch?.matched ? dsccPinMatch : null,
+  );
 }
 
 function buildFromRep(
@@ -322,6 +338,7 @@ function buildFromRep(
   enquiry: RepEnquiryRecord | undefined,
   verification: RepVerificationRecord | undefined,
   review: { verificationStatus?: RepVerificationStatus | null; adminApproved?: boolean | null; isPublic?: boolean | null; lastVerifiedDate?: string | null; adminNotes: string } | null,
+  dsccEntries: DsccRegisterEntry[],
 ): RepAuditRow {
   const email = rep.email.toLowerCase();
   const counties = Array.isArray(rep.counties) && rep.counties.length
@@ -367,6 +384,7 @@ function buildFromRep(
     adminApproved,
     isPublic,
     review,
+    dsccEntries,
   );
   return {
     email,
@@ -402,6 +420,7 @@ function buildFromEnquiry(
   enquiry: RepEnquiryRecord,
   verification: RepVerificationRecord | undefined,
   review: { verificationStatus?: RepVerificationStatus | null; adminApproved?: boolean | null; isPublic?: boolean | null; lastVerifiedDate?: string | null; adminNotes: string } | null,
+  dsccEntries: DsccRegisterEntry[],
 ): RepAuditRow {
   const counties = verification?.countiesCovered || (enquiry.countyArea ? [enquiry.countyArea] : []);
   const stations = verification?.stationsCovered || [];
@@ -450,6 +469,7 @@ function buildFromEnquiry(
       review?.adminApproved ?? null,
       review?.isPublic ?? null,
       review,
+      dsccEntries,
     ),
     duplicateReasons: [],
     adminNotes: review?.adminNotes || '',
@@ -459,6 +479,7 @@ function buildFromEnquiry(
 function buildFromVerification(
   verification: RepVerificationRecord,
   review: { verificationStatus?: RepVerificationStatus | null; adminApproved?: boolean | null; isPublic?: boolean | null; lastVerifiedDate?: string | null; adminNotes: string } | null,
+  dsccEntries: DsccRegisterEntry[],
 ): RepAuditRow {
   const counties = verification.countiesCovered || [];
   const stations = verification.stationsCovered || [];
@@ -506,6 +527,7 @@ function buildFromVerification(
       review?.adminApproved ?? null,
       review?.isPublic ?? null,
       review,
+      dsccEntries,
     ),
     duplicateReasons: [],
     adminNotes: review?.adminNotes || '',

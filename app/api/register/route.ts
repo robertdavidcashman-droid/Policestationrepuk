@@ -421,6 +421,7 @@ export async function POST(request: Request) {
       email,
       name: fullName,
       sraNumber,
+      pinNumber,
       category,
     });
     const regulatoryAutoPass = regulatoryCheck.passed;

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { namesLikelyMatch, normalizePersonName } from '@/lib/name-match';
+import { namesLikelyMatch, namePartiallyMatches, normalizePersonName } from '@/lib/name-match';
 import { parseSraPersonPage, parseSraPersonSearchResults } from '@/lib/sra-register-lookup';
-import { parseDsccRegisterRows, findDsccRegisterMatches } from '@/lib/dscc-register-lookup';
+import {
+  parseDsccRegisterRows,
+  findDsccRegisterMatches,
+  checkDsccPinAgainstRegister,
+  normalizeDsccPin,
+} from '@/lib/dscc-register-lookup';
 
 describe('normalizePersonName', () => {
   it('normalises punctuation and case', () => {
@@ -16,6 +21,41 @@ describe('namesLikelyMatch', () => {
 
   it('rejects different surnames', () => {
     expect(namesLikelyMatch('Robert Cashman', 'Robert Smith')).toBe(false);
+  });
+});
+
+describe('namePartiallyMatches', () => {
+  it('matches surname plus overlapping forename prefix', () => {
+    expect(namePartiallyMatches('Jonathan Salter', 'JONATHAN MARK SALTER')).toBe(true);
+  });
+
+  it('rejects same forename but different surname', () => {
+    expect(namePartiallyMatches('Jonathan Salter', 'Jonathan Smith')).toBe(false);
+  });
+});
+
+describe('checkDsccPinAgainstRegister', () => {
+  const entries = [
+    { title: 'MR', forename: 'JONATHAN MARK', surname: 'SALTER', firm: 'Example LLP' },
+    { title: 'MR', forename: 'JANE', surname: 'DOE', firm: 'Other' },
+  ];
+
+  it('matches when PIN supplied and name appears on register', () => {
+    const result = checkDsccPinAgainstRegister('Jonathan Salter', '1650', entries);
+    expect(result.matched).toBe(true);
+    expect(result.pinSupplied).toBe('1650');
+    expect(result.entries).toHaveLength(1);
+  });
+
+  it('does not match when surname differs', () => {
+    const result = checkDsccPinAgainstRegister('Jonathan Smith', '1650', entries);
+    expect(result.matched).toBe(false);
+  });
+});
+
+describe('normalizeDsccPin', () => {
+  it('strips non-digits', () => {
+    expect(normalizeDsccPin('PIN-1650')).toBe('1650');
   });
 });
 

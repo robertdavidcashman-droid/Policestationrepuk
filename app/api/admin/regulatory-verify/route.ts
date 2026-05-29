@@ -57,6 +57,7 @@ export async function POST(request: Request) {
       email: targetEmail,
       name: rep.name,
       sraNumber: hints?.sraNumber,
+      pinNumber: hints?.pinNumber || rep.dsccPin,
       category,
     });
     const sweep = apply

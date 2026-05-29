@@ -1,4 +1,4 @@
-import { lookupDsccPersonByName, type DsccLookupResult } from '@/lib/dscc-register-lookup';
+import { lookupDsccPersonByName, lookupDsccPersonByPinAndName, type DsccLookupResult, type DsccPinLookupResult } from '@/lib/dscc-register-lookup';
 import {
   lookupLawSocietyPerson,
   type LawSocietyLookupResult,
@@ -29,6 +29,7 @@ export interface RegulatoryDirectoryInput {
   email: string;
   name: string;
   sraNumber?: string;
+  pinNumber?: string;
   category?: ApplicantCategory | null;
 }
 
@@ -36,6 +37,7 @@ export interface RegulatoryDirectoryCheck {
   sra: SraLookupResult;
   lawSociety: LawSocietyLookupResult;
   dscc: DsccLookupResult;
+  dsccPin: DsccPinLookupResult | null;
   passed: boolean;
   passSource: 'sra' | 'dscc' | 'law-society' | 'multiple' | null;
   suggestedStatus: PublicVerifiedStatus | null;
@@ -99,13 +101,19 @@ export async function checkRegulatoryDirectories(
   input: RegulatoryDirectoryInput,
 ): Promise<RegulatoryDirectoryCheck> {
   const sra = await lookupSraPerson({ name: input.name, sraNumber: input.sraNumber });
-  const [dscc, lawSociety] = await Promise.all([
+  const dsccPinPromise = input.pinNumber
+    ? lookupDsccPersonByPinAndName(input.name, input.pinNumber)
+    : Promise.resolve(null);
+  const [dscc, lawSociety, dsccPin] = await Promise.all([
     lookupDsccPersonByName(input.name),
     lookupLawSocietyPerson({ name: input.name, sraNumber: input.sraNumber }, sra),
+    dsccPinPromise,
   ]);
 
   const sraMatched = sra.matched;
-  const dsccMatched = dscc.matched;
+  const dsccNameMatched = dscc.matched;
+  const dsccPinMatched = dsccPin?.matched ?? false;
+  const dsccMatched = dsccNameMatched || dsccPinMatched;
   const lawSocietyMatched = lawSociety.matched;
   const passed = sraMatched || dsccMatched || lawSocietyMatched;
   const passSource = resolvePassSource(sraMatched, dsccMatched, lawSocietyMatched);
@@ -137,15 +145,25 @@ export async function checkRegulatoryDirectories(
     noteParts.push('Law Society register: no match.');
   }
 
-  if (dsccMatched) {
-    const sample = dscc.entries[0];
+  if (dsccPinMatched && dsccPin) {
+    noteParts.push(dsccPin.note);
+  } else if (input.pinNumber) {
     noteParts.push(
-      `DSCC accredited register: ${sample.forename} ${sample.surname}` +
-        (sample.firm ? ` (${sample.firm})` : '') +
-        (dscc.entries.length > 1 ? ` +${dscc.entries.length - 1} more` : '') +
-        '.',
+      dsccPin?.note ?? 'DSCC PIN supplied but name not matched on accredited register.',
     );
-  } else {
+  }
+
+  if (dsccMatched) {
+    const sample = (dsccPinMatched && dsccPin?.entries[0]) || dscc.entries[0];
+    if (sample && !dsccPinMatched) {
+      noteParts.push(
+        `DSCC accredited register: ${sample.forename} ${sample.surname}` +
+          (sample.firm ? ` (${sample.firm})` : '') +
+          (dscc.entries.length > 1 ? ` +${dscc.entries.length - 1} more` : '') +
+          '.',
+      );
+    }
+  } else if (!input.pinNumber) {
     noteParts.push('DSCC accredited register: no match.');
   }
 
@@ -153,6 +171,7 @@ export async function checkRegulatoryDirectories(
     sra,
     lawSociety,
     dscc,
+    dsccPin,
     passed,
     passSource,
     suggestedStatus,
@@ -171,6 +190,7 @@ export async function runNewRepRegulatoryVerification(
     email: ctx.email,
     name: ctx.name,
     sraNumber: ctx.sraNumber,
+    pinNumber: ctx.pinNumber,
     category: ctx.category,
     existingReview: ctx.existingReview,
     reviewer: ctx.reviewer ?? `system:${ctx.source}`,
@@ -302,6 +322,7 @@ export type { RepVerificationStatus };
 
 export interface RepRegulatoryHints {
   sraNumber?: string;
+  pinNumber?: string;
   category?: ApplicantCategory | null;
 }
 
@@ -316,6 +337,7 @@ export async function loadRegulatoryHintsByEmail(): Promise<Map<string, RepRegul
       const email = v.email.toLowerCase();
       map.set(email, {
         sraNumber: v.sraNumber || undefined,
+        pinNumber: v.pinNumber || undefined,
         category: v.category ?? null,
       });
     }
@@ -340,8 +362,13 @@ export async function loadRegulatoryHintsByEmail(): Promise<Map<string, RepRegul
             typeof row.sra_number === 'string' && row.sra_number.trim()
               ? row.sra_number.trim()
               : existing.sraNumber;
+          const pin =
+            typeof row.dscc_pin === 'string' && row.dscc_pin.trim()
+              ? row.dscc_pin.trim()
+              : existing.pinNumber;
           map.set(email, {
             sraNumber: sra,
+            pinNumber: pin,
             category: existing.category ?? inferApplicantCategory(String(row.accreditation ?? '')),
           });
         }
@@ -431,11 +458,13 @@ export async function verifyAndPublishRep(
       email,
       name: rep.name,
       sraNumber: hints?.sraNumber,
+      pinNumber: hints?.pinNumber || rep.dsccPin,
       category,
     });
 
     const baseRisk = scoreRepresentativeRisk(rep, {
       sraNumber: hints?.sraNumber,
+      pinNumber: hints?.pinNumber || rep.dsccPin,
       status: review?.verificationStatus ?? null,
       adminApproved: review?.adminApproved ?? null,
       isPublic: review?.isPublic ?? null,
