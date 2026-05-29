@@ -107,12 +107,6 @@ async function main() {
   } else {
     console.warn('skip ADMIN_PASSWORD: set ADMIN_PASSWORD in .env.local or ADMIN_PASSWORD_OVERRIDE when running this script');
   }
-  const adminPassword = process.env.ADMIN_PASSWORD_OVERRIDE || env.ADMIN_PASSWORD;
-  if (adminPassword) {
-    await setVar('ADMIN_PASSWORD', adminPassword, ENVS);
-  } else {
-    console.warn('skip ADMIN_PASSWORD: set ADMIN_PASSWORD in .env.local or ADMIN_PASSWORD_OVERRIDE');
-  }
   console.log('\nDone. Trigger a production redeploy: npx vercel --prod --yes');
 }
 
