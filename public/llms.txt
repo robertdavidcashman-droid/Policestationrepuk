@@ -9,8 +9,13 @@ Site: https://policestationrepuk.org
 # High-value hubs
 - https://policestationrepuk.org/Blog — Professional blog (freelance police station reps & criminal defence firms)
 - https://policestationrepuk.org/directory — Accredited representative directory
+- https://policestationrepuk.org/legal-services-directory — Criminal law legal services directory
 - https://policestationrepuk.org/PoliceStationCover — Police station cover for firms
 - https://policestationrepuk.org/Register — Representative registration
+- https://policestationrepuk.org/WhatsApp — WhatsApp community overview
+- https://policestationrepuk.org/WhatsApp/reps — Join WhatsApp (police station reps)
+- https://policestationrepuk.org/WhatsApp/solicitors — Join WhatsApp (criminal defence solicitors)
+- https://policestationrepuk.org/WhatsApp/firms — Join WhatsApp (criminal defence firms)
 - https://policestationrepuk.org/rss.xml — Blog RSS feed
 
 # Blog articles (police station representation operations)

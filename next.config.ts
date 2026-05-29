@@ -1,10 +1,17 @@
 import type { NextConfig } from "next";
 import path from "path";
 import bundleAnalyzer from "@next/bundle-analyzer";
+import packageJson from "./package.json";
 
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
+const siteBuildDate = new Date().toISOString().slice(0, 10);
+
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_SITE_VERSION: packageJson.version,
+    NEXT_PUBLIC_SITE_BUILD_DATE: siteBuildDate,
+  },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
   },

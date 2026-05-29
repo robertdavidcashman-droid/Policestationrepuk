@@ -3,6 +3,9 @@ import {
   WHATSAPP_FIRM_JOIN_URL,
   WHATSAPP_JOIN_URL,
   WHATSAPP_JOIN_PHONE,
+  WHATSAPP_PAGE_FIRMS,
+  WHATSAPP_PAGE_REPS,
+  WHATSAPP_PAGE_SOLICITORS,
   COMMUNITY_EMAIL,
 } from '@/lib/site-navigation';
 
@@ -63,10 +66,10 @@ export function HomeCommunityWhatsAppPromo() {
                 Join as a firm on WhatsApp
               </a>
               <Link
-                href="/WhatsApp"
+                href={WHATSAPP_PAGE_FIRMS}
                 className="text-center text-sm font-semibold text-emerald-300 underline decoration-emerald-500/50 underline-offset-2 hover:text-white sm:text-left"
               >
-                How firms join &rarr;
+                Firm join guide &rarr;
               </Link>
             </div>
             <p className="mt-5 text-xs leading-relaxed text-emerald-200/75">
@@ -91,14 +94,31 @@ export function HomeCommunityWhatsAppPromo() {
                 Join as a rep
               </a>
               <Link
+                href={WHATSAPP_PAGE_REPS}
+                className="inline-flex justify-center text-sm font-semibold text-emerald-300 underline decoration-emerald-500/50 underline-offset-2 hover:text-white"
+              >
+                Rep join guide &rarr;
+              </Link>
+              <Link
                 href="/register"
                 className="inline-flex justify-center text-sm font-semibold text-emerald-300 underline decoration-emerald-500/50 underline-offset-2 hover:text-white"
               >
-                List your profile in the directory &rarr;
+                List in the directory &rarr;
               </Link>
             </div>
           </article>
         </div>
+
+        <p className="mx-auto mt-6 max-w-xl text-center text-sm text-emerald-200/80">
+          <Link href={WHATSAPP_PAGE_SOLICITORS} className="font-semibold text-emerald-200 underline hover:text-white">
+            Criminal defence solicitors
+          </Link>
+          {' '}can join the same group to post cover requests — see the{' '}
+          <Link href={WHATSAPP_PAGE_SOLICITORS} className="font-semibold text-emerald-200 underline hover:text-white">
+            solicitor join guide
+          </Link>
+          .
+        </p>
 
         <p className="mx-auto mt-6 max-w-2xl text-center text-xs text-emerald-200/70">
           Prefer email?{' '}

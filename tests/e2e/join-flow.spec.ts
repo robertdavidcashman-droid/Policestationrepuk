@@ -76,11 +76,17 @@ test.describe('Public entry points', () => {
     expect(href).toBe('/Account');
   });
 
-  test('homepage shows WhatsApp group promo (firms-first) with procedure link', async ({ page }) => {
+  test('top WhatsApp banner links reps, solicitors, and firms to join pages', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('navigation', { name: 'Join WhatsApp by role' }).getByRole('link', { name: 'Reps' })).toHaveAttribute('href', '/WhatsApp/reps');
+    await expect(page.getByRole('navigation', { name: 'Join WhatsApp by role' }).getByRole('link', { name: 'Solicitors' })).toHaveAttribute('href', '/WhatsApp/solicitors');
+    await expect(page.getByRole('navigation', { name: 'Join WhatsApp by role' }).getByRole('link', { name: 'Firms' })).toHaveAttribute('href', '/WhatsApp/firms');
+  });
+
+  test('homepage shows WhatsApp group promo (firms-first) with join guides', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: /Need police station cover out of hours/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /^How firms join/ }).first()).toHaveAttribute('href', '/WhatsApp');
-    await expect(page.getByRole('link', { name: /^Join as a firm$/ }).first()).toBeVisible();
+    await expect(page.getByRole('link', { name: /^Firm join guide/ }).first()).toHaveAttribute('href', '/WhatsApp/firms');
   });
 
   test('/Join page loads and links to /register', async ({ page }) => {

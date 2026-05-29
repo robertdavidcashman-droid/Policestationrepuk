@@ -5,6 +5,9 @@ import {
   WHATSAPP_JOIN_URL,
   WHATSAPP_JOIN_PHONE,
   FACEBOOK_GROUP_URL,
+  WHATSAPP_PAGE_FIRMS,
+  WHATSAPP_PAGE_REPS,
+  WHATSAPP_PAGE_SOLICITORS,
 } from '@/lib/site-navigation';
 
 export const metadata = buildMetadata({
@@ -100,10 +103,31 @@ export default function WhatsAppPage() {
             PoliceStationRepUK WhatsApp group
           </h1>
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-slate-300">
-            One WhatsApp community for <strong className="text-white">accredited police station reps</strong> and{' '}
+            One WhatsApp community for <strong className="text-white">accredited police station reps</strong>,{' '}
+            <strong className="text-white">criminal defence solicitors</strong>, and{' '}
             <strong className="text-white">criminal defence firms</strong> across England &amp; Wales — cover requests,
             networking, and peer support. Free; members are verified before being added.
           </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href={WHATSAPP_PAGE_REPS}
+              className="btn-gold inline-flex min-h-[44px] items-center px-5 no-underline"
+            >
+              Join as a rep
+            </Link>
+            <Link
+              href={WHATSAPP_PAGE_SOLICITORS}
+              className="inline-flex min-h-[44px] items-center rounded-lg border border-white/30 bg-white/10 px-5 text-sm font-semibold text-white no-underline hover:bg-white/20"
+            >
+              Join as a solicitor
+            </Link>
+            <Link
+              href={WHATSAPP_PAGE_FIRMS}
+              className="inline-flex min-h-[44px] items-center rounded-lg border border-white/30 bg-white/10 px-5 text-sm font-semibold text-white no-underline hover:bg-white/20"
+            >
+              Join as a firm
+            </Link>
+          </div>
         </div>
       </section>
 

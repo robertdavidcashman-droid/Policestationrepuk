@@ -39,6 +39,14 @@ export const WHATSAPP_JOIN_URL =
 /** Pre-filled message when a criminal defence firm requests to join (same group as WHATSAPP_JOIN_URL). */
 export const WHATSAPP_FIRM_JOIN_URL =
   'https://wa.me/447535494446?text=Hi%2C%20we%20are%20a%20criminal%20defence%20firm%20and%20would%20like%20to%20join%20the%20PoliceStationRepUK%20WhatsApp%20group%20for%20police%20station%20cover.%20Firm%20name%3A%20';
+/** Pre-filled message for criminal defence solicitors / duty solicitors joining the same group. */
+export const WHATSAPP_SOLICITOR_JOIN_URL =
+  'https://wa.me/447535494446?text=Hi%2C%20I%20am%20a%20criminal%20defence%20solicitor%20and%20would%20like%20to%20join%20the%20PoliceStationRepUK%20WhatsApp%20group.%20Firm%20name%3A%20';
+
+/** Audience-specific join guides (SEO landing pages). */
+export const WHATSAPP_PAGE_REPS = '/WhatsApp/reps';
+export const WHATSAPP_PAGE_SOLICITORS = '/WhatsApp/solicitors';
+export const WHATSAPP_PAGE_FIRMS = '/WhatsApp/firms';
 /** @deprecated Use WHATSAPP_FIRM_JOIN_URL for firm CTAs. Same group; firm-specific prefill. */
 export const WHATSAPP_FIRMS_JOIN_URL = WHATSAPP_FIRM_JOIN_URL;
 export const FACEBOOK_GROUP_URL =
@@ -105,7 +113,10 @@ export const FOOTER_TOOLS: FooterLink[] = [
 
 /** Footer column “Community” — order from homepage crawl (/) */
 export const FOOTER_COMMUNITY: FooterLink[] = [
-  { href: '/WhatsApp', label: 'WhatsApp group (reps & firms)' },
+  { href: '/WhatsApp', label: 'WhatsApp group — overview' },
+  { href: WHATSAPP_PAGE_REPS, label: 'Join WhatsApp — reps' },
+  { href: WHATSAPP_PAGE_SOLICITORS, label: 'Join WhatsApp — solicitors' },
+  { href: WHATSAPP_PAGE_FIRMS, label: 'Join WhatsApp — firms' },
   { href: FACEBOOK_GROUP_URL, label: 'Facebook Group', external: true },
   { href: '/Forum', label: 'Community Forum' },
   { href: '/Blog', label: 'Blog' },

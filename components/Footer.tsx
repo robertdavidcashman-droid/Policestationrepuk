@@ -14,6 +14,7 @@ import {
 } from '@/lib/custodynote-promo';
 import { PSRTRAIN_CTA, PSRTRAIN_FREE_TESTING_NOTE, PSRTRAIN_NAME, PSRTRAIN_TRAINING_HREF } from '@/lib/psrtrain-promo';
 import { SUPPORT_EMAIL, SUPPORT_MAILTO_HREF } from '@/lib/site-contact';
+import { SiteVersionStamp } from '@/components/SiteVersionStamp';
 import {
   FOOTER_COLUMN_TITLES,
   FOOTER_COMMUNITY,
@@ -266,6 +267,7 @@ export function Footer() {
           <p className="mt-2 text-xs text-white/70">
             &copy; {year} PoliceStationRepUK — operated by Defence Legal Services Ltd. All rights reserved.
           </p>
+          <SiteVersionStamp className="mt-3" />
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-[var(--navy-light)] pt-6 sm:gap-x-4">

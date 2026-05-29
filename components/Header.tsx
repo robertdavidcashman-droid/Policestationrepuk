@@ -14,9 +14,11 @@ import {
   HEADER_LOGIN_HREF,
 } from '@/lib/site-navigation';
 
-/** Fewer inline links between lg and xl (1280px) so the bar does not need horizontal scroll. */
-const DESKTOP_NAV_COMPACT_PRIMARY = 5;
-const DESKTOP_NAV_FULL_PRIMARY = 7;
+/** Laptop (lg–xl): fewer inline links so “More” and “Log In” do not overlap nav text. */
+const DESKTOP_NAV_COMPACT_PRIMARY = 4;
+/** Wide desktop (xl+): show more links before “More” dropdown. */
+const DESKTOP_NAV_MEDIUM_PRIMARY = 6;
+const DESKTOP_NAV_FULL_PRIMARY = 8;
 
 function NavItem({
   href,
@@ -64,11 +66,11 @@ function MoreDropdown({ links, linkClass }: { links: ReadonlyArray<{ href: strin
   }, [open]);
 
   return (
-    <div ref={ref} className="relative shrink-0">
+    <div ref={ref} className="relative ml-1 shrink-0 border-l border-white/15 pl-2 xl:ml-1.5 xl:pl-2.5">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={linkClass}
+        className={`${linkClass} !bg-[var(--navy-light)]/80 ring-1 ring-white/10 hover:!ring-[var(--gold)]/40`}
         aria-expanded={open}
         aria-haspopup="true"
       >
@@ -99,20 +101,32 @@ function MoreDropdown({ links, linkClass }: { links: ReadonlyArray<{ href: strin
 export function Header() {
   const [open, setOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  /** false until mounted = SSR + first paint match; then xl+ uses full primary count. */
-  const [wideDesktopNav, setWideDesktopNav] = useState(false);
+  /** 0 = lg only, 1 = xl+, 2 = 2xl+ (set after mount to avoid layout shift mismatch). */
+  const [navTier, setNavTier] = useState(0);
 
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1280px)');
-    const sync = () => setWideDesktopNav(mq.matches);
+    const mqXl = window.matchMedia('(min-width: 1280px)');
+    const mq2xl = window.matchMedia('(min-width: 1536px)');
+    const sync = () => {
+      if (mq2xl.matches) setNavTier(2);
+      else if (mqXl.matches) setNavTier(1);
+      else setNavTier(0);
+    };
     sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
+    mqXl.addEventListener('change', sync);
+    mq2xl.addEventListener('change', sync);
+    return () => {
+      mqXl.removeEventListener('change', sync);
+      mq2xl.removeEventListener('change', sync);
+    };
   }, []);
 
-  const desktopPrimaryCount = wideDesktopNav
-    ? DESKTOP_NAV_FULL_PRIMARY
-    : DESKTOP_NAV_COMPACT_PRIMARY;
+  const desktopPrimaryCount =
+    navTier >= 2
+      ? DESKTOP_NAV_FULL_PRIMARY
+      : navTier >= 1
+        ? DESKTOP_NAV_MEDIUM_PRIMARY
+        : DESKTOP_NAV_COMPACT_PRIMARY;
   const desktopNavPrimary = PRIMARY_NAV.slice(0, desktopPrimaryCount);
   const desktopNavMore = PRIMARY_NAV.slice(desktopPrimaryCount);
 
@@ -132,7 +146,7 @@ export function Header() {
   };
 
   const desktopNavLinkClass =
-    'inline-flex shrink-0 min-h-[44px] items-center rounded-lg px-2.5 py-2 text-[13px] font-semibold leading-snug !text-white no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--gold)] xl:px-3 xl:text-sm whitespace-nowrap';
+    'inline-flex shrink-0 min-h-[44px] max-w-[11rem] items-center truncate rounded-lg px-2 py-2 text-[12px] font-semibold leading-snug !text-white no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--gold)] lg:max-w-[9.5rem] lg:px-2 lg:text-[12px] xl:max-w-[11rem] xl:px-2.5 xl:text-[13px] 2xl:max-w-none 2xl:px-3 2xl:text-sm';
 
   return (
     <>
@@ -175,9 +189,9 @@ export function Header() {
             </Link>
           </div>
 
-          <div className="hidden min-w-0 justify-center px-1 lg:flex">
+          <div className="hidden min-w-0 flex-1 justify-center overflow-hidden px-1 lg:flex lg:max-w-[min(100%,52rem)]">
             <nav
-              className="flex min-w-0 max-w-full items-center gap-0.5"
+              className="flex min-w-0 max-w-full flex-nowrap items-center gap-0.5 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               aria-label="Main navigation"
             >
               {desktopNavPrimary.map((link) => (
@@ -196,16 +210,16 @@ export function Header() {
             </nav>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2 lg:justify-self-end">
+          <div className="flex shrink-0 items-center gap-1.5 pl-1 lg:justify-self-end lg:pl-2">
             <Link
               href={HEADER_HELP_HREF}
-              className="hidden min-h-[44px] items-center px-2 text-sm font-medium !text-white/80 no-underline transition-colors hover:!text-[var(--gold)] lg:inline-flex"
+              className="hidden min-h-[44px] shrink-0 items-center px-2 text-sm font-medium !text-white/80 no-underline transition-colors hover:!text-[var(--gold)] xl:inline-flex"
             >
               Help
             </Link>
             <Link
               href={HEADER_LOGIN_HREF}
-              className="inline-flex min-h-[36px] items-center gap-1 rounded-lg bg-[var(--gold)] px-2.5 py-1 text-xs font-bold text-[var(--navy)] shadow-sm no-underline transition-colors hover:bg-[var(--gold-hover)] sm:min-h-[40px] sm:gap-1.5 sm:px-3.5 sm:py-2 sm:text-sm"
+              className="inline-flex min-h-[36px] shrink-0 items-center gap-1 rounded-lg bg-[var(--gold)] px-2.5 py-1 text-xs font-bold text-[var(--navy)] shadow-sm no-underline transition-colors hover:bg-[var(--gold-hover)] sm:min-h-[40px] sm:gap-1.5 sm:px-3 sm:py-2 sm:text-sm lg:px-2.5 xl:px-3.5"
             >
               Log In
               <span aria-hidden className="text-sm leading-none sm:text-base">→</span>
