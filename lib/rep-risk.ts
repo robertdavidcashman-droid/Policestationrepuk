@@ -333,6 +333,104 @@ export function isPublicRegisterVerifiedReview(adminNotes: string | null | undef
   return /matched (?:sra|dscc|law-society|multiple) public register/i.test(adminNotes);
 }
 
+export interface AuditRiskReviewInput {
+  riskCategory?: string | null;
+  riskReasons?: string[];
+  adminNotes?: string;
+  verificationStatus?: RepVerificationStatus | null;
+  adminApproved?: boolean | null;
+  isPublic?: boolean | null;
+  lastVerifiedDate?: string | null;
+}
+
+function isVerifiedPublicRep(review: AuditRiskReviewInput | null | undefined): boolean {
+  if (!review?.verificationStatus) return false;
+  if (!PUBLIC_VERIFIED_STATUSES.has(review.verificationStatus as never)) return false;
+  return review.adminApproved === true && review.isPublic === true && !!review.lastVerifiedDate;
+}
+
+function parseRegisterPassSourceFromNotes(
+  adminNotes: string,
+): 'sra' | 'dscc' | 'law-society' | 'multiple' | null {
+  const explicit = adminNotes.match(/Passed regulatory directory check \(([^)]+)\)/i);
+  if (explicit) {
+    const raw = explicit[1].toLowerCase().trim();
+    if (raw === 'sra' || raw === 'dscc' || raw === 'law-society' || raw === 'multiple') {
+      return raw;
+    }
+  }
+  const legacy = adminNotes.match(/matched (sra|dscc|law-society|multiple) public register/i);
+  if (legacy) return legacy[1].toLowerCase() as 'sra' | 'dscc' | 'law-society' | 'multiple';
+  return null;
+}
+
+/**
+ * Admin audit display risk: honour register verification and stored review
+ * state instead of re-showing stale heuristic high flags on verified reps.
+ */
+export function resolveAuditRiskAssessment(
+  heuristic: RepRiskAssessment,
+  review: AuditRiskReviewInput | null | undefined,
+): RepRiskAssessment {
+  if (!review || heuristic.category === 'ineligible') return heuristic;
+
+  const adminNotes = review.adminNotes ?? '';
+
+  if (isPublicRegisterVerifiedReview(adminNotes)) {
+    const source = parseRegisterPassSourceFromNotes(adminNotes);
+    const detail = review.riskReasons?.join('; ') || undefined;
+    return lowRiskForPublicRegisterMatch(source, detail);
+  }
+
+  if (isVerifiedPublicRep(review)) {
+    return {
+      category: 'low',
+      reasons: review.riskReasons?.length
+        ? review.riskReasons
+        : [`Publicly verified (${review.verificationStatus})`],
+      highRiskFlags: [],
+      mediumRiskFlags: [],
+      lowRiskIndicators: review.riskReasons?.length
+        ? review.riskReasons
+        : ['Verified and approved for public listing'],
+      shouldHide: false,
+    };
+  }
+
+  if (
+    adminNotes.includes('Low-risk auto-publish') ||
+    adminNotes.includes('Auto-published via /register')
+  ) {
+    return {
+      category: 'low',
+      reasons: review.riskReasons?.length
+        ? review.riskReasons
+        : ['Auto-published after verification'],
+      highRiskFlags: [],
+      mediumRiskFlags: [],
+      lowRiskIndicators: review.riskReasons?.length
+        ? review.riskReasons
+        : ['Auto-published profile'],
+      shouldHide: false,
+    };
+  }
+
+  if (review.riskCategory === 'low') {
+    return {
+      category: 'low',
+      reasons: review.riskReasons?.length ? review.riskReasons : ['Low risk on record'],
+      highRiskFlags: [],
+      mediumRiskFlags: [],
+      lowRiskIndicators: review.riskReasons?.length
+        ? review.riskReasons
+        : heuristic.lowRiskIndicators,
+      shouldHide: false,
+    };
+  }
+
+  return heuristic;
+}
+
 /** Convenience overload that scores a fully merged `Representative`. */
 export function scoreRepresentativeRisk(
   rep: Representative,

@@ -13,8 +13,7 @@ import {
   buildDuplicateIndex,
   duplicateReasons,
   scoreRepRisk,
-  isPublicRegisterVerifiedReview,
-  lowRiskForPublicRegisterMatch,
+  resolveAuditRiskAssessment,
   type RepRiskAssessment,
 } from '@/lib/rep-risk';
 import { matchesAutomatedSmokeRep } from '@/lib/directory-blocklist';
@@ -283,8 +282,17 @@ function commonRiskFromInputs(
   status: RepVerificationStatus | null,
   adminApproved: boolean | null,
   isPublic: boolean | null,
+  review: {
+    riskCategory?: string | null;
+    riskReasons?: string[];
+    adminNotes: string;
+    verificationStatus?: RepVerificationStatus | null;
+    adminApproved?: boolean | null;
+    isPublic?: boolean | null;
+    lastVerifiedDate?: string | null;
+  } | null,
 ) {
-  return scoreRepRisk({
+  const heuristic = scoreRepRisk({
     email,
     phone,
     name,
@@ -305,6 +313,7 @@ function commonRiskFromInputs(
     adminApproved,
     isPublic,
   });
+  return resolveAuditRiskAssessment(heuristic, review);
 }
 
 function buildFromRep(
@@ -357,6 +366,7 @@ function buildFromRep(
     verificationStatus,
     adminApproved,
     isPublic,
+    review,
   );
   return {
     email,
@@ -439,6 +449,7 @@ function buildFromEnquiry(
       verificationStatus,
       review?.adminApproved ?? null,
       review?.isPublic ?? null,
+      review,
     ),
     duplicateReasons: [],
     adminNotes: review?.adminNotes || '',
@@ -494,6 +505,7 @@ function buildFromVerification(
       verificationStatus,
       review?.adminApproved ?? null,
       review?.isPublic ?? null,
+      review,
     ),
     duplicateReasons: [],
     adminNotes: review?.adminNotes || '',
