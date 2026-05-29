@@ -19,4 +19,17 @@ export function socialPreviewImageUrl(): string {
 
 /** Short meta/JSON-LD description: directory only — not a law firm or provider of regulated services. */
 export const DEFAULT_DESCRIPTION =
-  'Free directory connecting criminal defence firms with accredited police station representatives across England and Wales. PoliceStationRepUK is not a law firm and does not provide legal advice or regulated legal services through the directory.';
+  'Free UK directory of accredited police station representatives and police station telephone numbers across England and Wales. Search reps by county or station; report updated custody desk numbers to keep contacts accurate. Not a law firm.';
+
+/** Default meta keywords for root layout and key hubs. */
+export const SITE_KEYWORDS = [
+  'police station representative',
+  'police station rep directory',
+  'police station cover',
+  'criminal defence police station',
+  'UK police station phone numbers',
+  'custody suite telephone number',
+  'accredited police station rep',
+  'freelance police station representative',
+  'England Wales police station directory',
+] as const;

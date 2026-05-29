@@ -196,14 +196,14 @@ export function StationsDirectoryExplorer({
             {custodyOnly ? ' · custody flagged only' : ''}
           </p>
           <p className="text-xs text-[var(--muted)]">
-            Wrong phone number or address?{' '}
+            Know a more up-to-date telephone number?{' '}
             <Link
               href="/UpdateStation"
               className="font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)] hover:underline"
             >
-              Suggest a correction
+              Report it here
             </Link>{' '}
-            — we review every submission.
+            — reviewed before publishing.
           </p>
         </div>
       </div>
@@ -328,7 +328,7 @@ function StationDirectoryCard({ station }: { station: PoliceStation }) {
           href={updateHref}
           className="text-xs font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)] hover:underline"
         >
-          Correct phone, address or other details →
+          Report up-to-date phone number →
         </Link>
       </div>
     </article>

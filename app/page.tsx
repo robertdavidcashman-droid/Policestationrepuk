@@ -26,7 +26,6 @@ import { LegalDirectoryPromo } from '@/components/legal-directory/LegalDirectory
 import { getAllReps, getAllCounties, getFeaturedRepsSorted } from '@/lib/data';
 import {
   organizationSchema,
-  webSiteSchema,
   faqPageSchema,
   directoryServiceLocalBusinessSchema,
 } from '@/lib/seo';
@@ -37,7 +36,7 @@ import { SITE_NAME, SITE_URL, socialPreviewImageUrl } from '@/lib/seo-layer/conf
 export const metadata: Metadata = {
   title: 'Find a Police Station Rep — UK Representative Directory',
   description:
-    'Free directory of accredited police station representatives in England & Wales. Search by county, station, or name. 300+ reps, 894 stations. Join free.',
+    'Free UK directory of police station representatives and station telephone numbers. Search reps by county or station; report updated custody desk numbers. Join free.',
   alternates: { canonical: SITE_URL },
   openGraph: {
     title: 'Find a Police Station Rep — UK Representative Directory',
@@ -81,7 +80,6 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={organizationSchema()} />
-      <JsonLd data={webSiteSchema() as Record<string, unknown>} />
       <JsonLd data={faqPageSchema(HOMEPAGE_FAQS)} />
       <JsonLd data={directoryServiceLocalBusinessSchema() as Record<string, unknown>} />
 

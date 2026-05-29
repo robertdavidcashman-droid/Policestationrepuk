@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { StationsDataContributeCta } from '@/components/StationsDataContributeCta';
 
 export function HomePhoneNumbers() {
   return (
@@ -6,19 +7,27 @@ export function HomePhoneNumbers() {
       <div className="page-container !py-0">
         <div className="mx-auto max-w-3xl text-center">
           <h3 className="text-h3 mt-0 text-[var(--navy)]">
-            Need police station phone numbers?
+            UK police station phone numbers
           </h3>
           <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
-            Find official phone numbers, addresses and custody contact details across England &amp; Wales.
+            Search custody suite lines, main numbers, and addresses across England &amp; Wales — kept
+            accurate with help from reps and firms who report corrections.
           </p>
 
           <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link href="/StationsDirectory" className="btn-gold w-full sm:w-auto">
-              Station Numbers
+              Station phone numbers
+            </Link>
+            <Link href="/UpdateStation" className="btn-outline w-full sm:w-auto">
+              Report updated number
             </Link>
             <Link href="/Forces" className="btn-outline w-full sm:w-auto">
-              Browse by Force
+              Browse by force
             </Link>
+          </div>
+
+          <div className="mt-8 text-left">
+            <StationsDataContributeCta variant="inline" className="text-center sm:text-left" />
           </div>
         </div>
       </div>

@@ -17,5 +17,6 @@ export {
   faqPageSchema,
   directoryServiceLocalBusinessSchema,
   directoryItemListSchema,
+  stationDirectoryItemListSchema,
 } from './seo-layer';
 export type { MetadataInput } from './seo-layer';

@@ -5,6 +5,8 @@ export interface MetadataInput {
   title: string;
   description: string;
   path: string;
+  /** Optional page-specific keywords (layout defaults apply when omitted). */
+  keywords?: string[];
   noIndex?: boolean;
   /** Set to 'article' for blog/news posts to emit correct OG type and dates. */
   ogType?: 'website' | 'article';
@@ -74,6 +76,7 @@ export function buildMetadata(opts: MetadataInput): Metadata {
   return {
     title: opts.title,
     description,
+    ...(opts.keywords?.length ? { keywords: opts.keywords } : {}),
     alternates: { canonical: url },
     openGraph,
     twitter: {

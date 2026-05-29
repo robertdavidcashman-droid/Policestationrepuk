@@ -1,14 +1,28 @@
 import Link from 'next/link';
 import { getAllStations } from '@/lib/data';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { JsonLd } from '@/components/JsonLd';
+import { StationsDataContributeCta } from '@/components/StationsDataContributeCta';
 import { StationsDirectoryExplorer } from '@/components/StationsDirectoryExplorer';
-import { buildMetadata } from '@/lib/seo';
+import {
+  buildMetadata,
+  breadcrumbSchema,
+  faqPageSchema,
+  stationDirectoryItemListSchema,
+} from '@/lib/seo';
+import { STATIONS_DIRECTORY_FAQS } from '@/lib/stations-seo';
 
 export const metadata = buildMetadata({
-  title: 'UK Police Station Directory — Custody Suites & Contacts',
+  title: 'UK Police Station Phone Numbers & Addresses Directory',
   description:
-    'Browse and search the UK police station directory by name, force, or county. Find contact details, addresses and accredited representatives covering each station across England & Wales.',
+    'Search UK police station telephone numbers, custody suite lines, addresses and forces. Report up-to-date phone numbers so the directory stays accurate for reps and firms.',
   path: '/StationsDirectory',
+  keywords: [
+    'police station phone numbers UK',
+    'custody suite telephone number',
+    'police station address directory',
+    'police force station contacts',
+  ],
 });
 
 export const dynamic = 'force-static';
@@ -20,9 +34,17 @@ interface PageProps {
 export default async function StationsDirectoryPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
   const stations = await getAllStations();
+  const stationListSample = stations.map((s) => ({ name: s.name, slug: s.slug }));
 
   return (
     <>
+      <JsonLd data={breadcrumbSchema([
+        { name: 'Home', url: '/' },
+        { name: 'Police Station Directory', url: '/StationsDirectory' },
+      ])} />
+      <JsonLd data={faqPageSchema([...STATIONS_DIRECTORY_FAQS])} />
+      <JsonLd data={stationDirectoryItemListSchema(stationListSample, stations.length)} />
+
       <section className="bg-[var(--navy)] py-10 sm:py-14">
         <div className="page-container !py-0">
           <Breadcrumbs
@@ -33,40 +55,43 @@ export default async function StationsDirectoryPage({ searchParams }: PageProps)
             ]}
           />
           <div className="mb-3 mt-3 inline-flex items-center gap-2 rounded-full border border-white bg-[var(--navy-light)] px-3 py-1 text-xs font-medium text-white">
-            <span>✓</span> Community Verified
+            <span>✓</span> Community-maintained contacts
           </div>
-          <h1 className="text-h1 text-white">Police Stations &amp; Forces Directory</h1>
+          <h1 className="text-h1 text-white">UK Police Station Phone Numbers &amp; Addresses</h1>
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-white">
-            Contact details and representative coverage for police stations across England &amp;
-            Wales. {stations.length > 0 ? `${stations.length} stations listed.` : ''}
+            Telephone numbers, custody suite lines, and addresses for police stations across England
+            &amp; Wales. {stations.length > 0 ? `${stations.length} stations listed.` : ''}
           </p>
           <p className="mt-3 max-w-2xl text-sm text-slate-300">
-            If a telephone number or address is wrong, use{' '}
+            Numbers change — if you have a verified up-to-date telephone number, please{' '}
             <Link
               href="/UpdateStation"
               className="font-semibold text-[var(--gold)] no-underline hover:underline"
             >
-              Suggest a station update
+              report it here
             </Link>{' '}
-            — or the &ldquo;Correct phone, address…&rdquo; link on each station card below.
+            or use &ldquo;Correct phone, address…&rdquo; on any station card below.
           </p>
         </div>
       </section>
 
       <div className="page-container">
+        <StationsDataContributeCta variant="slim" className="mb-6" />
         <StationsDirectoryExplorer stations={stations} initialQuery={params.q ?? ''} />
 
+        <StationsDataContributeCta variant="prominent" className="mt-10" />
+
         <div className="mt-10 rounded-xl border border-slate-200 bg-slate-50 p-6">
-          <h2 className="text-lg font-bold text-[var(--navy)]">Spotted incorrect information?</h2>
+          <h2 className="text-lg font-bold text-[var(--navy)]">Help us keep telephone numbers accurate</h2>
           <p className="mt-1.5 text-sm text-[var(--muted)]">
-            Wrong address, main line, custody suite number, or non-emergency contact? Tell us what
-            should change. We review every suggestion before updating the directory.
+            Reps and firms rely on correct custody desk and main line numbers for out-of-hours cover.
+            Submit the number you use today — we review every correction before it goes live.
           </p>
           <Link
             href="/UpdateStation"
             className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)] hover:underline"
           >
-            Open the station update form &rarr;
+            Report an updated phone number or address &rarr;
           </Link>
         </div>
 

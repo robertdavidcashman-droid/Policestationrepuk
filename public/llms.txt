@@ -9,6 +9,8 @@ Site: https://policestationrepuk.org
 # High-value hubs
 - https://policestationrepuk.org/Blog — Professional blog (freelance police station reps & criminal defence firms)
 - https://policestationrepuk.org/directory — Accredited representative directory
+- https://policestationrepuk.org/StationsDirectory — UK police station phone numbers, addresses, and forces (searchable)
+- https://policestationrepuk.org/UpdateStation — Report up-to-date police station telephone numbers or address corrections (reviewed before publish)
 - https://policestationrepuk.org/legal-services-directory — Criminal law legal services directory
 - https://policestationrepuk.org/PoliceStationCover — Police station cover for firms
 - https://policestationrepuk.org/Register — Representative registration

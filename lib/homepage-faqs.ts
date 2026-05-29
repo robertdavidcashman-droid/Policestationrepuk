@@ -25,6 +25,10 @@ export const HOMEPAGE_FAQS: { q: string; a: string }[] = [
     a: 'Firms use rota systems, WhatsApp groups, DSCC and other call centres, and directories such as PoliceStationRepUK to find accredited reps who can attend a given station or area at short notice, including nights and weekends.',
   },
   {
+    q: 'Where can I find UK police station telephone numbers?',
+    a: 'Use the Stations Directory on PoliceStationRepUK to search by station name, force, or county. If a custody desk or main line number is wrong or out of date, use the Report correction form — submissions are reviewed before the public listing is updated.',
+  },
+  {
     q: 'What is the difference between a duty solicitor and a police station rep?',
     a: 'A duty solicitor is a solicitor on the legal aid duty scheme. A police station representative is often an accredited agent who attends under the supervision of a solicitor firm. Both roles can provide police station advice; the exact arrangement depends on the firm and legal aid status.',
   },

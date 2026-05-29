@@ -19,4 +19,5 @@ export {
   faqPageSchema,
   directoryServiceLocalBusinessSchema,
   directoryItemListSchema,
+  stationDirectoryItemListSchema,
 } from './schemas';

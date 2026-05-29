@@ -21,11 +21,25 @@ export function webSiteSchema() {
     name: SITE_NAME,
     url: SITE_URL,
     description: DEFAULT_DESCRIPTION,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/directory?q={search_term_string}` },
-      'query-input': 'required name=search_term_string',
-    },
+    inLanguage: 'en-GB',
+    potentialAction: [
+      {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${SITE_URL}/directory?q={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+      {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${SITE_URL}/StationsDirectory?q={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    ],
   };
 }
 
@@ -41,7 +55,12 @@ export function platformLegalServiceSchema() {
       '@type': 'AdministrativeArea',
       name: 'England and Wales',
     },
-    knowsAbout: 'Police station representative directory and professional information for criminal defence firms',
+    knowsAbout: [
+      'Police station representative directory',
+      'UK police station telephone numbers and addresses',
+      'Criminal defence firm police station cover',
+      'Accredited police station reps England and Wales',
+    ],
   };
 }
 
@@ -76,6 +95,7 @@ export function localBusinessSchema(station: {
   slug: string;
   address: string;
   county: string;
+  telephone?: string;
 }) {
   return {
     '@context': 'https://schema.org',
@@ -88,6 +108,7 @@ export function localBusinessSchema(station: {
       addressRegion: station.county,
       addressCountry: 'GB',
     },
+    ...(station.telephone ? { telephone: station.telephone } : {}),
   };
 }
 
@@ -212,6 +233,28 @@ export function blogPostingSchema(post: {
       name: `${SITE_NAME} Blog`,
       url: `${SITE_URL}/Blog`,
     },
+  };
+}
+
+/** ItemList schema for police station directory (sample of stations for rich results). */
+export function stationDirectoryItemListSchema(
+  stations: { name: string; slug: string }[],
+  totalCount?: number,
+) {
+  const count = totalCount ?? stations.length;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'UK Police Station Directory — Phone Numbers & Addresses',
+    description:
+      'Searchable directory of UK police station contact details. Community corrections help keep telephone numbers accurate.',
+    numberOfItems: count,
+    itemListElement: stations.slice(0, 30).map((s, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${SITE_URL}/police-station/${s.slug}`,
+      name: s.name,
+    })),
   };
 }
 

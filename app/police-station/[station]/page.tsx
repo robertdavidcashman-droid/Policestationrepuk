@@ -4,6 +4,7 @@ import { getAllCounties, getAllReps, getAllStations, getStationBySlug, getRepsBy
 import type { PoliceStation } from '@/lib/types';
 import { buildMetadata, localBusinessSchema, breadcrumbSchema } from '@/lib/seo';
 import { JsonLd } from '@/components/JsonLd';
+import { StationsDataContributeCta } from '@/components/StationsDataContributeCta';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { RepCard } from '@/components/RepCard';
 import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCredentialVerificationNotice';
@@ -42,9 +43,11 @@ export async function generateMetadata({ params }: PageProps) {
   const repCount = countRepsForStation(stationData, allReps, allStations);
   const indexable = shouldIndexPoliceStationPage(stationData, repCount);
   const area = stationData.forceName || stationData.county || 'England & Wales';
+  const listedPhone = displayPhoneNumber(stationData);
+  const phoneSnippet = listedPhone ? ` Phone: ${listedPhone}.` : '';
   return buildMetadata({
-    title: `${stationData.name} Police Station | Representatives`,
-    description: `Accredited police station representatives for ${stationData.name} (${area}). ${repCount > 0 ? `${repCount} rep${repCount === 1 ? '' : 's'} listed. ` : ''}Custody advice, PACE interviews, and DSCC-aligned cover — directory only, not a law firm.`,
+    title: `${stationData.name} Police Station — Phone, Address & Reps`,
+    description: `${stationData.name} (${area}) — police station telephone numbers, address, and accredited representatives.${phoneSnippet} Report updated numbers if ours are wrong.`,
     path: `/police-station/${stationData.slug}`,
     noIndex: !indexable,
   });
@@ -70,7 +73,14 @@ export default async function PoliceStationPage({ params }: PageProps) {
     directoryHrefForAreaName(station.forceName, counties);
   const repCount = countRepsForStation(station, allReps, allStations);
   const indexable = shouldIndexPoliceStationPage(station, repCount);
-  const schema = localBusinessSchema({ name: station.name, slug: station.slug, address: station.address, county: station.forceName || station.county || '' });
+  const listedPhone = displayPhoneNumber(station);
+  const schema = localBusinessSchema({
+    name: station.name,
+    slug: station.slug,
+    address: station.address,
+    county: station.forceName || station.county || '',
+    ...(listedPhone ? { telephone: listedPhone } : {}),
+  });
   const bc = breadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Directory', url: '/directory' }, { name: `${station.name} Police Station`, url: `/police-station/${station.slug}` }]);
   const areaLabel = station.county || station.forceName || '';
 
@@ -230,11 +240,16 @@ export default async function PoliceStationPage({ params }: PageProps) {
                 </a>
                 <Link
                   href={`/UpdateStation?station=${encodeURIComponent(station.id)}`}
-                  className="btn-outline mt-2 w-full !text-sm"
+                  className="btn-gold mt-2 w-full !text-sm no-underline text-center"
                 >
-                  Suggest a correction (phone or address)
+                  Report up-to-date phone number
                 </Link>
+                <p className="mt-2 text-center text-xs text-[var(--muted)]">
+                  Know a newer custody desk or main line? We review every correction.
+                </p>
               </section>
+
+              <StationsDataContributeCta variant="slim" />
 
               <section className="rounded-[var(--radius-lg)] bg-[var(--navy)] p-6 text-center">
                 <h3 className="font-bold text-white">Cover this station?</h3>

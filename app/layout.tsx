@@ -8,8 +8,8 @@ import { SiteWidePromoStrip } from '@/components/SiteWidePromoStrip';
 import { DeferredGlobalWidgets } from '@/components/DeferredGlobalWidgets';
 import { JsonLd } from '@/components/JsonLd';
 import './globals.css';
-import { SITE_URL, SITE_NAME, socialPreviewImageUrl } from '@/lib/seo-layer/config';
-import { platformLegalServiceSchema } from '@/lib/seo';
+import { SITE_URL, SITE_NAME, SITE_KEYWORDS, socialPreviewImageUrl } from '@/lib/seo-layer/config';
+import { platformLegalServiceSchema, webSiteSchema } from '@/lib/seo';
 
 /** Set in Vercel / `.env` when verifying in Google Search Console (omit to skip meta tag). */
 const GOOGLE_SITE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
@@ -36,7 +36,8 @@ export const metadata: Metadata = {
     template: '%s',
   },
   description:
-    'Free directory of accredited police station representatives across England & Wales. Find reps by county, station, or name. 100% free.',
+    'Free UK directory of accredited police station representatives and police station phone numbers. Search reps by county or station; report updated custody numbers. 100% free.',
+  keywords: [...SITE_KEYWORDS],
   metadataBase: new URL(SITE_URL),
   manifest: '/manifest.json',
   alternates: { canonical: SITE_URL },
@@ -46,7 +47,7 @@ export const metadata: Metadata = {
     type: 'website',
     title: 'PoliceStationRepUK — Free Police Station Rep Directory UK',
     description:
-      'The UK\'s free directory connecting criminal defence firms with accredited police station representatives across England & Wales.',
+      'The UK\'s free directory for police station reps, station phone numbers, and criminal defence cover across England & Wales.',
     url: SITE_URL,
     images: [
       {
@@ -100,6 +101,7 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-screen flex-col bg-[var(--background)] font-sans text-[var(--foreground)] antialiased">
         <JsonLd data={platformLegalServiceSchema()} />
+        <JsonLd data={webSiteSchema()} />
         <a href="#main-content" className="skip-link">
           Skip to content
         </a>

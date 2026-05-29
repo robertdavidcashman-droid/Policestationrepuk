@@ -75,7 +75,7 @@ export const FOOTER_DIRECTORIES: FooterLink[] = [
   { href: '/Forces', label: 'Police Forces' },
   { href: '/Firms', label: 'Law Firms' },
   { href: '/Map', label: 'Interactive Map' },
-  { href: '/UpdateStation', label: 'Update Station Info' },
+  { href: '/UpdateStation', label: 'Report station phone number' },
 ];
 
 /** Footer column “For Reps” — order & labels from homepage crawl */
