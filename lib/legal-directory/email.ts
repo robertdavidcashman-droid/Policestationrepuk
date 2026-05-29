@@ -6,9 +6,17 @@
 import { Resend } from 'resend';
 import { SITE_URL } from '@/lib/seo-layer/config';
 import { LEGAL_DIRECTORY_BASE } from './constants';
-import type { LegalDirectoryListing, LegalDirectoryListingStatus } from './types';
+import { issueLegalDirectoryAdminToken } from './admin-action-token';
+import {
+  adminActionButtonsHtml,
+  formatListingDetailsHtml,
+} from './listing-email-html';
+import type { LegalDirectoryListing } from './types';
 
-const ADMIN_EMAIL = 'robertcashman@defencelegalservices.co.uk';
+const ADMIN_EMAIL =
+  process.env.ADMIN_NOTIFICATION_EMAIL?.trim() ||
+  process.env.OWNER_EMAIL?.trim() ||
+  'robertdavidcashman@gmail.com';
 const FROM_EMAIL = 'PoliceStationRepUK <noreply@policestationrepuk.org>';
 
 let resend: Resend | null = null;
@@ -32,25 +40,52 @@ function escapeHtml(val: unknown): string {
     .replace(/'/g, '&#39;');
 }
 
+async function buildAdminActionUrls(listingId: string): Promise<{
+  amendUrl: string;
+  deleteUrl: string;
+  adminUrl: string;
+} | null> {
+  try {
+    const [amendToken, deleteToken] = await Promise.all([
+      issueLegalDirectoryAdminToken({ listingId, action: 'amend' }),
+      issueLegalDirectoryAdminToken({ listingId, action: 'delete' }),
+    ]);
+    return {
+      amendUrl: `${SITE_URL}/admin/legal-directory/action/${encodeURIComponent(amendToken)}`,
+      deleteUrl: `${SITE_URL}/admin/legal-directory/action/${encodeURIComponent(deleteToken)}`,
+      adminUrl: `${SITE_URL}/admin/legal-directory`,
+    };
+  } catch (err) {
+    console.warn('[Legal directory email] Could not issue admin action tokens:', err);
+    return {
+      amendUrl: `${SITE_URL}/admin/legal-directory`,
+      deleteUrl: `${SITE_URL}/admin/legal-directory`,
+      adminUrl: `${SITE_URL}/admin/legal-directory`,
+    };
+  }
+}
+
 export async function sendLegalDirectoryListingReceived(opts: {
   to: string;
   businessName: string;
-  status: LegalDirectoryListingStatus;
+  slug: string;
 }): Promise<boolean> {
   const client = getResend();
+  const publicUrl = `${SITE_URL}${LEGAL_DIRECTORY_BASE}/listing/${opts.slug}`;
   if (!client) {
-    console.info('[Legal directory — no RESEND_API_KEY] listing received', opts);
+    console.info('[Legal directory — no RESEND_API_KEY] listing published', opts);
     return false;
   }
   try {
     await client.emails.send({
       from: FROM_EMAIL,
       to: opts.to,
-      subject: 'Your Legal Services Directory listing — received',
+      subject: 'Your Legal Services Directory listing is now live',
       html: `
-        <p>Thank you for submitting <strong>${escapeHtml(opts.businessName)}</strong> to the Police Station Rep UK Legal Services Directory.</p>
-        <p>Your listing status is: <strong>${escapeHtml(opts.status)}</strong>. It will be reviewed before publication. You will receive another email when it is approved or if we need more information.</p>
-        <p><a href="${SITE_URL}${LEGAL_DIRECTORY_BASE}/manage-listing">Manage your listing</a></p>
+        <p>Thank you for listing <strong>${escapeHtml(opts.businessName)}</strong> on the Police Station Rep UK Legal Services Directory.</p>
+        <p>Your listing is <strong>live now</strong> and searchable on the directory.</p>
+        <p><a href="${escapeHtml(publicUrl)}">View your public listing</a></p>
+        <p><a href="${SITE_URL}${LEGAL_DIRECTORY_BASE}/manage-listing">Manage your listing</a> (amend or delete)</p>
       `,
     });
     return true;
@@ -76,7 +111,7 @@ export async function sendLegalDirectoryManagementLink(opts: {
       to: opts.to,
       subject: 'Manage your Legal Services Directory listing',
       html: `
-        <p>Use the secure link below to amend or request deletion of your listing. This link expires in 7 days.</p>
+        <p>Use the secure link below to amend or delete your listing. This link expires in 7 days.</p>
         <p><a href="${escapeHtml(url)}">${escapeHtml(url)}</a></p>
         <p>If you did not request this, ignore this email.</p>
       `,
@@ -111,20 +146,41 @@ export async function sendLegalDirectoryAdminAlert(opts: {
   }
 }
 
-export async function notifyAdminNewListing(listing: LegalDirectoryListing): Promise<void> {
+export async function notifyAdminListingChange(
+  listing: LegalDirectoryListing,
+  event: 'new' | 'updated' | 'deleted',
+): Promise<void> {
+  const actionUrls = await buildAdminActionUrls(listing.id);
+  const eventLabel =
+    event === 'new'
+      ? 'New listing registered'
+      : event === 'updated'
+        ? 'Listing updated'
+        : 'Listing deleted by provider';
+
+  const buttons =
+    event === 'deleted' || !actionUrls
+      ? `<p><a href="${SITE_URL}/admin/legal-directory">Open admin</a></p>`
+      : adminActionButtonsHtml(actionUrls);
+
   await sendLegalDirectoryAdminAlert({
-    subject: `[Legal Directory] New listing — ${listing.businessName} (${listing.status})`,
+    subject: `[Legal Directory] ${eventLabel} — ${listing.businessName}`,
     bodyHtml: `
-      <h2>New Legal Services Directory submission</h2>
+      <h2>${escapeHtml(eventLabel)}</h2>
       <p><strong>Business:</strong> ${escapeHtml(listing.businessName)}</p>
       <p><strong>Status:</strong> ${escapeHtml(listing.status)}</p>
-      <p><strong>Risk score:</strong> ${listing.riskScore}</p>
-      <p><strong>Flags:</strong> ${escapeHtml(listing.reviewFlags.join(', ') || 'none')}</p>
-      <p><a href="${SITE_URL}/admin/legal-directory">Review in admin</a></p>
+      ${formatListingDetailsHtml(listing)}
+      ${buttons}
     `,
   });
 }
 
+/** @deprecated Use notifyAdminListingChange */
+export async function notifyAdminNewListing(listing: LegalDirectoryListing): Promise<void> {
+  await notifyAdminListingChange(listing, 'new');
+}
+
+/** @deprecated High-risk listings still publish; admin is notified in the main email. */
 export async function notifyAdminFlagged(opts: {
   title: string;
   detail: string;
@@ -132,13 +188,13 @@ export async function notifyAdminFlagged(opts: {
   flags: string[];
 }): Promise<void> {
   await sendLegalDirectoryAdminAlert({
-    subject: `[Legal Directory — REVIEW] ${opts.title}`,
+    subject: `[Legal Directory — note] ${opts.title}`,
     bodyHtml: `
-      <h2>Flagged submission</h2>
+      <h2>Listing note (already live)</h2>
       <p>${escapeHtml(opts.detail)}</p>
       <p><strong>Risk:</strong> ${opts.riskScore}</p>
       <p><strong>Flags:</strong> ${escapeHtml(opts.flags.join(', '))}</p>
-      <p><a href="${SITE_URL}/admin/legal-directory/review-queue">Review queue</a></p>
+      <p><a href="${SITE_URL}/admin/legal-directory">Open admin</a></p>
     `,
   });
 }

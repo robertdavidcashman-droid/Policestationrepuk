@@ -25,7 +25,7 @@ export function LegalDirectoryPromo({
           <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-slate-300">
             More than police station reps. Find — or list — criminal defence solicitors, barristers&apos;
             chambers, expert witnesses, interpreters, process servers, and other criminal justice
-            providers across England &amp; Wales. Free listings, reviewed before publication.
+            providers across England &amp; Wales. Free listings, live immediately after submission.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link href={LEGAL_DIRECTORY_BASE} className="btn-gold no-underline">

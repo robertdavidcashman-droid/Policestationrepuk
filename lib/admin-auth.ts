@@ -1,10 +1,15 @@
 import { getSession } from '@/lib/auth';
 
+const DEFAULT_ADMIN_EMAIL = 'robertdavidcashman@gmail.com';
+
 const ADMIN_EMAILS = new Set(
-  (process.env.ADMIN_EMAILS || process.env.OWNER_EMAIL || '')
-    .split(/[,;]+/)
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean),
+  [
+    DEFAULT_ADMIN_EMAIL,
+    ...(process.env.ADMIN_EMAILS || process.env.OWNER_EMAIL || '')
+      .split(/[,;]+/)
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean),
+  ],
 );
 
 export type AdminCheckResult =

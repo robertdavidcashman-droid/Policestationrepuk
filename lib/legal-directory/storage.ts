@@ -242,6 +242,7 @@ export async function createListing(
   const id = newId();
   const slug = buildListingSlug(input.businessName, input.town, email);
   const now = new Date().toISOString();
+  const isApproved = status === 'approved';
   const { token, hash, expiresAt } = generateManagementToken();
 
   await store.set(mgmtKey(hash), {
@@ -284,7 +285,7 @@ export async function createListing(
     promoted: false,
     verified: false,
     dateSubmitted: now,
-    dateApproved: null,
+    dateApproved: isApproved ? now : null,
     lastUpdated: now,
     deletionRequestedAt: null,
     seoTitle: buildSeoTitle(input.businessName, categorySlug, input.town, input.county),
@@ -355,6 +356,58 @@ export async function saveListing(listing: LegalDirectoryListing): Promise<void>
   if (!store) return;
   listing.lastUpdated = new Date().toISOString();
   await store.set(listingKey(listing.id), listing);
+}
+
+/** Apply owner or admin edits immediately to a live listing. */
+export async function applyListingPatch(
+  listing: LegalDirectoryListing,
+  patch: Record<string, unknown>,
+): Promise<LegalDirectoryListing> {
+  const updated: LegalDirectoryListing = { ...listing };
+
+  if (patch.phone !== undefined) updated.phone = sanitizeText(String(patch.phone), 40);
+  if (patch.websiteUrl !== undefined) updated.websiteUrl = sanitizeUrl(String(patch.websiteUrl));
+  if (patch.description !== undefined) {
+    updated.description = sanitizeMultiline(String(patch.description), 4000);
+    updated.seoDescription = sanitizeText(updated.description, 160);
+  }
+  if (patch.areasCovered !== undefined) {
+    updated.areasCovered = sanitizeMultiline(String(patch.areasCovered), 1500);
+  }
+  if (patch.specialisms !== undefined) {
+    updated.specialisms = sanitizeMultiline(String(patch.specialisms), 1000);
+    updated.keywords = sanitizeText(updated.specialisms, 300);
+  }
+  if (patch.county !== undefined) updated.county = sanitizeText(String(patch.county), 100);
+  if (patch.town !== undefined) updated.town = sanitizeText(String(patch.town), 100);
+  if (patch.emergencyPhone !== undefined) {
+    updated.emergencyPhone = sanitizeText(String(patch.emergencyPhone), 40);
+  }
+  if (patch.availability24Hour !== undefined) {
+    updated.availability24Hour =
+      patch.availability24Hour === true || patch.availability24Hour === 'on';
+  }
+  if (patch.businessName !== undefined) {
+    updated.businessName = sanitizeText(String(patch.businessName), 200);
+  }
+  if (patch.contactPerson !== undefined) {
+    updated.contactPerson = sanitizeText(String(patch.contactPerson), 120);
+  }
+
+  updated.status = 'approved';
+  updated.pendingChanges = null;
+
+  if (patch.slug && patch.slug !== listing.slug) {
+    const store = getDirectoryStore();
+    if (store) {
+      await store.del(slugKey(listing.slug));
+      await store.set(slugKey(String(patch.slug)), listing.id);
+      updated.slug = String(patch.slug);
+    }
+  }
+
+  await saveListing(updated);
+  return updated;
 }
 
 export async function applyPendingChanges(

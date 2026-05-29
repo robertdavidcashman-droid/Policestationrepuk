@@ -26,7 +26,7 @@ export function DirectoryManagementRequestForm() {
       setStatus('done');
       setMessage(
         data.message ??
-          'If a listing exists for this email, we have sent a secure management link. Otherwise you may submit an amendment request for admin review.',
+          'If a listing exists for this email, we have sent a secure management link.',
       );
     } catch {
       setStatus('error');

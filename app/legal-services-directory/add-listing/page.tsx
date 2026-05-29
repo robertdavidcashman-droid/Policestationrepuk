@@ -7,7 +7,7 @@ import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
 export const metadata = buildMetadata({
   title: 'Add a Free Listing — Legal Services Directory',
   description:
-    'Submit a free directory listing for your criminal law or criminal justice-related practice. Listings are reviewed before publication.',
+    'Submit a free directory listing for your criminal law or criminal justice-related practice. Listings go live immediately after submission.',
   path: `${LEGAL_DIRECTORY_BASE}/add-listing`,
 });
 
@@ -16,7 +16,7 @@ export default function AddListingPage() {
     <>
       <LegalDirectoryHero
         title="Add a Free Listing"
-        description="Submit your organisation for review. Listings are not published automatically until moderated. Suspicious or spam submissions are referred to the site administrator."
+        description="Submit your organisation for a free listing. It will appear on the directory immediately. The site administrator receives an email copy with links to amend or remove if needed."
         breadcrumbs={[
           { label: 'Home', href: '/' },
           { label: 'Legal Services Directory', href: LEGAL_DIRECTORY_BASE },

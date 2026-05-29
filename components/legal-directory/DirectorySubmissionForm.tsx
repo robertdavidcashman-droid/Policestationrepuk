@@ -44,7 +44,7 @@ export function DirectorySubmissionForm() {
       setStatus('done');
       setMessage(
         data.message ??
-          'Thank you. Your listing has been received and will be reviewed before publication.',
+          'Thank you. Your listing is now live on the Legal Services Directory.',
       );
       e.currentTarget.reset();
     } catch {
@@ -216,7 +216,7 @@ export function DirectorySubmissionForm() {
       )}
 
       <button type="submit" className="btn-gold" disabled={status === 'loading'}>
-        {status === 'loading' ? 'Submitting…' : 'Submit listing for review'}
+        {status === 'loading' ? 'Submitting…' : 'Publish listing'}
       </button>
     </form>
   );

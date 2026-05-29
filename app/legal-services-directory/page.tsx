@@ -24,19 +24,19 @@ export const revalidate = 3600;
 const FAQ = [
   {
     q: 'Who can list in this directory?',
-    a: 'Criminal defence solicitors, barristers, police station representatives, expert witnesses, interpreters, and other criminal justice-related service providers may submit a free listing subject to moderation.',
+    a: 'Criminal defence solicitors, barristers, police station representatives, expert witnesses, interpreters, and other criminal justice-related service providers may submit a free listing. Listings go live immediately after submission.',
   },
   {
     q: 'Are listings endorsed by Police Station Rep UK?',
     a: 'No. The directory is for information only. Users must make their own enquiries and check regulatory status before instructing any provider.',
   },
   {
-    q: 'How long does approval take?',
-    a: 'All new listings and amendments are reviewed before publication. Suspicious submissions are flagged and are never published automatically.',
+    q: 'How quickly is my listing published?',
+    a: 'New listings and owner amendments go live immediately. The site administrator receives an email copy with links to amend or delete if needed.',
   },
   {
     q: 'Can I amend or delete my listing?',
-    a: 'Yes. Use Manage Your Listing with the email address on your listing to receive a secure link, or submit a change request for admin review.',
+    a: 'Yes. Use Manage Your Listing with the email address on your listing to receive a secure link. Changes and deletions take effect straight away.',
   },
 ];
 

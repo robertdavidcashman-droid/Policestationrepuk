@@ -27,7 +27,7 @@ export default async function ManageListingTokenPage({ params }: Props) {
     <>
       <LegalDirectoryHero
         title="Edit your listing"
-        description={`Signed in as ${resolved.email}. Proposed changes are held for admin review.`}
+        description={`Signed in as ${resolved.email}. Changes go live on the directory immediately.`}
         breadcrumbs={[
           { label: 'Home', href: '/' },
           { label: 'Legal Services Directory', href: LEGAL_DIRECTORY_BASE },

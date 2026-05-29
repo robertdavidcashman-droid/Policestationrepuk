@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getClientIp, rateLimitOk } from '@/lib/contact-guards';
 import { resolveManagementToken, saveListing } from '@/lib/legal-directory/storage';
-import { sendLegalDirectoryAdminAlert } from '@/lib/legal-directory/email';
+import { notifyAdminListingChange } from '@/lib/legal-directory/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,20 +25,16 @@ export async function POST(request: Request) {
     }
 
     const { listing } = resolved;
-    listing.status = 'deletion_requested';
+    listing.status = 'deleted';
     listing.deletionRequestedAt = new Date().toISOString();
-    listing.reviewFlags = [...new Set([...listing.reviewFlags, 'deletion_requested'])];
+    listing.reviewFlags = [...new Set([...listing.reviewFlags, 'owner_deleted'])];
     await saveListing(listing);
 
-    await sendLegalDirectoryAdminAlert({
-      subject: `[Legal Directory] Deletion request — ${listing.businessName}`,
-      bodyHtml: `<p>Deletion requested for <strong>${listing.businessName}</strong> (${listing.ownerEmail}).</p>`,
-    });
+    await notifyAdminListingChange(listing, 'deleted');
 
     return NextResponse.json({
       ok: true,
-      message:
-        'Your deletion request has been submitted. An administrator will review it. Your listing remains visible until deletion is approved.',
+      message: 'Your listing has been removed from the public directory.',
     });
   } catch (e) {
     console.error('[legal-directory/manage-delete]', e);

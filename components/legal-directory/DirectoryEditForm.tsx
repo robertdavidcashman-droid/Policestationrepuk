@@ -41,7 +41,7 @@ export function DirectoryEditForm({
       setStatus('done');
       setMessage(
         data.message ??
-          'Your proposed changes have been submitted for review. Your current public listing remains unchanged until approved.',
+          'Your listing has been updated and is live on the directory.',
       );
     } catch {
       setStatus('error');
@@ -50,7 +50,7 @@ export function DirectoryEditForm({
   }
 
   async function requestDeletion() {
-    if (!confirm('Request deletion of your listing? This requires admin approval.')) return;
+    if (!confirm('Delete your listing? It will be removed from the public directory immediately.')) return;
     setStatus('loading');
     try {
       const res = await fetch('/api/legal-directory/manage-delete', {
@@ -65,7 +65,7 @@ export function DirectoryEditForm({
         return;
       }
       setStatus('done');
-      setMessage(data.message ?? 'Deletion request submitted for admin review.');
+      setMessage(data.message ?? 'Your listing has been removed from the directory.');
     } catch {
       setStatus('error');
       setMessage('Network error.');
@@ -84,8 +84,7 @@ export function DirectoryEditForm({
     <div className="space-y-6">
       <form onSubmit={onSubmit} className="card-surface space-y-4 p-6">
         <p className="text-sm text-[var(--muted)]">
-          Editing <strong>{listing.businessName}</strong>. Changes are held as pending until an
-          administrator approves them.
+          Editing <strong>{listing.businessName}</strong>. Changes go live immediately.
         </p>
         <label className="block">
           <span className="text-sm font-semibold text-[var(--navy)]">Phone</span>
@@ -128,13 +127,13 @@ export function DirectoryEditForm({
         </label>
         {status === 'error' && <p className="text-sm text-red-700">{message}</p>}
         <button type="submit" className="btn-gold" disabled={status === 'loading'}>
-          Submit changes for review
+          Save changes
         </button>
       </form>
       <div className="card-surface border-red-200 p-6">
-        <h3 className="font-semibold text-red-800">Request deletion</h3>
+        <h3 className="font-semibold text-red-800">Delete listing</h3>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Soft deletion after admin approval — your listing will be removed from public search.
+          Removes your listing from public search immediately.
         </p>
         <button
           type="button"
@@ -142,7 +141,7 @@ export function DirectoryEditForm({
           className="btn-outline mt-4 !border-red-300 !text-red-800"
           disabled={status === 'loading'}
         >
-          Request listing deletion
+          Delete listing
         </button>
       </div>
     </div>

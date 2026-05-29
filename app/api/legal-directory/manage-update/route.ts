@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getClientIp, rateLimitOk } from '@/lib/contact-guards';
-import { resolveManagementToken, saveListing } from '@/lib/legal-directory/storage';
+import {
+  resolveManagementToken,
+  applyListingPatch,
+  saveListing,
+} from '@/lib/legal-directory/storage';
 import {
   sanitizeMultiline,
   sanitizeText,
@@ -9,7 +13,7 @@ import {
   containsScriptOrInjection,
 } from '@/lib/legal-directory/sanitize';
 import { scoreLegalDirectorySubmission } from '@/lib/legal-directory/risk';
-import { notifyAdminFlagged, sendLegalDirectoryAdminAlert } from '@/lib/legal-directory/email';
+import { notifyAdminListingChange } from '@/lib/legal-directory/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,30 +69,16 @@ export async function POST(request: Request) {
       category: listing.categorySlug,
     });
 
-    listing.pendingChanges = patch;
-    listing.status = risk.riskScore >= 51 ? 'flagged_for_review' : 'pending_update';
-    listing.riskScore = Math.max(listing.riskScore, risk.riskScore);
-    listing.reviewFlags = [...new Set([...listing.reviewFlags, ...risk.reviewFlags, 'amendment_submitted'])];
-    await saveListing(listing);
+    const updated = await applyListingPatch(listing, patch);
+    updated.riskScore = Math.max(updated.riskScore, risk.riskScore);
+    updated.reviewFlags = [...new Set([...updated.reviewFlags, ...risk.reviewFlags, 'owner_amendment'])];
+    await saveListing(updated);
 
-    await sendLegalDirectoryAdminAlert({
-      subject: `[Legal Directory] Amendment — ${listing.businessName}`,
-      bodyHtml: `<p>Amendment pending review for <strong>${listing.businessName}</strong>.</p><p><a href="${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://policestationrepuk.com'}/admin/legal-directory">Admin</a></p>`,
-    });
-
-    if (risk.riskScore >= 51) {
-      await notifyAdminFlagged({
-        title: `Amendment: ${listing.businessName}`,
-        detail: 'Amendment flagged for review',
-        riskScore: risk.riskScore,
-        flags: risk.reviewFlags,
-      });
-    }
+    await notifyAdminListingChange(updated, 'updated');
 
     return NextResponse.json({
       ok: true,
-      message:
-        'Your proposed changes have been submitted for review. Your current public listing remains unchanged until approved.',
+      message: 'Your listing has been updated and is live on the directory.',
     });
   } catch (e) {
     console.error('[legal-directory/manage-update]', e);

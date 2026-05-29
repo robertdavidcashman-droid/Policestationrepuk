@@ -2,13 +2,12 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import {
   createListing,
   getListingById,
-  getListingBySlug,
   getListingByOwnerEmail,
   listAllListings,
   listApprovedListings,
   toPublicListing,
   saveListing,
-  applyPendingChanges,
+  applyListingPatch,
   resolveManagementToken,
   issueManagementTokenForListing,
   filterListings,
@@ -144,21 +143,19 @@ describe('Legal Directory — risk scoring', () => {
 });
 
 describe('Legal Directory — full lifecycle (in-memory store)', () => {
-  it('creates a listing as pending_review and keeps it out of public views', async () => {
+  it('creates a listing as approved and shows it in public views immediately', async () => {
     const res = await createListing(baseInput({ email: 'lifecycle@example.com' }));
     expect(res.ok).toBe(true);
     if (!res.ok) return;
-    expect(res.status).toBe('pending_review');
+    expect(res.status).toBe('approved');
     expect(res.managementToken).toBeTruthy();
 
     const stored = await getListingById(res.id);
-    expect(stored?.status).toBe('pending_review');
+    expect(stored?.status).toBe('approved');
+    expect(stored?.dateApproved).toBeTruthy();
 
-    // Not visible publicly until approved.
     const approved = await listApprovedListings();
-    expect(approved.find((l) => l.id === res.id)).toBeUndefined();
-    const bySlug = await getListingBySlug(res.slug);
-    expect(bySlug?.status).toBe('pending_review');
+    expect(approved.find((l) => l.id === res.id)).toBeDefined();
   });
 
   it('rejects a duplicate listing for the same owner email', async () => {
@@ -191,27 +188,18 @@ describe('Legal Directory — full lifecycle (in-memory store)', () => {
     expect(pub.businessName).toBe(listing!.businessName);
   });
 
-  it('holds amendments as pendingChanges and only applies on approval', async () => {
+  it('applies owner amendments immediately via applyListingPatch', async () => {
     const res = await createListing(baseInput({ email: 'amend@example.com' }));
     if (!res.ok) return;
     const listing = (await getListingById(res.id))!;
-    listing.status = 'approved';
-    await saveListing(listing);
 
-    // Simulate amendment submission.
-    listing.pendingChanges = { phone: '0207 999 0000', description: `${VALID_DESC} Updated.` };
-    listing.status = 'pending_update';
-    await saveListing(listing);
-
-    // Public listing should still show original phone until approval.
-    const beforeApproval = (await getListingById(res.id))!;
-    expect(beforeApproval.phone).toBe('01622 123456');
-    expect(beforeApproval.pendingChanges).not.toBeNull();
-
-    const updated = await applyPendingChanges(res.id, 'admin@test.local');
-    expect(updated?.phone).toBe('0207 999 0000');
-    expect(updated?.status).toBe('approved');
-    expect(updated?.pendingChanges).toBeNull();
+    const updated = await applyListingPatch(listing, {
+      phone: '0207 999 0000',
+      description: `${VALID_DESC} Updated.`,
+    });
+    expect(updated.phone).toBe('0207 999 0000');
+    expect(updated.status).toBe('approved');
+    expect(updated.pendingChanges).toBeNull();
   });
 
   it('issues and resolves a secure management token; rejects garbage tokens', async () => {
@@ -230,20 +218,15 @@ describe('Legal Directory — full lifecycle (in-memory store)', () => {
     expect(bad).toBeNull();
   });
 
-  it('marks deletion_requested and excludes deleted listings from public/search', async () => {
+  it('soft-deletes listings and excludes them from public search', async () => {
     const res = await createListing(baseInput({ email: 'delete@example.com' }));
     if (!res.ok) return;
     const listing = (await getListingById(res.id))!;
-    listing.status = 'approved';
-    await saveListing(listing);
 
-    listing.status = 'deletion_requested';
+    listing.status = 'deleted';
     listing.deletionRequestedAt = new Date().toISOString();
     await saveListing(listing);
     expect((await listApprovedListings()).find((l) => l.id === res.id)).toBeUndefined();
-
-    listing.status = 'deleted';
-    await saveListing(listing);
     const resolved = await resolveManagementToken((await issueManagementTokenForListing(listing)) ?? 'x');
     // Deleted listings cannot be managed via token.
     expect(resolved).toBeNull();

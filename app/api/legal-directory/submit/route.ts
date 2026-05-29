@@ -7,6 +7,7 @@ import {
   parseLegalAidStatus,
   sanitizeMultiline,
   sanitizeText,
+  getListingById,
 } from '@/lib/legal-directory/storage';
 import {
   containsScriptOrInjection,
@@ -15,11 +16,9 @@ import {
   validateDescription,
 } from '@/lib/legal-directory/sanitize';
 import {
-  notifyAdminFlagged,
-  notifyAdminNewListing,
+  notifyAdminListingChange,
   sendLegalDirectoryListingReceived,
 } from '@/lib/legal-directory/email';
-import { getListingById } from '@/lib/legal-directory/storage';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,8 +41,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Too many submissions. Please try again later.' }, { status: 429 });
     }
 
-    // Detect injection attempts on the RAW input before HTML is stripped, so we
-    // can flag for admin review rather than silently neutralising and publishing.
     const rawTextBlob = [raw.businessName, raw.description, raw.websiteUrl, raw.specialisms]
       .map((v) => (typeof v === 'string' ? v : ''))
       .join(' ');
@@ -121,24 +118,17 @@ export async function POST(request: Request) {
         sendLegalDirectoryListingReceived({
           to: email,
           businessName,
-          status: result.status,
+          slug: result.slug,
         }),
-        notifyAdminNewListing(listing),
-        listing.riskScore >= 51 || listing.status === 'flagged_for_review'
-          ? notifyAdminFlagged({
-              title: listing.businessName,
-              detail: 'High-risk legal directory submission',
-              riskScore: listing.riskScore,
-              flags: listing.reviewFlags,
-            })
-          : Promise.resolve(),
+        notifyAdminListingChange(listing, 'new'),
       ]);
     }
 
     return NextResponse.json({
       ok: true,
       message:
-        'Thank you. Your listing has been received and will be reviewed before publication. Suspicious or incomplete submissions are never published automatically.',
+        'Thank you. Your listing is now live on the Legal Services Directory. A confirmation has been sent to your email.',
+      slug: result.slug,
     });
   } catch (e) {
     console.error('[legal-directory/submit]', e);
