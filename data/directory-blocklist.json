@@ -3,9 +3,26 @@
     "smoketest@policestationrepuk.org",
     "smoketest+featured@policestationrepuk.org",
     "cursor-test+featured@policestationrepuk.org",
-    "audit-test@policestationrepuk.test"
+    "audit-test@policestationrepuk.test",
+    "hxsxnk786@gmail.com",
+    "markcarrington@hotmail.co.uk",
+    "matthew.craig@rocketmail.com",
+    "jakedarbandi@gmail.com",
+    "anthony.grime@hotmail.com",
+    "russell.nash3@btinternet.com",
+    "shaneoneill914@yahoo.co.uk",
+    "aaqib.raheem@outlook.com"
   ],
-  "slugs": [],
+  "slugs": [
+    "hasan-ahmed",
+    "mark-carrington",
+    "matthew-craig",
+    "jake-darbandi",
+    "anthony-grime",
+    "russell-nash",
+    "shane-oneill",
+    "aaqib-raheem"
+  ],
   "slugPrefixes": ["laurie-learmont", "playwright-test-", "api-test-", "dup-test-", "smoke-test-"],
   "normalizedNames": ["laurie learmont"]
 }
