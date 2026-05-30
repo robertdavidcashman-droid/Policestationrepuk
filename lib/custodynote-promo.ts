@@ -9,6 +9,9 @@ export const CUSTODYNOTE_DOWNLOAD_HREF = `${CUSTODYNOTE_SITE}/download?${UTM}`;
 /** Primary trial CTA — custodynote.com/download is the canonical install path. */
 export const CUSTODYNOTE_TRIAL_HREF = CUSTODYNOTE_DOWNLOAD_HREF;
 export const CUSTODYNOTE_PRICING_HREF = `${CUSTODYNOTE_SITE}/pricing?${UTM}`;
+/** Free practitioner resources — linkable checklists and templates. */
+export const CUSTODYNOTE_TOOLS_HREF = `${CUSTODYNOTE_SITE}/tools?${UTM}`;
+export const CUSTODYNOTE_CHECKLIST_HREF = `${CUSTODYNOTE_SITE}/police-station-attendance-checklist?${UTM}`;
 /** Mac section on the custodynote.com download page (Apple Silicon + Intel pickers). */
 export const CUSTODYNOTE_MAC_DOWNLOAD_HREF = `${CUSTODYNOTE_DOWNLOAD_HREF}#mac`;
 

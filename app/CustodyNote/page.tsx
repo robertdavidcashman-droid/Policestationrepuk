@@ -7,6 +7,8 @@ import {
   CUSTODYNOTE_DISCOUNT_PCT,
   CUSTODYNOTE_DOWNLOAD_CTA,
   CUSTODYNOTE_DOWNLOAD_HREF,
+  CUSTODYNOTE_CHECKLIST_HREF,
+  CUSTODYNOTE_TOOLS_HREF,
   CUSTODYNOTE_APPS_DETAIL,
   CUSTODYNOTE_APPS_LINE,
   CUSTODYNOTE_DOWNLOAD_APPS_CTA,
@@ -487,6 +489,39 @@ export default function CustodyNotePage() {
               <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--muted)]">{f.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Free resources — linkable from firms & training */}
+      <section className="mb-14">
+        <div className="rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--card-bg)] p-8 shadow-[var(--card-shadow)]">
+          <h2 className="text-h2 text-[var(--navy)]">Free resources (no signup)</h2>
+          <p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">
+            Custody Note publishes free checklists and templates for criminal defence
+            professionals — safe to link from firm intranets and training materials.
+          </p>
+          <ul className="mt-5 space-y-2 text-sm">
+            <li>
+              <a
+                href={CUSTODYNOTE_CHECKLIST_HREF}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-[var(--gold-link)] hover:underline"
+              >
+                Police station attendance checklist (UK) — printable
+              </a>
+            </li>
+            <li>
+              <a
+                href={CUSTODYNOTE_TOOLS_HREF}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-[var(--gold-link)] hover:underline"
+              >
+                All free tools &amp; templates on custodynote.com
+              </a>
+            </li>
+          </ul>
         </div>
       </section>
 
