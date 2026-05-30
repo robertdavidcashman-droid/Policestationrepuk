@@ -9,26 +9,20 @@ import { PSRTRAIN_TRAINING_HREF } from '@/lib/psrtrain-promo';
  * Tools & Resources / Community + legal links + regulatory block).
  */
 
-/**
- * Primary header — order + labels from policestationrepuk.com (`docs/live-site-map.json` + homepage crawl).
- * `/search` is an on-site extra (advanced filters); everything else mirrors the live Wix menu.
- */
-export const PRIMARY_NAV = [
+export type HeaderNavLink = { href: string; text: string; external?: boolean };
+export type FooterLink = { href: string; label: string; external?: boolean };
+
+function footerLinksToNav(links: readonly FooterLink[]): HeaderNavLink[] {
+  return links.map(({ href, label, external }) => ({ href, text: label, external }));
+}
+
+/** Always-visible desktop header links (high-traffic destinations). */
+export const HEADER_NAV_PRIMARY: HeaderNavLink[] = [
   { href: '/', text: 'Home' },
+  { href: '/directory', text: 'Find a Rep' },
   { href: '/Blog', text: 'Blog' },
-  { href: '/CustodyNote', text: '🆕 Custody Note' },
-  { href: '/directory', text: '🔍 Find a Rep' },
-  { href: '/legal-services-directory', text: '⚖️ Legal Services Directory' },
-  { href: '/register', text: 'Join the Directory (Free)' },
-  { href: '/StationsDirectory', text: '📞 Station Numbers' },
-  { href: '/FormsLibrary', text: '📄 Forms' },
-  { href: '/Resources', text: '🌐 Resources' },
-  { href: '/FindSupervisingSolicitor', text: 'Find a Supervisor' },
-  { href: '/search', text: '🔎 Search' },
-  { href: '/Contact', text: 'Contact Us' },
-  { href: '/About', text: 'About' },
-  { href: PSRTRAIN_TRAINING_HREF, text: 'PSRAS prep ↗' },
-] as const;
+  { href: '/CustodyNote', text: 'Custody Note' },
+];
 
 /** Community group — WhatsApp number (same as Robert Cashman directory mobile; not shown on generic /Contact). */
 export const COMMUNITY_EMAIL = 'robertcashman@defencelegalservices.co.uk';
@@ -63,8 +57,6 @@ export const HEADER_SHARE_LABEL_COPIED = 'Link copied!';
 /** Mobile duplicate CTA (mirrors prominent join button on source) */
 export const HEADER_MOBILE_CTA_HREF = '/register';
 export const HEADER_MOBILE_CTA_TEXT = 'Join the Directory (Free)';
-
-export type FooterLink = { href: string; label: string; external?: boolean };
 
 /** Footer column “Directories” — link labels from data/page-content.json (/) */
 export const FOOTER_DIRECTORIES: FooterLink[] = [
@@ -141,6 +133,34 @@ export const FOOTER_LEGAL: FooterLink[] = [
   { href: '/Accessibility', label: 'Accessibility' },
   { href: '/Complaints', label: 'Complaints' },
 ];
+
+/** Grouped desktop dropdown menus — mirrors footer columns for consistency. */
+export const HEADER_NAV_DROPDOWNS: { label: string; links: HeaderNavLink[] }[] = [
+  { label: 'Directories', links: footerLinksToNav(FOOTER_DIRECTORIES) },
+  { label: 'For Reps', links: footerLinksToNav(FOOTER_FOR_REPRESENTATIVES) },
+  { label: 'Resources', links: footerLinksToNav(FOOTER_TOOLS) },
+  { label: 'Community', links: footerLinksToNav(FOOTER_COMMUNITY) },
+  { label: 'Legal', links: footerLinksToNav(FOOTER_LEGAL) },
+];
+
+/** Flat deduplicated list for mobile drawer and legacy imports. */
+export function buildHeaderMobileLinks(): HeaderNavLink[] {
+  const seen = new Set<string>();
+  const out: HeaderNavLink[] = [];
+  const add = (link: HeaderNavLink) => {
+    if (seen.has(link.href)) return;
+    seen.add(link.href);
+    out.push(link);
+  };
+  for (const link of HEADER_NAV_PRIMARY) add(link);
+  for (const group of HEADER_NAV_DROPDOWNS) {
+    for (const link of group.links) add(link);
+  }
+  return out;
+}
+
+/** @deprecated Prefer HEADER_NAV_PRIMARY + HEADER_NAV_DROPDOWNS in Header. */
+export const PRIMARY_NAV = buildHeaderMobileLinks();
 
 /** Mid-footer spotlight — h3 + body from homepage headings/content */
 export const FOOTER_SPOTLIGHT_KENT_TITLE = 'Need a Police Station Rep in Kent?';

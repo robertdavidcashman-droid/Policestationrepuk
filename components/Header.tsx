@@ -5,20 +5,16 @@ import type { ReactNode } from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { SITE_URL } from '@/lib/seo-layer/config';
 import {
-  PRIMARY_NAV,
+  HEADER_NAV_DROPDOWNS,
+  HEADER_NAV_PRIMARY,
   HEADER_SHARE_LABEL,
   HEADER_SHARE_LABEL_COPIED,
   HEADER_MOBILE_CTA_HREF,
   HEADER_MOBILE_CTA_TEXT,
   HEADER_HELP_HREF,
   HEADER_LOGIN_HREF,
+  type HeaderNavLink,
 } from '@/lib/site-navigation';
-
-/** Laptop (lg–xl): fewer inline links so “More” and “Log In” do not overlap nav text. */
-const DESKTOP_NAV_COMPACT_PRIMARY = 4;
-/** Wide desktop (xl+): show more links before “More” dropdown. */
-const DESKTOP_NAV_MEDIUM_PRIMARY = 6;
-const DESKTOP_NAV_FULL_PRIMARY = 8;
 
 function NavItem({
   href,
@@ -53,7 +49,15 @@ function NavItem({
   );
 }
 
-function MoreDropdown({ links, linkClass }: { links: ReadonlyArray<{ href: string; text: string }>; linkClass: string }) {
+function NavDropdown({
+  label,
+  links,
+  linkClass,
+}: {
+  label: string;
+  links: HeaderNavLink[];
+  linkClass: string;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -65,30 +69,39 @@ function MoreDropdown({ links, linkClass }: { links: ReadonlyArray<{ href: strin
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    if (open) document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
+
   return (
-    <div ref={ref} className="relative ml-1 shrink-0 border-l border-white/15 pl-2 xl:ml-1.5 xl:pl-2.5">
+    <div ref={ref} className="relative shrink-0">
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
           setOpen((v) => !v);
         }}
-        className={`${linkClass} !bg-[var(--navy-light)]/80 ring-1 ring-white/10 hover:!ring-[var(--gold)]/40`}
+        className={`${linkClass} ${open ? '!bg-[var(--navy-light)] ring-1 ring-[var(--gold)]/40' : ''}`}
         aria-expanded={open}
         aria-haspopup="true"
       >
-        More
+        {label}
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden className="ml-1">
           <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-[100] mt-1 min-w-[200px] rounded-lg border border-[var(--navy-light)] bg-[var(--navy)] py-1 shadow-xl">
+        <div className="absolute left-0 top-full z-[100] mt-1 max-h-[min(70vh,24rem)] min-w-[15rem] overflow-y-auto rounded-lg border border-[var(--navy-light)] bg-[var(--navy)] py-1 shadow-xl sm:min-w-[17rem]">
+          <p className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white/50">{label}</p>
           {links.map((link) => (
             <NavItem
               key={`${link.href}-${link.text}`}
               href={link.href}
-              external={link.href.startsWith('http')}
+              external={link.external ?? link.href.startsWith('http')}
               onNavigate={() => setOpen(false)}
               className="flex min-h-[40px] items-center px-4 py-2 text-sm font-medium !text-white no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--gold)]"
             >
@@ -104,34 +117,6 @@ function MoreDropdown({ links, linkClass }: { links: ReadonlyArray<{ href: strin
 export function Header() {
   const [open, setOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  /** 0 = lg only, 1 = xl+, 2 = 2xl+ (set after mount to avoid layout shift mismatch). */
-  const [navTier, setNavTier] = useState(0);
-
-  useEffect(() => {
-    const mqXl = window.matchMedia('(min-width: 1280px)');
-    const mq2xl = window.matchMedia('(min-width: 1536px)');
-    const sync = () => {
-      if (mq2xl.matches) setNavTier(2);
-      else if (mqXl.matches) setNavTier(1);
-      else setNavTier(0);
-    };
-    sync();
-    mqXl.addEventListener('change', sync);
-    mq2xl.addEventListener('change', sync);
-    return () => {
-      mqXl.removeEventListener('change', sync);
-      mq2xl.removeEventListener('change', sync);
-    };
-  }, []);
-
-  const desktopPrimaryCount =
-    navTier >= 2
-      ? DESKTOP_NAV_FULL_PRIMARY
-      : navTier >= 1
-        ? DESKTOP_NAV_MEDIUM_PRIMARY
-        : DESKTOP_NAV_COMPACT_PRIMARY;
-  const desktopNavPrimary = PRIMARY_NAV.slice(0, desktopPrimaryCount);
-  const desktopNavMore = PRIMARY_NAV.slice(desktopPrimaryCount);
 
   const handleShare = async () => {
     const url = typeof window !== 'undefined' ? window.location.href : SITE_URL;
@@ -149,12 +134,12 @@ export function Header() {
   };
 
   const desktopNavLinkClass =
-    'inline-flex shrink-0 min-h-[44px] max-w-[11rem] items-center truncate rounded-lg px-2 py-2 text-[12px] font-semibold leading-snug !text-white no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--gold)] lg:max-w-[9.5rem] lg:px-2 lg:text-[12px] xl:max-w-[11rem] xl:px-2.5 xl:text-[13px] 2xl:max-w-none 2xl:px-3 2xl:text-sm';
+    'inline-flex shrink-0 min-h-[44px] items-center whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-semibold leading-snug !text-white no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--gold)] xl:px-3 xl:text-sm';
 
   return (
     <>
       <header className="relative z-30 border-b border-[var(--navy-light)] bg-[var(--navy)] shadow-lg">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-2 sm:py-2.5 sm:px-6 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:justify-normal lg:gap-x-3 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-2 sm:py-2.5 sm:px-6 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:gap-x-3 lg:px-8">
           <div className="flex min-w-0 items-center gap-3 lg:min-w-0">
             <button
               type="button"
@@ -192,27 +177,30 @@ export function Header() {
             </Link>
           </div>
 
-          <div className="hidden min-w-0 flex-1 justify-center px-1 lg:flex lg:max-w-[min(100%,52rem)]">
-            <div className="flex min-w-0 max-w-full items-center gap-0.5">
-              <nav
-                className="flex min-w-0 flex-nowrap items-center gap-0.5 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                aria-label="Main navigation"
-              >
-                {desktopNavPrimary.map((link) => (
-                  <NavItem
-                    key={`${link.href}-${link.text}`}
-                    href={link.href}
-                    className={desktopNavLinkClass}
-                    external={link.href.startsWith('http')}
-                  >
-                    {link.text}
-                  </NavItem>
-                ))}
-              </nav>
-              {desktopNavMore.length > 0 && (
-                <MoreDropdown links={desktopNavMore} linkClass={desktopNavLinkClass} />
-              )}
-            </div>
+          <div className="hidden min-w-0 flex-1 justify-center px-1 lg:flex">
+            <nav
+              className="flex flex-wrap items-center justify-center gap-0.5 xl:gap-1"
+              aria-label="Main navigation"
+            >
+              {HEADER_NAV_PRIMARY.map((link) => (
+                <NavItem
+                  key={`${link.href}-${link.text}`}
+                  href={link.href}
+                  className={desktopNavLinkClass}
+                  external={link.external ?? link.href.startsWith('http')}
+                >
+                  {link.text}
+                </NavItem>
+              ))}
+              {HEADER_NAV_DROPDOWNS.map((group) => (
+                <NavDropdown
+                  key={group.label}
+                  label={group.label}
+                  links={group.links}
+                  linkClass={desktopNavLinkClass}
+                />
+              ))}
+            </nav>
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5 pl-1 lg:justify-self-end lg:pl-2">
@@ -265,21 +253,42 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile drawer */}
+        {/* Mobile drawer — grouped like desktop */}
         {open && (
           <div className="max-h-[80vh] overflow-y-auto border-t border-[var(--navy-light)] bg-[var(--navy)] lg:hidden">
             <nav className="flex flex-col px-4 py-3 sm:px-5" aria-label="Mobile navigation">
-              {PRIMARY_NAV.map((link) => (
-            <NavItem
-              key={`${link.href}-${link.text}`}
-              href={link.href}
-              external={link.href.startsWith('http')}
-              onNavigate={() => setOpen(false)}
-              className="flex min-h-[44px] items-center rounded-lg px-3 py-2.5 text-sm font-medium !text-[var(--header-link)] no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--header-link-hover)]"
-            >
-              {link.text}
-            </NavItem>
+              <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-white/50">Main</p>
+              {HEADER_NAV_PRIMARY.map((link) => (
+                <NavItem
+                  key={`${link.href}-${link.text}`}
+                  href={link.href}
+                  external={link.external ?? link.href.startsWith('http')}
+                  onNavigate={() => setOpen(false)}
+                  className="flex min-h-[44px] items-center rounded-lg px-3 py-2.5 text-sm font-medium !text-[var(--header-link)] no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--header-link-hover)]"
+                >
+                  {link.text}
+                </NavItem>
               ))}
+
+              {HEADER_NAV_DROPDOWNS.map((group) => (
+                <div key={group.label} className="mt-3 border-t border-[var(--navy-light)] pt-3">
+                  <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-white/50">
+                    {group.label}
+                  </p>
+                  {group.links.map((link) => (
+                    <NavItem
+                      key={`${group.label}-${link.href}`}
+                      href={link.href}
+                      external={link.external ?? link.href.startsWith('http')}
+                      onNavigate={() => setOpen(false)}
+                      className="flex min-h-[44px] items-center rounded-lg px-3 py-2.5 text-sm font-medium !text-[var(--header-link)] no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--header-link-hover)]"
+                    >
+                      {link.text}
+                    </NavItem>
+                  ))}
+                </div>
+              ))}
+
               <div className="mt-3 grid gap-2 border-t border-[var(--navy-light)] pt-3">
                 <Link
                   href={HEADER_HELP_HREF}

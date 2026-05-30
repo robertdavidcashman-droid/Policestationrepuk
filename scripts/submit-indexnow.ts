@@ -1,33 +1,27 @@
-#!/usr/bin/env node
+#!/usr/bin/env npx tsx
 /**
  * Submit sitemap URLs to IndexNow after deploy (Bing, Yandex, Naver, Seznam, etc.).
  *
  * Usage:
- *   node scripts/submit-indexnow.mjs
- *   SITE_URL=https://policestationrepuk.org node scripts/submit-indexnow.mjs --changed-only
- *
- * Env:
- *   SITE_URL              — canonical site (default: https://policestationrepuk.org)
- *   GITHUB_EVENT_BEFORE   — optional; with GITHUB_SHA enables --changed-only in CI
- *   GITHUB_SHA
- *   INDEXNOW_WAIT_MS      — ms to wait for deploy propagation (default 45000)
+ *   npm run indexnow
+ *   npm run indexnow -- --changed-only
  */
 import { execSync } from 'node:child_process';
-import { INDEXNOW_KEY, INDEXNOW_KEY_LOCATION, submitIndexNow } from '../lib/indexnow.ts';
+import { INDEXNOW_KEY_LOCATION, submitIndexNow } from '../lib/indexnow';
 
 const SITE_URL = (process.env.SITE_URL || 'https://policestationrepuk.org').replace(/\/$/, '');
 const WAIT_MS = Number(process.env.INDEXNOW_WAIT_MS || 45_000);
 const changedOnly = process.argv.includes('--changed-only');
 
-function sleep(ms) {
+function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function parseSitemapXml(xml) {
+function parseSitemapXml(xml: string): string[] {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/gi)].map((m) => m[1].trim());
 }
 
-async function fetchSitemapUrls() {
+async function fetchSitemapUrls(): Promise<string[]> {
   const res = await fetch(`${SITE_URL}/sitemap.xml`, {
     headers: { 'user-agent': 'PoliceStationRepUK-indexnow/1.0' },
   });
@@ -35,7 +29,7 @@ async function fetchSitemapUrls() {
   const xml = await res.text();
   const locs = parseSitemapXml(xml);
   if (/<sitemapindex/i.test(xml)) {
-    const nested = [];
+    const nested: string[] = [];
     for (const child of locs.slice(0, 20)) {
       const r = await fetch(child, { headers: { 'user-agent': 'PoliceStationRepUK-indexnow/1.0' } });
       if (r.ok) nested.push(...parseSitemapXml(await r.text()));
@@ -45,10 +39,9 @@ async function fetchSitemapUrls() {
   return locs;
 }
 
-/** Map changed repo paths to public URLs for incremental IndexNow pings. */
-function urlsFromGitDiff(before, after) {
+function urlsFromGitDiff(before: string | undefined, after: string | undefined): string[] {
   if (!before || !after || before === '0000000000000000000000000000000000000000') return [];
-  let files;
+  let files: string[];
   try {
     files = execSync(`git diff --name-only ${before} ${after}`, { encoding: 'utf8' })
       .split('\n')
@@ -61,7 +54,7 @@ function urlsFromGitDiff(before, after) {
   const urls = new Set([SITE_URL]);
 
   for (const file of files) {
-    let m;
+    let m: RegExpMatchArray | null;
     if ((m = file.match(/^app\/(.+)\/page\.tsx$/))) {
       const seg = m[1].replace(/\/\[[^\]]+\]/g, '');
       urls.add(seg ? `${SITE_URL}/${seg}` : SITE_URL);
@@ -77,7 +70,11 @@ function urlsFromGitDiff(before, after) {
       urls.add(`${SITE_URL}/Wiki/${m[1]}`);
     } else if ((m = file.match(/^app\/LegalUpdates\/([^/]+)\/page\.tsx$/))) {
       urls.add(`${SITE_URL}/LegalUpdates/${m[1]}`);
-    } else if (file.startsWith('lib/blog/') || file.startsWith('data/reps.json') || file.startsWith('data/stations.json')) {
+    } else if (
+      file.startsWith('lib/blog/') ||
+      file.startsWith('data/reps.json') ||
+      file.startsWith('data/stations.json')
+    ) {
       urls.add(`${SITE_URL}/directory`);
       urls.add(`${SITE_URL}/Blog`);
     } else if (file.startsWith('data/') || file.startsWith('lib/') || file.startsWith('components/')) {
@@ -89,10 +86,12 @@ function urlsFromGitDiff(before, after) {
 }
 
 async function main() {
-  console.log(`IndexNow: waiting ${WAIT_MS}ms for deploy to propagate…`);
-  await sleep(WAIT_MS);
+  if (WAIT_MS > 0) {
+    console.log(`IndexNow: waiting ${WAIT_MS}ms for deploy to propagate…`);
+    await sleep(WAIT_MS);
+  }
 
-  let urls;
+  let urls: string[];
   if (changedOnly) {
     const diffUrls = urlsFromGitDiff(process.env.GITHUB_EVENT_BEFORE, process.env.GITHUB_SHA);
     if (diffUrls.length > 1) {
@@ -118,7 +117,7 @@ async function main() {
   );
 }
 
-main().catch((err) => {
-  console.error('IndexNow failed:', err.message || err);
+main().catch((err: unknown) => {
+  console.error('IndexNow failed:', err instanceof Error ? err.message : err);
   process.exit(1);
 });

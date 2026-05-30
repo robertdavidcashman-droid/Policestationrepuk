@@ -221,7 +221,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
           <button
             type="button"
             onClick={() => setTab('audit')}
-            className={`px-4 py-2 text-sm font-semibold ${
+            className={`px-4 py-2 text-lg font-semibold ${
               tab === 'audit' ? 'bg-[var(--navy)] text-white' : 'text-[var(--navy)] hover:bg-slate-100'
             }`}
           >
@@ -230,7 +230,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
           <button
             type="button"
             onClick={() => setTab('reps')}
-            className={`px-4 py-2 text-sm font-semibold ${
+            className={`px-4 py-2 text-lg font-semibold ${
               tab === 'reps' ? 'bg-[var(--navy)] text-white' : 'text-[var(--navy)] hover:bg-slate-100'
             }`}
           >

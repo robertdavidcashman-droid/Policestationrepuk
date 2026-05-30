@@ -27,13 +27,13 @@ export function AdminShell({
       <div className="admin-container">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--gold)]">Admin</p>
+            <p className="text-sm font-bold uppercase tracking-widest text-[var(--gold)]">Admin</p>
             <h1 className="text-h2 text-[var(--navy)]">{title}</h1>
             {description ? (
-              <p className="mt-2 max-w-3xl text-sm text-[var(--muted)]">{description}</p>
+              <p className="mt-2 max-w-3xl text-lg text-[var(--muted)]">{description}</p>
             ) : null}
           </div>
-          <p className="text-xs text-[var(--muted)]">
+          <p className="text-base text-[var(--muted)]">
             Signed in as <strong className="text-[var(--navy)]">{adminEmail}</strong>
           </p>
         </div>
@@ -48,7 +48,7 @@ export function AdminShell({
               <Link
                 key={item.id}
                 href={item.href}
-                className={`rounded-lg px-4 py-2 text-sm font-semibold no-underline transition-colors ${
+                className={`rounded-lg px-4 py-2 text-lg font-semibold no-underline transition-colors ${
                   isActive
                     ? 'bg-[var(--navy)] text-white'
                     : 'border border-[var(--border)] bg-white text-[var(--navy)] hover:border-[var(--gold)]'

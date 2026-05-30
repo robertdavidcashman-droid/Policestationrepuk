@@ -69,7 +69,7 @@
     "test:audit:seo": "playwright test --config=playwright.audit.config.ts tests/audit/seo.spec.ts",
     "test:audit:responsive": "playwright test --config=playwright.audit.config.ts tests/audit/responsive.spec.ts",
     "test:audit:console": "playwright test --config=playwright.audit.config.ts tests/audit/console-errors.spec.ts",
-    "indexnow": "npx tsx scripts/submit-indexnow.mjs"
+    "indexnow": "npx tsx scripts/submit-indexnow.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

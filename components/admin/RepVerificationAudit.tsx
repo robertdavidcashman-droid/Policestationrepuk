@@ -88,7 +88,7 @@ function PublicVisibilityBadge({
     return (
       <span
         className={`inline-flex items-center gap-1.5 rounded-lg border-2 border-emerald-600 bg-emerald-50 font-bold uppercase tracking-wide text-emerald-900 ${
-          large ? 'px-4 py-2 text-sm' : 'px-2 py-1 text-[10px]'
+          large ? 'px-4 py-2 text-lg' : 'px-2 py-1 text-sm'
         }`}
         title="Visible on the public directory right now"
       >
@@ -100,7 +100,7 @@ function PublicVisibilityBadge({
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-lg border-2 border-slate-400 bg-slate-100 font-bold uppercase tracking-wide text-slate-800 ${
-        large ? 'px-4 py-2 text-sm' : 'px-2 py-1 text-[10px]'
+        large ? 'px-4 py-2 text-lg' : 'px-2 py-1 text-sm'
       }`}
       title="Not shown on the public directory"
     >
@@ -209,14 +209,14 @@ export function RepVerificationAudit() {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-h3 text-[var(--navy)]">Rep Verification Audit</h2>
-          <p className="text-xs text-[var(--muted)]">
+          <p className="text-base text-[var(--muted)]">
             Every existing rep, enquiry and verification submission scored against the
             PoliceStationRepUK risk rules. High-risk and ineligible rows are hidden from the
             public directory automatically until you act on them.
           </p>
         </div>
         <div className="flex gap-2">
-          <button onClick={reload} disabled={loading} className="btn-outline !text-sm">
+          <button onClick={reload} disabled={loading} className="btn-outline !text-lg">
             {loading ? 'Refreshing…' : 'Refresh'}
           </button>
         </div>
@@ -242,12 +242,12 @@ export function RepVerificationAudit() {
           placeholder="Search name, email, phone, station, IP, notes…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+          className="rounded-lg border border-[var(--border)] px-3 py-2 text-lg"
         />
         <select
           value={riskFilter}
           onChange={(e) => setRiskFilter(e.target.value as typeof riskFilter)}
-          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
+          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-lg"
         >
           <option value="all">All risk categories</option>
           <option value="ineligible">Ineligible</option>
@@ -258,7 +258,7 @@ export function RepVerificationAudit() {
         <select
           value={sourceFilter}
           onChange={(e) => setSourceFilter(e.target.value as typeof sourceFilter)}
-          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
+          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-lg"
         >
           <option value="all">All sources</option>
           <option value="representative">Existing rep</option>
@@ -268,7 +268,7 @@ export function RepVerificationAudit() {
         <select
           value={visibilityFilter}
           onChange={(e) => setVisibilityFilter(e.target.value as typeof visibilityFilter)}
-          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
+          className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-lg"
         >
           <option value="all">All visibility</option>
           <option value="visible">Publicly visible</option>
@@ -277,20 +277,20 @@ export function RepVerificationAudit() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-lg text-red-800">
           {error}
         </div>
       )}
 
       {loading && !data && (
-        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-lg text-slate-500">
           Loading audit…
         </div>
       )}
 
       {data && (
         <>
-          <p className="mt-4 text-xs text-slate-500 xl:hidden">
+          <p className="mt-4 text-base text-slate-500 xl:hidden">
             {filtered.length} row{filtered.length === 1 ? '' : 's'} — tap Review to act on a rep.
           </p>
 
@@ -310,29 +310,29 @@ export function RepVerificationAudit() {
                     <div className="mb-2 flex flex-wrap items-center gap-2">
                       <PublicVisibilityBadge row={r} size="lg" />
                       <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${RISK_COLOR[r.risk.category]}`}
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-sm font-bold uppercase ${RISK_COLOR[r.risk.category]}`}
                       >
                         {r.risk.category} risk
                       </span>
                     </div>
                     <h3 className="font-bold text-[var(--navy)]">{r.name || '—'}</h3>
-                    <p className="truncate text-xs text-slate-500">{r.email}</p>
+                    <p className="truncate text-base text-slate-500">{r.email}</p>
                   </div>
                   <button
                     onClick={() => setOpenEmail(r.email)}
-                    className="btn-gold shrink-0 !px-4 !py-2 !text-sm"
+                    className="btn-gold shrink-0 !px-4 !py-2 !text-lg"
                   >
                     Review &amp; act
                   </button>
                 </div>
                 {!r.publiclyVisible && (
-                  <ul className="mt-2 list-inside list-disc text-[11px] text-slate-600">
+                  <ul className="mt-2 list-inside list-disc text-base text-slate-600">
                     {visibilityBreakdown(r).map((line) => (
                       <li key={line}>{line}</li>
                     ))}
                   </ul>
                 )}
-                <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-base">
                   <dt className="text-slate-500">Phone</dt>
                   <dd>{r.phone || '—'}</dd>
                   <dt className="text-slate-500">Status</dt>
@@ -350,7 +350,7 @@ export function RepVerificationAudit() {
               </article>
             ))}
             {filtered.length === 0 && (
-              <p className="rounded-lg border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+              <p className="rounded-lg border border-slate-200 bg-slate-50 p-6 text-center text-lg text-slate-500">
                 No rows match the current filters.
               </p>
             )}
@@ -358,11 +358,11 @@ export function RepVerificationAudit() {
 
           {/* Table — wide screens; Public + Action stay pinned on the right */}
           <div className="admin-audit-scroll mt-4 hidden min-w-0 xl:block">
-            <p className="mb-2 text-[10px] text-slate-500">
+            <p className="mb-2 text-sm text-slate-500">
               Scroll horizontally for extra columns — Public and Review stay fixed on the right.
             </p>
-            <table className="admin-audit-table w-full min-w-[900px] text-xs">
-              <thead className="bg-slate-50 text-left text-[10px] uppercase tracking-wider text-slate-500">
+            <table className="admin-audit-table w-full min-w-[900px] text-base">
+              <thead className="bg-slate-50 text-left text-sm uppercase tracking-wider text-slate-500">
                 <tr>
                   <th className="admin-audit-sticky-left px-2 py-2">Risk</th>
                   <th className="admin-audit-sticky-left-2 px-2 py-2 min-w-[180px]">Name / Email</th>
@@ -388,20 +388,20 @@ export function RepVerificationAudit() {
                   >
                     <td className="admin-audit-sticky-left px-2 py-2">
                       <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${RISK_COLOR[r.risk.category]}`}
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-sm font-bold uppercase ${RISK_COLOR[r.risk.category]}`}
                       >
                         {r.risk.category}
                       </span>
                     </td>
                     <td className="admin-audit-sticky-left-2 px-2 py-2">
                       <div className="font-semibold text-[var(--navy)]">{r.name || '—'}</div>
-                      <div className="text-[10px] text-slate-500">{r.email}</div>
+                      <div className="text-sm text-slate-500">{r.email}</div>
                       {r.slug && (
                         <a
                           href={`/rep/${r.slug}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[10px] text-[var(--gold-link)] underline"
+                          className="text-sm text-[var(--gold-link)] underline"
                         >
                           /rep/{r.slug}
                         </a>
@@ -411,7 +411,7 @@ export function RepVerificationAudit() {
                     <td className="px-2 py-2 max-w-[160px]">
                       <div className="break-words">{r.claimedStatus || '—'}</div>
                       {r.verificationStatusLabel && (
-                        <div className="mt-0.5 text-[10px] uppercase text-slate-500">
+                        <div className="mt-0.5 text-sm uppercase text-slate-500">
                           {r.verificationStatusLabel}
                         </div>
                       )}
@@ -425,7 +425,7 @@ export function RepVerificationAudit() {
                     <td className="admin-audit-sticky-right-2 px-2 py-2">
                       <PublicVisibilityBadge row={r} />
                       {!r.publiclyVisible && (
-                        <p className="mt-1 max-w-[140px] text-[9px] leading-tight text-slate-500">
+                        <p className="mt-1 max-w-[140px] text-sm leading-tight text-slate-500">
                           {visibilityBreakdown(r)[0]}
                         </p>
                       )}
@@ -433,7 +433,7 @@ export function RepVerificationAudit() {
                     <td className="admin-audit-sticky-right px-2 py-2">
                       <button
                         onClick={() => setOpenEmail(r.email)}
-                        className="btn-gold w-full !px-2 !py-1.5 !text-[11px]"
+                        className="btn-gold w-full !px-2 !py-1.5 !text-base"
                       >
                         Review &amp; act
                       </button>
@@ -442,7 +442,7 @@ export function RepVerificationAudit() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={12} className="px-3 py-6 text-center text-sm text-slate-500">
+                    <td colSpan={12} className="px-3 py-6 text-center text-lg text-slate-500">
                       No rows match the current filters.
                     </td>
                   </tr>
@@ -478,7 +478,7 @@ function Stat({ label, value, tone }: { label: string; value: number; tone?: 'ok
           : 'border-slate-200 bg-white';
   return (
     <div className={`rounded-xl border p-2 ${cls}`}>
-      <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{label}</p>
+      <p className="text-sm font-bold uppercase tracking-widest text-slate-500">{label}</p>
       <p className="mt-0.5 text-xl font-extrabold text-[var(--navy)]">{value}</p>
     </div>
   );
@@ -546,12 +546,12 @@ function AuditDetailDrawer({
       <div className="flex h-full w-full max-w-full flex-col bg-white shadow-2xl sm:max-w-2xl lg:max-w-4xl">
         <div className="flex shrink-0 items-start justify-between border-b border-slate-200 px-4 py-3 sm:px-5">
           <div className="min-w-0 pr-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--gold)]">
+            <p className="text-sm font-bold uppercase tracking-widest text-[var(--gold)]">
               Verification audit
             </p>
-            <h3 className="truncate text-base font-bold text-[var(--navy)]">{email}</h3>
+            <h3 className="truncate text-xl font-bold text-[var(--navy)]">{email}</h3>
           </div>
-          <button onClick={onClose} className="shrink-0 rounded-lg border border-slate-200 px-3 py-1 text-sm">
+          <button onClick={onClose} className="shrink-0 rounded-lg border border-slate-200 px-3 py-1 text-lg">
             Close
           </button>
         </div>
@@ -571,14 +571,14 @@ function AuditDetailDrawer({
                   href={`/rep/${row.slug}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs font-semibold text-[var(--gold-link)] underline"
+                  className="text-base font-semibold text-[var(--gold-link)] underline"
                 >
                   View profile →
                 </a>
               )}
             </div>
             {!row.publiclyVisible && (
-              <ul className="mt-2 list-inside list-disc text-xs text-slate-700">
+              <ul className="mt-2 list-inside list-disc text-base text-slate-700">
                 {visibilityBreakdown(row).map((line) => (
                   <li key={line}>{line}</li>
                 ))}
@@ -588,20 +588,20 @@ function AuditDetailDrawer({
         )}
 
         {message && (
-          <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 sm:px-5">
+          <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-2 text-lg text-amber-900 sm:px-5">
             {message}
           </div>
         )}
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 text-sm sm:px-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 text-lg sm:px-5">
           {!row && <p>Loading…</p>}
           {row && (
             <>
               <section className="mb-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <h4 className="text-base font-bold uppercase tracking-wider text-slate-500">
                   Summary
                 </h4>
-                <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-base">
                   <dt className="text-slate-500">Name</dt>
                   <dd>{row.name || '—'}</dd>
                   <dt className="text-slate-500">Source</dt>
@@ -609,7 +609,7 @@ function AuditDetailDrawer({
                   <dt className="text-slate-500">Risk</dt>
                   <dd>
                     <span
-                      className={`rounded border px-2 py-0.5 text-[10px] font-bold uppercase ${RISK_COLOR[row.risk.category]}`}
+                      className={`rounded border px-2 py-0.5 text-sm font-bold uppercase ${RISK_COLOR[row.risk.category]}`}
                     >
                       {row.risk.category}
                     </span>
@@ -642,7 +642,7 @@ function AuditDetailDrawer({
               </section>
 
               {row.risk.highRiskFlags.length > 0 && (
-                <section className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800">
+                <section className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-base text-red-800">
                   <p className="font-semibold">High-risk flags</p>
                   <ul className="mt-1 list-inside list-disc">
                     {row.risk.highRiskFlags.map((f, i) => (
@@ -652,7 +652,7 @@ function AuditDetailDrawer({
                 </section>
               )}
               {row.risk.mediumRiskFlags.length > 0 && (
-                <section className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                <section className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-base text-amber-900">
                   <p className="font-semibold">Medium-risk flags</p>
                   <ul className="mt-1 list-inside list-disc">
                     {row.risk.mediumRiskFlags.map((f, i) => (
@@ -662,7 +662,7 @@ function AuditDetailDrawer({
                 </section>
               )}
               {row.duplicateReasons.length > 0 && (
-                <section className="mb-4 rounded-lg border border-purple-200 bg-purple-50 p-3 text-xs text-purple-900">
+                <section className="mb-4 rounded-lg border border-purple-200 bg-purple-50 p-3 text-base text-purple-900">
                   <p className="font-semibold">Duplicate detection</p>
                   <ul className="mt-1 list-inside list-disc">
                     {row.duplicateReasons.map((f, i) => (
@@ -672,7 +672,7 @@ function AuditDetailDrawer({
                 </section>
               )}
               {row.risk.lowRiskIndicators.length > 0 && (
-                <section className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
+                <section className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-base text-emerald-900">
                   <p className="font-semibold">Positive signals</p>
                   <ul className="mt-1 list-inside list-disc">
                     {row.risk.lowRiskIndicators.map((f, i) => (
@@ -683,43 +683,43 @@ function AuditDetailDrawer({
               )}
 
               <section className="mb-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <h4 className="text-base font-bold uppercase tracking-wider text-slate-500">
                   Admin notes (private)
                 </h4>
                 <textarea
                   rows={4}
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-base"
                 />
               </section>
 
               <section className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <h4 className="text-base font-bold uppercase tracking-wider text-slate-500">
                   Issue verification link
                 </h4>
-                <p className="mt-1 text-xs text-slate-600">
+                <p className="mt-1 text-base text-slate-600">
                   Sends a private, single-use, 30-day verification link to the applicant&apos;s
                   email and records `verification-link-sent`.
                 </p>
                 <button
                   onClick={issueVerificationLink}
                   disabled={working}
-                  className="btn-gold mt-2 !text-xs"
+                  className="btn-gold mt-2 !text-base"
                 >
                   Issue secure verification link
                 </button>
               </section>
 
               <section className="mb-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <h4 className="text-base font-bold uppercase tracking-wider text-slate-500">
                   Apply admin action
                 </h4>
                 <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                   <select
                     value={action}
                     onChange={(e) => setAction(e.target.value)}
-                    className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs sm:min-w-[16rem]"
+                    className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-base sm:min-w-[16rem]"
                   >
                     <option value="">Pick an action…</option>
                     {ACTION_OPTIONS.map((o) => (
@@ -731,7 +731,7 @@ function AuditDetailDrawer({
                   <button
                     onClick={() => runAction(action)}
                     disabled={working || !action}
-                    className="btn-gold shrink-0 !text-xs"
+                    className="btn-gold shrink-0 !text-base"
                   >
                     Apply
                   </button>
@@ -746,13 +746,13 @@ function AuditDetailDrawer({
                         void runAction(o.value);
                       }}
                       disabled={working}
-                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-[11px] font-medium text-[var(--navy)] hover:border-[var(--gold)] disabled:opacity-60"
+                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-base font-medium text-[var(--navy)] hover:border-[var(--gold)] disabled:opacity-60"
                     >
                       {o.label}
                     </button>
                   ))}
                 </div>
-                <p className="mt-2 text-[10px] text-slate-500">
+                <p className="mt-2 text-sm text-slate-500">
                   Approving sets adminApproved=true, isPublic=true, lastVerifiedDate=now and
                   promotes the profile to the public directory (visibility gate still requires
                   a verified status).

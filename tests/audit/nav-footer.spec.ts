@@ -2,13 +2,13 @@ import { test, expect } from '@playwright/test';
 import { fetchStatus, normaliseUrl } from './helpers/link-graph';
 
 test.describe('Header and footer link integrity', () => {
-  test('desktop More menu reveals overflow nav links', async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 900 });
+  test('desktop nav dropdown reveals grouped links', async ({ page }) => {
+    await page.setViewportSize({ width: 1400, height: 900 });
     await page.goto('/');
-    const more = page.getByRole('button', { name: 'More' });
-    await expect(more).toBeVisible();
-    await more.click();
-    const overflowLink = page.getByRole('link', { name: /Find a Supervisor/i });
+    const forReps = page.getByRole('button', { name: 'For Reps' });
+    await expect(forReps).toBeVisible();
+    await forReps.click();
+    const overflowLink = page.getByRole('link', { name: /Find a Supervising Solicitor/i });
     await expect(overflowLink).toBeVisible();
     await overflowLink.click();
     await expect(page).toHaveURL(/FindSupervisingSolicitor/i);
