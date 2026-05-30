@@ -61,15 +61,18 @@ function MoreDropdown({ links, linkClass }: { links: ReadonlyArray<{ href: strin
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
-    if (open) document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
+    if (open) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
   return (
     <div ref={ref} className="relative ml-1 shrink-0 border-l border-white/15 pl-2 xl:ml-1.5 xl:pl-2.5">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
         className={`${linkClass} !bg-[var(--navy-light)]/80 ring-1 ring-white/10 hover:!ring-[var(--gold)]/40`}
         aria-expanded={open}
         aria-haspopup="true"
@@ -80,7 +83,7 @@ function MoreDropdown({ links, linkClass }: { links: ReadonlyArray<{ href: strin
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 min-w-[200px] rounded-lg border border-[var(--navy-light)] bg-[var(--navy)] py-1 shadow-xl">
+        <div className="absolute right-0 top-full z-[100] mt-1 min-w-[200px] rounded-lg border border-[var(--navy-light)] bg-[var(--navy)] py-1 shadow-xl">
           {links.map((link) => (
             <NavItem
               key={`${link.href}-${link.text}`}
@@ -189,25 +192,27 @@ export function Header() {
             </Link>
           </div>
 
-          <div className="hidden min-w-0 flex-1 justify-center overflow-hidden px-1 lg:flex lg:max-w-[min(100%,52rem)]">
-            <nav
-              className="flex min-w-0 max-w-full flex-nowrap items-center gap-0.5 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              aria-label="Main navigation"
-            >
-              {desktopNavPrimary.map((link) => (
-                <NavItem
-                  key={`${link.href}-${link.text}`}
-                  href={link.href}
-                  className={desktopNavLinkClass}
-                  external={link.href.startsWith('http')}
-                >
-                  {link.text}
-                </NavItem>
-              ))}
+          <div className="hidden min-w-0 flex-1 justify-center px-1 lg:flex lg:max-w-[min(100%,52rem)]">
+            <div className="flex min-w-0 max-w-full items-center gap-0.5">
+              <nav
+                className="flex min-w-0 flex-nowrap items-center gap-0.5 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                aria-label="Main navigation"
+              >
+                {desktopNavPrimary.map((link) => (
+                  <NavItem
+                    key={`${link.href}-${link.text}`}
+                    href={link.href}
+                    className={desktopNavLinkClass}
+                    external={link.href.startsWith('http')}
+                  >
+                    {link.text}
+                  </NavItem>
+                ))}
+              </nav>
               {desktopNavMore.length > 0 && (
                 <MoreDropdown links={desktopNavMore} linkClass={desktopNavLinkClass} />
               )}
-            </nav>
+            </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5 pl-1 lg:justify-self-end lg:pl-2">
