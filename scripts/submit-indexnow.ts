@@ -1,13 +1,13 @@
 #!/usr/bin/env npx tsx
 /**
- * Submit sitemap URLs to IndexNow after deploy (Bing, Yandex, Naver, Seznam, etc.).
+ * Submit sitemap URLs to IndexNow (Bing, Yandex, Naver, Seznam, etc.).
  *
  * Usage:
  *   npm run indexnow
  *   npm run indexnow -- --changed-only
  */
 import { execSync } from 'node:child_process';
-import { INDEXNOW_KEY_LOCATION, submitIndexNow } from '../lib/indexnow';
+import { submitSitemapToIndexNow } from '../lib/indexnow-pipeline';
 
 const SITE_URL = (process.env.SITE_URL || 'https://policestationrepuk.org').replace(/\/$/, '');
 const WAIT_MS = Number(process.env.INDEXNOW_WAIT_MS || 45_000);
@@ -15,28 +15,6 @@ const changedOnly = process.argv.includes('--changed-only');
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
-}
-
-function parseSitemapXml(xml: string): string[] {
-  return [...xml.matchAll(/<loc>([^<]+)<\/loc>/gi)].map((m) => m[1].trim());
-}
-
-async function fetchSitemapUrls(): Promise<string[]> {
-  const res = await fetch(`${SITE_URL}/sitemap.xml`, {
-    headers: { 'user-agent': 'PoliceStationRepUK-indexnow/1.0' },
-  });
-  if (!res.ok) throw new Error(`sitemap fetch failed: ${res.status}`);
-  const xml = await res.text();
-  const locs = parseSitemapXml(xml);
-  if (/<sitemapindex/i.test(xml)) {
-    const nested: string[] = [];
-    for (const child of locs.slice(0, 20)) {
-      const r = await fetch(child, { headers: { 'user-agent': 'PoliceStationRepUK-indexnow/1.0' } });
-      if (r.ok) nested.push(...parseSitemapXml(await r.text()));
-    }
-    return nested.length ? nested : locs;
-  }
-  return locs;
 }
 
 function urlsFromGitDiff(before: string | undefined, after: string | undefined): string[] {
@@ -91,29 +69,23 @@ async function main() {
     await sleep(WAIT_MS);
   }
 
-  let urls: string[];
   if (changedOnly) {
     const diffUrls = urlsFromGitDiff(process.env.GITHUB_EVENT_BEFORE, process.env.GITHUB_SHA);
     if (diffUrls.length > 1) {
-      urls = diffUrls;
-      console.log(`IndexNow: submitting ${urls.length} URL(s) from git diff`);
-    } else {
-      console.log('IndexNow: no mapped git changes — falling back to sitemap');
-      urls = await fetchSitemapUrls();
+      const { submitIndexNow, INDEXNOW_KEY_LOCATION } = await import('../lib/indexnow');
+      console.log(`IndexNow: submitting ${diffUrls.length} URL(s) from git diff`);
+      const result = await submitIndexNow(diffUrls);
+      console.log(
+        `IndexNow: ok (${result.status}) — ${result.submitted} URL(s) in ${result.batches} batch(es); key ${INDEXNOW_KEY_LOCATION}`,
+      );
+      return;
     }
-  } else {
-    urls = await fetchSitemapUrls();
-    console.log(`IndexNow: submitting ${urls.length} URL(s) from sitemap`);
+    console.log('IndexNow: no mapped git changes — falling back to sitemap');
   }
 
-  if (urls.length === 0) {
-    console.error('IndexNow: no URLs to submit');
-    process.exit(1);
-  }
-
-  const result = await submitIndexNow(urls);
+  const result = await submitSitemapToIndexNow({ source: 'live', siteUrl: SITE_URL });
   console.log(
-    `IndexNow: ok (${result.status}) — ${result.submitted} URL(s) in ${result.batches} batch(es); key ${INDEXNOW_KEY_LOCATION}`,
+    `IndexNow: ok (${result.status}) — ${result.submitted} URL(s) from ${result.source} sitemap in ${result.batches} batch(es); key ${result.keyLocation}`,
   );
 }
 

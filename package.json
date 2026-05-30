@@ -21,6 +21,7 @@
     "dev": "next dev",
     "prebuild": "node scripts/blog/fetch-hero-images.mjs",
     "build": "next build",
+    "postbuild": "npx tsx scripts/postbuild-indexnow.ts",
     "start": "next start",
     "lint": "next lint",
     "deploy:vercel": "vercel deploy --prod --yes",
