@@ -132,6 +132,8 @@ const nextConfig: NextConfig = {
         destination: "/directory",
         permanent: true,
       },
+      { source: "/find", destination: "/directory", permanent: true },
+      { source: "/stations", destination: "/StationsDirectory", permanent: true },
       {
         source: "/representatives",
         destination: "/directory",

@@ -31,6 +31,8 @@ import {
   FOOTER_TOOLS,
   WHATSAPP_JOIN_PHONE,
   FOOTER_UTILITY_COOKIE_SETTINGS,
+  FOOTER_UTILITY_LINKS_HREF,
+  FOOTER_UTILITY_LINKS_LABEL,
   FOOTER_UTILITY_RSS_HREF,
   FOOTER_UTILITY_RSS_LABEL,
   FOOTER_UTILITY_SITEMAP_HREF,
@@ -271,6 +273,12 @@ export function Footer() {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-[var(--navy-light)] pt-6 sm:gap-x-4">
+          <Link
+            href={FOOTER_UTILITY_LINKS_HREF}
+            className="inline-flex min-h-[44px] items-center px-2 text-xs !text-[var(--footer-link)] no-underline hover:!text-[var(--footer-link-hover)]"
+          >
+            {FOOTER_UTILITY_LINKS_LABEL}
+          </Link>
           <Link
             href={FOOTER_UTILITY_SITEMAP_HREF}
             className="inline-flex min-h-[44px] items-center px-2 text-xs !text-[var(--footer-link)] no-underline hover:!text-[var(--footer-link-hover)]"

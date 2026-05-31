@@ -12,6 +12,8 @@ import { availabilityBucket, isUrgentCoverCapable, profileCompleteness } from '@
 import { looksIneligible } from '@/lib/rep-status';
 import { turnstileSiteKey } from '@/lib/turnstile';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
+import { CopyLinkButton } from '@/components/CopyLinkButton';
+import { SITE_URL } from '@/lib/seo-layer/config';
 
 // Render every rep slug on demand. The previous setup combined
 // `revalidate = 60` with `generateStaticParams()` returning ~180 known
@@ -261,6 +263,15 @@ export default async function RepPage({ params }: PageProps) {
                   {!rep.phone && !rep.email && (
                     <p className="text-sm text-slate-600">Use the directory search or your firm networks to reach this rep.</p>
                   )}
+                </div>
+                <div className="mt-4 border-t border-slate-100 pt-4">
+                  <CopyLinkButton
+                    url={`${SITE_URL}/rep/${rep.slug}`}
+                    label="Copy profile link"
+                    copiedLabel="Profile link copied!"
+                    shareTitle={`${rep.name} — police station rep`}
+                    shareText={`${rep.name} — accredited police station rep${rep.county?.trim() ? ` covering ${rep.county.trim()}` : ''}. Listed on PoliceStationRepUK:`}
+                  />
                 </div>
               </section>
 

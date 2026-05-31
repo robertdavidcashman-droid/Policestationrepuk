@@ -1,4 +1,5 @@
 import { CUSTODYNOTE_TRIAL_HREF } from '@/lib/custodynote-promo';
+import { POLICESTATIONAGENT_HOME_HREF } from '@/lib/policestationagent-promo';
 import { SUPPORT_MAILTO_HREF } from '@/lib/site-contact';
 import { PSRTRAIN_TRAINING_HREF } from '@/lib/psrtrain-promo';
 
@@ -86,9 +87,11 @@ export const FOOTER_FOR_REPRESENTATIVES: FooterLink[] = [
 
 /** Footer column “Tools & Resources” */
 export const FOOTER_TOOLS: FooterLink[] = [
+  { href: '/links', label: 'Quick links hub' },
   { href: '/CustodyNote', label: 'Custody Note — overview' },
   { href: CUSTODYNOTE_TRIAL_HREF, label: 'Custody Note — free trial', external: true },
   { href: PSRTRAIN_TRAINING_HREF, label: 'PSR Train (PSRAS prep)', external: true },
+  { href: POLICESTATIONAGENT_HOME_HREF, label: 'Police Station Agent — solicitors', external: true },
   { href: '/police-station-representative', label: 'Police station representative' },
   { href: '/criminal-solicitor-police-station', label: 'Criminal solicitor — police station' },
   { href: '/police-station-rights-uk', label: 'Police station rights UK' },
@@ -187,6 +190,8 @@ export const FOOTER_UTILITY_SHARE = 'Share Directory';
 export const FOOTER_UTILITY_TOP = 'Top';
 export const FOOTER_UTILITY_SITEMAP_HREF = '/sitemap.xml';
 export const FOOTER_UTILITY_SITEMAP_LABEL = 'Sitemap';
+export const FOOTER_UTILITY_LINKS_HREF = '/links';
+export const FOOTER_UTILITY_LINKS_LABEL = 'Quick Links';
 export const FOOTER_UTILITY_RSS_HREF = '/rss.xml';
 export const FOOTER_UTILITY_RSS_LABEL = 'RSS Feed';
 export const FOOTER_UTILITY_COOKIE_SETTINGS = 'Cookie Settings';
