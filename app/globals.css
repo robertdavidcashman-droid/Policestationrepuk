@@ -44,7 +44,7 @@
   --radius-lg: 0.5rem;
   --section-gap: 1.75rem;
   --container-max: 72rem;
-  --container-gutter: 1.25rem;
+  --container-gutter: clamp(0.875rem, 3.5vw, 1.25rem);
   --section-pad-y: 3rem;
   --section-pad-y-sm: 3.5rem;
   --section-pad-compact-y: 2.375rem;
@@ -56,6 +56,15 @@
   --space-hero-stack-lg: 1.5rem;
   --card-padding: 1.5rem;
   --focus-ring: 0 0 0 2px var(--background), 0 0 0 4px var(--navy), 0 0 0 6px var(--gold);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --fixed-bottom-base: calc(1rem + var(--safe-area-bottom));
+  --fixed-bottom-raised: calc(4.75rem + var(--safe-area-bottom));
+}
+
+html {
+  overflow-x: clip;
 }
 
 @theme inline {
@@ -87,6 +96,29 @@ body {
   letter-spacing: -0.011em;
   -webkit-font-smoothing: auto;
   -moz-osx-font-smoothing: auto;
+  overflow-x: clip;
+}
+
+/* Fixed FABs / cookie bar — respect iPhone home indicator and notched edges */
+.fixed-ui-bottom {
+  bottom: var(--fixed-bottom-base);
+}
+.fixed-ui-bottom-raised {
+  bottom: var(--fixed-bottom-raised);
+}
+.fixed-ui-left {
+  left: calc(0.75rem + var(--safe-area-left));
+}
+.fixed-ui-right {
+  right: calc(0.75rem + var(--safe-area-right));
+}
+@media (min-width: 640px) {
+  .fixed-ui-left {
+    left: calc(1rem + var(--safe-area-left));
+  }
+  .fixed-ui-right {
+    right: calc(1rem + var(--safe-area-right));
+  }
 }
 
 .skip-link {
@@ -191,6 +223,13 @@ footer .text-slate-600 {
   flex: 1;
   width: 100%;
   min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .site-shell-main {
+    /* Room for help chat + optional cookie bar without obscuring footer CTAs */
+    padding-bottom: calc(3.5rem + var(--safe-area-bottom));
+  }
 }
 
 .site-shell-main > * {

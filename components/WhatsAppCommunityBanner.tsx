@@ -24,7 +24,10 @@ export function WhatsAppCommunityBanner() {
             <span className="text-emerald-300/90" aria-hidden>
               💬{' '}
             </span>
-            Join the PoliceStationRepUK WhatsApp group — cover, networking &amp; peer support.{' '}
+            <span className="sm:hidden">Join our WhatsApp — reps &amp; firms. </span>
+            <span className="hidden sm:inline">
+              Join the PoliceStationRepUK WhatsApp group — cover, networking &amp; peer support.{' '}
+            </span>
             <span className="font-normal text-emerald-100/85">Free · verified members</span>
           </p>
 
@@ -44,7 +47,7 @@ export function WhatsAppCommunityBanner() {
             ))}
             <Link
               href="/WhatsApp"
-              className="inline-flex min-h-[28px] items-center justify-center rounded-full border border-emerald-600/50 bg-emerald-900/40 px-3 py-1 text-[10px] font-semibold text-emerald-100 no-underline hover:border-emerald-400/60 hover:text-white sm:text-[11px]"
+              className="hidden min-h-[28px] items-center justify-center rounded-full border border-emerald-600/50 bg-emerald-900/40 px-3 py-1 text-[10px] font-semibold text-emerald-100 no-underline hover:border-emerald-400/60 hover:text-white min-[480px]:inline-flex sm:text-[11px]"
             >
               How it works
             </Link>

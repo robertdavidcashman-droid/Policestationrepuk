@@ -138,7 +138,7 @@ export function Header() {
 
   return (
     <>
-      <header className="relative z-30 border-b border-[var(--navy-light)] bg-[var(--navy)] shadow-lg">
+      <header className="relative z-30 overflow-x-clip border-b border-[var(--navy-light)] bg-[var(--navy)] shadow-lg">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-2 sm:py-2.5 sm:px-6 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:gap-x-3 lg:px-8">
           <div className="flex min-w-0 items-center gap-3 lg:min-w-0">
             <button

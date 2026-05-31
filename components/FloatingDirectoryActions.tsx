@@ -1,13 +1,27 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { SITE_URL } from '@/lib/seo-layer/config';
 import { FOOTER_UTILITY_SHARE, FOOTER_UTILITY_TOP } from '@/lib/site-navigation';
 
+const DIRECTORY_ROUTES = ['/directory', '/search', '/StationsDirectory'] as const;
+
+function isDirectoryContext(pathname: string | null): boolean {
+  if (!pathname) return false;
+  if (pathname.startsWith('/rep/')) return true;
+  return DIRECTORY_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
+}
+
 /**
- * Mirrors live-site floating “Share directory” / “Back to top” affordances
- * (viewport edge stack — footer row keeps sitemap/RSS/cookie links).
+ * Floating share / back-to-top — directory pages only, md+ (mobile uses header share strip).
  */
 export function FloatingDirectoryActions() {
+  const pathname = usePathname();
+
+  if (!isDirectoryContext(pathname)) return null;
+
   const handleShare = async () => {
     const url = typeof window !== 'undefined' ? window.location.href : SITE_URL;
     if (navigator.share) {
@@ -27,7 +41,7 @@ export function FloatingDirectoryActions() {
     <nav
       data-parity-mask
       aria-label="Share and back to top"
-      className="pointer-events-none fixed bottom-28 left-3 z-30 flex flex-col gap-2 sm:bottom-32 sm:left-4"
+      className="pointer-events-none fixed-ui-bottom-raised fixed-ui-left z-30 hidden flex-col gap-2 md:flex"
     >
       <button
         type="button"

@@ -18,7 +18,7 @@ export function HelpChatButton() {
         data-parity-mask
         onClick={() => setOpen((v) => !v)}
         aria-label="Open help chat"
-        className="fixed bottom-28 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--navy)] text-xl text-white shadow-lg transition-all hover:bg-[var(--navy-light)] hover:shadow-xl sm:bottom-32 sm:right-5"
+        className="fixed-ui-bottom-raised fixed-ui-right z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--navy)] text-xl text-white shadow-lg transition-all hover:bg-[var(--navy-light)] hover:shadow-xl"
       >
         💬
       </button>
@@ -26,7 +26,7 @@ export function HelpChatButton() {
       {open && (
         <div
           data-parity-mask
-          className="fixed bottom-[8.25rem] right-4 z-[60] w-[min(100vw-2rem,20rem)] rounded-xl border border-[var(--card-border)] bg-white p-5 shadow-2xl sm:right-5"
+          className="fixed-ui-bottom-raised fixed-ui-right z-[60] w-[min(calc(100vw-2rem-var(--safe-area-left)-var(--safe-area-right)),20rem)] rounded-xl border border-[var(--card-border)] bg-white p-5 shadow-2xl"
         >
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-bold text-[var(--navy)]">Need Help?</h4>

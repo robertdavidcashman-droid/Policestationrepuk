@@ -19,8 +19,8 @@ export function HomeHero() {
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--gold)]/40 bg-[#1e3a8a]/80 px-4 py-2 text-sm font-semibold text-white/90">
-            Trusted by {TRUST_BADGE_COUNT}+ professionals · Free since 2016
+          <div className="mb-5 inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-[var(--gold)]/40 bg-[#1e3a8a]/80 px-3 py-2 text-xs font-semibold text-white/90 sm:px-4 sm:text-sm">
+            <span className="text-balance">Trusted by {TRUST_BADGE_COUNT}+ professionals · Free since 2016</span>
           </div>
 
           <h1 className="text-h1 text-white">

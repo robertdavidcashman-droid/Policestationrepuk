@@ -57,6 +57,9 @@ export const CUSTODYNOTE_APPS_DETAIL =
 export const TOP_BANNER_TEXT =
   'Custody Note for Windows PC & Mac — structured attendance notes, 30-day free trial';
 
+/** Shorter line for narrow phone screens (full text from `TOP_BANNER_TEXT` on sm+). */
+export const TOP_BANNER_TEXT_MOBILE = 'Custody Note — 30-day free trial';
+
 export const INLINE_CTA_HEADLINE = 'Stop rewriting custody notes at 2am';
 export const INLINE_CTA_BULLETS = [
   'PACE-aligned structured sections',

@@ -140,7 +140,8 @@ export function RepLinkKit({ name, slug, profileUrl, county }: RepLinkKitProps) 
               alt={`QR code linking to ${name} on PoliceStationRepUK`}
               width={220}
               height={220}
-              className="rounded-lg border border-slate-200 bg-white p-2"
+              className="h-auto max-w-full rounded-lg border border-slate-200 bg-white p-2"
+              style={{ width: 'min(220px, 100%)' }}
             />
           ) : (
             <div

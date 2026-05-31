@@ -21,8 +21,9 @@ export function CookieBanner() {
   return (
     <div
       className="psr-cookie-bar fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--border)] bg-white/95 px-[var(--container-gutter)] py-1 shadow-md backdrop-blur supports-[backdrop-filter]:bg-white/85 sm:px-6 sm:py-3 lg:px-8 lg:py-4"
+      style={{ paddingBottom: 'max(0.25rem, var(--safe-area-bottom))' }}
     >
-      <div className="mx-auto flex max-w-[var(--container-max)] flex-nowrap items-center justify-between gap-1.5 sm:gap-3">
+      <div className="mx-auto flex max-w-[var(--container-max)] flex-wrap items-center justify-between gap-1.5 sm:flex-nowrap sm:gap-3">
         <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
           <span className="text-[11px] font-bold leading-none text-[var(--navy)] sm:text-sm">Cookies</span>
           <span className="hidden text-xs text-[var(--muted)] sm:inline sm:text-sm">

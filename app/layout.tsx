@@ -99,7 +99,7 @@ export default function RootLayout({
         />
         <link rel="alternate" type="text/plain" title="LLM discovery" href="/llms.txt" />
       </head>
-      <body className="flex min-h-screen flex-col bg-[var(--background)] font-sans text-[var(--foreground)] antialiased">
+      <body className="flex min-h-screen min-h-[100dvh] flex-col overflow-x-clip bg-[var(--background)] font-sans text-[var(--foreground)] antialiased">
         <JsonLd data={platformLegalServiceSchema()} />
         <JsonLd data={webSiteSchema()} />
         <a href="#main-content" className="skip-link">

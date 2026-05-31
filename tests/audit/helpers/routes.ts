@@ -54,11 +54,16 @@ export const CORE_PAGES: string[] = [
   '/About',
   '/directory',
   '/register',
+  '/links',
+  '/rep/robert-cashman',
 ];
 
 /** Viewports for responsive checks. */
 export const VIEWPORTS = [
+  { name: 'phone-se', width: 320, height: 568 },
   { name: 'mobile', width: 390, height: 844 },
   { name: 'tablet', width: 768, height: 1024 },
+  { name: 'laptop', width: 1280, height: 800 },
   { name: 'desktop', width: 1440, height: 900 },
+  { name: 'wide', width: 1920, height: 1080 },
 ] as const;
