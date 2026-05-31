@@ -1,3 +1,4 @@
+import { BLOG_CATEGORIES } from '@/lib/blog/categories';
 import { CUSTODYNOTE_TRIAL_HREF } from '@/lib/custodynote-promo';
 import { POLICESTATIONAGENT_HOME_HREF } from '@/lib/policestationagent-promo';
 import { SUPPORT_MAILTO_HREF } from '@/lib/site-contact';
@@ -21,8 +22,17 @@ function footerLinksToNav(links: readonly FooterLink[]): HeaderNavLink[] {
 export const HEADER_NAV_PRIMARY: HeaderNavLink[] = [
   { href: '/', text: 'Home' },
   { href: '/directory', text: 'Find a Rep' },
-  { href: '/Blog', text: 'Blog' },
   { href: '/CustodyNote', text: 'Custody Note' },
+];
+
+/** Blog hub + topic filters for the header Blog menu. */
+export const HEADER_NAV_BLOG_LINKS: HeaderNavLink[] = [
+  { href: '/Blog', text: 'All articles' },
+  ...BLOG_CATEGORIES.map((c) => ({
+    href: `/Blog?cat=${c.id}`,
+    text: c.label,
+  })),
+  { href: '/rss.xml', text: 'RSS feed' },
 ];
 
 /** Community group — WhatsApp number (same as Robert Cashman directory mobile; not shown on generic /Contact). */
@@ -139,6 +149,7 @@ export const FOOTER_LEGAL: FooterLink[] = [
 
 /** Grouped desktop dropdown menus — mirrors footer columns for consistency. */
 export const HEADER_NAV_DROPDOWNS: { label: string; links: HeaderNavLink[] }[] = [
+  { label: 'Blog', links: HEADER_NAV_BLOG_LINKS },
   { label: 'Directories', links: footerLinksToNav(FOOTER_DIRECTORIES) },
   { label: 'For Reps', links: footerLinksToNav(FOOTER_FOR_REPRESENTATIVES) },
   { label: 'Resources', links: footerLinksToNav(FOOTER_TOOLS) },

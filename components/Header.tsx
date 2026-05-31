@@ -173,14 +173,14 @@ export function Header() {
     <header
       className={`site-header relative z-30 overflow-x-clip border-b border-[var(--navy-light)] bg-[var(--navy)] shadow-lg ${compact ? 'header-compact' : ''}`}
     >
-      <div className="header-row mx-auto flex max-w-7xl items-center justify-between gap-1.5 px-4 py-1 sm:gap-2 sm:px-6 sm:py-1.5 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:gap-x-3 lg:px-8">
+      <div className="header-row mx-auto flex max-w-7xl items-center justify-between gap-1.5 px-4 py-1 sm:gap-2 sm:px-6 sm:py-1.5 md:grid md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center md:gap-x-3 lg:px-8">
         <div className="flex min-w-0 items-center gap-2 lg:min-w-0 lg:gap-3">
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--navy-light)] text-white transition-colors hover:bg-[var(--navy)] hover:ring-1 hover:ring-[var(--gold)]/40 lg:hidden"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--navy-light)] text-white transition-colors hover:bg-[var(--navy)] hover:ring-1 hover:ring-[var(--gold)]/40 md:hidden"
           >
             {open ? (
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden>
@@ -210,7 +210,7 @@ export function Header() {
           </Link>
         </div>
 
-        <div className="hidden min-w-0 flex-1 justify-center px-1 lg:flex">
+        <div className="hidden min-w-0 flex-1 justify-center px-1 md:flex">
           <nav
             className="flex flex-wrap items-center justify-center gap-0.5 xl:gap-1"
             aria-label="Main navigation"
@@ -236,7 +236,7 @@ export function Header() {
           </nav>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 pl-0.5 lg:justify-self-end lg:gap-1.5 lg:pl-2">
+        <div className="flex shrink-0 items-center gap-1 pl-0.5 md:justify-self-end md:gap-1.5 md:pl-2">
           <button
             type="button"
             onClick={handleShare}
@@ -266,7 +266,7 @@ export function Header() {
       </div>
 
       {open && (
-        <div className="max-h-[80vh] overflow-y-auto border-t border-[var(--navy-light)] bg-[var(--navy)] lg:hidden">
+        <div className="max-h-[80vh] overflow-y-auto border-t border-[var(--navy-light)] bg-[var(--navy)] md:hidden">
           <nav className="flex flex-col px-4 py-3 sm:px-5" aria-label="Mobile navigation">
             <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-white/50">Main</p>
             {HEADER_NAV_PRIMARY.map((link) => (
