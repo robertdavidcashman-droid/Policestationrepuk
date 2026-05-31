@@ -21,3 +21,13 @@ export function clearPinnedOnScroll(
   if (scrollY > threshold) return false;
   return pinnedOpen;
 }
+
+/** Whether sticky header should use compact sizing (same threshold as promos). */
+export function shouldCompactHeader(scrollY: number, threshold = SCROLL_HIDE_PX): boolean {
+  return scrollY > threshold;
+}
+
+/** Whether cookie notice should collapse to a floating pill while reading. */
+export function shouldUseCookiePill(scrollY: number, threshold = SCROLL_HIDE_PX): boolean {
+  return scrollY > threshold;
+}

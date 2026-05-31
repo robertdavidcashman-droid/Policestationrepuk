@@ -3,6 +3,8 @@ import {
   clearPinnedOnScroll,
   SCROLL_HIDE_PX,
   shouldCollapsePromos,
+  shouldCompactHeader,
+  shouldUseCookiePill,
 } from '@/lib/promo-banner-scroll';
 
 describe('promo-banner-scroll', () => {
@@ -23,5 +25,17 @@ describe('promo-banner-scroll', () => {
     expect(clearPinnedOnScroll(0, true)).toBe(true);
     expect(clearPinnedOnScroll(SCROLL_HIDE_PX, true)).toBe(true);
     expect(clearPinnedOnScroll(SCROLL_HIDE_PX + 1, true)).toBe(false);
+  });
+
+  it('compacts header after scrolling past threshold', () => {
+    expect(shouldCompactHeader(0)).toBe(false);
+    expect(shouldCompactHeader(SCROLL_HIDE_PX)).toBe(false);
+    expect(shouldCompactHeader(SCROLL_HIDE_PX + 1)).toBe(true);
+  });
+
+  it('switches cookie notice to pill after scrolling past threshold', () => {
+    expect(shouldUseCookiePill(0)).toBe(false);
+    expect(shouldUseCookiePill(SCROLL_HIDE_PX)).toBe(false);
+    expect(shouldUseCookiePill(SCROLL_HIDE_PX + 1)).toBe(true);
   });
 });

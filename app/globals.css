@@ -59,8 +59,14 @@
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-left: env(safe-area-inset-left, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);
+  --header-compact-height: 2.5rem;
+  --header-touch-compact: 2.25rem;
+  --chrome-touch-drawer: 2.75rem;
+  --cookie-bar-height: 2rem;
+  --cookie-bar-height-pill: 2.25rem;
+  --fab-size: 3.5rem;
   --fixed-bottom-base: calc(1rem + var(--safe-area-bottom));
-  --fixed-bottom-raised: calc(4.75rem + var(--safe-area-bottom));
+  --fixed-bottom-raised: calc(4rem + var(--safe-area-bottom));
 }
 
 html {
@@ -119,6 +125,27 @@ body {
   .fixed-ui-right {
     right: calc(1rem + var(--safe-area-right));
   }
+}
+
+/* Compact sticky header — shrinks after scroll past promo threshold */
+.site-header.header-compact .header-row {
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+}
+.site-header.header-compact .header-logo-mark {
+  height: 1.5rem;
+  width: 1.5rem;
+  font-size: 0.75rem;
+}
+.site-header.header-compact .header-site-name {
+  display: none;
+}
+
+/* Cookie bar — sync FAB offset when full-width bar is visible */
+body.cookie-bar-visible:not(.cookie-bar-pill) {
+  --fixed-bottom-raised: calc(
+    var(--cookie-bar-height) + var(--fab-size) + 0.5rem + var(--safe-area-bottom)
+  );
 }
 
 /* Promo banners — collapse on scroll, expand via restore bar */
@@ -254,7 +281,12 @@ footer .text-slate-600 {
 @media (max-width: 767px) {
   .site-shell-main {
     /* Room for help chat + optional cookie bar without obscuring footer CTAs */
-    padding-bottom: calc(3.5rem + var(--safe-area-bottom));
+    padding-bottom: calc(2.75rem + var(--safe-area-bottom));
+  }
+  body.cookie-bar-visible:not(.cookie-bar-pill) .site-shell-main {
+    padding-bottom: calc(
+      var(--cookie-bar-height) + 2.75rem + var(--safe-area-bottom)
+    );
   }
 }
 
