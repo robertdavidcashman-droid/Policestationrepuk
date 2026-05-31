@@ -136,10 +136,23 @@ export async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
   }
 }
 
-/** Absolute URLs for IndexNow and other tooling. */
+/** Absolute URLs for IndexNow and other tooling (includes KV-backed public pages). */
 export async function getSitemapUrlList(): Promise<string[]> {
   const entries = await buildSitemap();
   return entries.map((e) => e.url);
+}
+
+/** Compare two URL lists — useful for diagnosing sitemap / IndexNow drift. */
+export function diffSitemapUrls(
+  expected: string[],
+  actual: string[],
+): { onlyInExpected: string[]; onlyInActual: string[] } {
+  const expectedSet = new Set(expected);
+  const actualSet = new Set(actual);
+  return {
+    onlyInExpected: expected.filter((u) => !actualSet.has(u)),
+    onlyInActual: actual.filter((u) => !expectedSet.has(u)),
+  };
 }
 
 async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
