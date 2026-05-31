@@ -318,9 +318,15 @@ export default async function RepPage({ params }: PageProps) {
                   href={rep.websiteUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full rounded-xl border border-slate-200 py-3 text-center text-sm font-semibold text-[var(--navy)] no-underline hover:bg-slate-50"
+                  className={`block w-full rounded-xl border py-3 text-center text-sm font-semibold no-underline hover:bg-slate-50 ${
+                    rep.slug === "robert-cashman"
+                      ? "border-[var(--gold)] bg-[var(--gold-pale)]/50 text-[var(--navy)]"
+                      : "border-slate-200 text-[var(--navy)]"
+                  }`}
                 >
-                  External website →
+                  {rep.slug === "robert-cashman"
+                    ? "Kent duty solicitor — free resources & representation →"
+                    : "External website →"}
                 </a>
               )}
             </div>

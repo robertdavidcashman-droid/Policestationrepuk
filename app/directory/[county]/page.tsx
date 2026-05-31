@@ -106,6 +106,25 @@ export default async function DirectoryCountyPage({ params }: PageProps) {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <DirectoryComplianceNotice className="mb-8" />
 
+        {countySlug === "kent" && (
+          <div className="mb-8 rounded-2xl border-2 border-[var(--gold)]/40 bg-[var(--gold-pale)]/30 p-6">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--navy)]">
+              Kent duty solicitor resource
+            </p>
+            <p className="mt-2 text-sm text-slate-700">
+              Free, sourced guide to police station rights in Kent — separate from this directory.
+            </p>
+            <a
+              href="https://www.policestationagent.com/kent-police-custody-resources?utm_source=repukkent"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-block text-sm font-bold text-[var(--navy)] underline"
+            >
+              Kent police custody resources →
+            </a>
+          </div>
+        )}
+
         <CustodyNotePagePromo variant="compact" className="mb-8" />
 
         {/* Reps grid */}

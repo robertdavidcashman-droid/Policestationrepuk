@@ -16,12 +16,12 @@ export function SidebarKentAgentPromo() {
         Solicitor-led cover for Kent firms — separate from this directory.
       </p>
       <a
-        href="https://www.policestationagent.com"
+        href="https://www.policestationagent.com/kent-police-custody-resources?utm_source=repuksidebar"
         target="_blank"
         rel="noopener noreferrer"
         className="mt-2 inline-block text-xs font-semibold text-[var(--navy)] underline"
       >
-        policestationagent.com
+        Kent custody resources (free guide)
       </a>
       <div className="mt-3 flex flex-wrap gap-2">
         <a
