@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react';
 import { SITE_URL } from '@/lib/seo-layer/config';
 import { SCROLL_HIDE_PX, shouldCompactHeader } from '@/lib/promo-banner-scroll';
 import {
+  HEADER_NAV_BLOG_LINKS,
   HEADER_NAV_DROPDOWNS,
   HEADER_NAV_PRIMARY,
   HEADER_SHARE_LABEL,
@@ -140,6 +141,7 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [compact, setCompact] = useState(false);
+  const mobileDropdowns = HEADER_NAV_DROPDOWNS.filter((group) => group.label !== 'Blog');
 
   useEffect(() => {
     const onScroll = () => setCompact(shouldCompactHeader(window.scrollY, SCROLL_HIDE_PX));
@@ -164,7 +166,7 @@ export function Header() {
   };
 
   const desktopNavLinkClass =
-    'inline-flex shrink-0 min-h-[var(--header-touch-compact)] items-center whitespace-nowrap rounded-lg px-2 py-1 text-xs font-semibold leading-snug !text-white no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--gold)] lg:text-[13px] xl:min-h-[2.25rem] xl:px-2.5 xl:py-1.5 xl:text-sm';
+    'inline-flex shrink-0 min-h-[var(--header-touch-compact)] items-center whitespace-nowrap rounded-lg px-1.5 py-1 text-xs font-semibold leading-snug !text-white no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--gold)] xl:min-h-[2.25rem] xl:px-2.5 xl:py-1.5 xl:text-sm';
 
   const drawerLinkClass =
     'flex min-h-[var(--chrome-touch-drawer)] items-center rounded-lg px-3 py-2.5 text-sm font-medium !text-[var(--header-link)] no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--header-link-hover)]';
@@ -173,14 +175,14 @@ export function Header() {
     <header
       className={`site-header relative z-30 overflow-x-clip border-b border-[var(--navy-light)] bg-[var(--navy)] shadow-lg ${compact ? 'header-compact' : ''}`}
     >
-      <div className="header-row mx-auto flex max-w-7xl items-center justify-between gap-1.5 px-4 py-1 sm:gap-2 sm:px-6 sm:py-1.5 md:grid md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center md:gap-x-3 lg:px-8">
+      <div className="header-row mx-auto flex max-w-7xl items-center justify-between gap-1.5 px-4 py-1 sm:gap-2 sm:px-6 sm:py-1.5 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:gap-x-3 lg:px-8">
         <div className="flex min-w-0 items-center gap-2 lg:min-w-0 lg:gap-3">
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--navy-light)] text-white transition-colors hover:bg-[var(--navy)] hover:ring-1 hover:ring-[var(--gold)]/40 md:hidden"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--navy-light)] text-white transition-colors hover:bg-[var(--navy)] hover:ring-1 hover:ring-[var(--gold)]/40 lg:hidden"
           >
             {open ? (
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden>
@@ -204,15 +206,15 @@ export function Header() {
             >
               ⚖️
             </span>
-            <span className="header-site-name hidden text-sm font-bold tracking-tight text-white sm:inline lg:text-base">
+            <span className="header-site-name hidden text-sm font-bold tracking-tight text-white sm:inline lg:hidden xl:inline xl:text-base">
               PoliceStationRep<span className="text-[var(--gold)]">UK</span>
             </span>
           </Link>
         </div>
 
-        <div className="hidden min-w-0 flex-1 justify-center px-1 md:flex">
+        <div className="hidden min-w-0 flex-1 justify-center px-1 lg:flex">
           <nav
-            className="flex flex-wrap items-center justify-center gap-0.5 xl:gap-1"
+            className="flex min-w-0 flex-nowrap items-center justify-center gap-0.5 overflow-hidden xl:gap-1"
             aria-label="Main navigation"
           >
             {HEADER_NAV_PRIMARY.map((link) => (
@@ -236,7 +238,7 @@ export function Header() {
           </nav>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 pl-0.5 md:justify-self-end md:gap-1.5 md:pl-2">
+        <div className="flex shrink-0 items-center gap-1 pl-0.5 lg:justify-self-end lg:gap-1.5 lg:pl-2">
           <button
             type="button"
             onClick={handleShare}
@@ -266,7 +268,7 @@ export function Header() {
       </div>
 
       {open && (
-        <div className="max-h-[80vh] overflow-y-auto border-t border-[var(--navy-light)] bg-[var(--navy)] md:hidden">
+        <div className="max-h-[80vh] overflow-y-auto border-t border-[var(--navy-light)] bg-[var(--navy)] lg:hidden">
           <nav className="flex flex-col px-4 py-3 sm:px-5" aria-label="Mobile navigation">
             <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-white/50">Main</p>
             {HEADER_NAV_PRIMARY.map((link) => (
@@ -281,7 +283,22 @@ export function Header() {
               </NavItem>
             ))}
 
-            {HEADER_NAV_DROPDOWNS.map((group) => (
+            <div className="mt-3 border-t border-[var(--navy-light)] pt-3">
+              <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-white/50">Blog</p>
+              {HEADER_NAV_BLOG_LINKS.map((link) => (
+                <NavItem
+                  key={`mobile-blog-${link.href}`}
+                  href={link.href}
+                  external={link.external ?? link.href.startsWith('http')}
+                  onNavigate={() => setOpen(false)}
+                  className={drawerLinkClass}
+                >
+                  {link.text}
+                </NavItem>
+              ))}
+            </div>
+
+            {mobileDropdowns.map((group) => (
               <div key={group.label} className="mt-3 border-t border-[var(--navy-light)] pt-3">
                 <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-white/50">
                   {group.label}

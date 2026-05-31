@@ -131,14 +131,6 @@ body {
   padding-top: 0.125rem;
   padding-bottom: 0.125rem;
 }
-.site-header.header-compact .header-logo-mark {
-  height: 1.5rem;
-  width: 1.5rem;
-  font-size: 0.75rem;
-}
-.site-header.header-compact .header-site-name {
-  display: none;
-}
 
 /* Cookie bar — sync FAB offset when bar is visible */
 body.cookie-bar-visible {
@@ -168,6 +160,9 @@ body.cookie-bar-visible {
   min-height: 0;
 }
 @media (prefers-reduced-motion: reduce) {
+  .site-header.header-compact .header-row {
+    transition: none;
+  }
   .promo-banner-stack-inner {
     transition: none;
   }
