@@ -10,18 +10,26 @@ import {
   TOP_BANNER_TEXT_MOBILE,
 } from '@/lib/custodynote-promo';
 
-const STORAGE_KEY = 'cn-top-banner-dismissed';
+export const CUSTODYNOTE_BANNER_DISMISSED_KEY = 'cn-top-banner-dismissed';
 
-export function CustodyNoteTopBanner() {
+type CustodyNoteTopBannerProps = {
+  onDismissChange?: (dismissed: boolean) => void;
+};
+
+export function CustodyNoteTopBanner({ onDismissChange }: CustodyNoteTopBannerProps = {}) {
   const [dismissed, setDismissed] = useState<boolean | null>(null);
 
   useEffect(() => {
     try {
-      setDismissed(localStorage.getItem(STORAGE_KEY) === '1');
+      setDismissed(localStorage.getItem(CUSTODYNOTE_BANNER_DISMISSED_KEY) === '1');
     } catch {
       setDismissed(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (dismissed !== null) onDismissChange?.(dismissed);
+  }, [dismissed, onDismissChange]);
 
   const hidden = dismissed === true;
 
@@ -63,7 +71,7 @@ export function CustodyNoteTopBanner() {
           type="button"
           onClick={() => {
             try {
-              localStorage.setItem(STORAGE_KEY, '1');
+              localStorage.setItem(CUSTODYNOTE_BANNER_DISMISSED_KEY, '1');
             } catch {
               /* ignore */
             }

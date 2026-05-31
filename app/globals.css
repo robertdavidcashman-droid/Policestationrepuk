@@ -121,6 +121,32 @@ body {
   }
 }
 
+/* Promo banners — collapse on scroll, expand via restore bar */
+.promo-banner-stack-inner {
+  display: grid;
+  transition:
+    grid-template-rows 200ms ease,
+    opacity 200ms ease;
+}
+.promo-banner-stack-inner.is-expanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.promo-banner-stack-inner.is-collapsed {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
+}
+.promo-banner-stack-content {
+  overflow: hidden;
+  min-height: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .promo-banner-stack-inner {
+    transition: none;
+  }
+}
+
 .skip-link {
   position: absolute;
   left: -9999px;
