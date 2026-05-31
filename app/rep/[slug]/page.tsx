@@ -12,7 +12,8 @@ import { availabilityBucket, isUrgentCoverCapable, profileCompleteness } from '@
 import { looksIneligible } from '@/lib/rep-status';
 import { turnstileSiteKey } from '@/lib/turnstile';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
-import { CopyLinkButton } from '@/components/CopyLinkButton';
+import { RepLinkKit } from '@/components/RepLinkKit';
+import { repProfileUrl } from '@/lib/rep-link-kit';
 import { SITE_URL } from '@/lib/seo-layer/config';
 
 // Render every rep slug on demand. The previous setup combined
@@ -112,6 +113,7 @@ export default async function RepPage({ params }: PageProps) {
     { name: 'Directory', url: '/directory' },
     { name: rep.name, url: `/rep/${rep.slug}` },
   ]);
+  const profileUrl = repProfileUrl(SITE_URL, rep.slug);
 
   return (
     <>
@@ -264,16 +266,9 @@ export default async function RepPage({ params }: PageProps) {
                     <p className="text-sm text-slate-600">Use the directory search or your firm networks to reach this rep.</p>
                   )}
                 </div>
-                <div className="mt-4 border-t border-slate-100 pt-4">
-                  <CopyLinkButton
-                    url={`${SITE_URL}/rep/${rep.slug}`}
-                    label="Copy profile link"
-                    copiedLabel="Profile link copied!"
-                    shareTitle={`${rep.name} — police station rep`}
-                    shareText={`${rep.name} — accredited police station rep${rep.county?.trim() ? ` covering ${rep.county.trim()}` : ''}. Listed on PoliceStationRepUK:`}
-                  />
-                </div>
               </section>
+
+              <RepLinkKit name={rep.name} slug={rep.slug} profileUrl={profileUrl} county={rep.county} />
 
               <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[var(--card-shadow)]">
                 <h2 className="text-lg font-bold text-[var(--navy)]">At a glance</h2>
