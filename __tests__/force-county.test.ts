@@ -14,6 +14,10 @@ describe('forceMatchesCounty', () => {
     expect(forceMatchesCounty('Metropolitan Police', 'London')).toBe(true);
   });
 
+  it('aliases Middlesex to the Metropolitan Police', () => {
+    expect(forceMatchesCounty('Metropolitan Police', 'Middlesex')).toBe(true);
+  });
+
   it('does not match unrelated counties', () => {
     expect(forceMatchesCounty('Kent Police', 'Berkshire')).toBe(false);
     expect(forceMatchesCounty('Thames Valley Police', 'Kent')).toBe(false);
