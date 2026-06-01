@@ -51,6 +51,7 @@ const HIGH_PRIORITY_PAGES = [
   { path: 'search', priority: 0.9, freq: 'daily' as const },
   { path: 'Blog', priority: 0.85, freq: 'daily' as const },
   { path: 'StationsDirectory', priority: 0.85, freq: 'weekly' as const },
+  { path: 'HelpUsStationNumbers', priority: 0.78, freq: 'weekly' as const },
   { path: 'UpdateStation', priority: 0.72, freq: 'weekly' as const },
   { path: 'FormsLibrary', priority: 0.8, freq: 'monthly' as const },
   { path: 'Resources', priority: 0.8, freq: 'monthly' as const },

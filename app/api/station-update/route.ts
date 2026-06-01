@@ -7,6 +7,7 @@ import {
   validateContactTiming,
 } from '@/lib/contact-guards';
 import { saveSubmission } from '@/lib/submissions';
+import { savePendingStationUpdate } from '@/lib/station-overrides';
 
 export async function POST(request: Request) {
   try {
@@ -124,6 +125,25 @@ export async function POST(request: Request) {
       saveSubmission('station-update', payload),
       sendStationUpdateNotification(payload),
     ]);
+
+    // Mirror to the KV pending queue so an admin can one-click approve and
+    // publish the correction without a redeploy.
+    await savePendingStationUpdate({
+      id: submissionId,
+      stationId: String(stationId),
+      stationName: String(stationName),
+      fields: {
+        address: payload.suggested.address,
+        postcode: payload.suggested.postcode,
+        phone: payload.suggested.phone,
+        custodyPhone: payload.suggested.custodyPhone,
+        nonEmergencyPhone: payload.suggested.nonEmergencyPhone,
+      },
+      notes: payload.notes,
+      submitterName: payload.submitterName,
+      submitterEmail: payload.submitterEmail,
+      submittedAt: new Date().toISOString(),
+    });
 
     return NextResponse.json({
       ok: true,

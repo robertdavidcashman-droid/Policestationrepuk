@@ -10,7 +10,8 @@ import { RepCard } from '@/components/RepCard';
 import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCredentialVerificationNotice';
 import { FirmCoverCTA } from '@/components/FirmCoverCTA';
 import { phoneToTelHref } from '@/lib/phone';
-import { classifyPhone, displayPhoneNumber } from '@/lib/station-search';
+import { displayPhoneNumber, stationPhoneNumbers } from '@/lib/station-search';
+import { StationLocationMap } from '@/components/StationLocationMap';
 import { countRepsForStation, shouldIndexPoliceStationPage } from '@/lib/station-indexing';
 import { directoryHrefForAreaName } from '@/lib/county-links';
 import {
@@ -82,7 +83,7 @@ export default async function PoliceStationPage({ params }: PageProps) {
     county: station.forceName || station.county || '',
     ...(listedPhone ? { telephone: listedPhone } : {}),
   });
-  const bc = breadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Directory', url: '/directory' }, { name: `${station.name} Police Station`, url: `/police-station/${station.slug}` }]);
+  const bc = breadcrumbSchema([{ name: 'Home', url: '/' }, { name: 'Station Directory', url: '/StationsDirectory' }, { name: `${station.name} Police Station`, url: `/police-station/${station.slug}` }]);
   const areaLabel = station.county || station.forceName || '';
 
   return (
@@ -97,7 +98,7 @@ export default async function PoliceStationPage({ params }: PageProps) {
             light
             items={[
               { label: 'Home', href: '/' },
-              { label: 'Directory', href: '/directory' },
+              { label: 'Station Directory', href: '/StationsDirectory' },
               { label: `${station.name}` },
             ]}
           />
@@ -117,7 +118,7 @@ export default async function PoliceStationPage({ params }: PageProps) {
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
             {/* Main content */}
-            <div className="space-y-6">
+            <div className="order-2 space-y-6 lg:order-1">
               <section className="rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-white p-6 shadow-[var(--card-shadow)] sm:p-8">
                 <h2 className="text-lg font-bold text-[var(--navy)] sm:text-xl">
                   Police station representation at {station.name}
@@ -211,7 +212,7 @@ export default async function PoliceStationPage({ params }: PageProps) {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="order-1 space-y-6 lg:order-2">
               <section className="rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-white p-6 shadow-[var(--card-shadow)]">
                 <h2 className="text-lg font-bold text-[var(--navy)]">Station details</h2>
                 <dl className="mt-3 space-y-3 text-sm">
@@ -237,6 +238,15 @@ export default async function PoliceStationPage({ params }: PageProps) {
                     <dd className="mt-0.5 text-[var(--navy)]">{(station.isCustodyStation || station.custodySuite) ? 'Yes' : 'No'}</dd>
                   </div>
                 </dl>
+                {typeof station.latitude === 'number' && typeof station.longitude === 'number' && (
+                  <div className="mt-4">
+                    <StationLocationMap
+                      lat={station.latitude}
+                      lng={station.longitude}
+                      name={station.name}
+                    />
+                  </div>
+                )}
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(station.address)}`}
                   target="_blank"
@@ -249,10 +259,14 @@ export default async function PoliceStationPage({ params }: PageProps) {
                   href={`/UpdateStation?station=${encodeURIComponent(station.id)}`}
                   className="btn-gold mt-2 w-full !text-sm no-underline text-center"
                 >
-                  Report up-to-date phone number
+                  Help us to help you — report number
                 </Link>
                 <p className="mt-2 text-center text-xs text-[var(--muted)]">
-                  Know a newer custody desk or main line? We review every correction.
+                  Know a newer custody desk or main line?{' '}
+                  <Link href="/HelpUsStationNumbers" className="font-semibold text-[var(--gold-link)] underline">
+                    Learn how it works
+                  </Link>
+                  .
                 </p>
               </section>
 
@@ -329,31 +343,14 @@ export default async function PoliceStationPage({ params }: PageProps) {
 }
 
 function StationPhoneDetail({ station }: { station: PoliceStation }) {
-  const cls = classifyPhone(station);
-  const number = displayPhoneNumber(station);
+  const entries = stationPhoneNumbers(station);
 
-  if (cls === 'station' && number) {
+  if (entries.length === 0) {
     return (
       <div>
         <dt className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Phone</dt>
-        <dd className="mt-0.5">
-          <a href={phoneToTelHref(number)} className="font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)]">
-            {number}
-          </a>
-        </dd>
-      </div>
-    );
-  }
-
-  if (cls === 'switchboard' && number) {
-    return (
-      <div>
-        <dt className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Phone</dt>
-        <dd className="mt-0.5">
-          <a href={phoneToTelHref(number)} className="font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)]">
-            {number}
-          </a>
-          <span className="mt-0.5 block text-[10px] text-[var(--muted)]">Force switchboard</span>
+        <dd className="mt-0.5 text-[var(--muted)]">
+          No direct number — call 101 for non-emergency enquiries
         </dd>
       </div>
     );
@@ -362,8 +359,24 @@ function StationPhoneDetail({ station }: { station: PoliceStation }) {
   return (
     <div>
       <dt className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Phone</dt>
-      <dd className="mt-0.5 text-[var(--muted)]">
-        No direct number — call 101 for non-emergency enquiries
+      <dd className="mt-1 space-y-1.5">
+        {entries.map((entry) => (
+          <div key={entry.number}>
+            <a
+              href={phoneToTelHref(entry.number)}
+              className="font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)]"
+            >
+              {entry.number}
+            </a>
+            <span className="ml-2 text-[10px] text-[var(--muted)]">
+              {entry.className === 'switchboard'
+                ? `${entry.label} · force switchboard`
+                : entry.className === 'generic'
+                  ? `${entry.label} · non-emergency`
+                  : entry.label}
+            </span>
+          </div>
+        ))}
       </dd>
     </div>
   );

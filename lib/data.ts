@@ -8,6 +8,8 @@ import {
   finalizeRepresentative,
 } from './rep-merge';
 import { repMatchesCountyName } from './county-matching';
+import { withDerivedCounty } from './force-county';
+import { applyStationOverrides } from './station-overrides';
 import { getKV, skipKVInPrerender } from './kv';
 import { loadFeaturedFlags, applyFeaturedFlags, sortFeaturedReps } from './featured';
 import {
@@ -110,7 +112,9 @@ function loadDataFromFiles(): FileData | null {
     }
 
     const counties: County[] = readJson(countiesPath) ?? [];
-    const stations: PoliceStation[] = readJson(stationsPath) ?? [];
+    const stations: PoliceStation[] = (readJson<PoliceStation[]>(stationsPath) ?? []).map(
+      withDerivedCounty,
+    );
     const fallbackRepsRaw = readJson<unknown>(repsPath);
     const fallbackReps: Representative[] = Array.isArray(fallbackRepsRaw)
       ? (fallbackRepsRaw as Representative[])
@@ -828,16 +832,18 @@ export async function getFeaturedRepsSorted(): Promise<Representative[]> {
 export async function getStationBySlug(slug: string): Promise<PoliceStation | undefined> {
   const file = loadDataFromFiles();
   const stations = file?.stations ?? [];
-  return (
+  const match =
     stations.find((s) => s.slug === slug) ??
     stations.find((s) => s.slug === `${slug}-police-station`) ??
-    stations.find((s) => s.slug.startsWith(`${slug}-`))
-  );
+    stations.find((s) => s.slug.startsWith(`${slug}-`));
+  if (!match) return undefined;
+  const [merged] = await applyStationOverrides([match]);
+  return merged ?? match;
 }
 
 export async function getAllStations(): Promise<PoliceStation[]> {
   const file = loadDataFromFiles();
-  return file?.stations ?? [];
+  return applyStationOverrides(file?.stations ?? []);
 }
 
 export async function getRepsByStation(stationName: string): Promise<Representative[]> {

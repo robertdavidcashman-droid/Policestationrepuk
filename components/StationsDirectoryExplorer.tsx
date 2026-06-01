@@ -3,16 +3,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { PoliceStation } from '@/lib/types';
-import {
-  searchStations,
-  classifyPhone,
-  displayPhoneNumber,
-  type ScoredStation,
-  type PhoneClass,
-} from '@/lib/station-search';
+import { searchStations, type ScoredStation } from '@/lib/station-search';
+import { StationPhone } from '@/components/StationPhone';
 
 type GroupBy = 'county' | 'force';
 type SortBy = 'relevance' | 'name';
+
+const PAGE_SIZE = 60;
 
 function isCustodyStation(s: PoliceStation): boolean {
   return Boolean(s.isCustodyStation || s.custodySuite);
@@ -37,6 +34,7 @@ export function StationsDirectoryExplorer({
   const [groupBy, setGroupBy] = useState<GroupBy>('force');
   const [custodyOnly, setCustodyOnly] = useState(false);
   const [sortBy, setSortBy] = useState<SortBy>('name');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const hasTextQuery = query.trim().length > 0;
 
@@ -44,6 +42,24 @@ export function StationsDirectoryExplorer({
     if (hasTextQuery && sortBy !== 'relevance') setSortBy('relevance');
     else if (!hasTextQuery && sortBy === 'relevance') setSortBy('name');
   }, [hasTextQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset the visible window whenever the result set changes.
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [query, custodyOnly, groupBy, sortBy]);
+
+  // Keep the URL's ?q= in sync so a typed search is shareable/bookmarkable.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handle = window.setTimeout(() => {
+      const url = new URL(window.location.href);
+      const q = query.trim();
+      if (q) url.searchParams.set('q', q);
+      else url.searchParams.delete('q');
+      window.history.replaceState(null, '', url.toString());
+    }, 300);
+    return () => window.clearTimeout(handle);
+  }, [query]);
 
   const filtered = useMemo(() => {
     let result: ScoredStation[] = searchStations(query, stations);
@@ -59,10 +75,18 @@ export function StationsDirectoryExplorer({
     return result;
   }, [stations, query, custodyOnly, sortBy, hasTextQuery]);
 
+  const total = stations.length;
+  const shown = filtered.length;
+
+  const visible = useMemo(
+    () => filtered.slice(0, visibleCount),
+    [filtered, visibleCount],
+  );
+
   const groupedSorted = useMemo(() => {
     if (hasTextQuery) return null;
 
-    const map = filtered.reduce<Record<string, ScoredStation[]>>((acc, station) => {
+    const map = visible.reduce<Record<string, ScoredStation[]>>((acc, station) => {
       const key = groupKey(station, groupBy);
       if (!acc[key]) acc[key] = [];
       acc[key].push(station);
@@ -73,10 +97,9 @@ export function StationsDirectoryExplorer({
     }
     const keys = Object.keys(map).sort((a, b) => a.localeCompare(b, 'en-GB'));
     return { map, keys };
-  }, [filtered, groupBy, hasTextQuery]);
+  }, [visible, groupBy, hasTextQuery]);
 
-  const total = stations.length;
-  const shown = filtered.length;
+  const hasMore = visibleCount < shown;
 
   if (total === 0) {
     return (
@@ -225,7 +248,7 @@ export function StationsDirectoryExplorer({
       ) : hasTextQuery ? (
         <div className="mt-8">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((station) => (
+            {visible.map((station) => (
               <StationDirectoryCard key={station.id} station={station} />
             ))}
           </div>
@@ -246,46 +269,23 @@ export function StationsDirectoryExplorer({
           ))}
         </div>
       )}
+
+      {hasMore && (
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <p className="text-xs text-[var(--muted)]">
+            Showing {visible.length} of {shown}
+          </p>
+          <button
+            type="button"
+            onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+            className="rounded-lg border border-[var(--navy)] bg-white px-5 py-2.5 text-sm font-semibold text-[var(--navy)] hover:bg-[var(--navy)] hover:text-white"
+          >
+            Load more stations
+          </button>
+        </div>
+      )}
     </>
   );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Phone label helper                                                 */
-/* ------------------------------------------------------------------ */
-
-function PhoneDisplay({ station }: { station: PoliceStation }) {
-  const cls: PhoneClass = classifyPhone(station);
-  const number = displayPhoneNumber(station);
-
-  switch (cls) {
-    case 'station':
-      return (
-        <p className="mt-2 text-xs font-medium text-[var(--gold-link)]">
-          {number}
-        </p>
-      );
-    case 'switchboard':
-      return (
-        <div className="mt-2">
-          <p className="text-xs font-medium text-[var(--gold-link)]">{number}</p>
-          <p className="text-[10px] text-[var(--muted)]">Force switchboard</p>
-        </div>
-      );
-    case 'generic':
-      return (
-        <p className="mt-2 text-[10px] text-[var(--muted)]">
-          Call 101 (non-emergency)
-        </p>
-      );
-    case 'none':
-    default:
-      return (
-        <p className="mt-2 text-[10px] text-[var(--muted)]">
-          No direct number — call 101
-        </p>
-      );
-  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -321,14 +321,14 @@ function StationDirectoryCard({ station }: { station: PoliceStation }) {
             {station.forceName || station.county}
           </p>
         )}
-        <PhoneDisplay station={station} />
+        <StationPhone station={station} />
       </Link>
       <div className="border-t border-[var(--card-border)] px-4 py-2.5">
         <Link
           href={updateHref}
           className="text-xs font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)] hover:underline"
         >
-          Report up-to-date phone number →
+          Help us to help you — report number →
         </Link>
       </div>
     </article>

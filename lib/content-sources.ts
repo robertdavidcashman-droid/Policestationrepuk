@@ -125,6 +125,8 @@ const PAGE_PATH: Record<string, ContentSource[]> = {
   '/AccreditedRepresentativeGuide': [PSRAS, SCC_2025],
   '/HowToBecome': [PSRAS, SCC_2025],
   '/CriminalLawCareerGuide': [PSRAS, SCC_2025, { label: 'SRA — SQE', href: 'https://www.sra.org.uk/become-solicitor/sqe/' }],
+  '/HelpUsStationNumbers': [PACE, { label: 'Find legal advice (justice.gov.uk)', href: 'https://find-legal-advice.justice.gov.uk/' }],
+  '/UpdateStation': [PACE, { label: 'Find legal advice (justice.gov.uk)', href: 'https://find-legal-advice.justice.gov.uk/' }],
 };
 
 const DEFAULT_CONTENT: ContentSource[] = [

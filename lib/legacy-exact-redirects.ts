@@ -42,6 +42,8 @@ export const LEGACY_EXACT_REDIRECTS: Record<string, string> = {
   '/policestationreppay': '/PoliceStationRepPay',
   '/policestationrepjobsuk': '/PoliceStationRepJobsUK',
   '/stationsdirectory': '/StationsDirectory',
+  '/helpusstationnumbers': '/HelpUsStationNumbers',
+  '/help-us-station-numbers': '/HelpUsStationNumbers',
   '/whatdoesrepdo': '/WhatDoesRepDo',
   '/dutysolicitorvsrep': '/DutySolicitorVsRep',
   '/beginnersguide': '/BeginnersGuide',

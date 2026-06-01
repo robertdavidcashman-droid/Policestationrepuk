@@ -66,6 +66,8 @@ export const SITEMAP_PATHS: string[] = [
   'SevenoaksPoliceStationReps',
   'SolicitorPoliceStationCoverUK',
   'StationsDirectory',
+  'HelpUsStationNumbers',
+  'UpdateStation',
   'SwanleyPoliceStationReps',
   'Terms',
   'TonbridgePoliceStationReps',

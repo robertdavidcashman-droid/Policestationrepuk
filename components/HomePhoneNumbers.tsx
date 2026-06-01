@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { StationsDataContributeCta } from '@/components/StationsDataContributeCta';
+import { CAMPAIGN_HEADLINE, CAMPAIGN_PATH } from '@/lib/station-numbers-campaign';
 
 export function HomePhoneNumbers() {
   return (
@@ -11,15 +12,18 @@ export function HomePhoneNumbers() {
           </h3>
           <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
             Search custody suite lines, main numbers, and addresses across England &amp; Wales — kept
-            accurate with help from reps and firms who report corrections.
+            accurate with help from reps, firms, and the public.
           </p>
 
-          <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+          <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
             <Link href="/StationsDirectory" className="btn-gold w-full sm:w-auto">
               Station phone numbers
             </Link>
             <Link href="/UpdateStation" className="btn-outline w-full sm:w-auto">
               Report updated number
+            </Link>
+            <Link href={CAMPAIGN_PATH} className="btn-outline w-full sm:w-auto">
+              {CAMPAIGN_HEADLINE}
             </Link>
             <Link href="/Forces" className="btn-outline w-full sm:w-auto">
               Browse by force

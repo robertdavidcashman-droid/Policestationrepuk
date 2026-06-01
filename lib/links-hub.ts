@@ -42,6 +42,11 @@ export const LINKS_HUB_SECTIONS: LinksHubSection[] = [
         description: 'Custody suite and main line numbers across England & Wales.',
       },
       {
+        href: '/HelpUsStationNumbers',
+        label: 'Help us to help you — station numbers',
+        description: 'Report up-to-date custody desk and main line numbers for the community directory.',
+      },
+      {
         href: '/register',
         label: 'Join the directory (free)',
         description: 'Register as an accredited rep — free listing.',

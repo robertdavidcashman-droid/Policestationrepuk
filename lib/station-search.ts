@@ -93,20 +93,79 @@ const SWITCHBOARD_NUMBERS = new Set([
 const GENERIC_NUMBERS = new Set(['101', '0800 40 50 40']);
 
 /* ------------------------------------------------------------------ */
+/*  Phone normalisation                                                */
+/*  Strip spaces/punctuation and normalise +44 / 0044 to a leading 0   */
+/*  so format variants match the switchboard/generic sets.             */
+/* ------------------------------------------------------------------ */
+
+export function normalizePhone(value: string): string {
+  let t = value.trim().replace(/\s+/g, '');
+  if (t.startsWith('+44')) t = '0' + t.slice(3);
+  else if (t.startsWith('0044')) t = '0' + t.slice(4);
+  return t.replace(/\D/g, '');
+}
+
+const SWITCHBOARD_NUMBERS_NORM = new Set(
+  Array.from(SWITCHBOARD_NUMBERS, normalizePhone),
+);
+const GENERIC_NUMBERS_NORM = new Set(Array.from(GENERIC_NUMBERS, normalizePhone));
+
+/* ------------------------------------------------------------------ */
 /*  classifyPhone                                                      */
 /* ------------------------------------------------------------------ */
 
 export function classifyPhone(station: PoliceStation): PhoneClass {
-  const raw = (station.custodyPhone || station.phone || '').trim();
+  const raw = (
+    station.custodyPhone ||
+    station.phone ||
+    station.custodyPhone2 ||
+    station.nonEmergencyPhone ||
+    ''
+  ).trim();
   if (!raw) return 'none';
-  if (GENERIC_NUMBERS.has(raw)) return 'generic';
-  if (SWITCHBOARD_NUMBERS.has(raw)) return 'switchboard';
+  const norm = normalizePhone(raw);
+  if (GENERIC_NUMBERS_NORM.has(norm)) return 'generic';
+  if (SWITCHBOARD_NUMBERS_NORM.has(norm)) return 'switchboard';
   return 'station';
 }
 
 export function displayPhoneNumber(station: PoliceStation): string | null {
   const raw = (station.custodyPhone || station.phone || station.custodyPhone2 || station.nonEmergencyPhone || '').trim();
   return raw || null;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Labelled phone list — distinct numbers a caller might use          */
+/* ------------------------------------------------------------------ */
+
+export interface StationPhoneEntry {
+  label: string;
+  number: string;
+  className: PhoneClass;
+}
+
+export function stationPhoneNumbers(station: PoliceStation): StationPhoneEntry[] {
+  const candidates: Array<{ label: string; value?: string }> = [
+    { label: 'Custody desk', value: station.custodyPhone },
+    { label: 'Custody desk (alt)', value: station.custodyPhone2 },
+    { label: 'Main line', value: station.phone },
+    { label: 'Non-emergency', value: station.nonEmergencyPhone },
+  ];
+
+  const seen = new Set<string>();
+  const entries: StationPhoneEntry[] = [];
+  for (const { label, value } of candidates) {
+    const trimmed = (value || '').trim();
+    if (!trimmed) continue;
+    const norm = normalizePhone(trimmed);
+    if (!norm || seen.has(norm)) continue;
+    seen.add(norm);
+    let className: PhoneClass = 'station';
+    if (GENERIC_NUMBERS_NORM.has(norm)) className = 'generic';
+    else if (SWITCHBOARD_NUMBERS_NORM.has(norm)) className = 'switchboard';
+    entries.push({ label, number: trimmed, className });
+  }
+  return entries;
 }
 
 /* ------------------------------------------------------------------ */

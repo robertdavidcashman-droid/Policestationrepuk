@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { PoliceStation } from '@/lib/types';
-import { phoneToTelHref } from '@/lib/phone';
+import { StationPhone } from '@/components/StationPhone';
 
 export function StationCard({ station }: { station: PoliceStation }) {
   return (
@@ -22,15 +22,8 @@ export function StationCard({ station }: { station: PoliceStation }) {
         <p className="mt-0.5 text-xs text-[var(--muted)]">{station.postcode}</p>
       )}
       <p className="mt-2 text-sm text-[var(--muted)]">{station.address}</p>
+      <StationPhone station={station} link className="mt-2 text-sm" />
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        {(station.custodyPhone || station.phone) && (
-          <a
-            href={phoneToTelHref(station.custodyPhone || station.phone || '')}
-            className="text-sm font-semibold text-[var(--navy)] no-underline hover:text-[var(--gold-hover)]"
-          >
-            📞 {station.custodyPhone || station.phone}
-          </a>
-        )}
         <Link
           href={`/police-station/${station.slug}`}
           className="text-sm font-medium text-[var(--gold-link)] no-underline hover:text-[var(--gold)]"

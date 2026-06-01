@@ -6,12 +6,13 @@ import { StationsDataContributeCta } from '@/components/StationsDataContributeCt
 import { StationUpdateForm } from '@/components/StationUpdateForm';
 import type { StationStub } from '@/components/StationUpdateForm';
 import { buildMetadata, breadcrumbSchema, faqPageSchema } from '@/lib/seo';
+import { CAMPAIGN_HEADLINE, CAMPAIGN_PATH } from '@/lib/station-numbers-campaign';
 import { UPDATE_STATION_FAQS } from '@/lib/stations-seo';
 
 export const metadata = buildMetadata({
   title: 'Report Wrong Police Station Phone Number or Address — UK',
   description:
-    'Submit an up-to-date custody desk, main line, or non-emergency telephone number for a UK police station. Community corrections are reviewed before publishing.',
+    'Help us to help you: submit an up-to-date custody desk, main line, or non-emergency telephone number for a UK police station. Community corrections are reviewed before publishing.',
   path: '/UpdateStation',
   keywords: [
     'report police station phone number',
@@ -53,11 +54,12 @@ export default async function UpdateStationPage() {
             items={[
               { label: 'Home', href: '/' },
               { label: 'Station Directory', href: '/StationsDirectory' },
+              { label: CAMPAIGN_HEADLINE, href: CAMPAIGN_PATH },
               { label: 'Report correction' },
             ]}
           />
           <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Report an up-to-date police station telephone number
+            {CAMPAIGN_HEADLINE}: report an up-to-date telephone number
           </h1>
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
             Help keep the UK stations directory accurate. Enter the correct custody desk, main line,

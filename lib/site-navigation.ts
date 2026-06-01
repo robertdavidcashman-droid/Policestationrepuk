@@ -75,6 +75,7 @@ export const FOOTER_DIRECTORIES: FooterLink[] = [
   { href: '/legal-services-directory', label: 'Legal Services Directory' },
   { href: '/search', label: 'Search directory' },
   { href: '/StationsDirectory', label: 'Station Numbers' },
+  { href: '/HelpUsStationNumbers', label: 'Help us — station numbers' },
   { href: '/Forces', label: 'Police Forces' },
   { href: '/Firms', label: 'Law Firms' },
   { href: '/Map', label: 'Interactive Map' },

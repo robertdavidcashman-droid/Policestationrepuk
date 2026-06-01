@@ -11,6 +11,8 @@ import {
   stationDirectoryItemListSchema,
 } from '@/lib/seo';
 import { STATIONS_DIRECTORY_FAQS } from '@/lib/stations-seo';
+import { computeStationPhoneStats } from '@/lib/station-numbers-campaign';
+import { GuideFaqs } from '@/components/StructuredGuideLayout';
 
 export const metadata = buildMetadata({
   title: 'UK Police Station Phone Numbers & Addresses Directory',
@@ -35,6 +37,7 @@ export default async function StationsDirectoryPage({ searchParams }: PageProps)
   const params = (await searchParams) ?? {};
   const stations = await getAllStations();
   const stationListSample = stations.map((s) => ({ name: s.name, slug: s.slug }));
+  const stats = computeStationPhoneStats(stations);
 
   return (
     <>
@@ -55,7 +58,7 @@ export default async function StationsDirectoryPage({ searchParams }: PageProps)
             ]}
           />
           <div className="mb-3 mt-3 inline-flex items-center gap-2 rounded-full border border-white bg-[var(--navy-light)] px-3 py-1 text-xs font-medium text-white">
-            <span>✓</span> Community-maintained contacts
+            <span>✓</span> Help us to help you — community-maintained contacts
           </div>
           <h1 className="text-h1 text-white">UK Police Station Phone Numbers &amp; Addresses</h1>
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-white">
@@ -72,6 +75,38 @@ export default async function StationsDirectoryPage({ searchParams }: PageProps)
             </Link>{' '}
             or use &ldquo;Correct phone, address…&rdquo; on any station card below.
           </p>
+
+          {stats.total > 0 && (
+            <dl className="mt-6 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { label: 'Stations listed', value: stats.total },
+                { label: 'Direct line shown', value: stats.directLine },
+                { label: 'Switchboard / 101', value: stats.switchboard + stats.generic },
+                { label: 'No number held', value: stats.none },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-lg border border-white/20 bg-[var(--navy-light)] px-3 py-2.5 text-center"
+                >
+                  <dt className="text-xs font-medium text-slate-300">{item.label}</dt>
+                  <dd className="mt-0.5 text-2xl font-extrabold text-white">{item.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          {stats.needsHelp > 0 && (
+            <p className="mt-3 max-w-2xl text-sm text-slate-300">
+              <strong className="text-white">{stats.needsHelp}</strong> listings could use a verified
+              direct custody or main line number.{' '}
+              <Link
+                href="/HelpUsStationNumbers"
+                className="font-semibold text-[var(--gold)] no-underline hover:underline"
+              >
+                Help us to help you
+              </Link>
+              .
+            </p>
+          )}
         </div>
       </section>
 
@@ -93,6 +128,13 @@ export default async function StationsDirectoryPage({ searchParams }: PageProps)
           >
             Report an updated phone number or address &rarr;
           </Link>
+        </div>
+
+        <div className="mt-14 border-t border-[var(--border)] pt-10">
+          <h2 className="text-h2 text-[var(--navy)]">Frequently asked questions</h2>
+          <GuideFaqs
+            faqs={STATIONS_DIRECTORY_FAQS.map((f) => ({ q: f.q, a: f.a }))}
+          />
         </div>
 
         <div className="mt-14 border-t border-[var(--border)] pt-10">
