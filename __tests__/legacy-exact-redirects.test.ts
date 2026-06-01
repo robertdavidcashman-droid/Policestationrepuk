@@ -9,4 +9,9 @@ describe('LEGACY_EXACT_REDIRECTS', () => {
   it('maps lowercase blog hub to canonical /Blog', () => {
     expect(LEGACY_EXACT_REDIRECTS['/blog']).toBe('/Blog');
   });
+
+  it('has no duplicate keys (object literal must be unique for TS build)', () => {
+    const keys = Object.keys(LEGACY_EXACT_REDIRECTS);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
 });

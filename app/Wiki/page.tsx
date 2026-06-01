@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
-import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { WikiArticleIndex } from '@/components/WikiArticleIndex';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { buildMetadata } from '@/lib/seo';
