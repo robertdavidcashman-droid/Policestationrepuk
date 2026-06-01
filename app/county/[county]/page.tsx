@@ -12,6 +12,8 @@ import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { RepCard } from '@/components/RepCard';
 import { StationCard } from '@/components/StationCard';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
+import { JoinCTA } from '@/components/directory/JoinCTA';
+import { FirmCoverCTA } from '@/components/FirmCoverCTA';
 
 export const dynamic = 'force-static';
 export const revalidate = false;
@@ -88,7 +90,10 @@ export default async function CountyPage({ params }: PageProps) {
           <section className="mt-12">
             <h2 className="text-h2 text-[var(--foreground)]">Representatives in {county.name}</h2>
             {reps.length === 0 ? (
-              <p className="mt-3 text-[var(--muted)]">No representatives listed for this county yet.</p>
+              <div className="mt-5 space-y-6">
+                <JoinCTA variant="empty-state" countyName={county.name} />
+                <FirmCoverCTA countyName={county.name} />
+              </div>
             ) : (
               <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {reps.map((rep) => (

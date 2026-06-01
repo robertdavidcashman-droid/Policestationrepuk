@@ -9,6 +9,7 @@ import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCre
 import { ReportProfileButton } from '@/components/ReportProfileButton';
 import { phoneToTelHref } from '@/lib/phone';
 import { availabilityBucket, isUrgentCoverCapable, profileCompleteness } from '@/lib/directory-ranking';
+import { isStrictDirectoryListing } from '@/lib/rep-public-trust';
 import { looksIneligible } from '@/lib/rep-status';
 import { turnstileSiteKey } from '@/lib/turnstile';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
@@ -77,6 +78,8 @@ export default async function RepPage({ params }: PageProps) {
   const { slug } = await params;
   const found = await getRepBySlug(slug);
   if (!found) notFound();
+
+  const directoryVerified = isStrictDirectoryListing(found);
 
   // Defence-in-depth: never render private fields (PIN, postcode, etc.) on a
   // public profile page. The visibility gate in getAllReps() already hides
@@ -158,7 +161,7 @@ export default async function RepPage({ params }: PageProps) {
             {rep.yearsExperience != null && rep.yearsExperience > 0 ? ` · ${rep.yearsExperience}+ years’ experience` : ''}
           </p>
           <div className="mt-4 max-w-2xl">
-            <RepTrustBadges rep={rep} variant="profile" />
+            <RepTrustBadges rep={rep} variant="profile" directoryVerified={directoryVerified} />
           </div>
           <p className="mt-3 max-w-2xl text-xs leading-relaxed text-white/70">
             This page is a directory listing. PoliceStationRepUK does not verify credentials or supervise cases — your firm

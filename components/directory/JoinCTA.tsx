@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { FirmCoverCTA } from '@/components/FirmCoverCTA';
 
 type Variant = 'inline' | 'sidebar' | 'hero' | 'empty-state';
 
@@ -55,6 +56,9 @@ export function JoinCTA({ variant = 'inline', totalReps, countyName }: JoinCTAPr
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
           </svg>
         </Link>
+        <div className="mt-6">
+          <FirmCoverCTA countyName={countyName} compact />
+        </div>
       </div>
     );
   }

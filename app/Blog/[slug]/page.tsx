@@ -10,6 +10,7 @@ import { SITE_URL } from '@/lib/seo-layer/config';
 import { categoryLabel } from '@/lib/blog/categories';
 import type { BlogCategoryId } from '@/lib/blog/types';
 import { getTopicClusterForSlug } from '@/lib/blog/topic-clusters';
+import { BlogDiscoveryLinks } from '@/components/BlogDiscoveryLinks';
 import { BlogAuthorBio } from '@/components/BlogAuthorBio';
 import { BlogBottomAd } from '@/components/BlogBottomAd';
 import { BlogCustodyNotePromo } from '@/components/BlogCustodyNotePromo';
@@ -234,6 +235,8 @@ export default async function BlogArticlePage({ params }: PageProps) {
           <div className="mt-12">
             <BlogAuthorBio />
           </div>
+
+          <BlogDiscoveryLinks categories={article.categories} />
 
           <aside className="mt-12 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--navy)] p-6 text-white sm:p-8">
             <h2 className="text-lg font-bold">Need cover or want to be found?</h2>

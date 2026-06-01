@@ -86,6 +86,29 @@ Live traffic for **policestationrepuk.org** is served from **Vercel**. The blog 
    `npx vercel git connect https://github.com/robertcashman-bit/Policestationrepuk.git`  
    so this project deploys on every push without relying on manual `vercel deploy`.
 
+## Legacy URLs & GSC migration
+
+After the Wix → Next.js migration, old paths are handled in two layers:
+
+- **`middleware.ts`** — exact legacy paths via `lib/legacy-exact-redirects.ts` (e.g. `/home`, `/Home` → `/`; lowercase `/blog` → `/Blog`) and unknown `/Blog/{slug}` via `lib/blog/legacy-blog-slugs.ts` (301 to a canonical article or `/Blog` hub — no 404).
+- **`next.config.ts`** — remaining one-off redirects (feeds, Base44 paths, etc.). Blog slug redirects are **not** duplicated here (case-insensitive matching caused loops on Vercel).
+
+**GSC triage:** export “Not indexed” URLs from Search Console and run:
+
+```bash
+npx tsx scripts/analyze-gsc-legacy-urls.ts path/to/gsc-pages.csv
+```
+
+Without a CSV, the script classifies blog paths from `docs/live-site-map.json`. See `audit/GSC_LEGACY_URL_AUDIT.md`.
+
+**Audit tests:** `npm test` covers redirect resolution; `npx playwright test tests/audit/legacy-redirects.spec.ts` smoke-checks live 301s.
+
+## Trust & directory quality
+
+- Rep profiles show **Admin-verified listing** when they pass the strict publication gate (`lib/rep-public-trust.ts` + `RepTrustBadges`).
+- Public visibility requires verified status, admin approval, `isPublic`, and a current `lastVerifiedDate` (`lib/rep-status.ts`).
+- **Report profile** uses Cloudflare Turnstile on the report flow; registration intentionally does not use Turnstile (see `RegisterForm.tsx`).
+
 ## Getting Started
 
 ### Prerequisites

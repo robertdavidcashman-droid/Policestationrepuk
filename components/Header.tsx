@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { SITE_URL } from '@/lib/seo-layer/config';
@@ -76,10 +77,12 @@ function NavDropdown({
   label,
   links,
   linkClass,
+  active,
 }: {
   label: string;
   links: HeaderNavLink[];
   linkClass: string;
+  active?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -108,7 +111,7 @@ function NavDropdown({
           e.stopPropagation();
           setOpen((v) => !v);
         }}
-        className={`${linkClass} ${open ? '!bg-[var(--navy-light)] ring-1 ring-[var(--gold)]/40' : ''}`}
+        className={`${linkClass} ${open || active ? '!bg-[var(--navy-light)] ring-1 ring-[var(--gold)]/40' : ''} ${active && !open ? '!text-[var(--gold)]' : ''}`}
         aria-expanded={open}
         aria-haspopup="true"
       >
@@ -138,6 +141,7 @@ function NavDropdown({
 }
 
 export function Header() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [compact, setCompact] = useState(false);
@@ -167,6 +171,20 @@ export function Header() {
 
   const desktopNavLinkClass =
     'inline-flex shrink-0 min-h-[var(--header-touch-compact)] items-center whitespace-nowrap rounded-lg px-1.5 py-1 text-xs font-semibold leading-snug !text-white no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--gold)] xl:min-h-[2.25rem] xl:px-2.5 xl:py-1.5 xl:text-sm';
+
+  const navLinkClass = (href: string, prefix = false) => {
+    const active =
+      href === '/'
+        ? pathname === '/'
+        : prefix
+          ? pathname === href || pathname.startsWith(`${href}/`)
+          : pathname === href;
+    return active
+      ? `${desktopNavLinkClass} !bg-[var(--navy-light)] ring-1 ring-[var(--gold)]/40 !text-[var(--gold)]`
+      : desktopNavLinkClass;
+  };
+
+  const isBlogActive = pathname === '/Blog' || pathname.startsWith('/Blog/');
 
   const drawerLinkClass =
     'flex min-h-[var(--chrome-touch-drawer)] items-center rounded-lg px-3 py-2.5 text-sm font-medium !text-[var(--header-link)] no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--header-link-hover)]';
@@ -221,7 +239,7 @@ export function Header() {
               <NavItem
                 key={`${link.href}-${link.text}`}
                 href={link.href}
-                className={desktopNavLinkClass}
+                className={navLinkClass(link.href, link.href === '/directory')}
                 external={link.external ?? link.href.startsWith('http')}
               >
                 {link.text}
@@ -233,6 +251,7 @@ export function Header() {
                 label={group.label}
                 links={group.links}
                 linkClass={desktopNavLinkClass}
+                active={group.label === 'Blog' ? isBlogActive : undefined}
               />
             ))}
           </nav>

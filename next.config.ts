@@ -172,27 +172,7 @@ const nextConfig: NextConfig = {
       },
       // NOTE: /blog/:slug → /Blog/:slug case redirect moved to middleware.ts
       // next.config redirects match case-insensitively on Vercel, creating a loop for /Blog/* URLs.
-      // Duplicate blog slugs → canonical versions
-      { source: "/blog/police-station-representation", destination: "/Blog/what-does-a-freelance-police-station-representative-do", permanent: true },
-      { source: "/blog/nofurtheractionafterpoliceinterview", destination: "/Blog/best-practice-handover-notes-after-police-station-attendance", permanent: true },
-      { source: "/blog/whats-a-duty-solicitor", destination: "/Blog/freelance-police-station-representative-vs-duty-solicitor", permanent: true },
-      { source: "/blog/what-is-a-duty-solicitor-4", destination: "/Blog/freelance-police-station-representative-vs-duty-solicitor", permanent: true },
-      { source: "/Blog/what-is-a-duty-solicitor-4", destination: "/Blog/freelance-police-station-representative-vs-duty-solicitor", permanent: true },
-      { source: "/Blog/whats-a-duty-solicitor", destination: "/Blog/freelance-police-station-representative-vs-duty-solicitor", permanent: true },
-      { source: "/Blog/nofurtheractionafterpoliceinterview", destination: "/Blog/best-practice-handover-notes-after-police-station-attendance", permanent: true },
-      { source: "/Blog/have-to-attend-a-police-station-part-2-1", destination: "/Blog", permanent: true },
-      { source: "/Blog/help-the-police-have-contacted-me-1", destination: "/Blog", permanent: true },
-      { source: "/Blog/property-returned-from-police-uk", destination: "/Blog", permanent: true },
-      { source: "/Blog/what-happens-if-you-don-t-attend-a-voluntary-police-interview-inengland", destination: "/Blog", permanent: true },
-      { source: "/Blog/understanding-police-bail-imposition-conditions-breaches-and-legal-implications-explained", destination: "/Blog", permanent: true },
-      { source: "/Blog/whats-a-voluntary-police-interview", destination: "/Blog", permanent: true },
-      { source: "/Blog/what-s-a-voluntary-police-interview", destination: "/Blog", permanent: true },
-      { source: "/Blog/whats-happens-at-a-police-station-voluntary-interview-part-2", destination: "/Blog", permanent: true },
-      { source: "/Blog/police-station-representation", destination: "/Blog/what-does-a-freelance-police-station-representative-do", permanent: true },
-      { source: "/Blog/understanding-police-cautions-and-warnings-what-you-need-to-know", destination: "/Blog", permanent: true },
-      { source: "/Blog/copy-of-what-is-common-assault-in-english-law", destination: "/Blog", permanent: true },
-      { source: "/Blog/welcome-to-our-blog", destination: "/Blog", permanent: true },
-      { source: "/Blog/police-station-agent-blog", destination: "/Blog", permanent: true },
+      // Legacy blog slug redirects are handled in middleware via lib/blog/legacy-blog-slugs.ts
       {
         source: "/servicesvoluntaryinterviews",
         destination: "/InterviewUnderCaution",
