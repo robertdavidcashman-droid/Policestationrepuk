@@ -6,6 +6,23 @@ Legal/factual accuracy review of site content, verified against primary sources 
 - **Method:** Each substantive claim (statute, section, figure, date, time limit, case citation) checked against `legislation.gov.uk`, `gov.uk` (LAA, CPS, Home Office, Sentencing Council), official PACE Codes, or other primary/authoritative sources. Unverifiable claims corrected, softened, or removed. Existing "general information, not legal advice" disclaimers preserved.
 - **Verdict key:** OK (accurate) · FIXED (corrected) · REMOVED (unverifiable/hallucinated) · SOFTENED (reworded to a defensible statement).
 
+### Status (as of 2026-06-01)
+
+| Tier | Scope | State |
+|---|---|---|
+| 1 | 8 legal updates, fee pages, PACE, DSCC guide | ✅ Complete |
+| 2 | Public rights pages (rights, free advice, interview, disclosure) | ✅ Complete |
+| 3 | 49 wiki articles | ✅ High-risk fixed; 4 articles still `pending` review |
+| 4 | 22 blog articles | ✅ Complete (verified accurate; no corrections) |
+| 5 | County geographic claims | ✅ Softened + systemic verification note |
+| — | Site-wide reliance/verification warning | ✅ Footer + content/legal/fee/county/rights templates |
+
+**Validation:** `vitest` 226/226 passing · `tsc --noEmit` clean · `next build` succeeds (all pages prerender).
+
+**Headline corrections:** removed the non-existent "Bail Act 2024" and corrected pre-charge bail limits site-wide (legal update + wiki); removed hallucinated/misattributed case citations (R v ATH, R v Dobson, ex parte Lee, ex parte Dhesi); corrected the DSCC billing form (SaBC/INVC + CRM18, not CRM6); replaced superseded £181/£219 police-station fees with the harmonised £320/£650 (SI 2025/1251).
+
+**Still outstanding:** 4 wiki articles left `pending` (`police-warrants-guide`, `fitness-for-interview-custody`, `digital-evidence-police-station-basics`, `police-station-interview-evidence-hub`) — not yet individually verified, status deliberately not flipped to `verified`.
+
 ---
 
 ## Tier 1 — Statutory & time/money-sensitive
