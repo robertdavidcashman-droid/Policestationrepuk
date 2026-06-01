@@ -12,7 +12,7 @@ Legal/factual accuracy review of site content, verified against primary sources 
 |---|---|---|
 | 1 | 8 legal updates, fee pages, PACE, DSCC guide | ✅ Complete |
 | 2 | Public rights pages (rights, free advice, interview, disclosure) | ✅ Complete |
-| 3 | 49 wiki articles | ✅ High-risk fixed; 4 articles still `pending` review |
+| 3 | 49 wiki articles | ✅ Complete (49/49 verified) |
 | 4 | 22 blog articles | ✅ Complete (verified accurate; no corrections) |
 | 5 | County geographic claims | ✅ Softened + systemic verification note |
 | — | Site-wide reliance/verification warning | ✅ Footer + content/legal/fee/county/rights templates |
@@ -21,7 +21,7 @@ Legal/factual accuracy review of site content, verified against primary sources 
 
 **Headline corrections:** removed the non-existent "Bail Act 2024" and corrected pre-charge bail limits site-wide (legal update + wiki); removed hallucinated/misattributed case citations (R v ATH, R v Dobson, ex parte Lee, ex parte Dhesi); corrected the DSCC billing form (SaBC/INVC + CRM18, not CRM6); replaced superseded £181/£219 police-station fees with the harmonised £320/£650 (SI 2025/1251).
 
-**Still outstanding:** 4 wiki articles left `pending` (`police-warrants-guide`, `fitness-for-interview-custody`, `digital-evidence-police-station-basics`, `police-station-interview-evidence-hub`) — not yet individually verified, status deliberately not flipped to `verified`.
+**Still outstanding:** None — all tiers complete; all 49 wiki articles verified.
 
 ---
 
@@ -131,7 +131,26 @@ Triaged all 49 articles for high-risk claim patterns (bail limits, fee figures, 
 - Mileage references across articles (45p first 10,000 miles, then 25p) match HMRC.
 
 ### Still pending review (factCheckStatus left as `pending`)
-- `police-warrants-guide`, `fitness-for-interview-custody`, `digital-evidence-police-station-basics`, `police-station-interview-evidence-hub` — not yet individually verified; status deliberately left `pending` rather than asserting accuracy.
+- ~~`police-warrants-guide`, `fitness-for-interview-custody`, `digital-evidence-police-station-basics`, `police-station-interview-evidence-hub`~~ — **reviewed 2026-06-01** (see below). All 49 wiki articles now `verified`.
+
+### Tier 3 follow-up — 4 previously pending articles (2026-06-01)
+
+#### `police-warrants-guide`
+- **FIXED — Warrant of further detention (s.43–44) conflated with superintendent extension (s.42).** Article wrongly presented 36 hours as magistrates' "warrant of further detention" and limited 96 hours to "terrorism or serious organised crime". Corrected: **s.42** superintendent authorisation extends to **36 hours** (indictable offences); **ss.43–44** magistrates' warrants continue beyond 36 hours up to the **96-hour PACE cap** for indictable offences; terrorism uses separate longer powers.
+  - Source: PACE ss.41–44 — https://www.legislation.gov.uk/ukpga/1984/60/section/43
+- **FIXED — PACE s.8 search-warrant grounds.** Replaced "serious indictable offence" and simplified grounds with the s.8(1) test: **indictable offence**, material of **substantial value** and **relevant evidence**, privilege/excluded-material limits, and an **s.8(3) access condition**.
+  - Source: PACE s.8 — https://www.legislation.gov.uk/ukpga/1984/60/section/8
+- **FIXED — Case citations.** **R (Bright) v Central Criminal Court [2001] 1 WLR 662** exists but concerns Schedule 1 PACE (special procedure/excluded material), not ordinary magistrates' s.8 warrants — citation and description corrected. **R v Southwark Crown Court, ex parte Bowles [1998] UKHL 16** is about **CJA 1988 s.93H production orders** (proceeds of crime), not general grounds for challenging PACE search warrants — reference description corrected; removed misleading footnote tie from §7 grounds list. **R v Derby Magistrates' Court, ex parte B [1996] AC 487** (LPP) — OK.
+- **SOFTENED — Footer.** Removed overclaiming "Fact-Checked: All legislation… accurate as of November 2025"; replaced with standard verify-against-source note.
+
+#### `fitness-for-interview-custody`
+- **OK.** Practitioner checklist only; correctly hedged (not a doctor, escalate to solicitor, describe observations not diagnoses). FME/healthcare, AA for vulnerable adults, intoxication deferral, and s.34 cross-reference all appropriate. No corrections.
+
+#### `digital-evidence-police-station-basics`
+- **OK.** Deliberately awareness-level; mandatory solicitor escalation on passwords/PINs/encryption; does not improvise RIPA/contempt advice. CPIA/disclosure framing accurate at station-stage. No corrections.
+
+#### `police-station-interview-evidence-hub`
+- **OK.** Link index only; includes disclaimer. No factual claims to verify. No corrections.
 
 ---
 
