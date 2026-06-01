@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { CrawlContent } from '@/components/CrawlContent';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { buildMetadata } from '@/lib/seo';
 
@@ -22,6 +23,7 @@ export default function PoliceDisclosureGuidePage() {
       </section>
       <div className="page-container">
         <div className="mx-auto max-w-4xl">
+          <ContentReliabilityNotice className="mb-8" />
           <CrawlContent slug="PoliceDisclosureGuide" />
           <CustodyNotePagePromo variant="compact" className="mt-10" />
           <section className="mt-10 rounded-[var(--radius-lg)] bg-[var(--navy)] p-8 text-center">

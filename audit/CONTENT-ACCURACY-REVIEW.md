@@ -80,6 +80,21 @@ Legal/factual accuracy review of site content, verified against primary sources 
 
 ---
 
+## Tier 2 — Public rights pages
+
+### `police-station-rights-uk` / `free-legal-advice-police-station`
+- **OK.** Deliberately high-level pillar pages, already hedged ("high level", "follow LAA rules", "not legal advice"). Framework attributed to PACE 1984 and Codes; free advice tied to the legal aid scheme; platform correctly described as a directory, not a legal-aid provider. Added the standard reliance banner. No factual corrections required.
+
+### `InterviewUnderCaution`
+- **OK.** Caution wording verbatim-correct; three-part explanation (right to silence, adverse inference, evidence) accurate; answer/no-comment/prepared-statement options correctly framed as advice-dependent. Added the reliance banner.
+  - Source: PACE Code C; CJPOA 1994 s.34 (adverse inferences).
+
+### `PoliceDisclosureGuide`
+- **OK — incl. the para 11.1A citation.** Verified that **PACE Code C paragraph 11.1A** does contain the pre-interview duty to give the suspect/solicitor "sufficient information to enable them to understand the nature of any such offence, and why they are suspected... for the effective exercise of the rights of the defence", subject to the investigating officer's discretion to withhold detail that might prejudice the investigation. Page's account of basic vs fuller disclosure, the right to challenge inadequate disclosure, and the link between poor disclosure and a defensible "no comment" is accurate. Added the reliance banner.
+  - Source: PACE Code C ¶11.1A & Note 11ZA — https://www.gov.uk/guidance/police-and-criminal-evidence-act-1984-pace-codes-of-practice ; DPP v Ara [2001] EWHC Admin 493; R v Roble [1997] Crim LR 449.
+
+---
+
 ## Consolidated sources index
 
 Every primary/authoritative source cited above, de-duplicated. All URLs verified against the official publisher during this review (2026-06-01). Where a landing page is given rather than a deep anchor, it is because the landing page is the stable canonical location.
