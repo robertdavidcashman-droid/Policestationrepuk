@@ -11,6 +11,7 @@
 # testing
 /coverage
 test-results/
+playwright-report/
 /reports/playwright-html/
 /reports/playwright-artifacts/
 /reports/playwright-audit.json
