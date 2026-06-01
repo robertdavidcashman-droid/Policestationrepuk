@@ -66,7 +66,93 @@ export const LEGACY_BLOG_SLUG_TO_PATH: Record<string, string> = {
   'no-further-action-after-police-interview': '/Blog/best-practice-handover-notes-after-police-station-attendance',
   'voluntary-interview-no-further-action': '/Blog/best-practice-handover-notes-after-police-station-attendance',
   'released-under-investigation-versus-bail': '/Blog/best-practice-handover-notes-after-police-station-attendance',
+  // Wix-era slugs also listed in next.config.ts — centralized here for middleware
+  'understanding-police-cautions-and-warnings-what-you-need-to-know': '/Blog',
+  'understanding-police-bail-imposition-conditions-breaches-and-legal-implications-explained': '/Blog',
+  'police-station-agent-blog': '/Blog',
+  'police-station-representation': '/Blog/what-does-a-freelance-police-station-representative-do',
+  'what-s-a-voluntary-police-interview': '/Blog',
+  'copy-of-what-is-common-assault-in-english-law': '/Blog',
+  'whats-happens-at-a-police-station-voluntary-interview-part-2': '/Blog',
+  'nofurtheractionafterpoliceinterview': '/Blog/best-practice-handover-notes-after-police-station-attendance',
+  'whats-a-voluntary-police-interview': '/Blog',
+  'whats-a-duty-solicitor': '/Blog/freelance-police-station-representative-vs-duty-solicitor',
+  'what-happens-if-you-don-t-attend-a-voluntary-police-interview-inengland': '/Blog',
+  'property-returned-from-police-uk': '/Blog',
+  'what-is-a-duty-solicitor-4': '/Blog/freelance-police-station-representative-vs-duty-solicitor',
+  'welcome-to-our-blog': '/Blog',
+  'have-to-attend-a-police-station-part-2-1': '/Blog',
+  'help-the-police-have-contacted-me-1': '/Blog',
+  'demystifying-police-bail-understanding-imposition-conditions-breaches-and-legal-implications': '/Blog',
+  'navigating-the-legal-system-understanding-the-impact-of-police-cautions-on-employment-criminal-rec': '/Blog',
+  'have-to-attend-a-police-station': '/Blog',
+  'help-the-police-have-contacted-me': '/Blog',
+  'getting-your-property-returned-by-the-police-in-the-uk': '/Blog',
+  'what-happens-if-you-don-t-attend-a-voluntary-police-interview-in-england': '/Blog',
+  'what-happens-at-a-police-station-voluntary-interview-page-4': '/Blog',
+  'what-happens-at-a-police-station-voluntary-interview-part-3': '/Blog',
+  'inside-a-voluntary-police-interview-what-to-expect-part-2': '/Blog',
+  'voluntary-interview-at-swanley-police-station': '/Blog',
+  'voluntaryinterviewwithpolice': '/Blog',
+  'police-voluntary-interview-questions-4': '/Blog',
+  'the-hidden-risks-of-voluntary-police-interviews-in-the-uk-you-need-to-know': '/Blog',
+  'how-digital-evidence-voluntary-police-interview': '/Blog/handling-disclosure-police-station',
+  'how-new-sentencing-guidelines-impact-your-rights-at-the-kent-police-station': '/Blog/sentencing-act-2026-key-changes',
+  'what-does-a-criminal-solicitor-do-part-2-the-magistrates-court': '/Blog',
+  'what-happens-if-charged-criminal-offence-court': '/Blog',
+  'what-is-common-assault-in-english-law': '/Blog',
+  'what-is-the-sex-offender-register': '/Blog',
+  'why-you-need-a-criminal-law-specialist': '/Blog',
+  'the-role-of-higher-court-advocates-in-the-uk': '/Blog',
+  'understanding-community-resolutions-and-their-impact-on-dbs-checks-and-employment': '/Blog',
+  'understanding-police-warrants-and-interviews-in-kent': '/Blog/out-of-hours-police-station-cover-for-law-firms',
+  'police-station-reps-and-agents-for-swanley-police-station': '/Blog/out-of-hours-police-station-cover-for-law-firms',
+  'complete-guide-to-legal-representation-at-kent-police-stations': '/Blog/out-of-hours-police-station-cover-for-law-firms',
+  'arrested-or-have-a-policewarrant-in-kent-here-s-what-you-need-to-know0': '/Blog/police-station-attendance-checklist',
+  'i-think-i-may-be-arrested-by-the-police-what-should-i-do': '/Blog/police-station-attendance-checklist',
+  'domestic-allegations-police-station-stage': '/Blog/police-station-attendance-checklist',
+  'drug-allegations-police-station-interviews': '/Blog/police-station-attendance-checklist',
+  'sexual-allegations-police-station-stage': '/Blog/police-station-attendance-checklist',
+  'theft-fraud-financial-police-station': '/Blog/police-station-attendance-checklist',
+  'violence-public-order-police-station-stage': '/Blog/police-station-attendance-checklist',
+  'motoring-driving-allegations-police-station': '/Blog/police-station-attendance-checklist',
+  'types-of-offences-police-station-stage': '/Blog/police-station-attendance-checklist',
+  'police-caution': '/Blog',
+  'police-caution-difference': '/Blog',
+  'the-police-caution-means-police-station-agent': '/Blog',
 };
+
+const TOPIC_RULES: { pattern: RegExp; target: string }[] = [
+  { pattern: /duty[- ]?solicitor|solicitor.*interview|legal-advice-free/, target: '/Blog/freelance-police-station-representative-vs-duty-solicitor' },
+  { pattern: /disclosure|brief|digital-evidence/, target: '/Blog/what-to-include-in-a-police-station-brief' },
+  { pattern: /no-further-action|released-under|bail|handover/, target: '/Blog/best-practice-handover-notes-after-police-station-attendance' },
+  { pattern: /kent|out-of-hours|24-7|swanley|cover/, target: '/Blog/out-of-hours-police-station-cover-for-law-firms' },
+  { pattern: /voluntary|interview|attend|arrested|custody-rights/, target: '/Blog/police-station-attendance-checklist' },
+  { pattern: /instruct|firm|mistake|freelance|rep-career|accreditation|fee|rate/, target: '/Blog/how-firms-can-instruct-freelance-police-station-reps' },
+  { pattern: /sentencing/, target: '/Blog/sentencing-act-2026-key-changes' },
+  { pattern: /representation|what-is-police-station/, target: '/Blog/what-does-a-freelance-police-station-representative-do' },
+];
+
+/**
+ * Resolve a legacy blog slug to a redirect target, or null if it is a current article slug.
+ * Unknown legacy slugs redirect to /Blog rather than 404 — reduces GSC "Not found" noise after Wix migration.
+ */
+export function resolveLegacyBlogRedirect(slug: string): string | null {
+  const normalized = slug.trim();
+  if (!normalized || NEW_BLOG_SLUG_SET.has(normalized)) return null;
+
+  const exact = LEGACY_BLOG_SLUG_TO_PATH[normalized];
+  if (exact) return exact;
+
+  const lower = normalized.toLowerCase();
+  for (const { pattern, target } of TOPIC_RULES) {
+    if (pattern.test(lower)) return target;
+  }
+
+  if (LEGACY_CRAWL_BLOG_SLUG_SET.has(normalized)) return '/Blog';
+
+  return '/Blog';
+}
 
 /** Every slug that previously had a crawl JSON under content/crawl/blog-*.json */
 export const ALL_LEGACY_CRAWL_BLOG_SLUGS: string[] = [

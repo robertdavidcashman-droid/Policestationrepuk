@@ -3,11 +3,7 @@ import type { NextRequest } from 'next/server';
 import { LEGACY_EXACT_REDIRECTS } from '@/lib/legacy-exact-redirects';
 import { COUNTY_SLUG_SET } from '@/lib/county-slugs-bundled';
 import { COUNTY_SEO_SLUG_TO_DIRECTORY_SLUG } from '@/lib/county-seo-directory-slugs';
-import {
-  LEGACY_BLOG_SLUG_TO_PATH,
-  LEGACY_CRAWL_BLOG_SLUG_SET,
-  NEW_BLOG_SLUG_SET,
-} from '@/lib/blog/legacy-blog-slugs';
+import { resolveLegacyBlogRedirect } from '@/lib/blog/legacy-blog-slugs';
 
 const PS_REP_PREFIX = '/police-station-representatives-';
 const PS_REP_SINGULAR_PREFIX = '/police-station-rep-';
@@ -120,18 +116,11 @@ export async function middleware(request: NextRequest) {
   const blogPostMatch = path.match(/^\/Blog\/([^/]+)\/?$/);
   if (blogPostMatch) {
     const slug = blogPostMatch[1];
-    if (!NEW_BLOG_SLUG_SET.has(slug)) {
-      const mapped = LEGACY_BLOG_SLUG_TO_PATH[slug];
-      if (mapped) {
-        const url = request.nextUrl.clone();
-        url.pathname = mapped.replace(/\/$/, '') || '/Blog';
-        return NextResponse.redirect(url, 301);
-      }
-      if (LEGACY_CRAWL_BLOG_SLUG_SET.has(slug)) {
-        const url = request.nextUrl.clone();
-        url.pathname = '/Blog';
-        return NextResponse.redirect(url, 301);
-      }
+    const mapped = resolveLegacyBlogRedirect(slug);
+    if (mapped) {
+      const url = request.nextUrl.clone();
+      url.pathname = mapped.replace(/\/$/, '') || '/Blog';
+      return NextResponse.redirect(url, 301);
     }
   }
 
