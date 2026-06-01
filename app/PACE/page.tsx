@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -157,6 +158,8 @@ export default function PACEPage() {
       </section>
 
       <div className="page-container">
+
+      <ContentReliabilityNotice className="mb-10" />
 
       {/* Quick Reference Box */}
       <section className="mb-14 rounded-[var(--radius-lg)] border border-[var(--gold)]/30 bg-[var(--gold)]/5 p-6 sm:p-8">

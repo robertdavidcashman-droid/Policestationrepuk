@@ -244,6 +244,35 @@ export function Footer() {
 
         <div className="mt-8 border-t border-[var(--navy-light)] pt-8">
           <h4 className="text-xs font-bold uppercase tracking-widest text-[var(--gold)]">
+            Reliance &amp; verification
+          </h4>
+          <p className="mt-3 max-w-4xl text-xs leading-relaxed text-white">
+            Every effort is made to keep the information on this website accurate and up to date, but
+            law, procedure, fees and official guidance change frequently and errors can occur. Nothing
+            on this site is legal advice. Always verify information against the original source &mdash;
+            such as{' '}
+            <a
+              href="https://www.legislation.gov.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold !text-[var(--gold)] underline-offset-2 hover:underline"
+            >
+              legislation.gov.uk
+            </a>
+            ,{' '}
+            <a
+              href="https://www.gov.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold !text-[var(--gold)] underline-offset-2 hover:underline"
+            >
+              gov.uk
+            </a>
+            , the Legal Aid Agency, CPS, or the relevant PACE Code &mdash; before you rely on it, or take
+            advice from a qualified professional.
+          </p>
+
+          <h4 className="mt-6 text-xs font-bold uppercase tracking-widest text-[var(--gold)]">
             {FOOTER_REGULATORY_TITLE}
           </h4>
           <p className="mt-3 max-w-4xl text-xs leading-relaxed text-white">{FOOTER_REGULATORY_BODY}</p>

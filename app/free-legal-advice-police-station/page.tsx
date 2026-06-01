@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { buildMetadata } from '@/lib/seo';
 import { PillarSeoLayout } from '@/components/PillarSeoLayout';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 
 export const metadata = buildMetadata({
   title: 'Your Rights at the Police Station (UK) | PACE Guide',
@@ -37,6 +38,7 @@ export default function FreeLegalAdvicePoliceStationPage() {
       quickAnswer="In England and Wales, suspects at a police station usually have a right to free legal advice under legal aid for police station work, delivered by a solicitor or accredited representative instructed by a firm. PoliceStationRepUK does not provide that advice — it helps firms find representatives."
       faqs={FAQS}
     >
+      <ContentReliabilityNotice className="not-prose mb-8" />
       <h2 className="text-xl font-bold text-[var(--navy)]">The right to legal advice</h2>
       <p>
         If you are <strong className="text-[var(--navy)]">arrested</strong> or attending a{' '}

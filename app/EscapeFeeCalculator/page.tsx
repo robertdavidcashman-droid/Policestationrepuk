@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 
 const RATE_CATEGORIES = [
   {
@@ -136,6 +137,8 @@ export default function EscapeFeeCalculatorPage() {
             under the harmonised fee structure (from 22 December 2025).
           </p>
         </header>
+
+        <ContentReliabilityNotice className="mb-8" />
 
         <div className="rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] sm:p-8">
           <p className="mb-6 text-sm leading-relaxed text-[var(--muted)]">

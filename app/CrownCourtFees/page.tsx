@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -32,6 +33,7 @@ export default function CrownCourtFeesPage() {
 
       <div className="page-container">
         <div className="mx-auto max-w-4xl space-y-10 pb-12 pt-8">
+          <ContentReliabilityNotice />
           <section className="space-y-4">
             <h2 className="text-h2 text-[var(--navy)]">Litigator fees vs advocacy fees</h2>
             <div className="grid gap-4 sm:grid-cols-2">

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { buildMetadata } from '@/lib/seo';
 import { PillarSeoLayout } from '@/components/PillarSeoLayout';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 
 export const metadata = buildMetadata({
   title: 'Police Station Rights UK — PACE & Caution Guide',
@@ -37,6 +38,7 @@ export default function PoliceStationRightsUkPage() {
       quickAnswer="In England and Wales, police station rights mainly come from PACE and the Codes of Practice: for example, rights to legal advice, information about the allegation, and protections during interview and detention. Always get advice from a criminal lawyer for your specific case."
       faqs={FAQS}
     >
+      <ContentReliabilityNotice className="not-prose mb-8" />
       <h2 className="text-xl font-bold text-[var(--navy)]">Legal framework</h2>
       <p>
         <strong className="text-[var(--navy)]">Police station rights</strong> for suspects are built around the Police

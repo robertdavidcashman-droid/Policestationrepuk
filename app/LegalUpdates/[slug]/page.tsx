@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { buildMetadata } from '@/lib/seo';
 import { getAllLegalUpdates, getLegalUpdateBySlug } from '@/lib/data';
 import { markdownToHtml } from '@/lib/markdown';
@@ -110,6 +111,7 @@ export default async function LegalUpdateArticlePage({ params }: PageProps) {
 
       {/* Article body */}
       <div className="page-container">
+        <ContentReliabilityNotice className="mx-auto mb-6 max-w-3xl" />
         <article
           className="wiki-prose mx-auto max-w-3xl"
           dangerouslySetInnerHTML={{ __html: contentHtml }}

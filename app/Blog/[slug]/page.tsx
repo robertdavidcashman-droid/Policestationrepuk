@@ -11,6 +11,7 @@ import { categoryLabel } from '@/lib/blog/categories';
 import type { BlogCategoryId } from '@/lib/blog/types';
 import { getTopicClusterForSlug } from '@/lib/blog/topic-clusters';
 import { BlogDiscoveryLinks } from '@/components/BlogDiscoveryLinks';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { BlogAuthorBio } from '@/components/BlogAuthorBio';
 import { BlogBottomAd } from '@/components/BlogBottomAd';
 import { BlogCustodyNotePromo } from '@/components/BlogCustodyNotePromo';
@@ -231,6 +232,8 @@ export default async function BlogArticlePage({ params }: PageProps) {
               </ul>
             </section>
           )}
+
+          <ContentReliabilityNotice className="mt-12" />
 
           <div className="mt-12">
             <BlogAuthorBio />

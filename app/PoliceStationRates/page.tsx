@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -41,6 +42,7 @@ export default function PoliceStationRatesPage() {
       </section>
 
       <div className="page-container">
+      <ContentReliabilityNotice className="mb-8" />
       <CustodyNotePagePromo variant="compact" className="mb-10" />
 
       {/* Key Figures */}

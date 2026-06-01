@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { marked } from 'marked';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { buildMetadata } from '@/lib/seo';
 import { getAllWikiArticles, getWikiArticleBySlug, getWikiArticlesByCategory } from '@/lib/data';
 
@@ -122,10 +123,13 @@ export default async function WikiArticlePage({ params }: PageProps) {
       <div className="page-container">
         <div className="mx-auto max-w-5xl lg:grid lg:grid-cols-[1fr_280px] lg:gap-10">
           {/* Article body */}
-          <article
-            className="wiki-prose"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+          <div className="min-w-0">
+            <ContentReliabilityNotice className="mb-6" />
+            <article
+              className="wiki-prose"
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          </div>
 
           {/* Sidebar */}
           <aside className="mt-10 lg:mt-0">
