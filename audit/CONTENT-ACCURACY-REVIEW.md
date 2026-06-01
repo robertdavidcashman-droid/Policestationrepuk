@@ -95,6 +95,29 @@ Legal/factual accuracy review of site content, verified against primary sources 
 
 ---
 
+## Tier 3 — Rep Wiki (49 articles)
+
+Triaged all 49 articles for high-risk claim patterns (bail limits, fee figures, mileage, case citations, statute dates), then verified/fixed the flagged ones.
+
+### `rui-vs-bail-guide`
+- **FIXED — Pre-charge bail time limits (same error as the legal update).** Article described the pre-2022 regime (initial **28 days**, then 3 months). Corrected to the post-28-Oct-2022 PCSC Act 2022 standard-case regime: initial **ABP 3 months** (custody officer) → **6 months** (Inspector) → **9 months** (Superintendent) → beyond 9 months **magistrates' court** (PACE ss.47ZF–47ZJ; Crim PR 14.21–14.22); FCA/SFO/NCA/HMRC cases start at a 6-month ABP. Fixed the comparison-table cells too.
+  - Source: Home Office pre-charge bail statutory guidance ¶¶11.5, 11.12 — https://www.gov.uk/government/publications/pre-charge-bail-statutory-guidance/pre-charge-bail-statutory-guidance-accessible ; PCSC Act 2022 Sch. 4 — https://www.legislation.gov.uk/ukpga/2022/32/schedule/4/enacted
+
+### `maximizing-legal-aid-claims` and `legal-aid-guide` (near-duplicates)
+- **FIXED — Out-of-date police-station fees.** Both presented the police-station standard fee as **£181 (non-London) / £219 (London) "As of 2024/25"** with a London split — superseded. Corrected to the harmonised single **£320 fixed fee / £650 escape threshold** for UFNs on/after 22 December 2025 (SI 2025/1251), with old rates flagged as applying only to pre-22-Dec-2025 UFNs. Relabelled the old hourly "enhanced (2024/25)" rates as the earlier (pre-22-Dec-2025) rates and cross-linked the current `legal-aid-billing-complete-guide`; rewrote the worked example around the current escape mechanics.
+  - Source: SI 2025/1251 — https://www.legislation.gov.uk/uksi/2025/1251/made
+
+### Verified accurate (no change)
+- **`legal-aid-billing-complete-guide`, `claiming-fees-police-station`** — correctly state the harmonised £320/£650 (UFN ≥ 22 Dec 2025), with £145.57–£315.86 old fixed fees and £640–£960 old escape thresholds correctly labelled as historical; current escape hourly rates (prep/attendance £49.70 National / £54.86 London; travel & waiting £27.60) cited to SI 2025/1251.
+- **`police-caution-explained`, `no-comment-interviews`** — case citations checked and are genuine, relevant s.34 authorities (R v Argent, Condron, Roble, Betts & Hall, Knight, Beckles, Nickolson). Caution wording correct.
+- **`adverse-inference-section-34-guide`** (was *pending* → now **verified**) — s.34 mechanics, ss.36/37 special warnings, prepared-statement strategy, and disclosure-dependent advice all accurate and well-hedged.
+- Mileage references across articles (45p first 10,000 miles, then 25p) match HMRC.
+
+### Still pending review (factCheckStatus left as `pending`)
+- `police-warrants-guide`, `fitness-for-interview-custody`, `digital-evidence-police-station-basics`, `police-station-interview-evidence-hub` — not yet individually verified; status deliberately left `pending` rather than asserting accuracy.
+
+---
+
 ## Consolidated sources index
 
 Every primary/authoritative source cited above, de-duplicated. All URLs verified against the official publisher during this review (2026-06-01). Where a landing page is given rather than a deep anchor, it is because the landing page is the stable canonical location.
