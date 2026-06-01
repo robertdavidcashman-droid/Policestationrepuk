@@ -9,6 +9,7 @@ import {
 } from './rep-merge';
 import { repMatchesCountyName } from './county-matching';
 import { withDerivedCounty } from './force-county';
+import { forceMatchesCounty } from './police-force-to-counties';
 import { applyStationOverrides } from './station-overrides';
 import { getKV, skipKVInPrerender } from './kv';
 import { loadFeaturedFlags, applyFeaturedFlags, sortFeaturedReps } from './featured';
@@ -145,11 +146,8 @@ function loadDataFromFiles(): FileData | null {
       .map((r) => finalizeRepresentative(r));
 
     for (const county of counties) {
-      const cLower = county.name.toLowerCase();
-      county.stationCount = stations.filter(
-        (s) =>
-          s.forceName?.toLowerCase().includes(cLower) ||
-          (s.county && s.county.toLowerCase() === cLower),
+      county.stationCount = stations.filter((s) =>
+        stationMatchesCounty(s, county.name),
       ).length;
     }
 
@@ -206,13 +204,24 @@ export async function getCountyBySlug(slug: string): Promise<County | undefined>
   return file?.counties.find((c) => c.slug === slug);
 }
 
+/**
+ * True when a station belongs to a directory county. Uses the curated
+ * force→counties map (so Thames Valley → Berkshire/Buckinghamshire, Northumbria
+ * → Tyne and Wear, West Mercia → Shropshire, etc.) and falls back to the
+ * station's own/derived county.
+ */
+function stationMatchesCounty(s: PoliceStation, countyName: string): boolean {
+  const cLower = countyName.toLowerCase();
+  if (s.county && s.county.toLowerCase() === cLower) return true;
+  if (s.forceName && forceMatchesCounty(s.forceName, countyName)) return true;
+  return false;
+}
+
 export async function getStationsByCounty(county: string): Promise<PoliceStation[]> {
   const file = loadDataFromFiles();
   if (!file) return [];
-  return file.stations.filter(
-    (s) =>
-      s.forceName?.toLowerCase().includes(county.toLowerCase()) ||
-      s.county?.toLowerCase() === county.toLowerCase(),
+  return applyStationOverrides(
+    file.stations.filter((s) => stationMatchesCounty(s, county)),
   );
 }
 

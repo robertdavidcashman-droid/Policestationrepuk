@@ -78,15 +78,19 @@ export function StationsDirectoryExplorer({
   const total = stations.length;
   const shown = filtered.length;
 
+  // Flat list (search mode): paginate the rows directly.
   const visible = useMemo(
     () => filtered.slice(0, visibleCount),
     [filtered, visibleCount],
   );
 
+  // Grouped list (browse mode): group the FULL result set first, then page by
+  // whole groups. Slicing before grouping was the bug that made most forces
+  // appear to contain a single station.
   const groupedSorted = useMemo(() => {
     if (hasTextQuery) return null;
 
-    const map = visible.reduce<Record<string, ScoredStation[]>>((acc, station) => {
+    const map = filtered.reduce<Record<string, ScoredStation[]>>((acc, station) => {
       const key = groupKey(station, groupBy);
       if (!acc[key]) acc[key] = [];
       acc[key].push(station);
@@ -96,10 +100,24 @@ export function StationsDirectoryExplorer({
       map[k].sort((a, b) => a.name.localeCompare(b.name, 'en-GB'));
     }
     const keys = Object.keys(map).sort((a, b) => a.localeCompare(b, 'en-GB'));
-    return { map, keys };
-  }, [visible, groupBy, hasTextQuery]);
 
-  const hasMore = visibleCount < shown;
+    // Reveal whole groups until we've shown at least `visibleCount` stations;
+    // each rendered group always shows all of its stations.
+    const visibleKeys: string[] = [];
+    let running = 0;
+    for (const k of keys) {
+      visibleKeys.push(k);
+      running += map[k].length;
+      if (running >= visibleCount) break;
+    }
+    return { map, keys, visibleKeys, shownCount: running };
+  }, [filtered, groupBy, hasTextQuery, visibleCount]);
+
+  const hasMore = hasTextQuery
+    ? visibleCount < shown
+    : (groupedSorted?.visibleKeys.length ?? 0) < (groupedSorted?.keys.length ?? 0);
+
+  const renderedCount = hasTextQuery ? visible.length : groupedSorted?.shownCount ?? 0;
 
   if (total === 0) {
     return (
@@ -255,10 +273,13 @@ export function StationsDirectoryExplorer({
         </div>
       ) : (
         <div className="mt-8 space-y-10">
-          {groupedSorted?.keys.map((groupName, idx) => (
+          {groupedSorted?.visibleKeys.map((groupName, idx) => (
             <section key={`${groupBy}-${groupName}-${idx}`} aria-labelledby={`stations-group-${idx}`}>
               <h2 id={`stations-group-${idx}`} className="mb-4 text-lg font-semibold text-[var(--navy)]">
-                {groupName}
+                {groupName}{' '}
+                <span className="text-sm font-normal text-[var(--muted)]">
+                  ({groupedSorted.map[groupName].length})
+                </span>
               </h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {groupedSorted.map[groupName].map((station) => (
@@ -273,7 +294,7 @@ export function StationsDirectoryExplorer({
       {hasMore && (
         <div className="mt-8 flex flex-col items-center gap-2">
           <p className="text-xs text-[var(--muted)]">
-            Showing {visible.length} of {shown}
+            Showing {renderedCount} of {shown}
           </p>
           <button
             type="button"
