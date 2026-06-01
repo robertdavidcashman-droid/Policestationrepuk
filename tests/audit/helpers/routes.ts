@@ -27,7 +27,7 @@ export const ENTRY_POINTS: string[] = [
   '/FormsLibrary',
 ];
 
-/** Pages powered by the CrawlContent component — must render real headings + sections. */
+/** Guide and crawl-backed pages — must render real headings + sections without Wix mirror defects. */
 export const CRAWL_CONTENT_PAGES: string[] = [
   '/HowToBecomePoliceStationRep',
   '/HowToBecome',

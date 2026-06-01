@@ -147,12 +147,12 @@ Scope: career/how-to pages and crawl-mirror content not covered in Tiers 1–5. 
 - **OK.** Deliberately high-level pillar pages, already hedged ("high level", "follow LAA rules", "not legal advice"). Framework attributed to PACE 1984 and Codes; free advice tied to the legal aid scheme; platform correctly described as a directory, not a legal-aid provider. Added the standard reliance banner. No factual corrections required.
 
 ### `InterviewUnderCaution`
-- **OK.** Caution wording verbatim-correct; three-part explanation (right to silence, adverse inference, evidence) accurate; answer/no-comment/prepared-statement options correctly framed as advice-dependent. Added the reliance banner.
-  - Source: PACE Code C; CJPOA 1994 s.34 (adverse inferences).
+- **REWRITTEN (2026-06-01).** Replaced flattened Wix `CrawlContent` mirror (duplicate headings, breadcrumb junk, empty Contents TOC, double reliability banner) with a structured guide in `lib/guide-interview-under-caution.ts` and `app/InterviewUnderCaution/page.tsx`. Caution wording matches PACE Code C standard wording; adverse inference tied to CJPOA 1994 s.34 and CPS guidance; interview steps, rights, and options framed as advice-dependent general information.
+  - Source: PACE Code C; CJPOA 1994 s.34; CPS adverse inferences guidance.
 
 ### `PoliceDisclosureGuide`
-- **OK — incl. the para 11.1A citation.** Verified that **PACE Code C paragraph 11.1A** does contain the pre-interview duty to give the suspect/solicitor "sufficient information to enable them to understand the nature of any such offence, and why they are suspected... for the effective exercise of the rights of the defence", subject to the investigating officer's discretion to withhold detail that might prejudice the investigation. Page's account of basic vs fuller disclosure, the right to challenge inadequate disclosure, and the link between poor disclosure and a defensible "no comment" is accurate. Added the reliance banner.
-  - Source: PACE Code C ¶11.1A & Note 11ZA — https://www.gov.uk/guidance/police-and-criminal-evidence-act-1984-pace-codes-of-practice ; DPP v Ara [2001] EWHC Admin 493; R v Roble [1997] Crim LR 449.
+- **REWRITTEN (2026-06-01).** Same structural fix as Interview — structured guide in `lib/guide-police-disclosure.ts` with PACE Code C paragraph 11.1A citation, CPIA/AG Guidelines context, and rep practice notes. Verified that **PACE Code C paragraph 11.1A** requires sufficient pre-interview information for meaningful advice, subject to investigation prejudice limits.
+  - Source: PACE Code C ¶11.1A — https://www.gov.uk/government/publications/pace-code-c-2023 ; CPIA 1996; Attorney General's Guidelines on Disclosure; DPP v Ara [2001] EWHC Admin 493; R v Roble [1997] Crim LR 449.
 
 ---
 

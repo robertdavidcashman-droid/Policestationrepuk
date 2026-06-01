@@ -117,6 +117,14 @@ const PAGE_PATH: Record<string, ContentSource[]> = {
   '/Resources': [PACE, PSRAS, SCC_2025, SENTENCING],
   '/InterviewUnderCaution': [CJPOA, CPS_ADVERSE, PACE],
   '/PoliceDisclosureGuide': [CPIA, AG_DISCLOSURE, CPS_DISCLOSURE],
+  '/WhatDoesRepDo': [PACE, PSRAS, SCC_2025],
+  '/DutySolicitorVsRep': [PSRAS, SCC_2025, PACE],
+  '/PrepareForCIT': [PSRAS, PACE, CJPOA, CPS_ADVERSE],
+  '/BuildPortfolioGuide': [PSRAS, SCC_2025],
+  '/GettingStarted': [PSRAS, PACE, SCC_2025],
+  '/AccreditedRepresentativeGuide': [PSRAS, SCC_2025],
+  '/HowToBecome': [PSRAS, SCC_2025],
+  '/CriminalLawCareerGuide': [PSRAS, SCC_2025, { label: 'SRA — SQE', href: 'https://www.sra.org.uk/become-solicitor/sqe/' }],
 };
 
 const DEFAULT_CONTENT: ContentSource[] = [
