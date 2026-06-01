@@ -118,13 +118,18 @@ const COMMON_PROBLEMS = [
   },
 ];
 
+const DUTY_SOLICITOR_STANDING = [
+  'Hold a current Criminal Litigation Accreditation Scheme (CLAS) qualification, or have been a member of a duty scheme under an earlier Contract (Standard Terms, clause 1.1).',
+  'Have passed the Police Station Qualification (PSQ) and be registered on the Duty Solicitor Register with the DSCC (scheme membership is typically applied for via ADMIN 1).',
+];
+
+/** Rolling “engaged” requirements — Specification paras 6.21–6.23 (SCC 2025). */
 const ENGAGED_REQUIREMENTS = [
-  'Hold a current Criminal Litigation Accreditation Scheme (CLAS) qualification, or have been a member of a duty scheme under an earlier Contract.',
-  'Undertake a minimum of 6 Police Station Advice and Assistance cases per rolling 12-month period (no more than two of which can be telephone-only advice with no subsequent attendance).',
-  'In each rolling 12-month period, undertake either 20 magistrates\u2019 court representations, or 10 magistrates\u2019 court plus 5 Crown Court representations.',
-  'Undertake at least one Police Station Duty attendance (excluding telephone advice) or Duty Slot in their name in each rolling 3-month period.',
-  'Work a minimum of 50 hours per calendar month on Criminal Defence Work for the Provider.',
-  'Meet the professional development requirements (CPD / SRA continuing competence).',
+  'Meet any professional development requirements of their relevant professional body on issues relevant to police station and magistrates\u2019 court work (para 6.21(a)).',
+  'Undertake a minimum of 6 Police Station Advice and Assistance cases per rolling 12-month period (no more than two of which can be telephone-only advice with no subsequent attendance) (para 6.21(b)).',
+  'In each rolling 12-month period, undertake either 20 magistrates\u2019 court representations, or 10 magistrates\u2019 court plus 5 Crown Court representations (para 6.21(c)).',
+  'Undertake at least one Police Station Duty attendance (excluding telephone advice) or Duty Slot in their name in each rolling 3-month period (para 6.21(d)).',
+  'Work a minimum of 50 hours per calendar month on Criminal Defence Work for the Provider from the office for which the duty slots were obtained (paras 6.22\u20136.23; the LAA may assess this on a rolling three-month basis).',
 ];
 
 const FAQS = [
@@ -314,7 +319,11 @@ export default function DSCCRegistrationGuidePage() {
               <li>have passed the Police Station Qualification (PSQ);</li>
               <li>meet the &quot;engaged&quot; requirements in the SCC (see below);</li>
               <li>have been added to the scheme by filing ADMIN 1 with the DSCC;</li>
-              <li>continue to meet the requirements at every annual data cleanse (filed via ADMIN 3).</li>
+              <li>
+                continue to meet the rolling &quot;engaged&quot; requirements in Specification paras
+                6.21&ndash;6.23 (see below) — monitored by the LAA under the duty solicitor
+                provisions, not via ADMIN 3.
+              </li>
             </ul>
             <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
               Schemes are local — a duty solicitor on the Maidstone scheme cannot pick up duty
@@ -414,19 +423,35 @@ export default function DSCCRegistrationGuidePage() {
             <SectionHeading id="engaged">&quot;Engaged&quot; requirements for duty solicitors</SectionHeading>
             <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
               Under the SCC, every duty solicitor must remain &quot;engaged&quot; — actively doing crime
-              work — to stay on the duty rota. The current requirements are:
+              work — to retain duty slots and stay deployable on the rota. The 2025 Specification
+              (paras 6.21&ndash;6.23) and Duty Solicitor Guidance set this out in two layers:
             </p>
-            <ul className="mt-4 list-disc space-y-2 pl-6 text-sm leading-relaxed text-[var(--muted)]">
+            <h3 className="mt-6 text-lg font-bold text-[var(--navy)]">Standing eligibility</h3>
+            <ul className="mt-3 list-disc space-y-2 pl-6 text-sm leading-relaxed text-[var(--muted)]">
+              {DUTY_SOLICITOR_STANDING.map((req) => (
+                <li key={req}>{req}</li>
+              ))}
+            </ul>
+            <h3 className="mt-6 text-lg font-bold text-[var(--navy)]">
+              Ongoing engaged requirements (rolling periods)
+            </h3>
+            <ul className="mt-3 list-disc space-y-2 pl-6 text-sm leading-relaxed text-[var(--muted)]">
               {ENGAGED_REQUIREMENTS.map((req) => (
                 <li key={req}>{req}</li>
               ))}
             </ul>
             <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
-              Failure to meet any one of these requirements at the annual ADMIN 3 cleanse is the
-              most common reason solicitors are removed from duty schemes. Accredited reps do not
-              have an equivalent set of engaged requirements, but they must remain at an SCC firm
-              with active supervision — a gap in supervision will see them removed from the
-              Register at the next cleanse.
+              Failure to meet the engaged requirements can lead the LAA to suspend or exclude a duty
+              solicitor, remove duty slots, or apply contract sanctions (Specification paras 6.25,
+              6.42&ndash;6.44). That process is separate from{' '}
+              <strong className="text-[var(--navy)]">ADMIN 3</strong>, which is the annual Police
+              Station Register cleanse for <em>representatives</em> only.
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
+              Accredited reps do not have an equivalent set of engaged requirements, but they must
+              remain at an SCC firm with active supervision — a gap in supervision can see them
+              removed from the Register when the supervising solicitor fails to return a completed
+              ADMIN 3 at the annual cleanse.
             </p>
           </section>
 
