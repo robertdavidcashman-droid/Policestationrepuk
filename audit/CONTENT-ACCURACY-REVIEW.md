@@ -118,6 +118,26 @@ Triaged all 49 articles for high-risk claim patterns (bail limits, fee figures, 
 
 ---
 
+## Tier 4 — Blog articles (22)
+
+Triaged all 22 articles (`lib/blog/articles-batch-1..4.ts`) for statutory/figure/Legal-Aid/case-citation claims.
+- **OK — 21 of 22 are soft, practice-oriented content** (freelance rep workflow, briefing, handover notes, insurance, communication, careers). They deliberately avoid hard legal/figure assertions and are strongly hedged ("not legal advice", "do not improvise citations", "Avoid inventing law"). The `police-station-rep-fee-rates-2026` article intentionally quotes **no** specific figures and cross-links `/PoliceStationRepPay`. No corrections needed.
+- **OK — `sentencing-act-2026-key-changes`** verified accurate: Royal Assent 22 Jan 2026; in force 22 Mar 2026; presumption to suspend custodial terms ≤12 months unless exceptional circumstances; max suspended sentence 3 years; doesn't replace the Sentencing Code 2020; section labels correct (common assault **s.39 CJA 1988**; **s.4/4A POA 1986**).
+  - Source: Sentencing Act 2026 — https://www.legislation.gov.uk/ukpga/2026/2/2026-03-22
+- All blog articles already render the site reliance banner via the `app/Blog/[slug]` template.
+
+---
+
+## Tier 5 — County geographic claims (`lib/counties-content.ts`)
+
+Custody estates change frequently (forces routinely close/merge suites), so naming an exhaustive "current" suite list is inherently risky. Approach: systemic softening rather than asserting a verified list for every suite.
+- **FIXED (systemic) — county template.** Added the reliance banner to `app/county/[county]/page.tsx` and a standing note under the content: custody suite locations/hours/24-hour status change as forces consolidate; treat named stations as a general guide and confirm the current suite with the force/DSCC, with a link to the Stations Directory. This covers **all** county pages (including the generic fallback) at once.
+- **SOFTENED — Kent.** Removed the over-specific assertion that "24-hour detention facilities are located at" eight named suites (some of which may have closed/changed); reframed around the consolidated main suites with an explicit "confirm current location" caveat.
+- **SOFTENED — London.** The list previously named several suites that have since closed (e.g. West End Central, Islington, Wandsworth) as current; reframed to note the estate has reduced and to confirm the live suite before attending rather than relying on a fixed list.
+- Remaining counties: present-tense suite names left in place but now bracketed by the template-level accuracy note and reliance banner; not individually re-verified suite-by-suite (custody estates change too often to assert a definitive current list).
+
+---
+
 ## Consolidated sources index
 
 Every primary/authoritative source cited above, de-duplicated. All URLs verified against the official publisher during this review (2026-06-01). Where a landing page is given rather than a deep anchor, it is because the landing page is the stable canonical location.

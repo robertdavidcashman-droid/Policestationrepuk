@@ -19,7 +19,7 @@ const countyContentMap: Record<string, CountyContent> = {
       },
       {
         heading: 'Police Stations and Custody Suites in Kent',
-        body: 'Kent Police operates custody suites at several locations across the county. The main custody suites with 24-hour detention facilities are located at Maidstone, Canterbury, Folkestone, Medway (Gillingham), Tunbridge Wells, Dover, Dartford, and Ashford. Some smaller stations such as Margate and Gravesend may hold detainees temporarily but typically transfer them to larger suites. Our directory includes representatives who cover all of these locations, ensuring that wherever your client is held in Kent, you can find a qualified representative to attend promptly.',
+        body: 'Kent Police has consolidated custody into a smaller number of larger custody centres, and the estate changes over time. Custody provision in the county has been based around suites such as Medway (North Kent), Maidstone, Canterbury and Folkestone, with smaller stations generally transferring detainees to a main suite. Because forces open, close and reconfigure custody suites, treat any list as a general guide and confirm the current custody location for your client with the force or the DSCC. Our directory includes representatives covering Kent, so wherever your client is held you can find a qualified representative to attend.',
       },
       {
         heading: 'How to Find a Police Station Representative in Kent',
@@ -49,7 +49,7 @@ const countyContentMap: Record<string, CountyContent> = {
       },
       {
         heading: 'Major London Custody Suites',
-        body: 'The Metropolitan Police operates custody suites across London, though the number of active suites has reduced in recent years as the Met consolidates its custody estate. Key custody suites include Charing Cross (Westminster), Brixton (Lambeth), Lewisham, Hackney, Tottenham (Haringey), Croydon, Wandsworth, Islington, Southwark, and West End Central (Westminster). Each suite handles a high volume of detentions, and solicitors need representatives who know these facilities and can navigate the practicalities of attending each one. Our directory lists representatives who specify exactly which London stations they cover, making it easy to find the right person for any call-out.',
+        body: 'The Metropolitan Police operates custody suites across London, but the number of active suites has reduced significantly in recent years as the Met consolidates into larger, fewer custody centres — so the live estate changes and individual suites open and close. Well-known central custody locations have included Charing Cross, Brixton, Lewisham, Croydon and others, but you should always confirm the current custody suite before attending rather than relying on any fixed list. Our directory lists representatives who specify which London areas they cover, making it easy to find the right person for any call-out.',
       },
       {
         heading: 'Night and Weekend Cover in London',

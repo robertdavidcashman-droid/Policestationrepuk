@@ -14,6 +14,7 @@ import { StationCard } from '@/components/StationCard';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { JoinCTA } from '@/components/directory/JoinCTA';
 import { FirmCoverCTA } from '@/components/FirmCoverCTA';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 
 export const dynamic = 'force-static';
 export const revalidate = false;
@@ -78,6 +79,8 @@ export default async function CountyPage({ params }: PageProps) {
             {content.intro}
           </p>
 
+          <ContentReliabilityNotice className="mt-6" />
+
           <CustodyNotePagePromo variant="compact" className="mt-8" />
 
           {content.sections.map((section, i) => (
@@ -86,6 +89,16 @@ export default async function CountyPage({ params }: PageProps) {
               <p className="mt-2 max-w-3xl leading-relaxed text-[var(--foreground)]">{section.body}</p>
             </section>
           ))}
+
+          <p className="mt-4 max-w-3xl text-xs leading-relaxed text-[var(--muted)]">
+            Custody suite locations, opening hours and 24-hour status change as forces consolidate
+            their custody estates. Treat any stations named above as a general guide only and confirm
+            the current custody suite for your client with the force or the DSCC — see our{' '}
+            <Link href="/StationsDirectory" className="text-[var(--accent)] no-underline hover:underline">
+              Stations Directory
+            </Link>{' '}
+            for current police station details.
+          </p>
 
           <section className="mt-12">
             <h2 className="text-h2 text-[var(--foreground)]">Representatives in {county.name}</h2>
