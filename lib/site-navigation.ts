@@ -130,31 +130,14 @@ export const HEADER_NAV_FEES_FORMS: HeaderNavLink[] = [
   { href: '/DSCCRegistrationGuide', text: 'DSCC Registration Guide' },
 ];
 
-/** Partner tools & SEO landing pages — header “More” menu. */
-export const HEADER_NAV_MORE: HeaderNavLink[] = [
-  { href: '/links', text: 'Quick links hub' },
-  { href: '/CustodyNote', text: 'Custody Note — overview' },
-  { href: CUSTODYNOTE_TRIAL_HREF, text: 'Custody Note — free trial', external: true },
-  { href: PSRTRAIN_TRAINING_HREF, text: 'PSR Train (PSRAS prep)', external: true },
-  { href: POLICESTATIONAGENT_HOME_HREF, text: 'Police Station Agent — solicitors', external: true },
-  { href: '/police-station-representative', text: 'Police station representative' },
-  { href: '/criminal-solicitor-police-station', text: 'Criminal solicitor — police station' },
-  { href: '/police-station-rep-kent', text: 'Police station rep — Kent' },
-  { href: '/police-station-rep-london', text: 'Police station rep — London' },
-  { href: '/police-station-rep-essex', text: 'Police station rep — Essex' },
-  { href: '/Blog', text: 'Professional blog' },
-];
-
-/** Footer column “Tools & Resources” — guides, fees, partners (deduped labels). */
-export const FOOTER_TOOLS: FooterLink[] = [
-  ...HEADER_NAV_GUIDES.map(({ href, text }) => ({ href, label: text.replace(' (all resources)', '') })),
-  ...HEADER_NAV_FEES_FORMS.filter((l) => l.href !== '/DSCCRegistrationGuide').map(({ href, text }) => ({
-    href,
-    label: text,
-  })),
-  { href: '/DSCCRegistrationGuide', label: 'DSCC Registration Guide' },
-  ...HEADER_NAV_MORE.map(({ href, text, external }) => ({ href, label: text, external })),
-];
+function dedupeNavLinks(links: HeaderNavLink[]): HeaderNavLink[] {
+  const seen = new Set<string>();
+  return links.filter((link) => {
+    if (seen.has(link.href)) return false;
+    seen.add(link.href);
+    return true;
+  });
+}
 
 /** Footer column “Community” — order from homepage crawl (/) */
 export const FOOTER_COMMUNITY: FooterLink[] = [
@@ -187,16 +170,42 @@ export const FOOTER_LEGAL: FooterLink[] = [
   { href: '/Complaints', label: 'Complaints' },
 ];
 
-/** Grouped desktop dropdown menus — mirrors footer columns for consistency. */
+/** Partner tools, directories, community, legal & SEO landing pages — header “More” menu. */
+export const HEADER_NAV_MORE: HeaderNavLink[] = dedupeNavLinks([
+  { href: '/links', text: 'Quick links hub' },
+  ...footerLinksToNav(FOOTER_DIRECTORIES),
+  ...footerLinksToNav(FOOTER_COMMUNITY),
+  ...footerLinksToNav(FOOTER_LEGAL),
+  { href: '/CustodyNote', text: 'Custody Note — overview' },
+  { href: CUSTODYNOTE_TRIAL_HREF, text: 'Custody Note — free trial', external: true },
+  { href: PSRTRAIN_TRAINING_HREF, text: 'PSR Train (PSRAS prep)', external: true },
+  { href: POLICESTATIONAGENT_HOME_HREF, text: 'Police Station Agent — solicitors', external: true },
+  { href: '/police-station-representative', text: 'Police station representative' },
+  { href: '/criminal-solicitor-police-station', text: 'Criminal solicitor — police station' },
+  { href: '/police-station-rep-kent', text: 'Police station rep — Kent' },
+  { href: '/police-station-rep-london', text: 'Police station rep — London' },
+  { href: '/police-station-rep-essex', text: 'Police station rep — Essex' },
+  { href: '/Blog', text: 'Professional blog' },
+]);
+
+/** Footer column “Tools & Resources” — guides, fees, partners (deduped labels). */
+export const FOOTER_TOOLS: FooterLink[] = [
+  ...HEADER_NAV_GUIDES.map(({ href, text }) => ({ href, label: text.replace(' (all resources)', '') })),
+  ...HEADER_NAV_FEES_FORMS.filter((l) => l.href !== '/DSCCRegistrationGuide').map(({ href, text }) => ({
+    href,
+    label: text,
+  })),
+  { href: '/DSCCRegistrationGuide', label: 'DSCC Registration Guide' },
+  ...HEADER_NAV_MORE.map(({ href, text, external }) => ({ href, label: text, external })),
+];
+
+/** Grouped desktop dropdown menus — keep the header row readable (5 menus, not 8). */
 export const HEADER_NAV_DROPDOWNS: { label: string; links: HeaderNavLink[] }[] = [
   { label: 'Blog', links: HEADER_NAV_BLOG_LINKS },
-  { label: 'Directories', links: footerLinksToNav(FOOTER_DIRECTORIES) },
   { label: 'For Reps', links: footerLinksToNav(FOOTER_FOR_REPRESENTATIVES) },
   { label: 'Guides', links: HEADER_NAV_GUIDES },
   { label: 'Fees & Forms', links: HEADER_NAV_FEES_FORMS },
   { label: 'More', links: HEADER_NAV_MORE },
-  { label: 'Community', links: footerLinksToNav(FOOTER_COMMUNITY) },
-  { label: 'Legal', links: footerLinksToNav(FOOTER_LEGAL) },
 ];
 
 /** Flat deduplicated list for mobile drawer and legacy imports. */

@@ -78,11 +78,13 @@ function NavDropdown({
   links,
   linkClass,
   active,
+  wide,
 }: {
   label: string;
   links: HeaderNavLink[];
   linkClass: string;
   active?: boolean;
+  wide?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -108,7 +110,6 @@ function NavDropdown({
       <button
         type="button"
         onMouseDown={(e) => {
-          // Prevent the document mousedown-outside handler from firing on the same gesture.
           e.stopPropagation();
         }}
         onClick={(e) => {
@@ -125,7 +126,11 @@ function NavDropdown({
         </svg>
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-[200] mt-1 max-h-[min(70vh,24rem)] min-w-[15rem] overflow-y-auto rounded-lg border border-[var(--navy-light)] bg-[var(--navy)] py-1 shadow-xl sm:min-w-[17rem]">
+        <div
+          className={`absolute left-0 top-full z-[200] mt-1 max-h-[min(70vh,28rem)] overflow-y-auto rounded-lg border border-[var(--navy-light)] bg-[var(--navy)] py-1 shadow-xl ${
+            wide ? 'min-w-[18rem] sm:min-w-[20rem]' : 'min-w-[15rem] sm:min-w-[17rem]'
+          }`}
+        >
           <p className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white/50">{label}</p>
           {links.map((link) => (
             <NavItem
@@ -174,7 +179,7 @@ export function Header() {
   };
 
   const desktopNavLinkClass =
-    'inline-flex shrink-0 min-h-[var(--header-touch-compact)] items-center whitespace-nowrap rounded-lg px-1.5 py-1 text-xs font-semibold leading-snug !text-white no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--gold)] xl:min-h-[2.25rem] xl:px-2.5 xl:py-1.5 xl:text-sm';
+    'inline-flex shrink-0 min-h-[var(--header-touch-compact)] items-center whitespace-nowrap rounded-lg px-2 py-1 text-xs font-semibold leading-snug !text-white no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--gold)] xl:min-h-[2.25rem] xl:px-2.5 xl:py-1.5 xl:text-sm';
 
   const navLinkClass = (href: string, prefix = false) => {
     const active =
@@ -193,12 +198,45 @@ export function Header() {
   const drawerLinkClass =
     'flex min-h-[var(--chrome-touch-drawer)] items-center rounded-lg px-3 py-2.5 text-sm font-medium !text-[var(--header-link)] no-underline transition-colors hover:bg-[var(--navy-light)] hover:!text-[var(--header-link-hover)]';
 
+  const utilityButtons = (
+    <>
+      <button
+        type="button"
+        onClick={handleShare}
+        className="psr-share-mini inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/90 transition-colors hover:bg-[var(--navy-light)] hover:text-[var(--gold)] xl:h-auto xl:w-auto xl:gap-1.5 xl:px-2 xl:py-1"
+        aria-label={shareOpen ? HEADER_SHARE_LABEL_COPIED : HEADER_SHARE_LABEL}
+        title={shareOpen ? HEADER_SHARE_LABEL_COPIED : HEADER_SHARE_LABEL}
+      >
+        <ShareIcon />
+        <span className="hidden text-xs font-medium xl:inline">
+          {shareOpen ? 'Copied!' : 'Share'}
+        </span>
+      </button>
+      <Link
+        href={HEADER_HELP_HREF}
+        className="hidden min-h-[var(--header-touch-compact)] shrink-0 items-center px-2 text-xs font-medium !text-white/80 no-underline transition-colors hover:!text-[var(--gold)] xl:inline-flex xl:text-sm"
+      >
+        Help
+      </Link>
+      <Link
+        href={HEADER_LOGIN_HREF}
+        className="inline-flex h-8 min-h-[2rem] shrink-0 items-center gap-1 rounded-lg bg-[var(--gold)] px-2 py-0.5 text-xs font-bold text-[var(--navy)] shadow-sm no-underline transition-colors hover:bg-[var(--gold-hover)] sm:px-2.5 lg:h-9 lg:px-3 lg:text-sm"
+      >
+        Log In
+        <span aria-hidden className="text-sm leading-none">
+          →
+        </span>
+      </Link>
+    </>
+  );
+
   return (
     <header
       className={`site-header relative z-30 border-b border-[var(--navy-light)] bg-[var(--navy)] shadow-lg ${compact ? 'header-compact' : ''}`}
     >
-      <div className="header-row mx-auto flex max-w-7xl items-center justify-between gap-1.5 px-4 py-1 sm:gap-2 sm:px-6 sm:py-1.5 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:gap-x-3 lg:px-8">
-        <div className="flex min-w-0 items-center gap-2 lg:min-w-0 lg:gap-3">
+      {/* Top bar: brand + utilities (desktop nav is on its own row below) */}
+      <div className="header-row mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-1.5 sm:px-6 sm:py-2 lg:px-8">
+        <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -228,66 +266,42 @@ export function Header() {
             >
               ⚖️
             </span>
-            <span className="header-site-name hidden text-sm font-bold tracking-tight text-white sm:inline lg:hidden xl:inline xl:text-base">
+            <span className="header-site-name text-sm font-bold tracking-tight text-white sm:text-base">
               PoliceStationRep<span className="text-[var(--gold)]">UK</span>
             </span>
           </Link>
         </div>
 
-        <div className="hidden min-w-0 flex-1 justify-center px-1 lg:flex lg:overflow-visible">
-          <nav
-            className="flex min-w-0 flex-wrap items-center justify-center gap-x-0.5 gap-y-1 overflow-visible xl:flex-nowrap xl:gap-1"
-            aria-label="Main navigation"
-          >
-            {HEADER_NAV_PRIMARY.map((link) => (
-              <NavItem
-                key={`${link.href}-${link.text}`}
-                href={link.href}
-                className={navLinkClass(link.href, link.href === '/directory')}
-                external={link.external ?? link.href.startsWith('http')}
-              >
-                {link.text}
-              </NavItem>
-            ))}
-            {HEADER_NAV_DROPDOWNS.map((group) => (
-              <NavDropdown
-                key={group.label}
-                label={group.label}
-                links={group.links}
-                linkClass={desktopNavLinkClass}
-                active={group.label === 'Blog' ? isBlogActive : undefined}
-              />
-            ))}
-          </nav>
-        </div>
+        <div className="flex shrink-0 items-center gap-1 pl-0.5 lg:gap-1.5">{utilityButtons}</div>
+      </div>
 
-        <div className="flex shrink-0 items-center gap-1 pl-0.5 lg:justify-self-end lg:gap-1.5 lg:pl-2">
-          <button
-            type="button"
-            onClick={handleShare}
-            className="psr-share-mini inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/90 transition-colors hover:bg-[var(--navy-light)] hover:text-[var(--gold)] xl:h-auto xl:w-auto xl:gap-1.5 xl:px-2 xl:py-1"
-            aria-label={shareOpen ? HEADER_SHARE_LABEL_COPIED : HEADER_SHARE_LABEL}
-            title={shareOpen ? HEADER_SHARE_LABEL_COPIED : HEADER_SHARE_LABEL}
-          >
-            <ShareIcon />
-            <span className="hidden text-xs font-medium xl:inline">
-              {shareOpen ? 'Copied!' : 'Share'}
-            </span>
-          </button>
-          <Link
-            href={HEADER_HELP_HREF}
-            className="hidden min-h-[var(--header-touch-compact)] shrink-0 items-center px-2 text-xs font-medium !text-white/80 no-underline transition-colors hover:!text-[var(--gold)] xl:inline-flex xl:text-sm"
-          >
-            Help
-          </Link>
-          <Link
-            href={HEADER_LOGIN_HREF}
-            className="inline-flex h-8 min-h-[2rem] shrink-0 items-center gap-1 rounded-lg bg-[var(--gold)] px-2 py-0.5 text-xs font-bold text-[var(--navy)] shadow-sm no-underline transition-colors hover:bg-[var(--gold-hover)] sm:px-2.5 lg:h-9 lg:px-3 lg:text-sm"
-          >
-            Log In
-            <span aria-hidden className="text-sm leading-none">→</span>
-          </Link>
-        </div>
+      {/* Desktop nav — full width second row so items can wrap without overlapping the logo */}
+      <div className="hidden border-t border-[var(--navy-light)]/80 lg:block">
+        <nav
+          className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-0.5 gap-y-1.5 px-4 py-2 sm:px-6 lg:px-8"
+          aria-label="Main navigation"
+        >
+          {HEADER_NAV_PRIMARY.map((link) => (
+            <NavItem
+              key={`${link.href}-${link.text}`}
+              href={link.href}
+              className={navLinkClass(link.href, link.href === '/directory')}
+              external={link.external ?? link.href.startsWith('http')}
+            >
+              {link.text}
+            </NavItem>
+          ))}
+          {HEADER_NAV_DROPDOWNS.map((group) => (
+            <NavDropdown
+              key={group.label}
+              label={group.label}
+              links={group.links}
+              linkClass={desktopNavLinkClass}
+              active={group.label === 'Blog' ? isBlogActive : undefined}
+              wide={group.label === 'More' || group.label === 'For Reps' || group.label === 'Guides'}
+            />
+          ))}
+        </nav>
       </div>
 
       {open && (
