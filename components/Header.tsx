@@ -107,6 +107,10 @@ function NavDropdown({
     <div ref={ref} className="relative shrink-0">
       <button
         type="button"
+        onMouseDown={(e) => {
+          // Prevent the document mousedown-outside handler from firing on the same gesture.
+          e.stopPropagation();
+        }}
         onClick={(e) => {
           e.stopPropagation();
           setOpen((v) => !v);
@@ -121,7 +125,7 @@ function NavDropdown({
         </svg>
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-[100] mt-1 max-h-[min(70vh,24rem)] min-w-[15rem] overflow-y-auto rounded-lg border border-[var(--navy-light)] bg-[var(--navy)] py-1 shadow-xl sm:min-w-[17rem]">
+        <div className="absolute left-0 top-full z-[200] mt-1 max-h-[min(70vh,24rem)] min-w-[15rem] overflow-y-auto rounded-lg border border-[var(--navy-light)] bg-[var(--navy)] py-1 shadow-xl sm:min-w-[17rem]">
           <p className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white/50">{label}</p>
           {links.map((link) => (
             <NavItem
@@ -191,7 +195,7 @@ export function Header() {
 
   return (
     <header
-      className={`site-header relative z-30 overflow-x-clip border-b border-[var(--navy-light)] bg-[var(--navy)] shadow-lg ${compact ? 'header-compact' : ''}`}
+      className={`site-header relative z-30 border-b border-[var(--navy-light)] bg-[var(--navy)] shadow-lg ${compact ? 'header-compact' : ''}`}
     >
       <div className="header-row mx-auto flex max-w-7xl items-center justify-between gap-1.5 px-4 py-1 sm:gap-2 sm:px-6 sm:py-1.5 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:gap-x-3 lg:px-8">
         <div className="flex min-w-0 items-center gap-2 lg:min-w-0 lg:gap-3">
@@ -230,9 +234,9 @@ export function Header() {
           </Link>
         </div>
 
-        <div className="hidden min-w-0 flex-1 justify-center px-1 lg:flex">
+        <div className="hidden min-w-0 flex-1 justify-center px-1 lg:flex lg:overflow-visible">
           <nav
-            className="flex min-w-0 flex-nowrap items-center justify-center gap-0.5 overflow-hidden xl:gap-1"
+            className="flex min-w-0 flex-wrap items-center justify-center gap-x-0.5 gap-y-1 overflow-visible xl:flex-nowrap xl:gap-1"
             aria-label="Main navigation"
           >
             {HEADER_NAV_PRIMARY.map((link) => (

@@ -104,7 +104,7 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           Skip to content
         </a>
-        <div className="sticky top-0 z-40 shadow-md">
+        <div className="sticky top-0 z-40 overflow-visible shadow-md">
           <PromoBannerStack />
           <Header />
         </div>
