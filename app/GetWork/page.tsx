@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -135,7 +136,7 @@ const FEE_STRUCTURE = [
 const FIRMS_WANT = [
   {
     title: 'Reliability above everything',
-    body: 'The most-instructed freelance reps are not the cheapest — they are the ones who always pick up the phone, always arrive within the LAA expected attendance window, and always send a clean attendance note. One missed call costs more goodwill than ten flawless attendances build.',
+    body: 'The most-instructed freelance reps are not the cheapest — they are the ones who always pick up the phone, attend without undue delay once instructed, and always send a clean attendance note. One missed call costs more goodwill than ten flawless attendances build.',
   },
   {
     title: 'Clean, defensible attendance notes',
@@ -326,6 +327,7 @@ export default function GetWorkPage() {
 
       <div className="page-container">
         <div className="mx-auto max-w-4xl">
+          <ContentReliabilityNotice className="mb-8" />
           {/* Regulatory notice */}
           <div className="mb-10 rounded-[var(--radius-lg)] border border-yellow-300 bg-yellow-50 p-6">
             <h2 className="text-base font-bold text-yellow-900">Important regulatory notice</h2>

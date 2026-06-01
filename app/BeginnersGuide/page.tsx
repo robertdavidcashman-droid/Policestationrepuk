@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -145,7 +146,7 @@ const MYTHS = [
   },
   {
     myth: '&quot;Only solicitors can advise — reps don\'t count.&quot;',
-    truth: 'Accredited reps are regulated by the Legal Aid Agency and the SRA-regulated firm that supervises them. They take the same custody calls, conduct the same consultations, and sit in the same interviews as duty solicitors. The advice is no less privileged or competent.',
+    truth: 'Accredited reps are on the LAA Police Station Register and work under the supervision of an SRA-regulated firm holding a Standard Crime Contract. They take the same custody calls, conduct the same consultations, and sit in the same interviews as duty solicitors. The advice is no less privileged or competent when given by an accredited rep.',
   },
   {
     myth: '&quot;The duty solicitor is on the police side.&quot;',
@@ -248,6 +249,7 @@ export default function BeginnersGuidePage() {
 
       <div className="page-container">
         <div className="mx-auto max-w-4xl">
+          <ContentReliabilityNotice className="mb-8" />
           {/* Read this first */}
           <div className="mb-10 rounded-[var(--radius-lg)] border border-amber-300 bg-amber-50 p-6">
             <h2 className="text-base font-bold text-amber-900">Read this first</h2>

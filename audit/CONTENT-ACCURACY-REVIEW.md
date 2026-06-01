@@ -15,13 +15,54 @@ Legal/factual accuracy review of site content, verified against primary sources 
 | 3 | 49 wiki articles | ✅ Complete (49/49 verified) |
 | 4 | 22 blog articles | ✅ Complete (verified accurate; no corrections) |
 | 5 | County geographic claims | ✅ Softened + systemic verification note |
-| — | Site-wide reliance/verification warning | ✅ Footer + content/legal/fee/county/rights templates |
+| — | Site-wide reliance/verification warning | ✅ Footer + content/legal/fee/county/rights/career/crawl templates |
 
 **Validation:** `vitest` 226/226 passing · `tsc --noEmit` clean · `next build` succeeds (all pages prerender).
 
 **Headline corrections:** removed the non-existent "Bail Act 2024" and corrected pre-charge bail limits site-wide (legal update + wiki); removed hallucinated/misattributed case citations (R v ATH, R v Dobson, ex parte Lee, ex parte Dhesi); corrected the DSCC billing form (SaBC/INVC + CRM18, not CRM6); replaced superseded £181/£219 police-station fees with the harmonised £320/£650 (SI 2025/1251).
 
-**Still outstanding:** None — all tiers complete; all 49 wiki articles verified.
+**Still outstanding:** None from Tiers 1–5. Tier 6 (second pass) complete for priority static guides; directory/station data and low-traffic crawl mirrors not line-by-line verified.
+
+---
+
+## Tier 6 — Second pass: static guides, FAQs, crawl mirrors (2026-06-01)
+
+Scope: career/how-to pages and crawl-mirror content not covered in Tiers 1–5. Method: pattern scan for high-risk claims (PSQ vs PSRAS, duty rota, SRA regulation, fees, attendance window, billing forms) + read-through of priority inline guides.
+
+### Inline career / FAQ pages
+
+#### `FAQ`
+- **FIXED — "regulated by the SRA".** Reps are on the LAA Police Station Register and supervised via an SRA-regulated firm; they are not solicitors and are not directly SRA-regulated in the same way.
+- **FIXED — qualifications answer.** Removed incorrect requirements for a law degree and PSQ (PSQ is for duty solicitors). Corrected to PSRAS pathway (Cardiff/Datalaw, portfolio, CIT, ADMIN 2).
+- **FIXED — "register with the DSCC duty rota".** Reps cannot be on the duty solicitor rota; they attend on a firm's instruction when the firm receives DSCC allocations.
+
+#### `RepFAQMaster`
+- **FIXED — "register with the DSCC scheme where you intend to take duty work".** Corrected to PSRAS + Police Station Register (ADMIN 2); reps cannot join the duty rota.
+- **FIXED — DSCC PIN answer.** Clarified PIN is for Register identification and firm billing; not the same as being on the duty rota.
+
+#### `HowToBecomePoliceStationRep`
+- **SOFTENED — "LAA expected attendance window".** No fixed published LAA standard; reworded to "attending without undue delay once instructed".
+- **FIXED — Stage 5 billing/duty wording.** SaBC monthly bulk claim (fee code INVC) instead of vague "billing system"; clarified reps attend DSCC allocations **to the firm**, not as duty solicitor on rota.
+
+#### `GetWork`
+- **SOFTENED — "LAA expected attendance window"** (same fix as above).
+
+#### `BeginnersGuide`
+- **FIXED — myth about rep regulation.** "Regulated by the LAA and SRA" → on Police Station Register, supervised by SCC firm (accurate framing).
+- **OK** — PACE rights, lifecycle, £320/£650 funding, Code C disclosure, detention clocks, player definitions — verified consistent with Tier 1–2 findings.
+
+#### Verified accurate (no content changes)
+- **`FindSupervisingSolicitor`** — ADMIN 2/3, supervisor standards, PSRA 2025 framing, anti paid-supervision warning — consistent with DSCC/PSRA 2025 (already aligned from prior work).
+- **`PoliceStationRepJobsUK`, `SolicitorPoliceStationCoverUK`, `PoliceStationCover`, `criminal-solicitor-police-station`, `Resources`** — pattern scan clean; no hard legal/fee errors found.
+- **Crawl mirrors** (`AccreditedRepresentativeGuide`, `WhatDoesRepDo`, `GettingStarted`, `DutySolicitorVsRep`, `BuildPortfolioGuide`, `PrepareForCIT`, `HowToBecome`, `CriminalLawCareerGuide`) — Wix-mirror prose; no stale fee/bail/case citations detected. Portfolio numbers in crawl mirror vary slightly by provider — inline `HowToBecomePoliceStationRep` is authoritative.
+
+### Site-wide (Tier 6)
+- **Added `ContentReliabilityNotice`** to: `CrawlContent` (all crawl-mirror pages), `HowToBecomePoliceStationRep`, `GetWork`, `FindSupervisingSolicitor`, `BeginnersGuide`, `FAQ`, `RepFAQMaster`, `DSCCRegistrationGuide`.
+
+### Not in scope (explicit)
+- **Directory data** (`reps.json`, `stations.json`) — operational listings, not editorial legal content.
+- **~190 unused crawl JSON files** in `content/crawl/` — legacy Wix mirror; not all mapped to live routes.
+- **Terms, Privacy, About, Contact** — standard site pages; no substantive legal claims audited.
 
 ---
 

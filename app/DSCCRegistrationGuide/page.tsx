@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -211,6 +212,7 @@ export default function DSCCRegistrationGuidePage() {
 
       <div className="page-container">
         <div className="mx-auto max-w-4xl">
+          <ContentReliabilityNotice className="mb-8" />
           {/* Read this first */}
           <div className="mb-10 rounded-[var(--radius-lg)] border border-amber-300 bg-amber-50 p-6">
             <h2 className="text-base font-bold text-amber-900">Read this first</h2>

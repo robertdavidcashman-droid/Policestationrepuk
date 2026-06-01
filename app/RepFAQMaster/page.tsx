@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -36,7 +37,7 @@ const FAQ_GROUPS: { title: string; items: { q: string; a: string }[] }[] = [
     items: [
       {
         q: 'How do I become a police station representative?',
-        a: 'Typically you complete an accredited training pathway (e.g. through an approved provider), meet suitability requirements, and register with the DSCC scheme where you intend to take duty work. Your regulator and insurer set additional conditions.',
+        a: 'Typically you complete the PSRAS pathway through an approved assessment organisation (Cardiff or Datalaw), secure supervision at a Standard Crime Contract firm, pass the written stage, portfolio, and Critical Incidents Test, and are added to the Police Station Register via ADMIN 2. Reps cannot join the duty solicitor rota — they attend on a firm\'s instruction. Check the latest LAA Police Station Register Arrangements and PSRAS guidance.',
       },
       {
         q: 'What qualifications do I need?',
@@ -61,7 +62,7 @@ const FAQ_GROUPS: { title: string; items: { q: string; a: string }[] }[] = [
       },
       {
         q: 'Do I need a DSCC PIN number?',
-        a: 'If you intend to take legally aided police station work under the duty scheme, you normally need to be registered appropriately with the DSCC arrangements that apply to your role. Confirm with your firm and the LAA.',
+        a: 'If you intend to take legally aided police station work, your firm adds you to the Police Station Register via ADMIN 2 and you receive a DSCC PIN. The PIN identifies you on attendances and in the firm\'s monthly LAA claim — it is not the same as being on the duty solicitor rota. Confirm arrangements with your supervising firm and the LAA.',
       },
       {
         q: 'Can I work for multiple firms?',
@@ -118,6 +119,7 @@ export default function RepFAQMasterPage() {
 
       <div className="page-container">
         <div className="mx-auto max-w-4xl space-y-12 pb-12 pt-8">
+          <ContentReliabilityNotice />
           {FAQ_GROUPS.map((group) => (
             <section key={group.title} className="scroll-mt-8">
               <h2 className="text-h2 text-[var(--navy)]">{group.title}</h2>

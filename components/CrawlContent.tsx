@@ -1,6 +1,7 @@
 import '@/styles/prose.css';
 import fs from 'fs';
 import path from 'path';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 
 interface CrawlHeading {
   level: number;
@@ -215,6 +216,7 @@ export function CrawlContent({ slug }: { slug: string }) {
 
   return (
     <div className="content-section space-y-6">
+      <ContentReliabilityNotice />
       {intro.length > 0 && (
         <div className="rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] sm:p-8">
           <Paragraphs lines={intro} />

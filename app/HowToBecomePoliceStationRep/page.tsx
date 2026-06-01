@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { PsrTrainPromo } from '@/components/PsrTrainPromo';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { buildMetadata } from '@/lib/seo';
@@ -36,7 +37,7 @@ const REALITY_POINTS = [
   },
   {
     title: 'You will be called at 02:00',
-    body: 'Police custody is a 24/7 operation. Once accredited and on the register you can be called any hour of the day, every day of the year, often with little warning. Most reps build a working life around an on-call rota with multiple firms. Reliability — picking up the phone, arriving within the LAA expected attendance window, sending a clean attendance note within 24 hours — is the single most important commercial asset you have.',
+    body: 'Police custody is a 24/7 operation. Once accredited and on the register you can be called any hour of the day, every day of the year, often with little warning. Most reps build a working life around an on-call rota with multiple firms. Reliability — picking up the phone, attending without undue delay once instructed, sending a clean attendance note within 24 hours — is the single most important commercial asset you have.',
   },
   {
     title: 'You need a Standard Crime Contract firm behind you',
@@ -100,8 +101,8 @@ const STAGE_4_STEPS = [
 const STAGE_5_STEPS = [
   'Your supervising solicitor notifies the DSCC of your CIT pass and submits the upgrade paperwork.',
   'You move from Probationary Representative to Accredited Police Station Representative on the Police Station Register.',
-  'You receive a permanent PSRAS PIN — used to identify you to the DSCC and custody officers, and to claim Legal Aid attendance fees through the firm&apos;s billing system.',
-  'You can now (subject to your firm&apos;s policy) attend police stations as the sole legal adviser, including on duty calls allocated through the DSCC.',
+  'You receive a permanent PSRAS PIN — used to identify you to the DSCC and custody officers. Attendances are claimed by the firm through the LAA monthly bulk-claim system (SaBC, fee code INVC).',
+  'You can now (subject to your firm&apos;s policy) attend police stations as the sole legal adviser when instructed by a firm — including attendances arising from DSCC duty allocations to that firm (you are not the duty solicitor on the rota).',
 ];
 
 const COST_TABLE = [
@@ -241,6 +242,7 @@ export default function HowToBecomePage() {
 
       <div className="page-container">
         <div className="mx-auto max-w-4xl">
+          <ContentReliabilityNotice className="mb-8" />
           <CustodyNotePagePromo variant="compact" className="mb-10" />
 
           {/* Read this first */}
