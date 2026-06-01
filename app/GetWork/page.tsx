@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -597,25 +598,6 @@ export default function GetWorkPage() {
             </div>
           </section>
 
-          {/* Sources */}
-          <section className="mb-12">
-            <SectionHeading id="sources">Official sources</SectionHeading>
-            <ul className="mt-4 space-y-2">
-              {SOURCES.map((link) => (
-                <li key={link.href}>
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium text-[var(--navy)] underline decoration-[var(--gold)]/40 underline-offset-2 hover:decoration-[var(--gold)]"
-                  >
-                    {link.label} ↗
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-
           {/* Related */}
           <section className="mb-12">
             <h2 className="text-h2 text-[var(--navy)]">Related guides</h2>
@@ -632,6 +614,14 @@ export default function GetWorkPage() {
               ))}
             </div>
           </section>
+
+          <ResolvedContentSources
+            id="sources"
+            title="Official sources"
+            className="mb-12"
+            context={{ kind: 'page', path: '/GetWork' }}
+            extra={SOURCES}
+          />
 
           {/* CTA */}
           <div className="rounded-[var(--radius-lg)] bg-[var(--navy)] p-8 text-center">

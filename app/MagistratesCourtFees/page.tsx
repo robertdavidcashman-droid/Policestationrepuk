@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -285,6 +286,8 @@ export default function MagistratesCourtFeesPage() {
               Disclaimer: information only — not legal or financial advice. Verify all figures before billing.
             </p>
           </section>
+
+          <ResolvedContentSources className="mb-10" context={{ kind: 'page', path: '/MagistratesCourtFees' }} />
 
           <section className="rounded-[var(--radius-lg)] bg-[var(--navy)] p-8 text-center">
             <h2 className="text-xl font-bold text-white">Need help?</h2>

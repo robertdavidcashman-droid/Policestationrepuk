@@ -57,6 +57,61 @@ export const LINKS_HUB_SECTIONS: LinksHubSection[] = [
     })),
   },
   {
+    title: 'Training & reference',
+    items: [
+      {
+        href: '/Resources',
+        label: 'Knowledge Centre',
+        description: 'Career guides, PACE, forms, rates, and professional resources.',
+      },
+      {
+        href: '/CommonOffencesGuide',
+        label: 'Common Offences Guide',
+        description: 'Actus reus, mens rea, verified case law, defences, and sentencing links.',
+      },
+      {
+        href: '/BeginnersGuide',
+        label: "Beginner's guide",
+        description: 'Custody lifecycle, PACE rights, and what reps do at the station.',
+      },
+      {
+        href: '/PACE',
+        label: 'PACE Codes',
+        description: 'Summaries of Codes A–H for police station work.',
+      },
+      {
+        href: '/Wiki',
+        label: 'Rep Wiki',
+        description: 'In-depth articles on interviews, disclosure, and practice.',
+      },
+      {
+        href: '/LegalUpdates',
+        label: 'Legal Updates',
+        description: 'Statutory and procedural changes for reps and firms.',
+      },
+    ],
+  },
+  {
+    title: 'Fees & billing',
+    items: [
+      {
+        href: '/PoliceStationRates',
+        label: 'Station rates (2025/26)',
+        description: 'Harmonised £320 fee, £650 escape threshold, and claiming guidance.',
+      },
+      {
+        href: '/EscapeFeeCalculator',
+        label: 'Escape fee calculator',
+        description: 'Estimate profit costs when a case exceeds the fixed fee.',
+      },
+      {
+        href: '/FormsLibrary',
+        label: 'Forms library',
+        description: 'CRM1–CRM18A legal aid forms and templates.',
+      },
+    ],
+  },
+  {
     title: 'Community',
     items: [
       {

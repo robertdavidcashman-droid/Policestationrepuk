@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -154,6 +155,8 @@ export default function RepFAQMasterPage() {
               . Last updated: March 2026.
             </p>
           </section>
+
+          <ResolvedContentSources className="mb-10" context={{ kind: 'page', path: '/RepFAQMaster' }} />
 
           <section className="rounded-[var(--radius-lg)] bg-[var(--navy)] p-8 text-center">
             <h2 className="text-xl font-bold text-white">Need help?</h2>

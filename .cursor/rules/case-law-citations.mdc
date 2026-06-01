@@ -1,0 +1,33 @@
+---
+description: Mandatory verification standard for any UK case law citation on this site
+globs: data/**/*,lib/**/*,app/**/*.tsx,content/**/*
+alwaysApply: false
+---
+
+# Case law citations — zero tolerance for hallucination
+
+This site publishes criminal-law reference material for police station representatives. **A wrong case citation is worse than no citation.**
+
+## Hard rules
+
+1. **Never cite a case from memory.** Every citation must be checked against at least two independent authoritative sources (BAILII neutral citation, legislation.gov.uk, CPS legal guidance, Sentencing Council, or a reported law report you have opened).
+2. **If in doubt, leave it out.** Prefer linking to CPS charging standards, PACE Codes, or legislation instead of naming a case.
+3. **Citation and holding must match.** Do not attach a case to a legal proposition it does not support (e.g. do not cite *R v Sang* for self-incrimination — it is an entrapment case).
+4. **Use neutral citations** where available (`[2017] UKSC 67`, `[1997] EWCA Crim 926`). Report citations (`[1992] 1 AC 699`) are acceptable when the neutral citation is verified.
+5. **Do not invent cases**, partial names, or year/report combinations. Removed examples from this project: *R v ATH [2023] EWCA Crim 1047* (non-existent), *R v Dobson [2011]* (wrong subject for BWV), *R v DPP ex p Dhesi [1995]* (unverifiable in context).
+6. **Programmatic case lists** belong in `lib/case-law-registry.ts`. Pages that render case law should import from the registry or duplicate its verified entries exactly.
+7. **Before adding a case**, add it to `lib/case-law-registry.ts` with `holding`, `verifiedSources` (URLs), and `topic` tags. Run `npm test -- tests/case-law-registry.test.ts`.
+
+## Verification checklist (every new citation)
+
+- [ ] Case name spelled correctly
+- [ ] Neutral or law-report citation matches BAILII / CPS / textbook
+- [ ] Holding is one sentence, accurate, and proportionate to what the court decided
+- [ ] Not superseded (e.g. use *Ivey* for dishonesty, not *Ghosh*; *R v G* for criminal damage recklessness, not *Caldwell*)
+- [ ] Appropriate for police-station context (not obscure appellate trivia)
+
+## When editing wiki / legal updates / guides
+
+- Replace long footnote lists of cases with **statute + CPS guidance links** unless each case is individually verified.
+- Remove marketing lines like "all case law verified" unless a named audit tier documents each citation.
+- After bulk case-law edits, update `audit/CONTENT-ACCURACY-REVIEW.md`.

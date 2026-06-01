@@ -15,6 +15,7 @@ import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { JoinCTA } from '@/components/directory/JoinCTA';
 import { FirmCoverCTA } from '@/components/FirmCoverCTA';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 
 export const dynamic = 'force-static';
 export const revalidate = false;
@@ -128,6 +129,11 @@ export default async function CountyPage({ params }: PageProps) {
               </div>
             )}
           </section>
+
+          <ResolvedContentSources
+            className="mt-10"
+            context={{ kind: 'page', path: '/directory' }}
+          />
 
           <p className="mt-10">
             <Link href="/directory" className="font-medium text-[var(--accent)] no-underline hover:underline">

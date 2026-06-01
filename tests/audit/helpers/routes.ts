@@ -23,6 +23,7 @@ export const ENTRY_POINTS: string[] = [
   '/FAQ',
   '/Wiki',
   '/PACE',
+  '/CommonOffencesGuide',
   '/FormsLibrary',
 ];
 

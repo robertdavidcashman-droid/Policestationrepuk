@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -229,7 +230,14 @@ export default function PACEPage() {
       {/* Resource links */}
       <section>
         <h2 className="text-h2 mb-6 text-[var(--navy)]">Related Resources</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <Link
+            href="/CommonOffencesGuide"
+            className="block rounded-[var(--radius)] border border-[var(--card-border)] bg-[var(--card-bg)] p-5 no-underline shadow-[var(--card-shadow)] transition-all hover:border-[var(--gold)]/40 hover:shadow-[var(--card-shadow-hover)]"
+          >
+            <p className="font-medium text-[var(--navy)]">Common Offences Guide</p>
+            <p className="mt-1 text-sm text-[var(--muted)]">Actus reus, mens rea, defences &amp; sentencing</p>
+          </Link>
           <Link
             href="/Resources"
             className="block rounded-[var(--radius)] border border-[var(--card-border)] bg-[var(--card-bg)] p-5 no-underline shadow-[var(--card-shadow)] transition-all hover:border-[var(--gold)]/40 hover:shadow-[var(--card-shadow-hover)]"
@@ -275,6 +283,8 @@ export default function PACEPage() {
           </a>
         </p>
       </section>
+
+      <ResolvedContentSources className="mt-10" context={{ kind: 'page', path: '/PACE' }} />
     </div>
     </>
   );

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { PsrTrainPromo } from '@/components/PsrTrainPromo';
 import { buildMetadata } from '@/lib/seo';
 
@@ -170,6 +171,12 @@ const CAREER = [
     external: false,
   },
   {
+    title: 'Common Offences Guide',
+    href: '/CommonOffencesGuide',
+    desc: 'Actus reus, mens rea, verified case law, defences, and Sentencing Council guidelines.',
+    external: false,
+  },
+  {
     title: 'Get Work as a Police Station Rep',
     href: '/GetWork',
     desc: 'Proven strategies to build and grow your freelance police station practice.',
@@ -261,11 +268,13 @@ export default function ResourcesPage() {
       {/* Quick access bar */}
       <section className="border-b border-[var(--border)] bg-slate-50 py-6">
         <div className="page-container !py-0">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             {[
               { href: '/Wiki', label: 'Rep Wiki', desc: 'In-depth guides and scenarios' },
+              { href: '/CommonOffencesGuide', label: 'Common Offences', desc: 'Elements, defences & sentencing' },
               { href: '/FormsLibrary', label: 'Forms Library', desc: 'CRM1–CRM18A legal aid forms' },
               { href: '/StationsDirectory', label: 'Station Numbers', desc: 'Custody suite phone directory' },
+              { href: '/PACE', label: 'PACE Codes', desc: 'Codes A–H reference summaries' },
               { href: '/Blog', label: 'Professional Blog', desc: 'Practical articles for the profession' },
             ].map((q) => (
               <Link
@@ -349,6 +358,10 @@ export default function ResourcesPage() {
           </Link>
         </div>
       </div>
+    </div>
+
+    <div className="page-container pb-12">
+      <ResolvedContentSources context={{ kind: 'page', path: '/Resources' }} />
     </div>
     </>
   );

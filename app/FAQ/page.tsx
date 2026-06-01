@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { JsonLd } from '@/components/JsonLd';
 import { buildMetadata, breadcrumbSchema } from '@/lib/seo';
 
@@ -159,6 +160,8 @@ export default function FAQPage() {
           </a>
         </p>
       </div>
+
+      <ResolvedContentSources className="mt-10" context={{ kind: 'page', path: '/FAQ' }} />
       </div>
     </>
   );

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { buildMetadata } from '@/lib/seo';
 import { getAllLegalUpdates, getLegalUpdateBySlug } from '@/lib/data';
 import { markdownToHtml } from '@/lib/markdown';
@@ -116,6 +117,13 @@ export default async function LegalUpdateArticlePage({ params }: PageProps) {
           className="wiki-prose mx-auto max-w-3xl"
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
+
+        <div className="mx-auto max-w-3xl">
+          <ResolvedContentSources
+            className="mt-10"
+            context={{ kind: 'legal-update', slug: article.slug }}
+          />
+        </div>
 
         {/* Back link */}
         <div className="mx-auto mt-12 max-w-3xl border-t border-[var(--border)] pt-8">

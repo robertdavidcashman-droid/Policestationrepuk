@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { marked } from 'marked';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { buildMetadata } from '@/lib/seo';
 import { getAllWikiArticles, getWikiArticleBySlug, getWikiArticlesByCategory } from '@/lib/data';
 
@@ -128,6 +129,10 @@ export default async function WikiArticlePage({ params }: PageProps) {
             <article
               className="wiki-prose"
               dangerouslySetInnerHTML={{ __html: html }}
+            />
+            <ResolvedContentSources
+              className="mt-10"
+              context={{ kind: 'wiki', slug: article.slug, category: article.category }}
             />
           </div>
 

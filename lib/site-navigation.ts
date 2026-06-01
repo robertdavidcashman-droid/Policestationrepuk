@@ -87,33 +87,73 @@ export const FOOTER_FOR_REPRESENTATIVES: FooterLink[] = [
   { href: '/Profile', label: 'My Profile' },
   { href: '/GoFeatured', label: 'Become Featured' },
   { href: '/PoliceStationRepJobsUK', label: 'Rep Jobs UK' },
-  { href: '/GetWork', label: 'Get Work Guide' },
   { href: '/HowToBecomePoliceStationRep', label: 'How to Become a Rep' },
   { href: '/FindSupervisingSolicitor', label: 'Find a Supervising Solicitor' },
   { href: '/PrepareForCIT', label: 'Prepare for the CIT' },
+  { href: '/BuildPortfolioGuide', label: 'Build Your PSRAS Portfolio' },
+  { href: '/GettingStarted', label: 'Getting Started' },
+  { href: '/BeginnersGuide', label: "Beginner's Guide" },
+  { href: '/WhatDoesRepDo', label: 'What Does a Rep Do?' },
+  { href: '/DutySolicitorVsRep', label: 'Duty Solicitor vs Rep' },
+  { href: '/AccreditedRepresentativeGuide', label: 'Accredited Representative Guide' },
+  { href: '/CriminalLawCareerGuide', label: 'Criminal Law Career Guide' },
+  { href: '/GetWork', label: 'Get Work Guide' },
+  { href: '/DSCCRegistrationGuide', label: 'DSCC Registration Guide' },
   { href: PSRTRAIN_TRAINING_HREF, label: 'PSR Train — exam prep', external: true },
   { href: '/PoliceStationCover', label: 'Police Station Cover (Firms)' },
 ];
 
-/** Footer column “Tools & Resources” */
+/** Training & reference guides — header “Guides” menu + footer tools block. */
+export const HEADER_NAV_GUIDES: HeaderNavLink[] = [
+  { href: '/Resources', text: 'Knowledge Centre (all resources)' },
+  { href: '/Wiki', text: 'Rep Wiki' },
+  { href: '/CommonOffencesGuide', text: 'Common Offences Guide' },
+  { href: '/BeginnersGuide', text: "Beginner's Guide" },
+  { href: '/PACE', text: 'PACE Codes' },
+  { href: '/InterviewUnderCaution', text: 'Interview Under Caution' },
+  { href: '/PoliceDisclosureGuide', text: 'Police Disclosure Guide' },
+  { href: '/LegalUpdates', text: 'Legal Updates' },
+  { href: '/RepFAQMaster', text: 'Rep FAQ' },
+  { href: '/FAQ', text: 'Help & FAQ' },
+  { href: '/police-station-rights-uk', text: 'Police station rights UK' },
+  { href: '/free-legal-advice-police-station', text: 'Free legal advice (police station)' },
+];
+
+/** Fees, billing & forms — header “Fees & Forms” menu. */
+export const HEADER_NAV_FEES_FORMS: HeaderNavLink[] = [
+  { href: '/PoliceStationRates', text: 'Station Rates (2025/26)' },
+  { href: '/PoliceStationRepPay', text: 'Rep Pay Explained' },
+  { href: '/EscapeFeeCalculator', text: 'Escape Fee Calculator' },
+  { href: '/MagistratesCourtFees', text: "Magistrates' Court Fees" },
+  { href: '/CrownCourtFees', text: 'Crown Court Fees' },
+  { href: '/FormsLibrary', text: 'Forms Library' },
+  { href: '/DSCCRegistrationGuide', text: 'DSCC Registration Guide' },
+];
+
+/** Partner tools & SEO landing pages — header “More” menu. */
+export const HEADER_NAV_MORE: HeaderNavLink[] = [
+  { href: '/links', text: 'Quick links hub' },
+  { href: '/CustodyNote', text: 'Custody Note — overview' },
+  { href: CUSTODYNOTE_TRIAL_HREF, text: 'Custody Note — free trial', external: true },
+  { href: PSRTRAIN_TRAINING_HREF, text: 'PSR Train (PSRAS prep)', external: true },
+  { href: POLICESTATIONAGENT_HOME_HREF, text: 'Police Station Agent — solicitors', external: true },
+  { href: '/police-station-representative', text: 'Police station representative' },
+  { href: '/criminal-solicitor-police-station', text: 'Criminal solicitor — police station' },
+  { href: '/police-station-rep-kent', text: 'Police station rep — Kent' },
+  { href: '/police-station-rep-london', text: 'Police station rep — London' },
+  { href: '/police-station-rep-essex', text: 'Police station rep — Essex' },
+  { href: '/Blog', text: 'Professional blog' },
+];
+
+/** Footer column “Tools & Resources” — guides, fees, partners (deduped labels). */
 export const FOOTER_TOOLS: FooterLink[] = [
-  { href: '/links', label: 'Quick links hub' },
-  { href: '/CustodyNote', label: 'Custody Note — overview' },
-  { href: CUSTODYNOTE_TRIAL_HREF, label: 'Custody Note — free trial', external: true },
-  { href: PSRTRAIN_TRAINING_HREF, label: 'PSR Train (PSRAS prep)', external: true },
-  { href: POLICESTATIONAGENT_HOME_HREF, label: 'Police Station Agent — solicitors', external: true },
-  { href: '/police-station-representative', label: 'Police station representative' },
-  { href: '/criminal-solicitor-police-station', label: 'Criminal solicitor — police station' },
-  { href: '/police-station-rights-uk', label: 'Police station rights UK' },
-  { href: '/free-legal-advice-police-station', label: 'Free legal advice (police station)' },
-  { href: '/police-station-rep-kent', label: 'Police station rep — Kent' },
-  { href: '/police-station-rep-london', label: 'Police station rep — London' },
-  { href: '/police-station-rep-essex', label: 'Police station rep — Essex' },
-  { href: '/FormsLibrary', label: 'Forms' },
-  { href: '/PoliceStationRates', label: 'Station Rates (2025/26)' },
-  { href: '/PACE', label: 'PACE Codes' },
-  { href: '/Wiki', label: 'Rep Wiki & training guides' },
-  { href: '/LegalUpdates', label: 'Legal Updates' },
+  ...HEADER_NAV_GUIDES.map(({ href, text }) => ({ href, label: text.replace(' (all resources)', '') })),
+  ...HEADER_NAV_FEES_FORMS.filter((l) => l.href !== '/DSCCRegistrationGuide').map(({ href, text }) => ({
+    href,
+    label: text,
+  })),
+  { href: '/DSCCRegistrationGuide', label: 'DSCC Registration Guide' },
+  ...HEADER_NAV_MORE.map(({ href, text, external }) => ({ href, label: text, external })),
 ];
 
 /** Footer column “Community” — order from homepage crawl (/) */
@@ -152,7 +192,9 @@ export const HEADER_NAV_DROPDOWNS: { label: string; links: HeaderNavLink[] }[] =
   { label: 'Blog', links: HEADER_NAV_BLOG_LINKS },
   { label: 'Directories', links: footerLinksToNav(FOOTER_DIRECTORIES) },
   { label: 'For Reps', links: footerLinksToNav(FOOTER_FOR_REPRESENTATIVES) },
-  { label: 'Resources', links: footerLinksToNav(FOOTER_TOOLS) },
+  { label: 'Guides', links: HEADER_NAV_GUIDES },
+  { label: 'Fees & Forms', links: HEADER_NAV_FEES_FORMS },
+  { label: 'More', links: HEADER_NAV_MORE },
   { label: 'Community', links: footerLinksToNav(FOOTER_COMMUNITY) },
   { label: 'Legal', links: footerLinksToNav(FOOTER_LEGAL) },
 ];

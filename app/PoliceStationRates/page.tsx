@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -229,6 +230,8 @@ export default function PoliceStationRatesPage() {
           </Link>
         </div>
       </section>
+
+      <ResolvedContentSources className="mt-10" context={{ kind: 'page', path: '/PoliceStationRates' }} />
       </div>
     </>
   );

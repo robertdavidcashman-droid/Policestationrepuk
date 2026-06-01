@@ -79,6 +79,7 @@ const HIGH_PRIORITY_PAGES = [
   { path: 'Wiki', priority: 0.8, freq: 'weekly' as const },
   { path: 'AboutFounder', priority: 0.6, freq: 'monthly' as const },
   { path: 'BeginnersGuide', priority: 0.7, freq: 'monthly' as const },
+  { path: 'CommonOffencesGuide', priority: 0.75, freq: 'monthly' as const },
   { path: 'InterviewUnderCaution', priority: 0.7, freq: 'monthly' as const },
   { path: 'WhatDoesRepDo', priority: 0.7, freq: 'monthly' as const },
   { path: 'DutySolicitorVsRep', priority: 0.65, freq: 'monthly' as const },

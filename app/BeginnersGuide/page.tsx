@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -203,6 +204,7 @@ const SOURCES = [
 ];
 
 const RELATED = [
+  { href: '/CommonOffencesGuide', label: 'Common Offences Guide', desc: 'Actus reus, mens rea, defences, and sentencing links' },
   { href: '/WhatDoesRepDo', label: 'What does a police station rep do?', desc: 'Day-in-the-life breakdown of the role' },
   { href: '/HowToBecomePoliceStationRep', label: 'How to become a rep', desc: 'Full PSRAS roadmap from enrolment to CIT' },
   { href: '/DutySolicitorVsRep', label: 'Duty solicitor vs rep', desc: 'The differences in qualification, scope, and pay' },
@@ -528,25 +530,6 @@ export default function BeginnersGuidePage() {
             </div>
           </section>
 
-          {/* Sources */}
-          <section className="mb-12">
-            <SectionHeading id="sources">Official sources</SectionHeading>
-            <ul className="mt-4 space-y-2">
-              {SOURCES.map((link) => (
-                <li key={link.href}>
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium text-[var(--navy)] underline decoration-[var(--gold)]/40 underline-offset-2 hover:decoration-[var(--gold)]"
-                  >
-                    {link.label} ↗
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-
           {/* Related */}
           <section className="mb-12">
             <h2 className="text-h2 text-[var(--navy)]">Related guides</h2>
@@ -563,6 +546,14 @@ export default function BeginnersGuidePage() {
               ))}
             </div>
           </section>
+
+          <ResolvedContentSources
+            id="sources"
+            title="Official sources"
+            className="mb-12"
+            context={{ kind: 'page', path: '/BeginnersGuide' }}
+            extra={SOURCES}
+          />
 
           <section className="rounded-[var(--radius-lg)] bg-[var(--navy)] p-8 text-center">
             <h2 className="text-xl font-bold text-white">Need help right now?</h2>

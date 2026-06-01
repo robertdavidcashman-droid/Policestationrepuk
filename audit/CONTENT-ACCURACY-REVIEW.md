@@ -21,7 +21,9 @@ Legal/factual accuracy review of site content, verified against primary sources 
 
 **Headline corrections:** removed the non-existent "Bail Act 2024" and corrected pre-charge bail limits site-wide (legal update + wiki); removed hallucinated/misattributed case citations (R v ATH, R v Dobson, ex parte Lee, ex parte Dhesi); corrected the DSCC billing form (SaBC/INVC + CRM18, not CRM6); replaced superseded £181/£219 police-station fees with the harmonised £320/£650 (SI 2025/1251).
 
-**Still outstanding:** None from Tiers 1–5. Tier 6 (second pass) complete for priority static guides; directory/station data and low-traffic crawl mirrors not line-by-line verified.
+**Navigation & sources (2026-06-01):** Header split into **Guides**, **Fees & Forms**, and **More** menu tabs (Common Offences, Wiki, PACE, interview/disclosure guides, rates, forms, etc.). Career pathway guides expanded in **For Reps**. Sources footers on all static guides. Case-law registry and `/CommonOffencesGuide` added.
+
+**Still outstanding:** Directory rep profiles excluded from sources footers. Pre-existing unrelated test flake in `enquiry-email-verify.test.ts` (if still present).
 
 ---
 
@@ -212,6 +214,49 @@ Custody estates change frequently (forces routinely close/merge suites), so nami
 - **SOFTENED — Kent.** Removed the over-specific assertion that "24-hour detention facilities are located at" eight named suites (some of which may have closed/changed); reframed around the consolidated main suites with an explicit "confirm current location" caveat.
 - **SOFTENED — London.** The list previously named several suites that have since closed (e.g. West End Central, Islington, Wandsworth) as current; reframed to note the estate has reduced and to confirm the live suite before attending rather than relying on a fixed list.
 - Remaining counties: present-tense suite names left in place but now bracketed by the template-level accuracy note and reliance banner; not individually re-verified suite-by-suite (custody estates change too often to assert a definitive current list).
+
+---
+
+## Tier 7 — Common Offences Guide (`/CommonOffencesGuide`)
+
+New reference page for police station reps: 11 common custody offences with actus reus, mens rea, defences, verified case law, and Sentencing Council guideline links.
+
+### Verification approach
+- **Case law:** Only established authorities with standard neutral citations checked against BAILII, CPS charging standards, or Sentencing Council materials. No invented or unverified citations (following the same standard as Tier 1–6).
+- **Statutes:** All linked to legislation.gov.uk section/contents pages.
+- **Sentencing:** Each offence links to the current Sentencing Council definitive guideline page (not draft/consultation versions).
+- **Dishonesty:** Ivey v Genting Casinos [2017] UKSC 67 (not Ghosh) for theft/fraud offences.
+- **Recklessness (criminal damage):** R v G [2004] UKHL 50 (not Caldwell).
+
+### Offences covered
+Common assault/battery (s.39 CJA 1988); ABH (s.47 OAPA 1861); GBH s.20 and s.18; theft (Theft Act 1968); burglary (s.9); robbery (s.8); criminal damage (Criminal Damage Act 1971); possession of controlled drug (MDA 1971 s.5); public order (POA 1986 ss.4, 4A, 5); fraud (Fraud Act 2006).
+
+### Key case law cited (verified)
+- *Woolmington v DPP* [1935] AC 462; *Fagan v MPC* [1969] 1 QB 439; *Collins v Wilcock* [1984] 3 All ER 374; *R v Venna* [1976] QB 421; *R v Savage; DPP v Parmenter* [1992] 1 AC 699; *R v Chan-Fook* [1994] 1 WLR 689; *R v Donovan* [1934] 2 KB 498; *R v Cunningham* [1957] 2 QB 396; *Ivey v Genting Casinos* [2017] UKSC 67; *DPP v Gomez* [1993] AC 442; *R v Lloyd* [1985] 1 QB 653; *R v Walkington* [1979] 1 WLR 1169; *R v Collins* [1973] AC 854; *R v G* [2004] UKHL 50; *Warner v MPC* [1969] 2 AC 256; *R v Kennedy (No 2)* [2007] UKHL 38; *DPP v Collins* [1973] QB 100; *DPP v Majewski* [1977] AC 443; *R v Hasan* [2005] UKHL 22; *R v Palmer* [1971] AC 814; *R v Gladstone Williams* [1996] 2 Cr App R 286; *R v Brown* [1994] 1 AC 212; *R v Allen* [1988] AC 1479.
+
+### Sources
+- Sentencing Council — https://www.sentencingcouncil.org.uk/sentencing-guidelines/
+- CPS OAP charging standard — https://www.cps.gov.uk/prosecution-guidance/offences-against-person-incorporating-charging-standard
+- CPS Theft Act — https://www.cps.gov.uk/legal-guidance/theft-act-offences
+- CPS Public Order — https://www.cps.gov.uk/legal-guidance/public-order-offences
+- CPS Fraud Act 2006 — https://www.cps.gov.uk/legal-guidance/fraud-act-2006-offences
+- CPS Misuse of Drugs Act — https://www.cps.gov.uk/legal-guidance/misuse-drugs-act-1971-0
+
+---
+
+## Tier 8 — Case-law verification policy & site-wide sources footers
+
+### Case-law policy (mandatory)
+- Added Cursor rule: `.cursor/rules/case-law-citations.mdc` — never cite from memory; if in doubt leave out; register cases in `lib/case-law-registry.ts` before use.
+- Created `lib/case-law-registry.ts` allowlist with verified sources (BAILII, CPS, legislation) per case.
+- Refactored `/CommonOffencesGuide` to pull case law only from the registry via `caseRefsByIds()`.
+- Fixed **wrong citations/holdings** in `police-caution-explained` wiki (e.g. *Roble*, *Condron*, *Pointer*, *Knight* prepared-statement inferences; removed unverified *Sang* self-incrimination footnote and other edge citations).
+- Fixed burglary entry case: *R v Collins* corrected to `[1973] QB 100` (was wrongly `[1973] AC 854`).
+- Added `tests/case-law-registry.test.ts` and `scripts/fix-wiki-case-citations.js`.
+
+### Site-wide sources footers
+- Added `lib/content-sources.ts` and `components/ContentSourcesFooter.tsx`.
+- Wired into: Wiki articles, Blog articles, Legal Updates, `CrawlContent`, mirror `[slug]` pages, `/PACE`, `/FAQ`, `/CommonOffencesGuide`, county directory pages.
 
 ---
 

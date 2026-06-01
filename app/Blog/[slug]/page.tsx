@@ -12,6 +12,7 @@ import type { BlogCategoryId } from '@/lib/blog/types';
 import { getTopicClusterForSlug } from '@/lib/blog/topic-clusters';
 import { BlogDiscoveryLinks } from '@/components/BlogDiscoveryLinks';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { BlogAuthorBio } from '@/components/BlogAuthorBio';
 import { BlogBottomAd } from '@/components/BlogBottomAd';
 import { BlogCustodyNotePromo } from '@/components/BlogCustodyNotePromo';
@@ -234,6 +235,8 @@ export default async function BlogArticlePage({ params }: PageProps) {
           )}
 
           <ContentReliabilityNotice className="mt-12" />
+
+          <ResolvedContentSources className="mt-10" context={{ kind: 'blog', slug }} />
 
           <div className="mt-12">
             <BlogAuthorBio />

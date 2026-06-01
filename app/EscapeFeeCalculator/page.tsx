@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 
 const RATE_CATEGORIES = [
   {
@@ -418,6 +419,8 @@ export default function EscapeFeeCalculatorPage() {
           for definitive rates. Rates shown are from SI 2025/1251 for cases with UFN on or after 22
           December 2025. Consult your supervisor or contract manager for complex claims.
         </p>
+
+        <ResolvedContentSources className="mt-10" context={{ kind: 'page', path: '/EscapeFeeCalculator' }} />
       </div>
     </div>
   );

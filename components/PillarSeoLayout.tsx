@@ -74,6 +74,16 @@ export function PillarSeoLayout({
             <p className="text-sm font-bold text-[var(--navy)]">Related pages</p>
             <ul className="mt-3 flex flex-col gap-2 text-sm">
               <li>
+                <Link href="/CommonOffencesGuide" className="font-medium text-[var(--navy)] underline">
+                  Common Offences Guide
+                </Link>
+              </li>
+              <li>
+                <Link href="/PACE" className="font-medium text-[var(--navy)] underline">
+                  PACE Codes
+                </Link>
+              </li>
+              <li>
                 <Link href="/police-station-representative" className="font-medium text-[var(--navy)] underline">
                   Police station representative
                 </Link>

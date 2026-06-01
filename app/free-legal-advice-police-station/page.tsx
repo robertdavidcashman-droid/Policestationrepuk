@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { buildMetadata } from '@/lib/seo';
 import { PillarSeoLayout } from '@/components/PillarSeoLayout';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 
 export const metadata = buildMetadata({
   title: 'Your Rights at the Police Station (UK) | PACE Guide',
@@ -32,6 +33,7 @@ const FAQS = [
 
 export default function FreeLegalAdvicePoliceStationPage() {
   return (
+    <>
     <PillarSeoLayout
       title="Free legal advice at the police station"
       breadcrumbItems={BC}
@@ -94,5 +96,11 @@ export default function FreeLegalAdvicePoliceStationPage() {
         for structured internal training — still general information only.
       </p>
     </PillarSeoLayout>
+    <div className="page-container pb-12">
+      <div className="mx-auto max-w-3xl">
+        <ResolvedContentSources context={{ kind: 'page', path: '/free-legal-advice-police-station' }} />
+      </div>
+    </div>
+    </>
   );
 }

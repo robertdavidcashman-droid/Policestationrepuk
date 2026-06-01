@@ -2,6 +2,7 @@ import '@/styles/prose.css';
 import fs from 'fs';
 import path from 'path';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 
 interface CrawlHeading {
   level: number;
@@ -235,6 +236,7 @@ export function CrawlContent({ slug }: { slug: string }) {
           )}
         </section>
       ))}
+      <ResolvedContentSources className="mt-2" context={{ kind: 'crawl', slug }} />
     </div>
   );
 }

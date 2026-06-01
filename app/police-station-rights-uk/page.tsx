@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { buildMetadata } from '@/lib/seo';
 import { PillarSeoLayout } from '@/components/PillarSeoLayout';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 
 export const metadata = buildMetadata({
   title: 'Police Station Rights UK — PACE & Caution Guide',
@@ -32,6 +33,7 @@ const FAQS = [
 
 export default function PoliceStationRightsUkPage() {
   return (
+    <>
     <PillarSeoLayout
       title="Police station rights in the UK"
       breadcrumbItems={BC}
@@ -100,5 +102,11 @@ export default function PoliceStationRightsUkPage() {
         advice.
       </p>
     </PillarSeoLayout>
+    <div className="page-container pb-12">
+      <div className="mx-auto max-w-3xl">
+        <ResolvedContentSources context={{ kind: 'page', path: '/police-station-rights-uk' }} />
+      </div>
+    </div>
+    </>
   );
 }

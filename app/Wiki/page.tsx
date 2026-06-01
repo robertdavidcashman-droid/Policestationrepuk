@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { WikiArticleIndex } from '@/components/WikiArticleIndex';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { buildMetadata } from '@/lib/seo';
@@ -37,6 +38,27 @@ export default async function WikiPage() {
 
       <div className="page-container">
         <CustodyNotePagePromo variant="compact" className="mb-10" />
+
+        <section className="mb-10">
+          <h2 className="text-h2 mb-4 text-[var(--navy)]">Featured reference guides</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { href: '/CommonOffencesGuide', label: 'Common Offences Guide', desc: 'Actus reus, mens rea, defences & sentencing' },
+              { href: '/BeginnersGuide', label: "Beginner's Guide", desc: 'Custody lifecycle and PACE rights' },
+              { href: '/PACE', label: 'PACE Codes', desc: 'Codes A–H summaries' },
+              { href: '/Resources', label: 'Knowledge Centre', desc: 'Career guides, forms, and rates' },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="block rounded-[var(--radius)] border border-[var(--card-border)] bg-[var(--card-bg)] p-4 no-underline shadow-[var(--card-shadow)] transition-all hover:border-[var(--gold)]/40 hover:shadow-[var(--card-shadow-hover)]"
+              >
+                <p className="font-medium text-[var(--navy)]">{item.label}</p>
+                <p className="mt-1 text-sm text-[var(--muted)]">{item.desc}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         <WikiArticleIndex articles={allArticles} variant="list" />
 

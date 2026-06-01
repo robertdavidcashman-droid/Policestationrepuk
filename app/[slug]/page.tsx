@@ -9,6 +9,8 @@ import { getCountySlugSet } from '@/lib/county-slugs';
 import { normalizeMirrorNavHref } from '@/lib/internal-link-normalize';
 import { buildMetadata } from '@/lib/seo';
 import { segmentCrawlContent } from '@/components/CrawlContent';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
+import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 
 const SITE_TITLE = 'PoliceStationRepUK';
 
@@ -100,6 +102,7 @@ const DEDICATED_ROUTES = new Set([
   'Advertisers', 'advertisers',
   'Advertising', 'advertising',
   'BeginnersGuide', 'beginnersguide',
+  'CommonOffencesGuide', 'commonoffencesguide',
   'BuildPortfolioGuide', 'buildportfolioguide',
   'CriminalLawCareerGuide', 'criminallawcareerguide',
   'CrownCourtFees', 'crowncourtfees',
@@ -287,6 +290,9 @@ export default async function SlugPage({ params }: PageProps) {
               </div>
             )}
           </article>
+
+          <ContentReliabilityNotice className="mt-8" />
+          <ResolvedContentSources className="mt-8" context={{ kind: 'crawl', slug }} />
 
           {'images' in page && Array.isArray(page.images) && page.images.length > 0 && (
             <section className="mt-10 grid gap-6 sm:grid-cols-2" aria-label="Images">

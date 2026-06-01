@@ -14,6 +14,7 @@ export const SITEMAP_PATHS: string[] = [
   'BeginnersGuide',
   'Blog',
   'BuildPortfolioGuide',
+  'CommonOffencesGuide',
   'Complaints',
   'Contact',
   'Cookies',
