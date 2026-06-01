@@ -62,6 +62,17 @@ Legal/factual accuracy review of site content, verified against primary sources 
 - **OK — `PACE`.** Detention clock (24h / 36h superintendent / 96h magistrates' warrant — indictable only), review times (first ≤6h, then ≤9h), caution wording, appropriate-adult rule, s.36/s.37 CJPOA 1994 special warnings, and Code A–H summaries all verified accurate. No changes required.
   - Source: PACE 1984 ss.40–44, 56, 58; PACE Codes of Practice — https://www.gov.uk/guidance/police-and-criminal-evidence-act-1984-pace-codes-of-practice
 
+### `DSCCRegistrationGuide`
+- **FIXED — Billing form (CRM6).** Page said the firm "submits the CRM6 claim through the LAA Crime Workflow" and that the PIN is recorded "in the firm's CRM6 billing claim." Wrong form. Police-station fixed fees are reported **monthly via Submit a Bulk Claim (SaBC)** (which replaced CWA) under **fee code INVC**; **escape** claims use the **Escape Fee Claim Form (CRM18)**. Corrected both the call-flow step and the PIN bullet.
+  - Source: LAA Guidance for Reporting Crime Lower Work (fee code INVC; CRM18 escape) — https://www.gov.uk/guidance/submit-a-bulk-claim-sabc
+- **FIXED — "Engaged" requirements.** Court-representation requirement was vague ("minimum specified court representations"); corrected to the SCC figures: each rolling 12 months **either 20 magistrates' court representations, or 10 magistrates' + 5 Crown Court**. Added the qualifier that of the **6 police-station cases**, no more than two can be telephone-only with no attendance. Confirmed the **50 hours/calendar month** and **one duty attendance/slot per rolling 3 months** items. CLAS wording generalised ("earlier Contract").
+  - Source: LAA Duty Solicitor Guidance (Oct 2025) §§2.3–2.10, Specification ¶6.21 — https://www.gov.uk/government/publications/standard-crime-contract-2025
+- **SOFTENED — "two-hour attendance guideline".** No such published LAA standard. Reworded to: no fixed statutory deadline; advice must be provided without undue delay; timing driven by the intended interview time and PACE Code C.
+- **FIXED/SOFTENED — ADMIN forms.** Confirmed **ADMIN 2** (Supervising Solicitor registers a Probationary Representative; PIN issued) and **ADMIN 3** (annual data cleanse, Certificate of Fitness incorporated) against the Police Station Register Arrangements 2025. Removed the unverified "currently January each year" cleanse month. Added a hedge that ADMIN 2/3 are the rep forms defined in the PSRA 2025 while duty-solicitor administration uses further DSCC forms (ADMIN 1/4 retained but not over-asserted).
+  - Source: Police Station Register Arrangements 2025 (defines ADMIN 2 & ADMIN 3) — published with the Standard Crime Contract 2025: https://www.gov.uk/government/publications/standard-crime-contract-2025
+- **FIXED — On-page "Official sources" list.** Replaced dead/guessed links (and the superseded 2022 contract / "Crime Workflow" references) with verified URLs: SCC 2025, SaBC, Criminal Legal Aid Manual, PACE Codes.
+- **OK — DSCC role, call flow, CDS Direct scope, PSQ/CLAS, Probationary→Accredited (CIT), PIN portability** all consistent with the 2025 arrangements.
+
 ### Site-wide reliance / verification warning (per user request: "warn re reliance … everywhere")
 - **ADDED — `components/ContentReliabilityNotice.tsx`** (new). Reusable warning in two variants: a prominent amber `banner` and a compact `inline` paragraph. Consistent wording everywhere: information may be wrong/out of date, it is **not legal advice**, and the reader must verify against the original source (legislation.gov.uk, gov.uk, LAA, CPS, relevant PACE Code) or take professional advice.
 - **ADDED — site-wide footer notice** (`components/Footer.tsx`): new "Reliance & verification" block renders on every page via the global layout.
@@ -90,6 +101,9 @@ Every primary/authoritative source cited above, de-duplicated. All URLs verified
 - **Attorney General's Guidelines on Disclosure (2024, effective 29 May 2024)** — https://www.gov.uk/government/publications/attorney-generals-guidelines-on-disclosure
 - **HMRC approved mileage rates** — https://www.gov.uk/travel-mileage-fuel-rates/travel-and-subsistence
 - **LAA graduated fee calculators (AGFS/LGFS)** — https://www.gov.uk/government/publications/graduated-fee-calculators
+- **LAA Submit a Bulk Claim (SaBC)** — reporting crime lower work, fee code INVC, escape via CRM18 — https://www.gov.uk/guidance/submit-a-bulk-claim-sabc
+- **LAA Criminal Legal Aid Manual** — https://www.gov.uk/guidance/criminal-legal-aid-manual
+- **Standard Crime Contract 2025** — incl. Police Station Register Arrangements 2025 (ADMIN 2/3) & Duty Solicitor Guidance (engaged requirements) — https://www.gov.uk/government/publications/standard-crime-contract-2025
 
 ### Crown Prosecution Service (cps.gov.uk)
 - **Code for Crown Prosecutors** — https://www.cps.gov.uk/publication/code-crown-prosecutors

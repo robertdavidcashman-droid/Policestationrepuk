@@ -52,12 +52,12 @@ const CALL_FLOW = [
   {
     n: 6,
     title: 'Attendance',
-    body: 'If attendance is required, the firm dispatches a solicitor or accredited rep. The LAA expects attendance within a reasonable time — the published guideline is two hours where practicable. The custody officer is told who is coming and when. The rep introduces themselves at custody, takes formal disclosure, and proceeds to consultation and interview.',
+    body: 'If attendance is required, the firm dispatches a solicitor or accredited rep. There is no fixed statutory deadline, but advice must be provided without undue delay — in practice the timing is driven by when the police intend to interview and by PACE Code C. The custody officer is told who is coming and when. The rep introduces themselves at custody, takes formal disclosure, and proceeds to consultation and interview.',
   },
   {
     n: 7,
     title: 'Billing and reporting',
-    body: 'After the attendance, the firm submits the CRM6 claim through the LAA Crime Workflow. Fixed fees are paid monthly. If the work crosses the &quot;escape&quot; threshold (currently around £650 of hourly-rate time), the firm can submit an escape claim instead. The DSCC record of the call is the audit trail.',
+    body: 'After the attendance, the firm reports the work to the LAA each month through the Submit a Bulk Claim (SaBC) service — which replaced Contracted Work and Administration (CWA) — using fee code INVC, and SaBC pays the fixed fee for the scheme the police station sits in. If the actual profit, travel and waiting costs cross the &quot;escape&quot; threshold (around £650), the firm completes an Escape Fee Claim Form (CRM18) for individual costs assessment instead. The DSCC record of the call is the audit trail.',
   },
 ];
 
@@ -75,7 +75,7 @@ const ADMIN_FORMS = [
   {
     code: 'ADMIN 3',
     title: 'Annual data cleanse',
-    body: 'Filed by the firm at the DSCC&apos;s annual data cleanse — currently January each year. Confirms every duty solicitor and rep is still active, still meets supervision/engaged requirements, and is still working at the firm. Failure to file ADMIN 3 removes the named individuals from the Register.',
+    body: 'Completed yearly for each Police Station Representative at the DSCC&apos;s annual data cleanse. Confirms the rep is still active, still meets the supervision requirements, and is still working at the firm (the Certificate of Fitness is incorporated into the ADMIN 3). Failure to return a properly completed ADMIN 3 removes the named individual from the Register.',
   },
   {
     code: 'ADMIN 4',
@@ -117,12 +117,12 @@ const COMMON_PROBLEMS = [
 ];
 
 const ENGAGED_REQUIREMENTS = [
-  'Hold a current Criminal Litigation Accreditation Scheme (CLAS) qualification or be a previous member of a duty scheme under an earlier SCC.',
-  'Undertake a minimum of 6 Police Station Advice and Assistance cases per rolling 12-month period.',
-  'Undertake the minimum specified court representations per rolling 12-month period.',
-  'Undertake at least one Police Station Duty attendance or Duty Slot in each rolling 3-month period.',
+  'Hold a current Criminal Litigation Accreditation Scheme (CLAS) qualification, or have been a member of a duty scheme under an earlier Contract.',
+  'Undertake a minimum of 6 Police Station Advice and Assistance cases per rolling 12-month period (no more than two of which can be telephone-only advice with no subsequent attendance).',
+  'In each rolling 12-month period, undertake either 20 magistrates\u2019 court representations, or 10 magistrates\u2019 court plus 5 Crown Court representations.',
+  'Undertake at least one Police Station Duty attendance (excluding telephone advice) or Duty Slot in their name in each rolling 3-month period.',
   'Work a minimum of 50 hours per calendar month on Criminal Defence Work for the Provider.',
-  'Maintain CPD and meet the SRA continuing competence requirements.',
+  'Meet the professional development requirements (CPD / SRA continuing competence).',
 ];
 
 const FAQS = [
@@ -161,10 +161,9 @@ const FAQS = [
 ];
 
 const SOURCES = [
-  { label: 'LAA — Duty Solicitors: rotas, information and guidance', href: 'https://www.gov.uk/government/publications/duty-solicitor-rotas' },
-  { label: 'LAA — Police Station Representatives and Duty Solicitors Arrangements 2025', href: 'https://www.gov.uk/guidance/police-station-representatives-and-duty-solicitors' },
-  { label: 'Standard Crime Contract 2022 (Specification Part B)', href: 'https://www.gov.uk/government/publications/standard-crime-contract-2022' },
-  { label: 'Legal Aid Agency — Crime Workflow (eForms)', href: 'https://www.gov.uk/guidance/criminal-legal-aid-manual' },
+  { label: 'LAA — Standard Crime Contract 2025 (incl. Police Station Register Arrangements 2025 & Duty Solicitor Guidance)', href: 'https://www.gov.uk/government/publications/standard-crime-contract-2025' },
+  { label: 'LAA — Submit a Bulk Claim (SaBC): reporting crime lower work and fee codes', href: 'https://www.gov.uk/guidance/submit-a-bulk-claim-sabc' },
+  { label: 'LAA — Criminal Legal Aid Manual', href: 'https://www.gov.uk/guidance/criminal-legal-aid-manual' },
   { label: 'PACE Code C — Detention, Treatment and Questioning', href: 'https://www.gov.uk/guidance/police-and-criminal-evidence-act-1984-pace-codes-of-practice' },
 ];
 
@@ -326,7 +325,9 @@ export default function DSCCRegistrationGuidePage() {
             <SectionHeading id="admin-forms">ADMIN 2, ADMIN 3, and the Register</SectionHeading>
             <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
               The DSCC maintains two registers: the Duty Solicitor Register and the Police Station
-              Representative Register. They are updated through four standard forms.
+              Representative Register. The representative forms (ADMIN 2 and ADMIN 3) are defined in
+              the LAA&apos;s Police Station Register Arrangements 2025; duty-solicitor scheme
+              administration uses further DSCC forms. The forms reps and firms most often encounter are:
             </p>
             <div className="mt-6 space-y-4">
               {ADMIN_FORMS.map((form) => (
@@ -376,7 +377,7 @@ export default function DSCCRegistrationGuidePage() {
             </p>
             <ul className="mt-4 list-disc space-y-2 pl-6 text-sm leading-relaxed text-[var(--muted)]">
               <li>Custody officers can ask to see the PIN before allowing you to sign the custody record as legal adviser.</li>
-              <li>The PIN is recorded in the firm&apos;s CRM6 billing claim — every attendance is tied to a specific PIN.</li>
+              <li>Each attendance is recorded against your PIN in the firm&apos;s monthly LAA claim (via SaBC) — every attendance is tied to a specific PIN.</li>
               <li>Never share your PIN. A PIN compromise can be misused by another person to attend custody in your name — and any complaint or regulatory action will land on you.</li>
               <li>If you change firms, your PIN moves with you but the new firm must file ADMIN 4 to notify the DSCC. Do not attend in the new firm&apos;s name until that has been acknowledged.</li>
             </ul>
