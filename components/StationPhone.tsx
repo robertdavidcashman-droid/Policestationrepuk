@@ -2,9 +2,52 @@ import type { PoliceStation } from '@/lib/types';
 import {
   classifyPhone,
   displayPhoneNumber,
+  stationPhoneNumbers,
   type PhoneClass,
 } from '@/lib/station-search';
 import { phoneToTelHref } from '@/lib/phone';
+import { formatPhoneUk } from '@/lib/phone-format';
+import {
+  DEFAULT_NON_EMERGENCY,
+  getOfficialContact,
+} from '@/lib/official-force-contacts';
+
+function forceNonEmergency(station: PoliceStation): { number: string; hint: string } {
+  const raw = getOfficialContact(station.forceName)?.nonEmergency ?? DEFAULT_NON_EMERGENCY;
+  const number = formatPhoneUk(raw) || raw;
+  const hint =
+    station.forceName === 'British Transport Police'
+      ? 'BTP non-emergency'
+      : number === '101'
+        ? 'Call 101 (non-emergency)'
+        : 'Force non-emergency';
+  return { number, hint };
+}
+
+function PhoneValue({
+  number,
+  link,
+  className,
+}: {
+  number: string;
+  link: boolean;
+  className?: string;
+}) {
+  if (link) {
+    return (
+      <a
+        href={phoneToTelHref(number)}
+        className={
+          className ??
+          'font-medium text-[var(--gold-link)] no-underline hover:text-[var(--gold)] hover:underline'
+        }
+      >
+        {number}
+      </a>
+    );
+  }
+  return <span className={className ?? 'font-medium text-[var(--gold-link)]'}>{number}</span>;
+}
 
 /**
  * Shared phone display used by the directory explorer and station cards so the
@@ -19,24 +62,34 @@ export function StationPhone({
   link?: boolean;
   className?: string;
 }) {
+  const entries = stationPhoneNumbers(station);
+  const wrapperClass = className ?? 'mt-2 text-xs';
+
+  if (entries.length > 0) {
+    return (
+      <div className={wrapperClass}>
+        {entries.map((entry) => (
+          <div key={`${entry.label}-${entry.number}`}>
+            <PhoneValue number={entry.number} link={link} />
+            <span className="ml-1 text-[10px] text-[var(--muted)]">
+              {entry.label}
+              {entry.className === 'switchboard' ? ' · force switchboard' : ''}
+              {entry.className === 'generic' ? ' · non-emergency' : ''}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   const cls: PhoneClass = classifyPhone(station);
   const number = displayPhoneNumber(station);
+  const { number: neNumber, hint } = forceNonEmergency(station);
 
   if (cls === 'station' || cls === 'switchboard') {
-    const numberEl = link && number ? (
-      <a
-        href={phoneToTelHref(number)}
-        className="font-medium text-[var(--gold-link)] no-underline hover:text-[var(--gold)] hover:underline"
-      >
-        {number}
-      </a>
-    ) : (
-      <span className="font-medium text-[var(--gold-link)]">{number}</span>
-    );
-
     return (
-      <div className={className ?? 'mt-2 text-xs'}>
-        {numberEl}
+      <div className={wrapperClass}>
+        <PhoneValue number={number!} link={link} />
         {cls === 'switchboard' && (
           <span className="block text-[10px] text-[var(--muted)]">Force switchboard</span>
         )}
@@ -45,8 +98,19 @@ export function StationPhone({
   }
 
   return (
-    <p className={`text-[10px] text-[var(--muted)] ${className ?? 'mt-2'}`}>
-      {cls === 'generic' ? 'Call 101 (non-emergency)' : 'No direct number — call 101'}
+    <p className={`text-[10px] text-[var(--muted)] ${wrapperClass}`}>
+      {cls === 'generic' && number ? (
+        <>
+          <PhoneValue number={number} link={link} className="text-[10px]" />
+          <span className="ml-1">· non-emergency</span>
+        </>
+      ) : (
+        <>
+          No direct number —{' '}
+          <PhoneValue number={neNumber} link={link} className="text-[10px]" />
+          <span className="ml-1">({hint})</span>
+        </>
+      )}
     </p>
   );
 }

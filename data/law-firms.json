@@ -29,7 +29,7 @@
     "postcode": "CH62 7HA",
     "phone": "0151 346 1375",
     "email": "info@acsolicitors.co.uk",
-    "website": "www.acssolicitors.co.uk",
+    "website": "https://www.acssolicitors.co.uk",
     "specialisms": [
       "Property - Commercial",
       "Wills, Trusts and Tax Planning",
@@ -853,19 +853,19 @@
     "sraNumber": "633830",
     "address": "43 New England Rd, Brighton, East Sussex BN1 4GG",
     "postcode": "BN1 4GG",
-    "phone": "",
+    "phone": "01273 713600",
     "email": "",
     "website": "https://www.tildensltd.co.uk/",
     "specialisms": [
       "Criminal Law"
     ],
-    "county": "Kent",
+    "county": "East Sussex",
     "region": "England",
     "sizeCategory": "small",
     "criminalLawPractice": true,
     "policeStationWork": true,
     "dutySolicitorScheme": true,
-    "lastVerified": "2025-08-29T16:44:40.566Z",
+    "lastVerified": "2026-06-02T12:00:00.000Z",
     "slug": "tildens-ltd"
   },
   {

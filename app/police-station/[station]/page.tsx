@@ -11,6 +11,12 @@ import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCre
 import { FirmCoverCTA } from '@/components/FirmCoverCTA';
 import { phoneToTelHref } from '@/lib/phone';
 import { displayPhoneNumber, stationPhoneNumbers } from '@/lib/station-search';
+import { isCustodyStation } from '@/lib/custody-station';
+import {
+  DEFAULT_NON_EMERGENCY,
+  getOfficialContact,
+} from '@/lib/official-force-contacts';
+import { formatPhoneUk } from '@/lib/phone-format';
 import { StationLocationMap } from '@/components/StationLocationMap';
 import { countRepsForStation, shouldIndexPoliceStationPage } from '@/lib/station-indexing';
 import { directoryHrefForAreaName } from '@/lib/county-links';
@@ -344,14 +350,38 @@ export default async function PoliceStationPage({ params }: PageProps) {
 
 function StationPhoneDetail({ station }: { station: PoliceStation }) {
   const entries = stationPhoneNumbers(station);
+  const custody = isCustodyStation(station);
+  const hasCustodyLine = entries.some(
+    (e) => e.label.startsWith('Custody') && e.className === 'station',
+  );
+  const neRaw = getOfficialContact(station.forceName)?.nonEmergency ?? DEFAULT_NON_EMERGENCY;
+  const neNumber = formatPhoneUk(neRaw) || neRaw;
+  const neHint =
+    station.forceName === 'British Transport Police'
+      ? 'BTP non-emergency'
+      : neNumber === '101'
+        ? 'non-emergency'
+        : 'force non-emergency';
 
   if (entries.length === 0) {
     return (
       <div>
         <dt className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Phone</dt>
         <dd className="mt-0.5 text-[var(--muted)]">
-          No direct number — call 101 for non-emergency enquiries
+          No direct number —{' '}
+          <a
+            href={phoneToTelHref(neNumber)}
+            className="font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)]"
+          >
+            {neNumber}
+          </a>{' '}
+          ({neHint})
         </dd>
+        {custody && !hasCustodyLine && (
+          <dd className="mt-2 text-xs text-[var(--muted)]">
+            No published custody desk line — use {neNumber} and ask for custody.
+          </dd>
+        )}
       </div>
     );
   }
@@ -361,7 +391,7 @@ function StationPhoneDetail({ station }: { station: PoliceStation }) {
       <dt className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Phone</dt>
       <dd className="mt-1 space-y-1.5">
         {entries.map((entry) => (
-          <div key={entry.number}>
+          <div key={`${entry.label}-${entry.number}`}>
             <a
               href={phoneToTelHref(entry.number)}
               className="font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)]"
@@ -377,6 +407,18 @@ function StationPhoneDetail({ station }: { station: PoliceStation }) {
             </span>
           </div>
         ))}
+        {custody && !hasCustodyLine && (
+          <p className="text-xs text-[var(--muted)]">
+            No published custody desk line — use{' '}
+            <a
+              href={phoneToTelHref(neNumber)}
+              className="font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)]"
+            >
+              {neNumber}
+            </a>{' '}
+            ({neHint}) and ask for custody.
+          </p>
+        )}
       </dd>
     </div>
   );

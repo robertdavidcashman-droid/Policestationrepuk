@@ -61,6 +61,30 @@ describe('stationPhoneNumbers', () => {
     );
     expect(entries).toHaveLength(1);
   });
+
+  it('lists custody before generic non-emergency', () => {
+    const entries = stationPhoneNumbers(
+      stub({
+        custodyPhone: '01622 690999',
+        phone: '101',
+        nonEmergencyPhone: '101',
+        forceName: 'Kent Police',
+      }),
+    );
+    expect(entries[0]?.label).toBe('Custody desk');
+    expect(entries.some((e) => e.className === 'generic')).toBe(true);
+  });
+
+  it('returns only BTP non-emergency when that is the sole number', () => {
+    const entries = stationPhoneNumbers(
+      stub({
+        forceName: 'British Transport Police',
+        nonEmergencyPhone: '0800 40 50 40',
+      }),
+    );
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ className: 'generic', number: '0800 40 50 40' });
+  });
 });
 
 describe('deriveStationCounty', () => {

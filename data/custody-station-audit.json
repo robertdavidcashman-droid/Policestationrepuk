@@ -1,0 +1,994 @@
+{
+  "generatedAt": "2026-06-02T14:10:44.470Z",
+  "totalStations": 896,
+  "auditRows": 90,
+  "recommendNewFlags": 0,
+  "rows": [
+    {
+      "id": "695519d656689489338b0f1f",
+      "slug": "oldbury-custody-suite",
+      "name": "Oldbury custody suite",
+      "forceName": "West Midlands Police",
+      "reasons": [],
+      "recommendFlag": false,
+      "currentFlag": true
+    },
+    {
+      "id": "6938f0c88a9be5bac7d4a603",
+      "slug": "bradford-trafalgar-house-police-station",
+      "name": "Bradford trafalgar house police station",
+      "forceName": "West Yorkshire Police",
+      "reasons": [
+        "seed:bradford"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "6935d2db39e68aa02a73e56c",
+      "slug": "middlewich-custody",
+      "name": "Middlewich custody",
+      "forceName": "Cheshire Constabulary",
+      "reasons": [],
+      "recommendFlag": false,
+      "currentFlag": true
+    },
+    {
+      "id": "692f57ef31e3e01c6613e1f4",
+      "slug": "polar-park-police-station",
+      "name": "Polar Park Police Station",
+      "forceName": "Metropolitan Police",
+      "reasons": [
+        "base44_is_custody_station"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "69249ef9743037e7e65a83d6",
+      "slug": "euston-street-police-station",
+      "name": "Euston Street Police Station",
+      "forceName": "Leicestershire Police",
+      "reasons": [
+        "base44_is_custody_station"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "69249ef9743037e7e65a83d3",
+      "slug": "northampton-criminal-justice-centre",
+      "name": "Northampton Criminal Justice Centre",
+      "forceName": "Northamptonshire Police",
+      "reasons": [
+        "seed:northampton",
+        "base44_is_custody_station"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "69249ef9743037e7e65a83d5",
+      "slug": "keyham-lane-police-station",
+      "name": "Keyham Lane Police Station",
+      "forceName": "Leicestershire Police",
+      "reasons": [
+        "base44_is_custody_station"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "69249ef9743037e7e65a83d8",
+      "slug": "banbury-police-station",
+      "name": "Banbury Police Station",
+      "forceName": "Thames Valley Police",
+      "reasons": [
+        "seed:banbury",
+        "base44_is_custody_station"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "69249ef9743037e7e65a83d4",
+      "slug": "weekly-woods-justice-centre",
+      "name": "Weekly Woods Justice Centre",
+      "forceName": "Northamptonshire Police",
+      "reasons": [
+        "base44_is_custody_station"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "69249ef9743037e7e65a83d7",
+      "slug": "kempston-police-station",
+      "name": "Kempston Police Station",
+      "forceName": "Bedfordshire Police",
+      "reasons": [
+        "base44_is_custody_station"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8db1a",
+      "slug": "norwich-police-station",
+      "name": "Norwich Police Station",
+      "forceName": "British Transport Police",
+      "reasons": [
+        "seed:norwich"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8db08",
+      "slug": "reading-police-station",
+      "name": "Reading Police Station",
+      "forceName": "British Transport Police",
+      "reasons": [
+        "seed:reading"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8db19",
+      "slug": "cambridge-police-station",
+      "name": "Cambridge Police Station",
+      "forceName": "British Transport Police",
+      "reasons": [
+        "seed:cambridge"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8db0c",
+      "slug": "peterborough-police-station",
+      "name": "Peterborough Police Station",
+      "forceName": "British Transport Police",
+      "reasons": [
+        "seed:peterborough"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8db15",
+      "slug": "gloucester-police-station",
+      "name": "Gloucester Police Station",
+      "forceName": "British Transport Police",
+      "reasons": [
+        "seed:gloucester"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8db17",
+      "slug": "exeter-st-davids-police-station",
+      "name": "Exeter St Davids Police Station",
+      "forceName": "British Transport Police",
+      "reasons": [
+        "seed:exeter"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8db16",
+      "slug": "plymouth-police-station",
+      "name": "Plymouth Police Station",
+      "forceName": "British Transport Police",
+      "reasons": [
+        "seed:plymouth"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8db0a",
+      "slug": "doncaster-police-station",
+      "name": "Doncaster Police Station",
+      "forceName": "British Transport Police",
+      "reasons": [
+        "seed:doncaster"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8db10",
+      "slug": "preston-police-station",
+      "name": "Preston Police Station",
+      "forceName": "British Transport Police",
+      "reasons": [
+        "seed:preston"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8db07",
+      "slug": "brighton-police-station",
+      "name": "Brighton Police Station",
+      "forceName": "British Transport Police",
+      "reasons": [
+        "seed:brighton"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8db00",
+      "slug": "leeds-police-station",
+      "name": "Leeds Police Station",
+      "forceName": "British Transport Police",
+      "reasons": [
+        "seed:leeds"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dafc",
+      "slug": "kings-cross-police-station",
+      "name": "Kings Cross Police Station",
+      "forceName": "British Transport Police",
+      "reasons": [
+        "seed:kings-lynn"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dab8",
+      "slug": "portsmouth-central-police-station",
+      "name": "Portsmouth Central Police Station",
+      "forceName": "Hampshire Constabulary",
+      "reasons": [
+        "seed:portsmouth-central"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dadc",
+      "slug": "crawley-police-station",
+      "name": "Crawley Police Station",
+      "forceName": "Sussex Police",
+      "reasons": [
+        "seed:crawley"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dab7",
+      "slug": "basingstoke-police-station",
+      "name": "Basingstoke Police Station",
+      "forceName": "Hampshire Constabulary",
+      "reasons": [
+        "seed:basingstoke"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8daac",
+      "slug": "bournemouth-police-station",
+      "name": "Bournemouth Police Station",
+      "forceName": "Dorset Police",
+      "reasons": [
+        "seed:bournemouth"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dac7",
+      "slug": "staines-police-station",
+      "name": "Staines Police Station",
+      "forceName": "Surrey Police",
+      "reasons": [
+        "seed:staines"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dace",
+      "slug": "medway-police-station",
+      "name": "Medway Police Station",
+      "forceName": "Kent Police",
+      "reasons": [
+        "seed:medway"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dad5",
+      "slug": "ashford-police-station",
+      "name": "Ashford Police Station",
+      "forceName": "Kent Police",
+      "reasons": [
+        "seed:ashford-kent"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dad0",
+      "slug": "canterbury-police-station",
+      "name": "Canterbury Police Station",
+      "forceName": "Kent Police",
+      "reasons": [
+        "seed:canterbury"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dad3",
+      "slug": "folkestone-police-station",
+      "name": "Folkestone Police Station",
+      "forceName": "Kent Police",
+      "reasons": [
+        "seed:folkestone"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dad4",
+      "slug": "margate-police-station",
+      "name": "Margate Police Station",
+      "forceName": "Kent Police",
+      "reasons": [
+        "seed:margate"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dac5",
+      "slug": "guildford-police-station",
+      "name": "Guildford Police Station",
+      "forceName": "Surrey Police",
+      "reasons": [
+        "seed:guildford"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dadb",
+      "slug": "brighton-police-station-2",
+      "name": "Brighton Police Station",
+      "forceName": "Sussex Police",
+      "reasons": [
+        "seed:brighton"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dab9",
+      "slug": "southampton-central-police-station",
+      "name": "Southampton Central Police Station",
+      "forceName": "Hampshire Constabulary",
+      "reasons": [
+        "seed:southampton-central"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dacf",
+      "slug": "maidstone-police-station",
+      "name": "Maidstone Police Station",
+      "forceName": "Kent Police",
+      "reasons": [
+        "seed:maidstone"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dadd",
+      "slug": "eastbourne-police-station",
+      "name": "Eastbourne Police Station",
+      "forceName": "Sussex Police",
+      "reasons": [
+        "seed:eastbourne"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8daad",
+      "slug": "poole-police-station",
+      "name": "Poole Police Station",
+      "forceName": "Dorset Police",
+      "reasons": [
+        "seed:poole"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dac8",
+      "slug": "woking-police-station",
+      "name": "Woking Police Station",
+      "forceName": "Surrey Police",
+      "reasons": [
+        "seed:woking"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dae8",
+      "slug": "reading-police-station-2",
+      "name": "Reading Police Station",
+      "forceName": "Thames Valley Police",
+      "reasons": [
+        "seed:reading"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8daec",
+      "slug": "oxford-police-station",
+      "name": "Oxford Police Station",
+      "forceName": "Thames Valley Police",
+      "reasons": [
+        "seed:oxford"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8dae9",
+      "slug": "slough-police-station",
+      "name": "Slough Police Station",
+      "forceName": "Thames Valley Police",
+      "reasons": [
+        "seed:slough"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da88",
+      "slug": "yeovil-police-station",
+      "name": "Yeovil Police Station",
+      "forceName": "Avon and Somerset Constabulary",
+      "reasons": [
+        "seed:yeovil"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da93",
+      "slug": "cheltenham-police-station",
+      "name": "Cheltenham Police Station",
+      "forceName": "Gloucestershire Constabulary",
+      "reasons": [
+        "seed:cheltenham"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da9b",
+      "slug": "plymouth-charles-cross-police-station",
+      "name": "Plymouth Charles Cross Police Station",
+      "forceName": "Devon and Cornwall Police",
+      "reasons": [
+        "seed:plymouth"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da9c",
+      "slug": "torquay-police-station",
+      "name": "Torquay Police Station",
+      "forceName": "Devon and Cornwall Police",
+      "reasons": [
+        "seed:torquay"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da91",
+      "slug": "gloucestershire-headquarters",
+      "name": "Gloucestershire Headquarters",
+      "forceName": "Gloucestershire Constabulary",
+      "reasons": [
+        "seed:gloucester"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da9a",
+      "slug": "exeter-police-station",
+      "name": "Exeter Police Station",
+      "forceName": "Devon and Cornwall Police",
+      "reasons": [
+        "seed:exeter"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da89",
+      "slug": "taunton-police-station",
+      "name": "Taunton Police Station",
+      "forceName": "Avon and Somerset Constabulary",
+      "reasons": [
+        "seed:taunton"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da06",
+      "slug": "kettering-police-station",
+      "name": "Kettering Police Station",
+      "forceName": "Northamptonshire Police",
+      "reasons": [
+        "seed:kettering"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da01",
+      "slug": "northamptonshire-headquarters",
+      "name": "Northamptonshire Headquarters",
+      "forceName": "Northamptonshire Police",
+      "reasons": [
+        "seed:northampton"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da32",
+      "slug": "nuneaton-police-station",
+      "name": "Nuneaton Police Station",
+      "forceName": "Warwickshire Police",
+      "reasons": [
+        "seed:nuneaton"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da30",
+      "slug": "warwickshire-headquarters",
+      "name": "Warwickshire Headquarters",
+      "forceName": "Warwickshire Police",
+      "reasons": [
+        "seed:warwick"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da1a",
+      "slug": "birmingham-central-police-station",
+      "name": "Birmingham Central Police Station",
+      "forceName": "West Midlands Police",
+      "reasons": [
+        "seed:birmingham-central"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da22",
+      "slug": "wolverhampton-police-station",
+      "name": "Wolverhampton Police Station",
+      "forceName": "West Midlands Police",
+      "reasons": [
+        "seed:wolverhampton"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da1e",
+      "slug": "coventry-central-police-station",
+      "name": "Coventry Central Police Station",
+      "forceName": "West Midlands Police",
+      "reasons": [
+        "seed:coventry"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8da36",
+      "slug": "warwick-police-station",
+      "name": "Warwick Police Station",
+      "forceName": "Warwickshire Police",
+      "reasons": [
+        "seed:warwick"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d993",
+      "slug": "bolton-police-station",
+      "name": "Bolton Police Station",
+      "forceName": "Greater Manchester Police",
+      "reasons": [
+        "seed:bolton"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d997",
+      "slug": "oldham-police-station",
+      "name": "Oldham Police Station",
+      "forceName": "Greater Manchester Police",
+      "reasons": [
+        "seed:oldham"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d990",
+      "slug": "birkenhead-police-station",
+      "name": "Birkenhead Police Station",
+      "forceName": "Merseyside Police",
+      "reasons": [
+        "seed:birkenhead"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d9e0",
+      "slug": "mansfield-police-station",
+      "name": "Mansfield Police Station",
+      "forceName": "Nottinghamshire Police",
+      "reasons": [
+        "seed:mansfield"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d974",
+      "slug": "blackburn-police-station",
+      "name": "Blackburn Police Station",
+      "forceName": "Lancashire Constabulary",
+      "reasons": [
+        "seed:blackburn"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d979",
+      "slug": "burnley-police-station",
+      "name": "Burnley Police Station",
+      "forceName": "Lancashire Constabulary",
+      "reasons": [
+        "seed:burnley"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d96d",
+      "slug": "preston-police-station-2",
+      "name": "Preston Police Station",
+      "forceName": "Lancashire Constabulary",
+      "reasons": [
+        "seed:preston"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d983",
+      "slug": "wirral-custody-suite",
+      "name": "Wirral Custody Suite",
+      "forceName": "Merseyside Police",
+      "reasons": [],
+      "recommendFlag": false,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d93d",
+      "slug": "huddersfield-police-station",
+      "name": "Huddersfield Police Station",
+      "forceName": "West Yorkshire Police",
+      "reasons": [
+        "seed:huddersfield"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d92e",
+      "slug": "doncaster-police-station-2",
+      "name": "Doncaster Police Station",
+      "forceName": "South Yorkshire Police",
+      "reasons": [
+        "seed:doncaster"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d8a6",
+      "slug": "hatfield-police-station",
+      "name": "Hatfield Police Station",
+      "forceName": "Hertfordshire Constabulary",
+      "reasons": [
+        "seed:hatfield"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d88d",
+      "slug": "southend-police-station",
+      "name": "Southend Police Station",
+      "forceName": "Essex Police",
+      "reasons": [
+        "seed:southend"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d8ae",
+      "slug": "stevenage-police-station",
+      "name": "Stevenage Police Station",
+      "forceName": "Hertfordshire Constabulary",
+      "reasons": [
+        "seed:stevenage"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d8c9",
+      "slug": "bury-st-edmunds-police-station",
+      "name": "Bury St Edmunds Police Station",
+      "forceName": "Suffolk Constabulary",
+      "reasons": [
+        "seed:bury-st-edmunds"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d884",
+      "slug": "colchester-police-station",
+      "name": "Colchester Police Station",
+      "forceName": "Essex Police",
+      "reasons": [
+        "seed:colchester"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d899",
+      "slug": "chelmsford-police-station",
+      "name": "Chelmsford Police Station",
+      "forceName": "Essex Police",
+      "reasons": [
+        "seed:chelmsford"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d8b9",
+      "slug": "kings-lynn-police-station",
+      "name": "Kings Lynn Police Station",
+      "forceName": "Norfolk Constabulary",
+      "reasons": [
+        "seed:kings-lynn"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d8aa",
+      "slug": "watford-police-station",
+      "name": "Watford Police Station",
+      "forceName": "Hertfordshire Constabulary",
+      "reasons": [
+        "seed:watford"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d889",
+      "slug": "basildon-police-station",
+      "name": "Basildon Police Station",
+      "forceName": "Essex Police",
+      "reasons": [
+        "seed:basildon"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d8cb",
+      "slug": "ipswich-police-station",
+      "name": "Ipswich Police Station",
+      "forceName": "Suffolk Constabulary",
+      "reasons": [
+        "seed:ipswich"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d823",
+      "slug": "brixton-police-station",
+      "name": "Brixton Police Station",
+      "forceName": "Metropolitan Police",
+      "reasons": [
+        "seed:brixton"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d872",
+      "slug": "cambridge-headquarters",
+      "name": "Cambridge Headquarters",
+      "forceName": "Cambridgeshire Constabulary",
+      "reasons": [
+        "seed:cambridge"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d85c",
+      "slug": "warwick-police-contact-point",
+      "name": "Warwick Police Contact Point",
+      "forceName": "Metropolitan Police",
+      "reasons": [
+        "seed:warwick"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d858",
+      "slug": "charing-cross-police-station",
+      "name": "Charing Cross Police Station",
+      "forceName": "Metropolitan Police",
+      "reasons": [
+        "seed:charing-cross"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d82a",
+      "slug": "lewisham-police-station",
+      "name": "Lewisham Police Station",
+      "forceName": "Metropolitan Police",
+      "reasons": [
+        "seed:lewisham"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d81f",
+      "slug": "kingston-police-station",
+      "name": "Kingston Police Station",
+      "forceName": "Metropolitan Police",
+      "reasons": [
+        "seed:kings-lynn"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d7f3",
+      "slug": "stoke-newington-police-station",
+      "name": "Stoke Newington Police Station",
+      "forceName": "Metropolitan Police",
+      "reasons": [
+        "seed:stoke-newington"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d7cb",
+      "slug": "kingsbury-library-police-contact-point",
+      "name": "Kingsbury Library Police Contact Point",
+      "forceName": "Metropolitan Police",
+      "reasons": [
+        "seed:kings-lynn"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d7d9",
+      "slug": "croydon-police-station",
+      "name": "Croydon Police Station",
+      "forceName": "Metropolitan Police",
+      "reasons": [
+        "seed:croydon"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d81c",
+      "slug": "kings-road-police-contact-point",
+      "name": "Kings Road Police Contact Point",
+      "forceName": "Metropolitan Police",
+      "reasons": [
+        "seed:kings-lynn"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "68af781484b8f00da0b8d7fd",
+      "slug": "tottenham-police-station",
+      "name": "Tottenham Police Station",
+      "forceName": "Metropolitan Police",
+      "reasons": [
+        "seed:tottenham"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "sg-plymouth-crownhill",
+      "slug": "plymouth-crownhill-police-station",
+      "name": "Plymouth Crownhill Police Station",
+      "forceName": "Devon and Cornwall Police",
+      "reasons": [
+        "seed:plymouth"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    },
+    {
+      "id": "sg-plymouth-devonport",
+      "slug": "plymouth-devonport-police-station",
+      "name": "Plymouth Devonport Police Station",
+      "forceName": "Devon and Cornwall Police",
+      "reasons": [
+        "seed:plymouth"
+      ],
+      "recommendFlag": true,
+      "currentFlag": true
+    }
+  ]
+}

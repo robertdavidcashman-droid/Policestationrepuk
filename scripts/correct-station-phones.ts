@@ -10,7 +10,12 @@ import {
   getOfficialContact,
   OFFICIAL_FORCE_CONTACTS,
 } from '../lib/official-force-contacts';
-import { formatPhoneUk, normalizePhoneDigits, phonesEquivalent } from '../lib/phone-format';
+import {
+  formatPhoneUk,
+  isPlausibleUkPhoneField,
+  normalizePhoneDigits,
+  phonesEquivalent,
+} from '../lib/phone-format';
 import { normalizePhone } from '../lib/station-search';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -61,6 +66,11 @@ function correctStation(s: Station): string[] {
   for (const field of PHONE_FIELDS) {
     const raw = (s[field] as string | undefined)?.trim();
     if (!raw) continue;
+    if (!isPlausibleUkPhoneField(raw)) {
+      if (WRITE) (s as Record<string, string>)[field] = field === 'nonEmergencyPhone' ? targetNe : '';
+      changes.push(`${field}: removed invalid/non-numeric content`);
+      continue;
+    }
     const formatted = formatField(raw);
     if (formatted !== raw) {
       if (WRITE) (s as Record<string, string>)[field] = formatted;

@@ -480,7 +480,7 @@ function StationDirectoryCard({ station }: { station: PoliceStation }) {
             {station.forceName || station.county}
           </p>
         )}
-        <StationPhone station={station} />
+        <StationPhone station={station} link />
       </Link>
       <div className="border-t border-[var(--card-border)] px-4 py-2.5">
         <Link

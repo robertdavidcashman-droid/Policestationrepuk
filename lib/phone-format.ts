@@ -49,3 +49,15 @@ export function phonesEquivalent(a: string, b: string): boolean {
   const db = normalizePhoneDigits(b);
   return Boolean(da && db && da === db);
 }
+
+/** Reject AI prose, URLs, or non-phone content in phone fields. */
+export function isPlausibleUkPhoneField(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 24) return false;
+  if (/https?:|\.police\.uk|utm_|\[|\]/i.test(trimmed)) return false;
+  const digits = normalizePhoneDigits(trimmed);
+  if (!digits) return false;
+  if (digits === '101') return true;
+  if (digits.startsWith('0800') && digits.length >= 10) return true;
+  return /^0\d{9,10}$/.test(digits);
+}
