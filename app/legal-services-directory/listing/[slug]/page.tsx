@@ -11,6 +11,8 @@ import {
   toPublicListing,
 } from '@/lib/legal-directory/storage';
 import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
+import { computeListingVerification } from '@/lib/legal-directory/verification-sources';
+import { isUnclaimedSeededListing } from '@/lib/legal-directory/laa-seed';
 import { phoneToTelHref } from '@/lib/phone';
 import { SITE_URL } from '@/lib/seo-layer/config';
 
@@ -43,6 +45,9 @@ export default async function ListingProfilePage({ params }: Props) {
 
   const pub = toPublicListing(listing);
   const specialisms = pub.specialisms.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean);
+  const verificationSources = pub.verificationSources ?? [];
+  const derivedVerification = computeListingVerification(verificationSources);
+  const unclaimed = isUnclaimedSeededListing(listing);
 
   const breadcrumbs = breadcrumbSchema([
     { name: 'Home', url: SITE_URL },
@@ -77,6 +82,16 @@ export default async function ListingProfilePage({ params }: Props) {
                 Verified
               </span>
             )}
+            {pub.verificationStatus === 'unverified' && !pub.verified && (
+              <span className="rounded-full bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-100">
+                Unverified
+              </span>
+            )}
+            {pub.verificationStatus === 'verified' && pub.dateVerified && (
+              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-200">
+                Checked {pub.dateVerified}
+              </span>
+            )}
             {pub.featured && (
               <span className="rounded-full bg-[var(--gold)]/20 px-3 py-1 text-xs font-bold text-[var(--gold)]">
                 Featured
@@ -89,6 +104,21 @@ export default async function ListingProfilePage({ params }: Props) {
       <div className="page-container section-pad">
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
+            {unclaimed && (
+              <section className="card-surface border-l-4 border-[var(--gold)] bg-[var(--gold-pale)] p-6">
+                <h2 className="text-h4 text-[var(--navy)]">Is this your firm?</h2>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+                  This listing was created from published Legal Aid Agency data and is unclaimed.
+                  Claim it to confirm your details, add contact information, and complete the profile.
+                </p>
+                <Link
+                  href={`${LEGAL_DIRECTORY_BASE}/claim/${pub.slug}`}
+                  className="btn-gold mt-4 inline-block no-underline"
+                >
+                  Claim this listing
+                </Link>
+              </section>
+            )}
             <section className="card-surface p-6">
               <h2 className="text-h3 text-[var(--navy)]">About</h2>
               <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[var(--muted)]">
@@ -159,7 +189,58 @@ export default async function ListingProfilePage({ params }: Props) {
                 Legal Aid: {pub.legalAidStatus === 'yes' ? 'Yes' : pub.legalAidStatus === 'no' ? 'No' : 'N/A'}
                 {pub.availability24Hour ? ' · 24-hour availability' : ''}
               </p>
+              {pub.verificationStatus === 'verified' && pub.dateVerified && (
+                <p className="mt-3 text-xs text-[var(--muted)]">
+                  Listing details checked {pub.dateVerified}
+                  {pub.sourceUrl ? (
+                    <>
+                      {' '}
+                      (
+                      <a
+                        href={pub.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-[var(--gold-link)] no-underline hover:underline"
+                      >
+                        source
+                      </a>
+                      )
+                    </>
+                  ) : null}
+                  .
+                </p>
+              )}
+              {pub.verificationStatus === 'unverified' && (
+                <p className="mt-3 text-xs font-medium text-amber-800">Contact details: unverified</p>
+              )}
             </div>
+
+            {verificationSources.length > 0 && (
+              <div className="card-surface p-6 text-sm text-[var(--muted)]">
+                <h3 className="font-semibold text-[var(--navy)]">Verification sources</h3>
+                <p className="mt-2">
+                  {derivedVerification.status === 'verified'
+                    ? `Confirmed against ${derivedVerification.tierACount > 0 ? 'an official register' : 'corroborating official sources'}${derivedVerification.dateVerified ? ` (checked ${derivedVerification.dateVerified})` : ''}.`
+                    : 'Submitted sources do not yet meet the threshold for verification.'}
+                </p>
+                <ul className="mt-3 space-y-2">
+                  {verificationSources.map((s, i) => (
+                    <li key={`${s.url}-${i}`}>
+                      <a
+                        href={s.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-[var(--gold-link)] no-underline hover:underline"
+                      >
+                        {s.label}
+                      </a>
+                      {s.reference ? ` · ${s.reference}` : ''}
+                      {s.dateChecked ? ` · checked ${s.dateChecked}` : ''}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {(pub.regulatoryBody || pub.regulatoryNumber) && (
               <div className="card-surface p-6 text-sm text-[var(--muted)]">

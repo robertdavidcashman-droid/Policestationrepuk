@@ -1,0 +1,211 @@
+[
+  {
+    "slug": "solicitors-regulation-authority",
+    "name": "Solicitors Regulation Authority (SRA)",
+    "url": "https://www.sra.org.uk",
+    "group": "Regulators",
+    "tier": "regulator",
+    "region": "England and Wales",
+    "shortDescription": "Regulator for solicitors and law firms in England and Wales.",
+    "description": "The Solicitors Regulation Authority regulates solicitors and the firms they work for in England and Wales. Use the SRA to check whether a solicitor or firm is authorised, view any regulatory history, and understand the standards firms must meet. The SRA's 'Check a solicitor's record' tool is the authoritative way to confirm a solicitor's current regulatory status before instructing them.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "bar-standards-board",
+    "name": "Bar Standards Board (BSB)",
+    "url": "https://www.barstandardsboard.org.uk",
+    "group": "Regulators",
+    "tier": "regulator",
+    "region": "England and Wales",
+    "shortDescription": "Regulator for barristers in England and Wales.",
+    "description": "The Bar Standards Board regulates barristers and specialised legal services businesses in England and Wales. Use the BSB to confirm that a barrister holds a current practising certificate and to review the professional standards barristers must follow. The 'Find a Barrister' service operated alongside the BSB lets you check authorisation before instructing counsel.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "cilex-regulation",
+    "name": "CILEx Regulation",
+    "url": "https://cilexregulation.org.uk",
+    "group": "Regulators",
+    "tier": "regulator",
+    "region": "England and Wales",
+    "shortDescription": "Regulator for Chartered Legal Executives and CILEX practitioners.",
+    "description": "CILEx Regulation is the independent regulator of Chartered Legal Executives, CILEX practitioners, and CILEX-regulated firms. Use it to verify the regulatory status of a Chartered Legal Executive or CILEX-authorised provider before instructing them on criminal or other legal matters.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "legal-services-board",
+    "name": "Legal Services Board",
+    "url": "https://legalservicesboard.org.uk",
+    "group": "Regulators",
+    "tier": "regulator",
+    "region": "England and Wales",
+    "shortDescription": "Oversight regulator for legal services in England and Wales.",
+    "description": "The Legal Services Board is the oversight body responsible for regulating the legal services regulators (such as the SRA and BSB) in England and Wales. It sets the framework that front-line regulators operate within and publishes research and policy on the legal services market.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "find-a-solicitor",
+    "name": "Find a Solicitor (The Law Society)",
+    "url": "https://solicitors.lawsociety.org.uk",
+    "group": "Find a provider",
+    "tier": "representation",
+    "region": "England and Wales",
+    "shortDescription": "Official Law Society search for regulated solicitors and firms.",
+    "description": "Find a Solicitor is the Law Society's free search tool for finding solicitors and firms regulated in England and Wales. You can search by name, location, and area of law, including criminal defence. It is a useful starting point for locating a regulated firm, and you can confirm regulatory status separately with the SRA.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "the-law-society",
+    "name": "The Law Society",
+    "url": "https://www.lawsociety.org.uk",
+    "group": "Find a provider",
+    "tier": "representation",
+    "region": "England and Wales",
+    "shortDescription": "Professional body representing solicitors in England and Wales.",
+    "description": "The Law Society is the independent professional body for solicitors in England and Wales. It provides guidance, practice notes, and resources for the profession and the public, and operates the Find a Solicitor service.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "the-bar-council",
+    "name": "The Bar Council",
+    "url": "https://www.barcouncil.org.uk",
+    "group": "Find a provider",
+    "tier": "representation",
+    "region": "England and Wales",
+    "shortDescription": "Professional body representing barristers in England and Wales.",
+    "description": "The Bar Council is the representative body for barristers in England and Wales. It provides public guidance on instructing barristers (including direct/public access) and supports the profession on standards and practice.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "cilex",
+    "name": "CILEX (Chartered Institute of Legal Executives)",
+    "url": "https://www.cilex.org.uk",
+    "group": "Find a provider",
+    "tier": "representation",
+    "region": "England and Wales",
+    "shortDescription": "Professional body for Chartered Legal Executives and paralegals.",
+    "description": "CILEX is the professional body for Chartered Legal Executives, paralegals, and other legal practitioners. It offers information on qualifications and the role of legal executives, who can work in criminal defence teams.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "legal-aid-agency",
+    "name": "Legal Aid Agency (LAA)",
+    "url": "https://www.gov.uk/government/organisations/legal-aid-agency",
+    "group": "Legal aid",
+    "tier": "legal_aid",
+    "region": "England and Wales",
+    "shortDescription": "Government body that funds and administers legal aid.",
+    "description": "The Legal Aid Agency is the part of the Ministry of Justice responsible for administering legal aid in England and Wales, including criminal legal aid and police station advice. It contracts with providers to deliver legal aid services and publishes data on those providers.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "find-a-legal-aid-adviser",
+    "name": "Find a legal aid adviser or solicitor",
+    "url": "https://find-legal-advice.justice.gov.uk",
+    "group": "Legal aid",
+    "tier": "legal_aid",
+    "region": "England and Wales",
+    "shortDescription": "Official gov.uk tool to find legal aid providers by area of law.",
+    "description": "This Ministry of Justice service lets the public find legal aid advisers and solicitors by area of law and location, including criminal defence. It identifies providers holding a legal aid contract for the relevant work.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "check-if-you-can-get-legal-aid",
+    "name": "Check if you can get legal aid",
+    "url": "https://www.gov.uk/check-legal-aid",
+    "group": "Legal aid",
+    "tier": "legal_aid",
+    "region": "England and Wales",
+    "shortDescription": "Official gov.uk eligibility checker for legal aid.",
+    "description": "An official gov.uk tool that helps individuals check whether they may be eligible for legal aid based on their circumstances and the type of legal problem, including criminal matters.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "crown-prosecution-service",
+    "name": "Crown Prosecution Service (CPS)",
+    "url": "https://www.cps.gov.uk",
+    "group": "Courts & prosecution",
+    "tier": "courts",
+    "region": "England and Wales",
+    "shortDescription": "The principal prosecuting authority for England and Wales.",
+    "description": "The Crown Prosecution Service prosecutes criminal cases investigated by the police and other agencies in England and Wales. Its website publishes prosecution guidance, the Code for Crown Prosecutors, and legal guidance on specific offences, which can be valuable reference material for defence practitioners.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "find-a-court-or-tribunal",
+    "name": "Find a court or tribunal",
+    "url": "https://www.gov.uk/find-court-tribunal",
+    "group": "Courts & prosecution",
+    "tier": "courts",
+    "region": "England and Wales",
+    "shortDescription": "Official gov.uk directory of courts and tribunals.",
+    "description": "An official gov.uk service to find contact details, addresses, and opening times for courts and tribunals in England and Wales, including magistrates' and Crown Courts handling criminal matters.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "legislation-gov-uk",
+    "name": "Legislation.gov.uk",
+    "url": "https://www.legislation.gov.uk",
+    "group": "Courts & prosecution",
+    "tier": "courts",
+    "region": "United Kingdom",
+    "shortDescription": "The official home of UK legislation.",
+    "description": "Legislation.gov.uk is the official source of UK primary and secondary legislation, managed by The National Archives. It is the authoritative place to read Acts such as the Police and Criminal Evidence Act 1984 and other statutes relevant to criminal practice.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "pace-codes-of-practice",
+    "name": "PACE Codes of Practice",
+    "url": "https://www.gov.uk/guidance/police-and-criminal-evidence-act-1984-pace-codes-of-practice",
+    "group": "Courts & prosecution",
+    "tier": "courts",
+    "region": "England and Wales",
+    "shortDescription": "Official Home Office PACE codes governing police powers.",
+    "description": "The Police and Criminal Evidence Act 1984 (PACE) Codes of Practice set out the powers and duties of the police, including detention, treatment, and questioning of suspects. This official Home Office page links to the current codes, which are essential reference material for anyone advising at the police station.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "legal-ombudsman",
+    "name": "Legal Ombudsman",
+    "url": "https://www.legalombudsman.org.uk",
+    "group": "Complaints & oversight",
+    "tier": "complaints",
+    "region": "England and Wales",
+    "shortDescription": "Independent complaints service for legal services consumers.",
+    "description": "The Legal Ombudsman resolves complaints about legal service providers in England and Wales when a complaint cannot be settled directly with the provider. It explains how to complain and what outcomes it can require.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "independent-office-for-police-conduct",
+    "name": "Independent Office for Police Conduct (IOPC)",
+    "url": "https://www.policeconduct.gov.uk",
+    "group": "Complaints & oversight",
+    "tier": "complaints",
+    "region": "England and Wales",
+    "shortDescription": "Oversees the police complaints system in England and Wales.",
+    "description": "The Independent Office for Police Conduct oversees the police complaints system in England and Wales and investigates the most serious matters involving the police. Its site explains how to complain about the police and what to expect.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "criminal-cases-review-commission",
+    "name": "Criminal Cases Review Commission (CCRC)",
+    "url": "https://ccrc.gov.uk",
+    "group": "Complaints & oversight",
+    "tier": "complaints",
+    "region": "England, Wales and Northern Ireland",
+    "shortDescription": "Independent body reviewing possible miscarriages of justice.",
+    "description": "The Criminal Cases Review Commission is the independent body that reviews possible miscarriages of justice in England, Wales, and Northern Ireland, and can refer cases back to the appeal courts. Its site explains who can apply and how the review process works.",
+    "dateChecked": "2026-06-02"
+  },
+  {
+    "slug": "law-society-gazette",
+    "name": "Law Society Gazette",
+    "url": "https://www.lawgazette.co.uk",
+    "group": "News & guidance",
+    "tier": "guidance",
+    "region": "England and Wales",
+    "shortDescription": "Leading news source for the solicitors' profession.",
+    "description": "The Law Society Gazette is a long-established news publication covering the legal profession in England and Wales, including criminal justice policy, legal aid, and practice developments relevant to defence practitioners.",
+    "dateChecked": "2026-06-02"
+  }
+]

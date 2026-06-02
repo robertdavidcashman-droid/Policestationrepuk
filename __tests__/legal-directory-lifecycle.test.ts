@@ -153,6 +153,8 @@ describe('Legal Directory — full lifecycle (in-memory store)', () => {
     const stored = await getListingById(res.id);
     expect(stored?.status).toBe('approved');
     expect(stored?.dateApproved).toBeTruthy();
+    expect(stored?.verificationStatus).toBe('unverified');
+    expect(stored?.dateVerified).toBeNull();
 
     const approved = await listApprovedListings();
     expect(approved.find((l) => l.id === res.id)).toBeDefined();

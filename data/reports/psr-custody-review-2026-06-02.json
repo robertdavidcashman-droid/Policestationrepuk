@@ -1,0 +1,874 @@
+{
+  "generatedAt": "2026-06-02T17:37:09.658Z",
+  "forceFilter": null,
+  "targets": 73,
+  "summary": {
+    "safe_custody": 0,
+    "see_below": 36,
+    "no_psr_page": 36,
+    "psr_page_no_custody": 1
+  },
+  "safeCandidates": [],
+  "seeBelowNeedingManualFootnote": [
+    {
+      "station": "Euston Street Police Station",
+      "slug": "euston-street-police-station",
+      "forceName": "Leicestershire Police",
+      "stationId": "euston-street-leicester",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Euston-Street-Police-Station.php",
+      "mainPhone": "0116 222 2222"
+    },
+    {
+      "station": "Keyham Lane Police Station",
+      "slug": "keyham-lane-police-station",
+      "forceName": "Leicestershire Police",
+      "stationId": "keyham-lane-leicester",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Keyham-Lane-Police-Station.php",
+      "mainPhone": "0116 222 2222"
+    },
+    {
+      "station": "Banbury Police Station",
+      "slug": "banbury-police-station",
+      "forceName": "Thames Valley Police",
+      "stationId": "banbury-thames-valley",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Banbury-Police-Station.php"
+    },
+    {
+      "station": "Kempston Police Station",
+      "slug": "kempston-police-station",
+      "forceName": "Bedfordshire Police",
+      "stationId": "kempston-bedford",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Kempston-Police-Station.php",
+      "mainPhone": "01234 841 212"
+    },
+    {
+      "station": "Peterborough Police Station",
+      "slug": "peterborough-police-station",
+      "forceName": "British Transport Police",
+      "stationId": "PE234300023",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Peterborough-Police-Station.php"
+    },
+    {
+      "station": "Exeter St Davids Police Station",
+      "slug": "exeter-st-davids-police-station",
+      "forceName": "British Transport Police",
+      "stationId": "PE234300034",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Exeter-Police-Station.php"
+    },
+    {
+      "station": "Doncaster Police Station",
+      "slug": "doncaster-police-station",
+      "forceName": "British Transport Police",
+      "stationId": "PE234300021",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Doncaster-Police-Station.php"
+    },
+    {
+      "station": "Preston Police Station",
+      "slug": "preston-police-station",
+      "forceName": "British Transport Police",
+      "stationId": "PE234300027",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Preston-Police-Station.php"
+    },
+    {
+      "station": "Portsmouth Central Police Station",
+      "slug": "portsmouth-central-police-station",
+      "forceName": "Hampshire Constabulary",
+      "stationId": "PE233800003",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Portsmouth-Central-Police-Station.php"
+    },
+    {
+      "station": "Crawley Police Station",
+      "slug": "crawley-police-station",
+      "forceName": "Sussex Police",
+      "stationId": "PE234100003",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Crawley-Police-Station.php"
+    },
+    {
+      "station": "Staines Police Station",
+      "slug": "staines-police-station",
+      "forceName": "Surrey Police",
+      "stationId": "PE233900004",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Staines-Police-Station.php"
+    },
+    {
+      "station": "Guildford Police Station",
+      "slug": "guildford-police-station",
+      "forceName": "Surrey Police",
+      "stationId": "PE233900002",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Guildford-Police-Station.php"
+    },
+    {
+      "station": "Maidstone Police Station",
+      "slug": "maidstone-police-station",
+      "forceName": "Kent Police",
+      "stationId": "PE234000003",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Maidstone-Police-Station.php"
+    },
+    {
+      "station": "Eastbourne Police Station",
+      "slug": "eastbourne-police-station",
+      "forceName": "Sussex Police",
+      "stationId": "PE234100004",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Eastbourne-Custody-Suite.php"
+    },
+    {
+      "station": "Poole Police Station",
+      "slug": "poole-police-station",
+      "forceName": "Dorset Police",
+      "stationId": "PE233700003",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Poole-Police-Station.php",
+      "mainPhone": "01202 22 22 22"
+    },
+    {
+      "station": "Woking Police Station",
+      "slug": "woking-police-station",
+      "forceName": "Surrey Police",
+      "stationId": "PE233900005",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Woking-Police-Station.php"
+    },
+    {
+      "station": "Slough Police Station",
+      "slug": "slough-police-station",
+      "forceName": "Thames Valley Police",
+      "stationId": "PE234200003",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Slough-Police-Station.php"
+    },
+    {
+      "station": "Yeovil Police Station",
+      "slug": "yeovil-police-station",
+      "forceName": "Avon and Somerset Constabulary",
+      "stationId": "PE233400005",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Yeovil-Police-Station.php"
+    },
+    {
+      "station": "Taunton Police Station",
+      "slug": "taunton-police-station",
+      "forceName": "Avon and Somerset Constabulary",
+      "stationId": "PE233400006",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Taunton-Police-Station.php"
+    },
+    {
+      "station": "Coventry Central Police Station",
+      "slug": "coventry-central-police-station",
+      "forceName": "West Midlands Police",
+      "stationId": "PE232600006",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Coventry-Central-Police-Station.php"
+    },
+    {
+      "station": "Birkenhead Police Station",
+      "slug": "birkenhead-police-station",
+      "forceName": "Merseyside Police",
+      "stationId": "PE231700017",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Birkenhead-Police-Station.php",
+      "mainPhone": "0151 709 6010"
+    },
+    {
+      "station": "Mansfield Police Station",
+      "slug": "mansfield-police-station",
+      "forceName": "Nottinghamshire Police",
+      "stationId": "PE232100010",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Mansfield-Police-Station.php",
+      "mainPhone": "0115 940 0999"
+    },
+    {
+      "station": "Burnley Police Station",
+      "slug": "burnley-police-station",
+      "forceName": "Lancashire Constabulary",
+      "stationId": "PE231600022",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Burnley-Police-Station.php"
+    },
+    {
+      "station": "Preston Police Station",
+      "slug": "preston-police-station-2",
+      "forceName": "Lancashire Constabulary",
+      "stationId": "PE231600010",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Preston-Police-Station.php"
+    },
+    {
+      "station": "Wirral Custody Suite",
+      "slug": "wirral-custody-suite",
+      "forceName": "Merseyside Police",
+      "stationId": "PE231700004",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Wirral-Custody-Suite.php"
+    },
+    {
+      "station": "Huddersfield Police Station",
+      "slug": "huddersfield-police-station",
+      "forceName": "West Yorkshire Police",
+      "stationId": "PE231400004",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Huddersfield-Police-Station.php"
+    },
+    {
+      "station": "Doncaster Police Station",
+      "slug": "doncaster-police-station-2",
+      "forceName": "South Yorkshire Police",
+      "stationId": "PE231300005",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Doncaster-Police-Station.php"
+    },
+    {
+      "station": "Hatfield Police Station",
+      "slug": "hatfield-police-station",
+      "forceName": "Hertfordshire Constabulary",
+      "stationId": "PE230500006",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Hatfield-Police-Station.php"
+    },
+    {
+      "station": "Stevenage Police Station",
+      "slug": "stevenage-police-station",
+      "forceName": "Hertfordshire Constabulary",
+      "stationId": "PE230500014",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Stevenage-Police-Station.php"
+    },
+    {
+      "station": "Colchester Police Station",
+      "slug": "colchester-police-station",
+      "forceName": "Essex Police",
+      "stationId": "PE230400004",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Colchester-Police-Station.php",
+      "mainPhone": "0300 333 4444"
+    },
+    {
+      "station": "Chelmsford Police Station",
+      "slug": "chelmsford-police-station",
+      "forceName": "Essex Police",
+      "stationId": "PE230400025",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Chelmsford-Police-Station.php",
+      "mainPhone": "0300 333 4444 or 01245 491 212"
+    },
+    {
+      "station": "Watford Police Station",
+      "slug": "watford-police-station",
+      "forceName": "Hertfordshire Constabulary",
+      "stationId": "PE230500010",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Watford-Police-Station.php"
+    },
+    {
+      "station": "Basildon Police Station",
+      "slug": "basildon-police-station",
+      "forceName": "Essex Police",
+      "stationId": "PE230400009",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Basildon-Police-Station.php",
+      "mainPhone": "0300 333 4444"
+    },
+    {
+      "station": "Brixton Police Station",
+      "slug": "brixton-police-station",
+      "forceName": "Metropolitan Police",
+      "stationId": "PE230100117",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Brixton-Police-Station.php"
+    },
+    {
+      "station": "Stoke Newington Police Station",
+      "slug": "stoke-newington-police-station",
+      "forceName": "Metropolitan Police",
+      "stationId": "PE230100069",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Stoke-Newington-Police-Station.php",
+      "mainPhone": "0300 123 1212"
+    },
+    {
+      "station": "Tottenham Police Station",
+      "slug": "tottenham-police-station",
+      "forceName": "Metropolitan Police",
+      "stationId": "PE230100079",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Tottenham-Police-Station.php",
+      "mainPhone": "020 8808 1212"
+    }
+  ],
+  "allRows": [
+    {
+      "station": "Oldbury custody suite",
+      "slug": "oldbury-custody-suite",
+      "forceName": "West Midlands Police",
+      "stationId": "oldbury-custody-suite-mju08gh4",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Bradford trafalgar house police station",
+      "slug": "bradford-trafalgar-house-police-station",
+      "forceName": "West Yorkshire Police",
+      "stationId": "bradford-trafalgar-house-police-station-mizhglre",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Middlewich custody",
+      "slug": "middlewich-custody",
+      "forceName": "Cheshire Constabulary",
+      "stationId": "middlewich-custody-miw3ueyh",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Polar Park Police Station",
+      "slug": "polar-park-police-station",
+      "forceName": "Metropolitan Police",
+      "stationId": "polar-park-heathrow",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Euston Street Police Station",
+      "slug": "euston-street-police-station",
+      "forceName": "Leicestershire Police",
+      "stationId": "euston-street-leicester",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Euston-Street-Police-Station.php",
+      "mainPhone": "0116 222 2222"
+    },
+    {
+      "station": "Northampton Criminal Justice Centre",
+      "slug": "northampton-criminal-justice-centre",
+      "forceName": "Northamptonshire Police",
+      "stationId": "northampton-cjc",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Keyham Lane Police Station",
+      "slug": "keyham-lane-police-station",
+      "forceName": "Leicestershire Police",
+      "stationId": "keyham-lane-leicester",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Keyham-Lane-Police-Station.php",
+      "mainPhone": "0116 222 2222"
+    },
+    {
+      "station": "Banbury Police Station",
+      "slug": "banbury-police-station",
+      "forceName": "Thames Valley Police",
+      "stationId": "banbury-thames-valley",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Banbury-Police-Station.php"
+    },
+    {
+      "station": "Weekly Woods Justice Centre",
+      "slug": "weekly-woods-justice-centre",
+      "forceName": "Northamptonshire Police",
+      "stationId": "weekly-woods-kettering",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Kempston Police Station",
+      "slug": "kempston-police-station",
+      "forceName": "Bedfordshire Police",
+      "stationId": "kempston-bedford",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Kempston-Police-Station.php",
+      "mainPhone": "01234 841 212"
+    },
+    {
+      "station": "Norwich Police Station",
+      "slug": "norwich-police-station",
+      "forceName": "British Transport Police",
+      "stationId": "PE234300037",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Cambridge Police Station",
+      "slug": "cambridge-police-station",
+      "forceName": "British Transport Police",
+      "stationId": "PE234300036",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Peterborough Police Station",
+      "slug": "peterborough-police-station",
+      "forceName": "British Transport Police",
+      "stationId": "PE234300023",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Peterborough-Police-Station.php"
+    },
+    {
+      "station": "Gloucester Police Station",
+      "slug": "gloucester-police-station",
+      "forceName": "British Transport Police",
+      "stationId": "PE234300032",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Exeter St Davids Police Station",
+      "slug": "exeter-st-davids-police-station",
+      "forceName": "British Transport Police",
+      "stationId": "PE234300034",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Exeter-Police-Station.php"
+    },
+    {
+      "station": "Doncaster Police Station",
+      "slug": "doncaster-police-station",
+      "forceName": "British Transport Police",
+      "stationId": "PE234300021",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Doncaster-Police-Station.php"
+    },
+    {
+      "station": "Preston Police Station",
+      "slug": "preston-police-station",
+      "forceName": "British Transport Police",
+      "stationId": "PE234300027",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Preston-Police-Station.php"
+    },
+    {
+      "station": "Leeds Police Station",
+      "slug": "leeds-police-station",
+      "forceName": "British Transport Police",
+      "stationId": "PE234300011",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Kings Cross Police Station",
+      "slug": "kings-cross-police-station",
+      "forceName": "British Transport Police",
+      "stationId": "PE234300007",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Portsmouth Central Police Station",
+      "slug": "portsmouth-central-police-station",
+      "forceName": "Hampshire Constabulary",
+      "stationId": "PE233800003",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Portsmouth-Central-Police-Station.php"
+    },
+    {
+      "station": "Crawley Police Station",
+      "slug": "crawley-police-station",
+      "forceName": "Sussex Police",
+      "stationId": "PE234100003",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Crawley-Police-Station.php"
+    },
+    {
+      "station": "Basingstoke Police Station",
+      "slug": "basingstoke-police-station",
+      "forceName": "Hampshire Constabulary",
+      "stationId": "PE233800002",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Bournemouth Police Station",
+      "slug": "bournemouth-police-station",
+      "forceName": "Dorset Police",
+      "stationId": "PE233700002",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Staines Police Station",
+      "slug": "staines-police-station",
+      "forceName": "Surrey Police",
+      "stationId": "PE233900004",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Staines-Police-Station.php"
+    },
+    {
+      "station": "Ashford Police Station",
+      "slug": "ashford-police-station",
+      "forceName": "Kent Police",
+      "stationId": "PE234000009",
+      "outcome": "psr_page_no_custody",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Ashford-Police-Station.php"
+    },
+    {
+      "station": "Guildford Police Station",
+      "slug": "guildford-police-station",
+      "forceName": "Surrey Police",
+      "stationId": "PE233900002",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Guildford-Police-Station.php"
+    },
+    {
+      "station": "Maidstone Police Station",
+      "slug": "maidstone-police-station",
+      "forceName": "Kent Police",
+      "stationId": "PE234000003",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Maidstone-Police-Station.php"
+    },
+    {
+      "station": "Eastbourne Police Station",
+      "slug": "eastbourne-police-station",
+      "forceName": "Sussex Police",
+      "stationId": "PE234100004",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Eastbourne-Custody-Suite.php"
+    },
+    {
+      "station": "Poole Police Station",
+      "slug": "poole-police-station",
+      "forceName": "Dorset Police",
+      "stationId": "PE233700003",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Poole-Police-Station.php",
+      "mainPhone": "01202 22 22 22"
+    },
+    {
+      "station": "Woking Police Station",
+      "slug": "woking-police-station",
+      "forceName": "Surrey Police",
+      "stationId": "PE233900005",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Woking-Police-Station.php"
+    },
+    {
+      "station": "Oxford Police Station",
+      "slug": "oxford-police-station",
+      "forceName": "Thames Valley Police",
+      "stationId": "PE234200006",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Slough Police Station",
+      "slug": "slough-police-station",
+      "forceName": "Thames Valley Police",
+      "stationId": "PE234200003",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Slough-Police-Station.php"
+    },
+    {
+      "station": "Yeovil Police Station",
+      "slug": "yeovil-police-station",
+      "forceName": "Avon and Somerset Constabulary",
+      "stationId": "PE233400005",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Yeovil-Police-Station.php"
+    },
+    {
+      "station": "Cheltenham Police Station",
+      "slug": "cheltenham-police-station",
+      "forceName": "Gloucestershire Constabulary",
+      "stationId": "PE233500003",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Gloucestershire Headquarters",
+      "slug": "gloucestershire-headquarters",
+      "forceName": "Gloucestershire Constabulary",
+      "stationId": "PE233500001",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Taunton Police Station",
+      "slug": "taunton-police-station",
+      "forceName": "Avon and Somerset Constabulary",
+      "stationId": "PE233400006",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Taunton-Police-Station.php"
+    },
+    {
+      "station": "Kettering Police Station",
+      "slug": "kettering-police-station",
+      "forceName": "Northamptonshire Police",
+      "stationId": "PE232400006",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Northamptonshire Headquarters",
+      "slug": "northamptonshire-headquarters",
+      "forceName": "Northamptonshire Police",
+      "stationId": "PE232400001",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Nuneaton Police Station",
+      "slug": "nuneaton-police-station",
+      "forceName": "Warwickshire Police",
+      "stationId": "PE232700003",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Warwickshire Headquarters",
+      "slug": "warwickshire-headquarters",
+      "forceName": "Warwickshire Police",
+      "stationId": "PE232700001",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Birmingham Central Police Station",
+      "slug": "birmingham-central-police-station",
+      "forceName": "West Midlands Police",
+      "stationId": "PE232600002",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Wolverhampton Police Station",
+      "slug": "wolverhampton-police-station",
+      "forceName": "West Midlands Police",
+      "stationId": "PE232600010",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Coventry Central Police Station",
+      "slug": "coventry-central-police-station",
+      "forceName": "West Midlands Police",
+      "stationId": "PE232600006",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Coventry-Central-Police-Station.php"
+    },
+    {
+      "station": "Warwick Police Station",
+      "slug": "warwick-police-station",
+      "forceName": "Warwickshire Police",
+      "stationId": "PE232700007",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Bolton Police Station",
+      "slug": "bolton-police-station",
+      "forceName": "Greater Manchester Police",
+      "stationId": "PE231800003",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Oldham Police Station",
+      "slug": "oldham-police-station",
+      "forceName": "Greater Manchester Police",
+      "stationId": "PE231800007",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Birkenhead Police Station",
+      "slug": "birkenhead-police-station",
+      "forceName": "Merseyside Police",
+      "stationId": "PE231700017",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Birkenhead-Police-Station.php",
+      "mainPhone": "0151 709 6010"
+    },
+    {
+      "station": "Mansfield Police Station",
+      "slug": "mansfield-police-station",
+      "forceName": "Nottinghamshire Police",
+      "stationId": "PE232100010",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Mansfield-Police-Station.php",
+      "mainPhone": "0115 940 0999"
+    },
+    {
+      "station": "Blackburn Police Station",
+      "slug": "blackburn-police-station",
+      "forceName": "Lancashire Constabulary",
+      "stationId": "PE231600017",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Burnley Police Station",
+      "slug": "burnley-police-station",
+      "forceName": "Lancashire Constabulary",
+      "stationId": "PE231600022",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Burnley-Police-Station.php"
+    },
+    {
+      "station": "Preston Police Station",
+      "slug": "preston-police-station-2",
+      "forceName": "Lancashire Constabulary",
+      "stationId": "PE231600010",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Preston-Police-Station.php"
+    },
+    {
+      "station": "Wirral Custody Suite",
+      "slug": "wirral-custody-suite",
+      "forceName": "Merseyside Police",
+      "stationId": "PE231700004",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Wirral-Custody-Suite.php"
+    },
+    {
+      "station": "Huddersfield Police Station",
+      "slug": "huddersfield-police-station",
+      "forceName": "West Yorkshire Police",
+      "stationId": "PE231400004",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Huddersfield-Police-Station.php"
+    },
+    {
+      "station": "Doncaster Police Station",
+      "slug": "doncaster-police-station-2",
+      "forceName": "South Yorkshire Police",
+      "stationId": "PE231300005",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Doncaster-Police-Station.php"
+    },
+    {
+      "station": "Hatfield Police Station",
+      "slug": "hatfield-police-station",
+      "forceName": "Hertfordshire Constabulary",
+      "stationId": "PE230500006",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Hatfield-Police-Station.php"
+    },
+    {
+      "station": "Stevenage Police Station",
+      "slug": "stevenage-police-station",
+      "forceName": "Hertfordshire Constabulary",
+      "stationId": "PE230500014",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Stevenage-Police-Station.php"
+    },
+    {
+      "station": "Bury St Edmunds Police Station",
+      "slug": "bury-st-edmunds-police-station",
+      "forceName": "Suffolk Constabulary",
+      "stationId": "PE230700002",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Colchester Police Station",
+      "slug": "colchester-police-station",
+      "forceName": "Essex Police",
+      "stationId": "PE230400004",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Colchester-Police-Station.php",
+      "mainPhone": "0300 333 4444"
+    },
+    {
+      "station": "Chelmsford Police Station",
+      "slug": "chelmsford-police-station",
+      "forceName": "Essex Police",
+      "stationId": "PE230400025",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Chelmsford-Police-Station.php",
+      "mainPhone": "0300 333 4444 or 01245 491 212"
+    },
+    {
+      "station": "Kings Lynn Police Station",
+      "slug": "kings-lynn-police-station",
+      "forceName": "Norfolk Constabulary",
+      "stationId": "PE230600004",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Watford Police Station",
+      "slug": "watford-police-station",
+      "forceName": "Hertfordshire Constabulary",
+      "stationId": "PE230500010",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Watford-Police-Station.php"
+    },
+    {
+      "station": "Basildon Police Station",
+      "slug": "basildon-police-station",
+      "forceName": "Essex Police",
+      "stationId": "PE230400009",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Basildon-Police-Station.php",
+      "mainPhone": "0300 333 4444"
+    },
+    {
+      "station": "Ipswich Police Station",
+      "slug": "ipswich-police-station",
+      "forceName": "Suffolk Constabulary",
+      "stationId": "PE230700004",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Brixton Police Station",
+      "slug": "brixton-police-station",
+      "forceName": "Metropolitan Police",
+      "stationId": "PE230100117",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Brixton-Police-Station.php"
+    },
+    {
+      "station": "Cambridge Headquarters",
+      "slug": "cambridge-headquarters",
+      "forceName": "Cambridgeshire Constabulary",
+      "stationId": "PE230300001",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Warwick Police Contact Point",
+      "slug": "warwick-police-contact-point",
+      "forceName": "Metropolitan Police",
+      "stationId": "PE230100174",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Lewisham Police Station",
+      "slug": "lewisham-police-station",
+      "forceName": "Metropolitan Police",
+      "stationId": "PE230100124",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Kingston Police Station",
+      "slug": "kingston-police-station",
+      "forceName": "Metropolitan Police",
+      "stationId": "PE230100113",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Stoke Newington Police Station",
+      "slug": "stoke-newington-police-station",
+      "forceName": "Metropolitan Police",
+      "stationId": "PE230100069",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Stoke-Newington-Police-Station.php",
+      "mainPhone": "0300 123 1212"
+    },
+    {
+      "station": "Kingsbury Library Police Contact Point",
+      "slug": "kingsbury-library-police-contact-point",
+      "forceName": "Metropolitan Police",
+      "stationId": "PE230100029",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Croydon Police Station",
+      "slug": "croydon-police-station",
+      "forceName": "Metropolitan Police",
+      "stationId": "PE230100043",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Kings Road Police Contact Point",
+      "slug": "kings-road-police-contact-point",
+      "forceName": "Metropolitan Police",
+      "stationId": "PE230100110",
+      "outcome": "no_psr_page"
+    },
+    {
+      "station": "Tottenham Police Station",
+      "slug": "tottenham-police-station",
+      "forceName": "Metropolitan Police",
+      "stationId": "PE230100079",
+      "outcome": "see_below",
+      "psrUrl": "https://www.policestationreps.com/Police_Stations/Tottenham-Police-Station.php",
+      "mainPhone": "020 8808 1212"
+    }
+  ]
+}

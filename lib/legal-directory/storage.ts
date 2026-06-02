@@ -101,10 +101,20 @@ async function writeReqIds(ids: string[]): Promise<void> {
   await store.set(REQ_IDS_KEY, ids);
 }
 
+function normalizeListing(listing: LegalDirectoryListing): LegalDirectoryListing {
+  return {
+    ...listing,
+    sourceUrl: listing.sourceUrl ?? listing.websiteUrl ?? '',
+    dateVerified: listing.dateVerified ?? null,
+    verificationStatus: listing.verificationStatus ?? 'unverified',
+  };
+}
+
 export async function getListingById(id: string): Promise<LegalDirectoryListing | null> {
   const store = getDirectoryStore();
   if (!store) return null;
-  return store.get<LegalDirectoryListing>(listingKey(id));
+  const raw = await store.get<LegalDirectoryListing>(listingKey(id));
+  return raw ? normalizeListing(raw) : null;
 }
 
 export async function getListingBySlug(slug: string): Promise<LegalDirectoryListing | null> {
@@ -284,6 +294,9 @@ export async function createListing(
     featured: false,
     promoted: false,
     verified: false,
+    sourceUrl: sanitizeUrl(input.websiteUrl) || '',
+    dateVerified: null,
+    verificationStatus: 'unverified',
     dateSubmitted: now,
     dateApproved: isApproved ? now : null,
     lastUpdated: now,
@@ -356,6 +369,83 @@ export async function saveListing(listing: LegalDirectoryListing): Promise<void>
   if (!store) return;
   listing.lastUpdated = new Date().toISOString();
   await store.set(listingKey(listing.id), listing);
+}
+
+/**
+ * Idempotently upsert a seeded (unclaimed) listing by stable id. Writes the
+ * listing + slug index and registers the id; does NOT create an email index
+ * (seeded stubs have no owner). Safe to run repeatedly.
+ */
+export async function upsertSeededListing(
+  listing: LegalDirectoryListing,
+): Promise<{ created: boolean }> {
+  const store = getDirectoryStore();
+  if (!store) throw new Error('Directory storage is not available.');
+
+  const existing = await getListingById(listing.id);
+  const now = new Date().toISOString();
+  const toSave: LegalDirectoryListing = {
+    ...listing,
+    lastUpdated: now,
+    dateSubmitted: existing?.dateSubmitted ?? listing.dateSubmitted,
+  };
+
+  await store.set(listingKey(toSave.id), toSave);
+  await store.set(slugKey(toSave.slug), toSave.id);
+
+  const ids = await readIds();
+  if (!ids.includes(toSave.id)) {
+    ids.push(toSave.id);
+    await writeIds(ids);
+  }
+
+  return { created: !existing };
+}
+
+export type ClaimSeededResult =
+  | { ok: true; listing: LegalDirectoryListing }
+  | { ok: false; error: string };
+
+/**
+ * Attach an owner to an unclaimed seeded listing (e.g. LAA stub). Sets the owner
+ * email + contact fields and registers the email index so the standard
+ * management-link flow works thereafter. Does not issue a token (caller does).
+ */
+export async function claimSeededListing(
+  listing: LegalDirectoryListing,
+  input: { email: string; contactPerson?: string; phone?: string; websiteUrl?: string },
+): Promise<ClaimSeededResult> {
+  const store = getDirectoryStore();
+  if (!store) return { ok: false, error: 'Directory storage is not available.' };
+  if (listing.ownerEmail) return { ok: false, error: 'This listing has already been claimed.' };
+
+  const email = normalizeEmail(input.email);
+  const existing = await getListingByOwnerEmail(email);
+  if (existing && existing.id !== listing.id && existing.status !== 'deleted') {
+    return {
+      ok: false,
+      error: 'A listing already exists for this email address. Use Manage Your Listing instead.',
+    };
+  }
+
+  const now = new Date().toISOString();
+  const updated: LegalDirectoryListing = {
+    ...listing,
+    ownerEmail: email,
+    email,
+    contactPerson: input.contactPerson
+      ? sanitizeText(input.contactPerson, 120)
+      : listing.contactPerson,
+    phone: input.phone ? sanitizeText(input.phone, 40) : listing.phone,
+    websiteUrl: input.websiteUrl ? sanitizeUrl(input.websiteUrl) : listing.websiteUrl,
+    status: 'approved',
+    lastUpdated: now,
+    moderationNotes: `${listing.moderationNotes}\n[claim] Claimed by ${email} at ${now}.`.trim(),
+  };
+
+  await store.set(listingKey(updated.id), updated);
+  await store.set(emailKey(email), updated.id);
+  return { ok: true, listing: updated };
 }
 
 /** Apply owner or admin edits immediately to a live listing. */

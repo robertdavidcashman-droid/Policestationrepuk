@@ -300,6 +300,15 @@ export function applyFeaturedFlags(
  * 2. Then by activatedAt DESC (newest first)
  * 3. Then by name ASC
  */
+/** Free "contributor" perk ranks below paid/legacy featured listings. */
+function isContributorTier(meta: FeaturedMeta | null | undefined): boolean {
+  if (!meta) return false;
+  if (meta.isLegacyFeatured || meta.status === 'legacy' || meta.status === 'grandfathered') {
+    return false;
+  }
+  return meta.tier === 'contributor';
+}
+
 export function sortFeaturedReps(
   reps: Representative[],
   flags: Map<string, FeaturedMeta>,
@@ -312,6 +321,12 @@ export function sortFeaturedReps(
 
     const aMeta = flags.get(a.email.toLowerCase());
     const bMeta = flags.get(b.email.toLowerCase());
+
+    // Paid / legacy featured outrank the free contributor tier.
+    const aContrib = isContributorTier(aMeta) ? 1 : 0;
+    const bContrib = isContributorTier(bMeta) ? 1 : 0;
+    if (aContrib !== bContrib) return aContrib - bContrib;
+
     const aTime = aMeta?.activatedAt ? new Date(aMeta.activatedAt).getTime() : 0;
     const bTime = bMeta?.activatedAt ? new Date(bMeta.activatedAt).getTime() : 0;
 

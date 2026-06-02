@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
 import { listAllListings, listAllRequests } from '@/lib/legal-directory/storage';
+import { isUnclaimedSeededListing } from '@/lib/legal-directory/laa-seed';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +31,8 @@ export async function GET() {
       dateSubmitted: l.dateSubmitted,
       ownerEmail: l.ownerEmail,
       hasPendingChanges: Boolean(l.pendingChanges),
+      verificationStatus: l.verificationStatus,
+      unclaimedSeeded: isUnclaimedSeededListing(l),
     })),
     requests,
   });

@@ -3,6 +3,10 @@
  * Stored in Upstash KV (see lib/legal-directory/storage.ts).
  */
 
+import type { LegalDirectoryVerificationSource } from './verification-sources';
+
+export type { LegalDirectoryVerificationSource } from './verification-sources';
+
 export type LegalDirectoryListingStatus =
   | 'draft'
   | 'pending_review'
@@ -28,6 +32,9 @@ export type LegalDirectoryRequestStatus =
   | 'approved'
   | 'rejected'
   | 'flagged_for_review';
+
+/** Provenance for directory-sourced contact details (separate from admin `verified` badge). */
+export type LegalDirectoryVerificationStatus = 'verified' | 'unverified';
 
 /** Public-safe listing fields (approved listings only on public routes). */
 export interface LegalDirectoryListing {
@@ -63,6 +70,18 @@ export interface LegalDirectoryListing {
   featured: boolean;
   promoted: boolean;
   verified: boolean;
+  /** Authoritative URL used to verify listing details. */
+  sourceUrl: string;
+  /** ISO date (YYYY-MM-DD) when details were last checked against sourceUrl. */
+  dateVerified: string | null;
+  /** Public label when contact details have not been independently verified. */
+  verificationStatus: LegalDirectoryVerificationStatus;
+  /**
+   * Authoritative sources backing this listing's verification (Tier A/B/C).
+   * `verificationStatus` should be derivable from these via
+   * {@link computeListingVerification}.
+   */
+  verificationSources?: LegalDirectoryVerificationSource[];
   dateSubmitted: string;
   dateApproved: string | null;
   lastUpdated: string;

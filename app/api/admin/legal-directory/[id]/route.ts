@@ -5,7 +5,8 @@ import {
   getListingById,
   saveListing,
 } from '@/lib/legal-directory/storage';
-import { sanitizeMultiline, sanitizeText } from '@/lib/legal-directory/sanitize';
+import { sanitizeMultiline, sanitizeText, sanitizeUrl } from '@/lib/legal-directory/sanitize';
+import type { LegalDirectoryVerificationStatus } from '@/lib/legal-directory/types';
 import type { LegalDirectoryListingStatus } from '@/lib/legal-directory/types';
 
 export const dynamic = 'force-dynamic';
@@ -82,6 +83,21 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
     case 'set_verified':
       listing.verified = body.verified === true;
       break;
+    case 'set_verification_provenance': {
+      if (typeof body.sourceUrl === 'string') {
+        listing.sourceUrl = sanitizeUrl(body.sourceUrl);
+      }
+      if (typeof body.dateVerified === 'string' && body.dateVerified.trim()) {
+        listing.dateVerified = body.dateVerified.trim().slice(0, 10);
+      }
+      if (body.verificationStatus === 'verified' || body.verificationStatus === 'unverified') {
+        listing.verificationStatus = body.verificationStatus as LegalDirectoryVerificationStatus;
+      }
+      if (listing.verificationStatus === 'verified' && !listing.dateVerified) {
+        listing.dateVerified = new Date().toISOString().slice(0, 10);
+      }
+      break;
+    }
     case 'set_status':
       if (typeof body.status === 'string') {
         listing.status = body.status as LegalDirectoryListingStatus;

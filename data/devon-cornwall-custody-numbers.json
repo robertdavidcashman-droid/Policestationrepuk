@@ -1,0 +1,77 @@
+{
+  "_comment": "Custody desk numbers from Devon & Cornwall Police custody information page (custody matters only). Key by station slug or PE stationId.",
+  "source": "https://www.devon-cornwall.police.uk/contact/custody-information",
+  "verifiedAt": "2026-05-29",
+  "stations": {
+    "barnstaple-police-station": {
+      "custodyPhone": "01392 290645",
+      "suiteName": "Barnstaple Custody Office",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    },
+    "PE233600002": {
+      "custodyPhone": "01392 290645",
+      "suiteName": "Barnstaple Custody Office",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    },
+    "camborne-police-station": {
+      "custodyPhone": "01209 615538",
+      "suiteName": "Camborne Custody Office",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    },
+    "PE233600006": {
+      "custodyPhone": "01209 615538",
+      "suiteName": "Camborne Custody Office",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    },
+    "plymouth-charles-cross-police-station": {
+      "custodyPhone": "01392 854233",
+      "suiteName": "Charles Cross Custody Office",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    },
+    "PE233600004": {
+      "custodyPhone": "01392 854233",
+      "suiteName": "Charles Cross Custody Office",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    },
+    "sg-plymouth-crownhill": {
+      "custodyPhone": "01392 854233",
+      "suiteName": "Charles Cross Custody Office (Plymouth)",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    },
+    "sg-plymouth-devonport": {
+      "custodyPhone": "01392 854233",
+      "suiteName": "Charles Cross Custody Office (Plymouth)",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    },
+    "exeter-police-station": {
+      "custodyPhone": "01392 290820",
+      "suiteName": "Exeter Custody Office",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    },
+    "PE233600003": {
+      "custodyPhone": "01392 290820",
+      "suiteName": "Exeter Custody Office",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    },
+    "newquay-police-station": {
+      "custodyPhone": "01637 839660",
+      "suiteName": "Newquay Custody Office",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    },
+    "PE233600007": {
+      "custodyPhone": "01637 839660",
+      "suiteName": "Newquay Custody Office",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    },
+    "torquay-police-station": {
+      "custodyPhone": "01392 854082",
+      "suiteName": "Torquay Custody Office",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    },
+    "PE233600005": {
+      "custodyPhone": "01392 854082",
+      "suiteName": "Torquay Custody Office",
+      "sourceUrl": "https://www.devon-cornwall.police.uk/contact/custody-information"
+    }
+  }
+}

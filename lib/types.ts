@@ -137,6 +137,26 @@ export interface PoliceStation {
   latitude?: number | null;
   longitude?: number | null;
   custodySuite?: boolean;
+  /** Merged at load from data/station-verification.json — not stored in stations.json. */
+  verificationMeta?: {
+    verificationStatus?: 'verified' | 'unverified' | 'partial';
+    dateVerified?: string;
+    sourceUrl?: string;
+    fields?: Partial<
+      Record<
+        'phone' | 'custodyPhone' | 'custodyPhone2' | 'address' | 'custodyStatus',
+        { status: 'verified' | 'unverified' | 'not_publicly_listed'; sourceUrl?: string; notes?: string }
+      >
+    >;
+    /** Merged at request time from rep-contributed custody numbers (KV). */
+    custodyContribution?: {
+      status: 'verified' | 'unverified';
+      /** Distinct reps backing the number. */
+      confirmedBy: number;
+      dateVerified: string | null;
+      source: 'rep_crowdsource';
+    };
+  };
 }
 
 export interface County {

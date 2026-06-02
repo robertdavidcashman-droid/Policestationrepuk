@@ -11,6 +11,15 @@ import { repMatchesCountyName } from './county-matching';
 import { withDerivedCounty } from './force-county';
 import { forceMatchesCounty } from './police-force-to-counties';
 import { applyStationOverrides } from './station-overrides';
+import { applyStationVerificationMeta } from './station-verification';
+import { applyCustodyConsensus } from './custody-tips/overlay';
+
+async function finalizeStations(stations: PoliceStation[]): Promise<PoliceStation[]> {
+  const withOverrides = await applyStationOverrides(stations);
+  const withMeta = applyStationVerificationMeta(withOverrides);
+  // Consensus runs last so it merges into (not replaces) the file-based meta.
+  return applyCustodyConsensus(withMeta);
+}
 import { getKV, skipKVInPrerender } from './kv';
 import { loadFeaturedFlags, applyFeaturedFlags, sortFeaturedReps } from './featured';
 import {
@@ -220,9 +229,7 @@ function stationMatchesCounty(s: PoliceStation, countyName: string): boolean {
 export async function getStationsByCounty(county: string): Promise<PoliceStation[]> {
   const file = loadDataFromFiles();
   if (!file) return [];
-  return applyStationOverrides(
-    file.stations.filter((s) => stationMatchesCounty(s, county)),
-  );
+  return finalizeStations(file.stations.filter((s) => stationMatchesCounty(s, county)));
 }
 
 export async function getRepsByCounty(county: string): Promise<Representative[]> {
@@ -846,13 +853,13 @@ export async function getStationBySlug(slug: string): Promise<PoliceStation | un
     stations.find((s) => s.slug === `${slug}-police-station`) ??
     stations.find((s) => s.slug.startsWith(`${slug}-`));
   if (!match) return undefined;
-  const [merged] = await applyStationOverrides([match]);
+  const [merged] = await finalizeStations([match]);
   return merged ?? match;
 }
 
 export async function getAllStations(): Promise<PoliceStation[]> {
   const file = loadDataFromFiles();
-  return applyStationOverrides(file?.stations ?? []);
+  return finalizeStations(file?.stations ?? []);
 }
 
 export async function getRepsByStation(stationName: string): Promise<Representative[]> {

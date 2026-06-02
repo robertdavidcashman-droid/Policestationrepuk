@@ -5,6 +5,7 @@ import type { PoliceStation } from '@/lib/types';
 import { buildMetadata, localBusinessSchema, breadcrumbSchema } from '@/lib/seo';
 import { JsonLd } from '@/components/JsonLd';
 import { StationsDataContributeCta } from '@/components/StationsDataContributeCta';
+import { StationVerificationBadge } from '@/components/StationVerificationBadge';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { RepCard } from '@/components/RepCard';
 import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCredentialVerificationNotice';
@@ -274,6 +275,7 @@ export default async function PoliceStationPage({ params }: PageProps) {
                   </Link>
                   .
                 </p>
+                <StationVerificationBadge station={station} />
               </section>
 
               <StationsDataContributeCta variant="slim" />

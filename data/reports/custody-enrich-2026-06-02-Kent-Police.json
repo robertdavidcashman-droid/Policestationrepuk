@@ -1,0 +1,42 @@
+{
+  "generatedAt": "2026-06-02T14:43:55.176Z",
+  "write": false,
+  "fetch": true,
+  "allMissing": false,
+  "forceFilter": "Kent Police",
+  "targets": 4,
+  "psrPagesFound": 4,
+  "custodyAdded": 0,
+  "phoneAdded": 3,
+  "rows": [
+    {
+      "station": "Tonbridge Police Station",
+      "slug": "tonbridge-police-station",
+      "action": "add_phone",
+      "number": "01622 690 690",
+      "source": "https://www.policestationreps.com/Police_Stations/Tonbridge-Police-Station.php",
+      "field": "phone"
+    },
+    {
+      "station": "Ashford Police Station",
+      "slug": "ashford-police-station",
+      "action": "no_source"
+    },
+    {
+      "station": "Canterbury Police Station",
+      "slug": "canterbury-police-station",
+      "action": "add_phone",
+      "number": "01227 762 055",
+      "source": "https://www.policestationreps.com/Police_Stations/Canterbury-Police-Station.php",
+      "field": "phone"
+    },
+    {
+      "station": "Maidstone Police Station",
+      "slug": "maidstone-police-station",
+      "action": "add_phone",
+      "number": "07534 533 070",
+      "source": "policestationreps.com",
+      "field": "phone"
+    }
+  ]
+}

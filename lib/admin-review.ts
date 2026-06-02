@@ -5,6 +5,7 @@ import {
   PUBLIC_VERIFIED_STATUSES,
   REP_STATUS_LABELS,
 } from '@/lib/rep-status';
+import { redeemPendingContributorReward } from '@/lib/custody-tips/reward';
 
 /**
  * Legacy 4-state value used by the original admin UI. New code should prefer
@@ -141,6 +142,20 @@ export async function setReview(
   };
 
   await kv.set(reviewKey(lower), record);
+
+  // If this write makes the rep publicly visible, redeem any banked custody
+  // contributor reward (fire-and-forget — must never block a review write).
+  const nowPublic =
+    record.adminApproved === true &&
+    record.isPublic === true &&
+    record.verificationStatus != null &&
+    PUBLIC_VERIFIED_STATUSES.has(record.verificationStatus as never);
+  if (nowPublic) {
+    void redeemPendingContributorReward(lower).catch((err) =>
+      console.warn('[admin-review] custody reward redemption failed:', err),
+    );
+  }
+
   return record;
 }
 

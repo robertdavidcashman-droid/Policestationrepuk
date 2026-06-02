@@ -39,6 +39,19 @@ export function LegalDirectoryCard({ listing }: { listing: PublicLegalDirectoryL
               Verified
             </span>
           )}
+          {listing.verificationStatus === 'unverified' && !listing.verified && (
+            <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold uppercase text-amber-900">
+              Unverified
+            </span>
+          )}
+          {listing.verificationStatus === 'verified' && listing.dateVerified && (
+            <span
+              className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700"
+              title={listing.sourceUrl ? `Source: ${listing.sourceUrl}` : undefined}
+            >
+              Checked {listing.dateVerified}
+            </span>
+          )}
           {listing.availability24Hour && (
             <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-800">
               24h

@@ -19,6 +19,7 @@ import {
   notifyAdminListingChange,
   sendLegalDirectoryListingReceived,
 } from '@/lib/legal-directory/email';
+import { applyAutoVerificationToListing } from '@/lib/legal-directory/auto-verify';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,6 +115,10 @@ export async function POST(request: Request) {
 
     const listing = await getListingById(result.id);
     if (listing) {
+      // Best-effort register check; never blocks publication.
+      await applyAutoVerificationToListing(listing).catch((err) =>
+        console.warn('[legal-directory/submit] auto-verify failed:', err),
+      );
       await Promise.all([
         sendLegalDirectoryListingReceived({
           to: email,

@@ -28,10 +28,55 @@
   },
   "PE234000002": {
     "custodyPhone": {
-      "number": "01634 792000",
-      "source": "scripts/generate-data.js (legacy custody seed)",
+      "number": "01634 792190",
+      "source": "https://www.policestationreps.com/Police_Stations/Medway-Police-Station.php",
       "verifiedAt": "2026-06-02",
-      "confidence": "medium",
+      "confidence": "high",
+      "field": "custodyPhone"
+    }
+  },
+  "PE234000005": {
+    "custodyPhone": {
+      "number": "01732 379190",
+      "source": "https://www.policestationreps.com/Police_Stations/Tonbridge-Police-Station.php",
+      "verifiedAt": "2026-06-02",
+      "confidence": "high",
+      "field": "custodyPhone"
+    }
+  },
+  "PE234000004": {
+    "custodyPhone": {
+      "number": "01227 868190",
+      "source": "https://www.policestationreps.com/Police_Stations/Canterbury-Police-Station.php",
+      "verifiedAt": "2026-06-02",
+      "confidence": "high",
+      "field": "custodyPhone"
+    }
+  },
+  "PE234000007": {
+    "custodyPhone": {
+      "number": "01303 289190",
+      "source": "https://www.policestationreps.com/Police_Stations/Folkestone-Police-Station.php",
+      "verifiedAt": "2026-06-02",
+      "confidence": "high",
+      "field": "custodyPhone"
+    }
+  },
+  "PE234000006": {
+    "custodyPhone": {
+      "number": "01474 366190",
+      "source": "https://www.policestationreps.com/Police_Stations/North-Kent-Police-Station.php",
+      "verifiedAt": "2026-06-02",
+      "confidence": "high",
+      "field": "custodyPhone"
+    }
+  },
+  "PE234000008": {
+    "custodyPhone": {
+      "number": "01843 222190",
+      "source": "https://www.policestationreps.com/Police_Stations/Margate-Police-Station.php",
+      "verifiedAt": "2026-06-02",
+      "confidence": "high",
       "field": "custodyPhone"
     }
   },
@@ -64,10 +109,10 @@
   },
   "PE233600004": {
     "custodyPhone": {
-      "number": "01752 487500",
-      "source": "scripts/generate-data.js (legacy custody seed)",
-      "verifiedAt": "2026-06-02",
-      "confidence": "medium",
+      "number": "01392 854233",
+      "source": "https://www.devon-cornwall.police.uk/contact/custody-information",
+      "verifiedAt": "2026-05-29",
+      "confidence": "high",
       "field": "custodyPhone"
     }
   },
@@ -91,19 +136,64 @@
   },
   "sg-plymouth-crownhill": {
     "custodyPhone": {
-      "number": "01752 487500",
-      "source": "scripts/generate-data.js (legacy custody seed)",
-      "verifiedAt": "2026-06-02",
-      "confidence": "medium",
+      "number": "01392 854233",
+      "source": "https://www.devon-cornwall.police.uk/contact/custody-information",
+      "verifiedAt": "2026-05-29",
+      "confidence": "high",
       "field": "custodyPhone"
     }
   },
   "sg-plymouth-devonport": {
     "custodyPhone": {
-      "number": "01752 487500",
-      "source": "scripts/generate-data.js (legacy custody seed)",
-      "verifiedAt": "2026-06-02",
-      "confidence": "medium",
+      "number": "01392 854233",
+      "source": "https://www.devon-cornwall.police.uk/contact/custody-information",
+      "verifiedAt": "2026-05-29",
+      "confidence": "high",
+      "field": "custodyPhone"
+    }
+  },
+  "PE233600002": {
+    "custodyPhone": {
+      "number": "01392 290645",
+      "source": "https://www.devon-cornwall.police.uk/contact/custody-information",
+      "verifiedAt": "2026-05-29",
+      "confidence": "high",
+      "field": "custodyPhone"
+    }
+  },
+  "PE233600005": {
+    "custodyPhone": {
+      "number": "01392 854082",
+      "source": "https://www.devon-cornwall.police.uk/contact/custody-information",
+      "verifiedAt": "2026-05-29",
+      "confidence": "high",
+      "field": "custodyPhone"
+    }
+  },
+  "PE233600007": {
+    "custodyPhone": {
+      "number": "01637 839660",
+      "source": "https://www.devon-cornwall.police.uk/contact/custody-information",
+      "verifiedAt": "2026-05-29",
+      "confidence": "high",
+      "field": "custodyPhone"
+    }
+  },
+  "PE233600003": {
+    "custodyPhone": {
+      "number": "01392 290820",
+      "source": "https://www.devon-cornwall.police.uk/contact/custody-information",
+      "verifiedAt": "2026-05-29",
+      "confidence": "high",
+      "field": "custodyPhone"
+    }
+  },
+  "PE233600006": {
+    "custodyPhone": {
+      "number": "01209 615538",
+      "source": "https://www.devon-cornwall.police.uk/contact/custody-information",
+      "verifiedAt": "2026-05-29",
+      "confidence": "high",
       "field": "custodyPhone"
     }
   }

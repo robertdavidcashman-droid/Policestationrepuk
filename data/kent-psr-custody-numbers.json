@@ -1,0 +1,19 @@
+{
+  "_comment": "Kent custody desk numbers from policestationreps.com 'See Below' footnotes. Key by station slug or PE stationId.",
+  "source": "https://www.policestationreps.com/",
+  "verifiedAt": "2026-06-02",
+  "stations": {
+    "medway-police-station": { "custodyPhone": "01634 792190", "psrUrl": "https://www.policestationreps.com/Police_Stations/Medway-Police-Station.php" },
+    "PE234000002": { "custodyPhone": "01634 792190", "psrUrl": "https://www.policestationreps.com/Police_Stations/Medway-Police-Station.php" },
+    "tonbridge-police-station": { "custodyPhone": "01732 379190", "psrUrl": "https://www.policestationreps.com/Police_Stations/Tonbridge-Police-Station.php" },
+    "PE234000005": { "custodyPhone": "01732 379190", "psrUrl": "https://www.policestationreps.com/Police_Stations/Tonbridge-Police-Station.php" },
+    "canterbury-police-station": { "custodyPhone": "01227 868190", "psrUrl": "https://www.policestationreps.com/Police_Stations/Canterbury-Police-Station.php" },
+    "PE234000004": { "custodyPhone": "01227 868190", "psrUrl": "https://www.policestationreps.com/Police_Stations/Canterbury-Police-Station.php" },
+    "folkestone-police-station": { "custodyPhone": "01303 289190", "psrUrl": "https://www.policestationreps.com/Police_Stations/Folkestone-Police-Station.php" },
+    "PE234000007": { "custodyPhone": "01303 289190", "psrUrl": "https://www.policestationreps.com/Police_Stations/Folkestone-Police-Station.php" },
+    "north-kent-police-station": { "custodyPhone": "01474 366190", "psrUrl": "https://www.policestationreps.com/Police_Stations/North-Kent-Police-Station.php" },
+    "PE234000006": { "custodyPhone": "01474 366190", "psrUrl": "https://www.policestationreps.com/Police_Stations/North-Kent-Police-Station.php" },
+    "margate-police-station": { "custodyPhone": "01843 222190", "psrUrl": "https://www.policestationreps.com/Police_Stations/Margate-Police-Station.php" },
+    "PE234000008": { "custodyPhone": "01843 222190", "psrUrl": "https://www.policestationreps.com/Police_Stations/Margate-Police-Station.php" }
+  }
+}

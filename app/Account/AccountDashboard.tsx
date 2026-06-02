@@ -346,6 +346,19 @@ export function AccountDashboard({ userEmail, isAdmin = false }: { userEmail: st
       {/* Featured status section */}
       <FeaturedListingAdvert className="mt-6" />
 
+      {/* Contribute custody numbers → free featured month */}
+      <div className="mt-6 rounded-xl border border-[var(--border)] bg-gradient-to-r from-slate-50 to-white p-5">
+        <h3 className="font-bold text-[var(--navy)]">Earn a free featured month</h3>
+        <p className="mt-1 text-sm text-[var(--muted)]">
+          You dial custody desks every day. Confirm, correct or add the numbers for stations you
+          cover — contribute five and earn a free featured month (and help every rep who comes after
+          you).
+        </p>
+        <Link href="/contribute-custody-numbers" className="btn-gold mt-4 inline-block !text-sm">
+          Contribute custody numbers
+        </Link>
+      </div>
+
       {upgradeStatus === 'success' && (
         <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
           <div className="flex items-center gap-2">

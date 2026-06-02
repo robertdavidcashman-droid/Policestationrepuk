@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ModerationStatusBadge } from './ModerationStatusBadge';
-import type { LegalDirectoryListingStatus } from '@/lib/legal-directory/types';
+import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
+import type {
+  LegalDirectoryListingStatus,
+  LegalDirectoryVerificationStatus,
+} from '@/lib/legal-directory/types';
 
 interface ListingRow {
   id: string;
@@ -20,12 +24,15 @@ interface ListingRow {
   dateSubmitted: string;
   ownerEmail: string;
   hasPendingChanges: boolean;
+  verificationStatus?: LegalDirectoryVerificationStatus;
+  unclaimedSeeded?: boolean;
 }
 
 export function LegalDirectoryAdmin({ reviewQueueOnly = false }: { reviewQueueOnly?: boolean }) {
   const [listings, setListings] = useState<ListingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
+  const [unclaimedOnly, setUnclaimedOnly] = useState(false);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
@@ -76,7 +83,10 @@ export function LegalDirectoryAdmin({ reviewQueueOnly = false }: { reviewQueueOn
     }
   }
 
+  const unclaimedCount = listings.filter((l) => l.unclaimedSeeded).length;
+
   const filtered = listings.filter((l) => {
+    if (unclaimedOnly && !l.unclaimedSeeded) return false;
     if (!filter) return true;
     const f = filter.toLowerCase();
     return (
@@ -100,6 +110,19 @@ export function LegalDirectoryAdmin({ reviewQueueOnly = false }: { reviewQueueOn
         <button type="button" onClick={load} className="btn-outline !text-sm">
           Refresh
         </button>
+        {!reviewQueueOnly && (
+          <button
+            type="button"
+            onClick={() => setUnclaimedOnly((v) => !v)}
+            className={`rounded-lg px-3 py-2 text-sm font-semibold ${
+              unclaimedOnly
+                ? 'bg-[var(--gold)] text-[var(--navy)]'
+                : 'border border-[var(--card-border)] text-[var(--navy)]'
+            }`}
+          >
+            Unclaimed seeded{unclaimedCount > 0 ? ` (${unclaimedCount})` : ''}
+          </button>
+        )}
         {!reviewQueueOnly && (
           <Link href="/admin/legal-directory/review-queue" className="btn-gold !text-sm no-underline">
             Review queue
@@ -126,9 +149,30 @@ export function LegalDirectoryAdmin({ reviewQueueOnly = false }: { reviewQueueOn
               <tr key={l.id} className="border-b last:border-0">
                 <td className="p-3">
                   <p className="font-semibold text-[var(--navy)]">{l.businessName}</p>
-                  <p className="text-xs text-[var(--muted)]">{l.ownerEmail}</p>
+                  <p className="text-xs text-[var(--muted)]">{l.ownerEmail || '— unclaimed —'}</p>
                   {l.hasPendingChanges && (
                     <p className="text-xs font-semibold text-amber-700">Pending amendment</p>
+                  )}
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {l.unclaimedSeeded && (
+                      <span className="rounded-full bg-[var(--gold-pale)] px-2 py-0.5 text-[10px] font-bold text-[var(--navy)]">
+                        Seeded · unclaimed
+                      </span>
+                    )}
+                    {l.verificationStatus === 'verified' && (
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                        Source-verified
+                      </span>
+                    )}
+                  </div>
+                  {l.unclaimedSeeded && (
+                    <Link
+                      href={`${LEGAL_DIRECTORY_BASE}/claim/${l.slug}`}
+                      target="_blank"
+                      className="mt-1 inline-block text-[10px] font-semibold text-[var(--gold-link)] no-underline hover:underline"
+                    >
+                      Open claim page ↗
+                    </Link>
                   )}
                 </td>
                 <td className="p-3">

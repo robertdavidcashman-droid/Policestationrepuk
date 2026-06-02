@@ -13,9 +13,9 @@ function toSlug(name) {
 
 const existingStations = [
   { id: "s1", name: "Maidstone", slug: "maidstone", county: "Kent", address: "6 Palace Avenue, Maidstone ME15 6NF", phone: "01622 690690", custodySuite: true },
-  { id: "s2", name: "Canterbury", slug: "canterbury", county: "Kent", address: "Old Dover Road, Canterbury CT1 3JQ", custodySuite: true },
-  { id: "s3", name: "Medway", slug: "medway", county: "Kent", address: "Purser Way, Gillingham ME7 1NE", phone: "01634 792000", custodySuite: true },
-  { id: "s4", name: "Folkestone", slug: "folkestone", county: "Kent", address: "Bouverie Road West, Folkestone CT20 2RB", custodySuite: true },
+  { id: "s2", name: "Canterbury", slug: "canterbury", county: "Kent", address: "Old Dover Road, Canterbury CT1 3JQ", phone: "01227 868190", custodySuite: true },
+  { id: "s3", name: "Medway", slug: "medway", county: "Kent", address: "Purser Way, Gillingham ME7 1NE", phone: "01634 792190", custodySuite: true },
+  { id: "s4", name: "Folkestone", slug: "folkestone", county: "Kent", address: "Bouverie Road West, Folkestone CT20 2RB", phone: "01303 289190", custodySuite: true },
   { id: "s5", name: "Tunbridge Wells", slug: "tunbridge-wells", county: "Kent", address: "Crescent Road, Tunbridge Wells TN1 2LU", custodySuite: false },
   { id: "s6", name: "Margate", slug: "margate", county: "Kent", address: "Fort Hill, Margate CT9 1HD", custodySuite: true },
   { id: "s7", name: "Dover", slug: "dover", county: "Kent", address: "Ladywell, Dover CT16 1DJ", custodySuite: false },
@@ -131,7 +131,7 @@ const newStationData = [
 
   // Kent
   { name: "Gravesend", county: "Kent", address: "Windmill Street, Gravesend DA12 1BE", phone: "01474 564422", custodySuite: true },
-  { name: "Tonbridge", county: "Kent", address: "Pembury Road, Tonbridge TN9 2HS", custodySuite: true },
+  { name: "Tonbridge", county: "Kent", address: "Pembury Road, Tonbridge TN9 2HS", phone: "01732 379190", custodySuite: true },
   { name: "Sevenoaks", county: "Kent", address: "Morewood Close, Sevenoaks TN13 2HU", custodySuite: false },
   { name: "Swanley", county: "Kent", address: "London Road, Swanley BR8 7AE", custodySuite: false },
   { name: "Dartford", county: "Kent", address: "Overy Street, Dartford DA1 1JD", custodySuite: true },

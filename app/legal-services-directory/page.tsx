@@ -66,6 +66,9 @@ export default async function LegalServicesDirectoryPage() {
         <Link href={`${LEGAL_DIRECTORY_BASE}/add-listing`} className="btn-outline !border-white/40 !text-white hover:!bg-white/10 no-underline">
           Add a Free Listing
         </Link>
+        <Link href={`${LEGAL_DIRECTORY_BASE}/resources`} className="btn-outline !border-white/40 !text-white hover:!bg-white/10 no-underline">
+          Official Resources
+        </Link>
         <Link href={`${LEGAL_DIRECTORY_BASE}/manage-listing`} className="btn-outline !border-white/40 !text-white hover:!bg-white/10 no-underline">
           Manage Your Listing
         </Link>
@@ -115,6 +118,21 @@ export default async function LegalServicesDirectoryPage() {
           </div>
           <Link href={`${LEGAL_DIRECTORY_BASE}/locations`} className="btn-outline mt-4 inline-block no-underline">
             All locations
+          </Link>
+        </section>
+
+        <section className="card-surface border-l-4 border-emerald-500 p-6">
+          <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
+            Official resources
+          </span>
+          <h2 className="text-h2 mt-3 text-[var(--navy)]">Trusted official links</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[var(--muted)]">
+            A curated set of authoritative links for England and Wales — the CPS, the SRA and other
+            regulators, legal aid, courts, and complaints bodies. These are editorial signposts, not
+            paid listings, and cannot be claimed.
+          </p>
+          <Link href={`${LEGAL_DIRECTORY_BASE}/resources`} className="btn-outline mt-5 inline-block no-underline">
+            Browse official resources
           </Link>
         </section>
 
