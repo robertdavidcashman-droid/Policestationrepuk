@@ -108,7 +108,7 @@ export default function ForcesPage() {
               {grouped[letter].map((force) => (
                 <Link
                   key={force}
-                  href={{ pathname: '/StationsDirectory', query: { q: force } }}
+                  href={{ pathname: '/StationsDirectory', query: { force } }}
                   className="group flex items-center gap-3 rounded-[var(--radius)] border border-[var(--card-border)] bg-[var(--card-bg)] p-4 no-underline shadow-[var(--card-shadow)] transition-all hover:border-[var(--gold)]/40 hover:shadow-[var(--card-shadow-hover)]"
                 >
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--gold)]/10 text-sm font-bold text-[var(--gold-link)]">

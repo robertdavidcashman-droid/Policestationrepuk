@@ -112,7 +112,12 @@ export default async function StationsDirectoryPage({ searchParams }: PageProps)
 
       <div className="page-container">
         <StationsDataContributeCta variant="slim" className="mb-6" />
-        <StationsDirectoryExplorer stations={stations} initialQuery={params.q ?? ''} />
+        <StationsDirectoryExplorer
+          stations={stations}
+          initialQuery={params.q ?? ''}
+          initialForce={params.force ?? ''}
+          initialCounty={params.county ?? ''}
+        />
 
         <StationsDataContributeCta variant="prominent" className="mt-10" />
 

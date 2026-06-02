@@ -5,8 +5,16 @@ import Link from 'next/link';
 import type { PoliceStation } from '@/lib/types';
 import { searchStations, type ScoredStation } from '@/lib/station-search';
 import { StationPhone } from '@/components/StationPhone';
+import {
+  ALL_AREAS,
+  areaKey,
+  buildAreaIndex,
+  filterByArea,
+  hasDirectNumber,
+  type AreaSelection,
+  type AreaType,
+} from '@/lib/station-browse';
 
-type GroupBy = 'county' | 'force';
 type SortBy = 'relevance' | 'name';
 
 const PAGE_SIZE = 60;
@@ -15,28 +23,57 @@ function isCustodyStation(s: PoliceStation): boolean {
   return Boolean(s.isCustodyStation || s.custodySuite);
 }
 
-function groupKey(s: PoliceStation, groupBy: GroupBy): string {
-  if (groupBy === 'county') {
-    return (s.county && s.county.trim()) || 'Other';
-  }
-  const force = (s.forceName && s.forceName.trim()) || (s.forceCode && s.forceCode.trim());
-  return force || 'Force not listed';
-}
-
 export function StationsDirectoryExplorer({
   stations,
   initialQuery = '',
+  initialForce = '',
+  initialCounty = '',
 }: {
   stations: PoliceStation[];
   initialQuery?: string;
+  initialForce?: string;
+  initialCounty?: string;
 }) {
   const [query, setQuery] = useState(initialQuery);
-  const [groupBy, setGroupBy] = useState<GroupBy>('force');
+  const [groupBy, setGroupBy] = useState<AreaType>(initialCounty ? 'county' : 'force');
+  const [area, setArea] = useState<AreaSelection>(
+    initialForce
+      ? { type: 'force', value: initialForce }
+      : initialCounty
+        ? { type: 'county', value: initialCounty }
+        : ALL_AREAS,
+  );
   const [custodyOnly, setCustodyOnly] = useState(false);
+  const [directOnly, setDirectOnly] = useState(false);
   const [sortBy, setSortBy] = useState<SortBy>('name');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
+  // The directory page is statically generated, so server-side searchParams are
+  // not reliably passed in. Read the URL on mount to honour deep links
+  // (?force= / ?county= / ?q=) from /Forces, shared links, and bookmarks.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const sp = new URLSearchParams(window.location.search);
+    const q = sp.get('q');
+    const force = sp.get('force');
+    const county = sp.get('county');
+    if (q) setQuery(q);
+    if (force) {
+      setGroupBy('force');
+      setArea({ type: 'force', value: force });
+    } else if (county) {
+      setGroupBy('county');
+      setArea({ type: 'county', value: county });
+    }
+  }, []);
+
   const hasTextQuery = query.trim().length > 0;
+  const hasArea = area.type !== 'all' && area.value.length > 0;
+  // Flat list when narrowed by search or a single area; grouped browse otherwise.
+  const isFlat = hasTextQuery || hasArea;
+
+  // Areas (forces or counties) with counts for the picker and chip bar.
+  const areaIndex = useMemo(() => buildAreaIndex(stations, groupBy), [stations, groupBy]);
 
   useEffect(() => {
     if (hasTextQuery && sortBy !== 'relevance') setSortBy('relevance');
@@ -46,9 +83,9 @@ export function StationsDirectoryExplorer({
   // Reset the visible window whenever the result set changes.
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [query, custodyOnly, groupBy, sortBy]);
+  }, [query, custodyOnly, directOnly, groupBy, sortBy, area]);
 
-  // Keep the URL's ?q= in sync so a typed search is shareable/bookmarkable.
+  // Keep the URL in sync (q / force / county) so any view is shareable.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const handle = window.setTimeout(() => {
@@ -56,16 +93,26 @@ export function StationsDirectoryExplorer({
       const q = query.trim();
       if (q) url.searchParams.set('q', q);
       else url.searchParams.delete('q');
+      if (area.type === 'force') url.searchParams.set('force', area.value);
+      else url.searchParams.delete('force');
+      if (area.type === 'county') url.searchParams.set('county', area.value);
+      else url.searchParams.delete('county');
       window.history.replaceState(null, '', url.toString());
     }, 300);
     return () => window.clearTimeout(handle);
-  }, [query]);
+  }, [query, area]);
 
   const filtered = useMemo(() => {
     let result: ScoredStation[] = searchStations(query, stations);
 
+    if (hasArea) {
+      result = filterByArea(result, area) as ScoredStation[];
+    }
     if (custodyOnly) {
       result = result.filter((s) => isCustodyStation(s));
+    }
+    if (directOnly) {
+      result = result.filter((s) => hasDirectNumber(s));
     }
 
     if (sortBy === 'name' || !hasTextQuery) {
@@ -73,12 +120,12 @@ export function StationsDirectoryExplorer({
     }
 
     return result;
-  }, [stations, query, custodyOnly, sortBy, hasTextQuery]);
+  }, [stations, query, area, hasArea, custodyOnly, directOnly, sortBy, hasTextQuery]);
 
   const total = stations.length;
   const shown = filtered.length;
 
-  // Flat list (search mode): paginate the rows directly.
+  // Flat list (search / single-area mode): paginate the rows directly.
   const visible = useMemo(
     () => filtered.slice(0, visibleCount),
     [filtered, visibleCount],
@@ -88,10 +135,10 @@ export function StationsDirectoryExplorer({
   // whole groups. Slicing before grouping was the bug that made most forces
   // appear to contain a single station.
   const groupedSorted = useMemo(() => {
-    if (hasTextQuery) return null;
+    if (isFlat) return null;
 
     const map = filtered.reduce<Record<string, ScoredStation[]>>((acc, station) => {
-      const key = groupKey(station, groupBy);
+      const key = areaKey(station, groupBy);
       if (!acc[key]) acc[key] = [];
       acc[key].push(station);
       return acc;
@@ -111,13 +158,31 @@ export function StationsDirectoryExplorer({
       if (running >= visibleCount) break;
     }
     return { map, keys, visibleKeys, shownCount: running };
-  }, [filtered, groupBy, hasTextQuery, visibleCount]);
+  }, [filtered, groupBy, isFlat, visibleCount]);
 
-  const hasMore = hasTextQuery
+  const hasMore = isFlat
     ? visibleCount < shown
     : (groupedSorted?.visibleKeys.length ?? 0) < (groupedSorted?.keys.length ?? 0);
 
-  const renderedCount = hasTextQuery ? visible.length : groupedSorted?.shownCount ?? 0;
+  const renderedCount = isFlat ? visible.length : groupedSorted?.shownCount ?? 0;
+
+  const areaNoun = groupBy === 'county' ? 'county' : 'force';
+
+  function selectArea(value: string) {
+    setArea(value ? { type: groupBy, value } : ALL_AREAS);
+  }
+
+  function changeGroupBy(next: AreaType) {
+    setGroupBy(next);
+    setArea(ALL_AREAS); // labels differ between dimensions, so reset selection
+  }
+
+  function clearAll() {
+    setQuery('');
+    setCustodyOnly(false);
+    setDirectOnly(false);
+    setArea(ALL_AREAS);
+  }
 
   if (total === 0) {
     return (
@@ -147,41 +212,61 @@ export function StationsDirectoryExplorer({
           </div>
 
           <div className="flex flex-wrap items-end gap-4">
-            {!hasTextQuery && (
-              <fieldset className="space-y-2">
-                <legend className="text-sm font-semibold text-[var(--navy)]">Group by</legend>
-                <div className="flex flex-wrap gap-2">
-                  {(
-                    [
-                      { value: 'county' as const, label: 'County' },
-                      { value: 'force' as const, label: 'Police force' },
-                    ] as const
-                  ).map((opt) => (
-                    <label
-                      key={opt.value}
-                      className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium ${
-                        groupBy === opt.value
-                          ? 'border-[var(--navy)] bg-[var(--navy)] text-white'
-                          : 'border-[var(--border)] bg-white text-[var(--navy)] hover:border-[var(--gold)]'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="stations-groupby"
-                        value={opt.value}
-                        checked={groupBy === opt.value}
-                        onChange={() => setGroupBy(opt.value)}
-                        className="sr-only"
-                      />
-                      {opt.label}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-            )}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="stations-area"
+                className="block text-sm font-semibold text-[var(--navy)]"
+              >
+                Jump to {areaNoun}
+              </label>
+              <select
+                id="stations-area"
+                value={hasArea ? area.value : ''}
+                onChange={(e) => selectArea(e.target.value)}
+                className="w-full min-w-[15rem] rounded-lg border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--foreground)]"
+              >
+                <option value="">All {areaNoun === 'county' ? 'counties' : 'forces'} ({total})</option>
+                {areaIndex.map((a) => (
+                  <option key={a.label} value={a.label}>
+                    {a.label} ({a.count})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <fieldset className="space-y-1.5">
+              <legend className="text-sm font-semibold text-[var(--navy)]">Browse by</legend>
+              <div className="flex flex-wrap gap-2">
+                {(
+                  [
+                    { value: 'force' as const, label: 'Police force' },
+                    { value: 'county' as const, label: 'County' },
+                  ] as const
+                ).map((opt) => (
+                  <label
+                    key={opt.value}
+                    className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium ${
+                      groupBy === opt.value
+                        ? 'border-[var(--navy)] bg-[var(--navy)] text-white'
+                        : 'border-[var(--border)] bg-white text-[var(--navy)] hover:border-[var(--gold)]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="stations-groupby"
+                      value={opt.value}
+                      checked={groupBy === opt.value}
+                      onChange={() => changeGroupBy(opt.value)}
+                      className="sr-only"
+                    />
+                    {opt.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
 
             {hasTextQuery && (
-              <fieldset className="space-y-2">
+              <fieldset className="space-y-1.5">
                 <legend className="text-sm font-semibold text-[var(--navy)]">Sort by</legend>
                 <div className="flex flex-wrap gap-2">
                   {(
@@ -214,27 +299,77 @@ export function StationsDirectoryExplorer({
             )}
           </div>
 
-          <div className="flex items-start gap-3">
-            <input
-              id="stations-custody-only"
-              type="checkbox"
-              checked={custodyOnly}
-              onChange={(e) => setCustodyOnly(e.target.checked)}
-              className="mt-1 h-4 w-4 shrink-0 rounded border-[var(--border)]"
-            />
-            <label htmlFor="stations-custody-only" className="text-sm text-[var(--muted)]">
-              <span className="font-medium text-[var(--navy)]">Custody / custody suite only</span>
-              <span className="block text-xs">
-                Many listings are not flagged as custody suites in the dataset — this filter may hide most stations.
-              </span>
+          {/* Quick-jump chips for one-tap area selection */}
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+            <button
+              type="button"
+              onClick={() => selectArea('')}
+              className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${
+                !hasArea
+                  ? 'border-[var(--navy)] bg-[var(--navy)] text-white'
+                  : 'border-[var(--border)] bg-white text-[var(--navy)] hover:border-[var(--gold)]'
+              }`}
+            >
+              All
+            </button>
+            {areaIndex.map((a) => (
+              <button
+                key={a.label}
+                type="button"
+                onClick={() => selectArea(a.label)}
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${
+                  hasArea && area.value === a.label
+                    ? 'border-[var(--navy)] bg-[var(--navy)] text-white'
+                    : 'border-[var(--border)] bg-white text-[var(--navy)] hover:border-[var(--gold)]'
+                }`}
+              >
+                {a.label} <span className="opacity-70">({a.count})</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
+            <label htmlFor="stations-custody-only" className="flex items-start gap-2 text-sm text-[var(--muted)]">
+              <input
+                id="stations-custody-only"
+                type="checkbox"
+                checked={custodyOnly}
+                onChange={(e) => setCustodyOnly(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--border)]"
+              />
+              <span className="font-medium text-[var(--navy)]">Custody suite only</span>
+            </label>
+            <label htmlFor="stations-direct-only" className="flex items-start gap-2 text-sm text-[var(--muted)]">
+              <input
+                id="stations-direct-only"
+                type="checkbox"
+                checked={directOnly}
+                onChange={(e) => setDirectOnly(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--border)]"
+              />
+              <span className="font-medium text-[var(--navy)]">Has a direct number</span>
             </label>
           </div>
 
           <p className="text-sm text-[var(--muted)]" role="status" aria-live="polite">
             Showing <strong className="text-[var(--navy)]">{shown}</strong> of{' '}
             <strong className="text-[var(--navy)]">{total}</strong> stations
+            {hasArea ? ` in ${area.value}` : ''}
             {query.trim() ? ` matching "${query.trim()}"` : ''}
-            {custodyOnly ? ' · custody flagged only' : ''}
+            {custodyOnly ? ' · custody only' : ''}
+            {directOnly ? ' · direct number' : ''}
+            {(hasArea || hasTextQuery || custodyOnly || directOnly) && (
+              <>
+                {' · '}
+                <button
+                  type="button"
+                  onClick={clearAll}
+                  className="font-semibold text-[var(--gold-link)] underline hover:text-[var(--gold)]"
+                >
+                  Clear
+                </button>
+              </>
+            )}
           </p>
           <p className="text-xs text-[var(--muted)]">
             Know a more up-to-date telephone number?{' '}
@@ -254,17 +389,20 @@ export function StationsDirectoryExplorer({
           <p className="text-[var(--muted)]">No stations match your filters.</p>
           <button
             type="button"
-            onClick={() => {
-              setQuery('');
-              setCustodyOnly(false);
-            }}
+            onClick={clearAll}
             className="mt-4 rounded-lg bg-[var(--navy)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--navy-light)]"
           >
             Clear search and filters
           </button>
         </div>
-      ) : hasTextQuery ? (
+      ) : isFlat ? (
         <div className="mt-8">
+          {hasArea && (
+            <h2 className="mb-4 text-lg font-semibold text-[var(--navy)]">
+              {area.value}{' '}
+              <span className="text-sm font-normal text-[var(--muted)]">({shown})</span>
+            </h2>
+          )}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {visible.map((station) => (
               <StationDirectoryCard key={station.id} station={station} />
