@@ -2,7 +2,10 @@ import { describe, it, expect } from 'vitest';
 import {
   detectRegulator,
   buildSraVerificationSource,
+  buildBsbVerificationSource,
 } from '@/lib/legal-directory/auto-verify';
+import { parseBsbRegisterCsv } from '@/lib/bsb-register-lookup';
+import { isPlausibleCilexMemberNumber } from '@/lib/cilex-register-lookup';
 import { computeListingVerification, tierForSource } from '@/lib/legal-directory/verification-sources';
 import {
   buildLaaProviderStub,
@@ -42,6 +45,29 @@ describe('SRA verification source', () => {
     const v = computeListingVerification([src]);
     expect(v.status).toBe('verified');
     expect(v.dateVerified).toBe('2026-06-02');
+  });
+});
+
+describe('BSB register CSV parsing', () => {
+  it('parses forename/surname rows from CSV header', () => {
+    const csv = `"Forenames","Surname","Honours","Primary status","Practising certificate valid","Address Name"
+"Jane","Smith","","Self Employed","01/04/2026-30/04/2027","Example Chambers"`;
+    const rows = parseBsbRegisterCsv(csv);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].name).toBe('Jane Smith');
+    expect(rows[0].organisation).toBe('Example Chambers');
+  });
+
+  it('builds a Tier A BSB verification source', () => {
+    const src = buildBsbVerificationSource('Jane Smith', '2026-06-02');
+    expect(tierForSource(src)).toBe('A');
+  });
+});
+
+describe('CILEx member number validation', () => {
+  it('accepts plausible membership numbers', () => {
+    expect(isPlausibleCilexMemberNumber('123456')).toBe(true);
+    expect(isPlausibleCilexMemberNumber('12')).toBe(false);
   });
 });
 

@@ -24,7 +24,7 @@
     "postbuild": "npx tsx scripts/postbuild-indexnow.ts",
     "start": "next start",
     "lint": "next lint",
-    "deploy:vercel": "vercel deploy --prod --yes",
+    "deploy:vercel": "npx vercel deploy --prod --yes",
     "qa:smoke": "node scripts/qa-smoke.mjs",
     "qa:lighthouse": "lhci autorun",
     "crawl": "npx playwright install chromium && node scripts/crawl-site.js",

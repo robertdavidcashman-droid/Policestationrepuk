@@ -64,53 +64,108 @@ async function loadWorkbook(): Promise<XLSX.WorkBook> {
   return XLSX.read(buf, { type: 'buffer' });
 }
 
-function pick(row: Record<string, unknown>, keys: string[]): string {
-  const lowerKeys = Object.keys(row);
-  for (const want of keys) {
-    const match = lowerKeys.find((k) => k.toLowerCase().trim().includes(want));
-    if (match) {
-      const v = row[match];
-      if (v != null && String(v).trim()) return String(v).trim();
-    }
-  }
-  return '';
+function yes(val: unknown): boolean {
+  return String(val ?? '').trim().toLowerCase() === 'yes';
 }
 
-function rowToRecord(row: Record<string, unknown>, sheetCategory: string): LaaProviderRecord | null {
-  const firmName = pick(row, ['firm', 'provider name', 'organisation', 'office name', 'account name', 'name']);
-  if (!firmName) return null;
-  const category = pick(row, ['category of law', 'category', 'area of law']) || sheetCategory;
-  return {
-    firmName,
-    category,
-    town: pick(row, ['post town', 'town', 'city']) || undefined,
-    county: pick(row, ['county', 'area']) || undefined,
-    postcode: pick(row, ['postcode', 'post code']) || undefined,
-    phone: pick(row, ['telephone', 'phone', 'tel']) || undefined,
-    accountNumber: pick(row, ['account number', 'account', 'firm id', 'provider id']) || undefined,
-  };
+/** Parse the main "Summary" sheet (provider offices + category flags). */
+function parseSummarySheet(wb: XLSX.WorkBook): LaaProviderRecord[] {
+  const sheet = wb.Sheets['Summary'];
+  if (!sheet) return [];
+
+  const raw = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, defval: '' });
+  let headerIdx = -1;
+  for (let i = 0; i < raw.length; i++) {
+    const row = raw[i];
+    if (row[1]?.trim() === 'Provider Name') {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx < 0) return [];
+
+  const headers = raw[headerIdx].map((h) => String(h).trim());
+  const col = (name: string) => headers.findIndex((h) => h.toLowerCase() === name.toLowerCase());
+
+  const iName = col('Provider Name');
+  const iCity = col('City');
+  const iCounty = col('County');
+  const iPostcode = col('Postcode');
+  const iPhone = col('Telephone Number');
+  const iCrime = col('Crime');
+  const iPrison = col('Prison Law');
+
+  const records: LaaProviderRecord[] = [];
+  for (let r = headerIdx + 1; r < raw.length; r++) {
+    const row = raw[r];
+    const firmName = String(row[iName] ?? '').trim();
+    if (!firmName) continue;
+
+    const crime = iCrime >= 0 && yes(row[iCrime]);
+    const prison = iPrison >= 0 && yes(row[iPrison]);
+    if (!crime && !prison) continue;
+
+    records.push({
+      firmName,
+      category: prison && !crime ? 'Prison Law' : crime ? 'Crime' : 'Prison Law',
+      town: iCity >= 0 ? String(row[iCity] ?? '').trim() || undefined : undefined,
+      county: iCounty >= 0 ? String(row[iCounty] ?? '').trim() || undefined : undefined,
+      postcode: iPostcode >= 0 ? String(row[iPostcode] ?? '').trim() || undefined : undefined,
+      phone: iPhone >= 0 ? String(row[iPhone] ?? '').trim() || undefined : undefined,
+    });
+  }
+  return records;
+}
+
+/** Supplement from "2025 Crime Providers" sheet (firm + postcode only). */
+function parseCrimeProvidersSheet(wb: XLSX.WorkBook): LaaProviderRecord[] {
+  const sheet = wb.Sheets['2025 Crime Providers'];
+  if (!sheet) return [];
+
+  const raw = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, defval: '' });
+  let headerIdx = -1;
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i][0]?.trim() === 'Provider Name') {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx < 0) return [];
+
+  const records: LaaProviderRecord[] = [];
+  for (let r = headerIdx + 1; r < raw.length; r++) {
+    const row = raw[r];
+    const firmName = String(row[0] ?? '').trim();
+    const postcode = String(row[1] ?? '').trim();
+    const prison = yes(row[4]);
+    if (!firmName) continue;
+    records.push({
+      firmName,
+      category: prison ? 'Prison Law' : 'Crime',
+      postcode: postcode || undefined,
+    });
+  }
+  return records;
 }
 
 async function main() {
   const limit = Number(arg('limit') ?? '0') || 0;
   const wb = await loadWorkbook();
 
+  const fromSummary = parseSummarySheet(wb);
+  const fromCrimeSheet = parseCrimeProvidersSheet(wb);
+  console.log(`[laa-fetch] Summary sheet: ${fromSummary.length} crime/prison offices`);
+  console.log(`[laa-fetch] 2025 Crime Providers sheet: ${fromCrimeSheet.length} rows`);
+
   const records: LaaProviderRecord[] = [];
   const seen = new Set<string>();
 
-  for (const sheetName of wb.SheetNames) {
-    const sheet = wb.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' });
-    for (const row of rows) {
-      const rec = rowToRecord(row, sheetName);
-      if (!rec) continue;
-      if (!isCrimeRelatedLaaCategory(rec.category) && !isCrimeRelatedLaaCategory(sheetName)) continue;
-      const key = laaProviderKey(rec);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      records.push(rec);
-      if (limit && records.length >= limit) break;
-    }
+  for (const rec of [...fromSummary, ...fromCrimeSheet]) {
+    if (!isCrimeRelatedLaaCategory(rec.category)) continue;
+    const key = laaProviderKey(rec);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    records.push(rec);
     if (limit && records.length >= limit) break;
   }
 

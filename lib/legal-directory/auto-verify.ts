@@ -9,6 +9,8 @@
  */
 
 import { lookupSraPersonByNumber } from '@/lib/sra-register-lookup';
+import { lookupBsbPerson } from '@/lib/bsb-register-lookup';
+import { lookupCilexMember, isPlausibleCilexMemberNumber } from '@/lib/cilex-register-lookup';
 import { saveListing } from './storage';
 import type { LegalDirectoryListing } from './types';
 import {
@@ -60,27 +62,75 @@ export function buildSraVerificationSource(
   };
 }
 
+/** Build a Tier A BSB verification source from a confirmed register record. */
+export function buildBsbVerificationSource(
+  name: string,
+  dateChecked: string = today(),
+): LegalDirectoryVerificationSource {
+  return {
+    type: 'bsb',
+    label: `BSB Barristers' Register — ${name}`,
+    url: 'https://www.barstandardsboard.org.uk/for-the-public/search-a-barristers-record/the-barristers-register.html',
+    reference: name,
+    dateChecked,
+  };
+}
+
+/** Build a Tier A CILEx verification source from a confirmed register record. */
+export function buildCilexVerificationSource(
+  memberNumber: string,
+  dateChecked: string = today(),
+): LegalDirectoryVerificationSource {
+  return {
+    type: 'cilex',
+    label: 'CILEx Regulation — membership confirmed',
+    url: 'https://www.cilexregulation.org.uk/regulation/find-a-regulated-individual/',
+    reference: `CILEx #${memberNumber.replace(/\D/g, '')}`,
+    dateChecked,
+  };
+}
+
 /**
  * Derive verification sources for a listing by checking public registers.
- * Currently supports the SRA register via a supplied SRA number.
  */
 export async function deriveListingVerification(input: AutoVerifyInput): Promise<AutoVerifyResult> {
   const sources: LegalDirectoryVerificationSource[] = [];
   const regulator = detectRegulator(input.regulatoryBody);
   const num = (input.regulatoryNumber ?? '').replace(/\D/g, '');
+  const personName = (input.contactPerson || input.businessName || '').trim();
+  const dateChecked = today();
 
-  // Only the SRA number lookup is automated for now. Treat a bare number with no
-  // (or an SRA) regulator as an SRA candidate; other regulators are left for the
-  // verification script / manual review.
   const sraCandidate = num.length >= 5 && (regulator === 'sra' || regulator === null);
   if (sraCandidate) {
     try {
-      const res = await lookupSraPersonByNumber(num, input.contactPerson || input.businessName);
+      const res = await lookupSraPersonByNumber(num, personName);
       if (res.matched && res.person) {
-        sources.push(buildSraVerificationSource(res.person.name, res.person.sraNumber || num));
+        sources.push(buildSraVerificationSource(res.person.name, res.person.sraNumber || num, dateChecked));
       }
     } catch (err) {
       console.warn('[legal-auto-verify] SRA lookup failed:', err);
+    }
+  }
+
+  if (regulator === 'bsb' && personName) {
+    try {
+      const res = await lookupBsbPerson({ name: personName, businessName: input.businessName });
+      if (res.matched && res.person) {
+        sources.push(buildBsbVerificationSource(res.person.name, dateChecked));
+      }
+    } catch (err) {
+      console.warn('[legal-auto-verify] BSB lookup failed:', err);
+    }
+  }
+
+  if (regulator === 'cilex' && isPlausibleCilexMemberNumber(input.regulatoryNumber ?? '')) {
+    try {
+      const res = await lookupCilexMember({ memberNumber: num, name: personName });
+      if (res.matched) {
+        sources.push(buildCilexVerificationSource(num, dateChecked));
+      }
+    } catch (err) {
+      console.warn('[legal-auto-verify] CILEx lookup failed:', err);
     }
   }
 

@@ -340,9 +340,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.west-midlands.police.uk/contact",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -395,9 +393,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.westyorkshire.police.uk/contact-us",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -412,9 +408,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Cheshire%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -456,9 +450,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.met.police.uk/contact/af/contact-us/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -481,9 +473,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Leicestershire%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -498,9 +488,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Northamptonshire%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -523,9 +511,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Leicestershire%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -548,9 +534,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.thamesvalley.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -565,9 +549,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Northamptonshire%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -582,9 +564,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Bedfordshire%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -663,9 +643,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.btp.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -687,9 +665,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.btp.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -730,9 +706,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.btp.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -755,9 +729,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.btp.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -779,9 +751,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.btp.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -861,9 +831,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.btp.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -904,9 +872,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.btp.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -1075,9 +1041,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.btp.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -1192,9 +1156,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.btp.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -1362,9 +1324,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Hampshire%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -1422,9 +1382,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Sussex%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -1519,9 +1477,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Hampshire%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -1566,9 +1522,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Dorset%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -1590,9 +1544,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Surrey%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -1648,9 +1600,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.kent.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -2108,9 +2058,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Surrey%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -2205,9 +2153,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.kent.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -2229,9 +2175,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Sussex%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -2376,9 +2320,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Dorset%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -2631,9 +2573,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Surrey%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -2747,9 +2687,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.thamesvalley.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -2937,9 +2875,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.thamesvalley.police.uk/contact/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -3122,9 +3058,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Avon%20and%20Somerset%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -3144,9 +3078,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Gloucestershire%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -3435,9 +3367,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Gloucestershire%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -3927,9 +3857,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Avon%20and%20Somerset%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -4551,9 +4479,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Northamptonshire%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -5251,9 +5177,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Northamptonshire%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -5445,9 +5369,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Warwickshire%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -5603,9 +5525,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Warwickshire%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -5752,9 +5672,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.west-midlands.police.uk/contact",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -5949,9 +5867,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.west-midlands.police.uk/contact",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -6093,9 +6009,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.west-midlands.police.uk/contact",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -6133,9 +6047,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Warwickshire%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -6211,9 +6123,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.gmp.police.uk/contact-us/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -6892,9 +6802,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.gmp.police.uk/contact-us/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -6950,9 +6858,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Merseyside%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -7254,9 +7160,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Nottinghamshire%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -8023,9 +7927,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Lancashire%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -8120,9 +8022,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Lancashire%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -8234,9 +8134,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Lancashire%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -8277,9 +8175,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Merseyside%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -8904,9 +8800,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.westyorkshire.police.uk/contact-us",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -9561,9 +9455,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=South%20Yorkshire%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -11099,9 +10991,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Hertfordshire%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -11380,9 +11270,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Hertfordshire%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -11413,9 +11301,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Suffolk%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -11437,9 +11323,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Essex%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -11529,9 +11413,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Essex%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -11747,9 +11629,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Norfolk%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -11785,9 +11665,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Hertfordshire%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -12141,9 +12019,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Essex%20Police%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -12371,9 +12247,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Suffolk%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -12605,9 +12479,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.met.police.uk/contact/af/contact-us/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -12912,9 +12784,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.google.com/search?q=Cambridgeshire%20Constabulary%20contact%20police%20station",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -13537,9 +13407,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.met.police.uk/contact/af/contact-us/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -13650,9 +13518,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.met.police.uk/contact/af/contact-us/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -13818,9 +13684,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.met.police.uk/contact/af/contact-us/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -14219,9 +14083,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.met.police.uk/contact/af/contact-us/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -14801,9 +14663,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.met.police.uk/contact/af/contact-us/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -15167,9 +15027,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.met.police.uk/contact/af/contact-us/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -15264,9 +15122,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.met.police.uk/contact/af/contact-us/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
@@ -15558,9 +15414,7 @@
       },
       "custodyPhone": {
         "status": "not_publicly_listed",
-        "sourceUrl": "https://www.met.police.uk/contact/af/contact-us/",
-        "dateVerified": "2026-06-02",
-        "notes": "No dedicated custody desk number found on force public contact pages during automated verification pass."
+        "notes": "No published custody desk line; contact via 101 or force switchboard."
       }
     }
   },
