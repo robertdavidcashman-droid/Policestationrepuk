@@ -11,15 +11,19 @@
  *   npx tsx scripts/seed-laa-crime-providers.ts --limit=25 # cap
  *   npx tsx scripts/seed-laa-crime-providers.ts --apply    # write
  */
-import 'dotenv/config';
-import { readFileSync } from 'fs';
+import { config } from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+
+config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../.env.local') });
+config(); // fallback .env
+import { readFileSync } from 'fs';
 import {
   buildLaaProviderStub,
   type LaaProviderRecord,
 } from '../lib/legal-directory/laa-seed';
 import { upsertSeededListing } from '../lib/legal-directory/storage';
+import { getDirectoryStore } from '../lib/legal-directory/store';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const IN_PATH = resolve(__dirname, '../data/laa-crime-providers.json');
@@ -48,6 +52,17 @@ async function main() {
   console.log(
     `[laa-seed] ${slice.length} records${limit ? ` (limited from ${records.length})` : ''} · mode: ${apply ? 'APPLY' : 'DRY-RUN'}`,
   );
+
+  if (apply) {
+    const store = getDirectoryStore();
+    if (!store?.durable) {
+      console.error(
+        '[laa-seed] ABORT: Upstash KV not configured. Set UPSTASH_REDIS_REST_URL/TOKEN (or KV_*) in .env.local.',
+      );
+      process.exit(1);
+    }
+    console.log('[laa-seed] connected to durable KV — writing unclaimed stubs (noindex until claimed)');
+  }
 
   let created = 0;
   let updated = 0;

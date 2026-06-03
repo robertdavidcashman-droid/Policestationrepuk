@@ -17,6 +17,10 @@ import {
   LAA_DIRECTORY_URL,
   type LaaProviderRecord,
 } from '@/lib/legal-directory/laa-seed';
+import {
+  shouldIndexLegalListingPage,
+  shouldIncludeLegalListingInSitemap,
+} from '@/lib/legal-directory/indexing';
 
 describe('auto-verify regulator detection', () => {
   it('detects known regulators from free text', () => {
@@ -134,5 +138,26 @@ describe('LAA provider stub building', () => {
   it('isUnclaimedSeededListing is false once an owner is attached', () => {
     const stub = buildLaaProviderStub(record);
     expect(isUnclaimedSeededListing({ ...stub, ownerEmail: 'owner@firm.co.uk' })).toBe(false);
+  });
+});
+
+describe('legal listing indexing rules', () => {
+  const record: LaaProviderRecord = {
+    firmName: 'Example Defence Solicitors LLP',
+    category: 'Crime',
+    town: 'Manchester',
+  };
+
+  it('unclaimed LAA stubs are not indexable or in sitemap', () => {
+    const stub = buildLaaProviderStub(record);
+    expect(shouldIndexLegalListingPage(stub)).toBe(false);
+    expect(shouldIncludeLegalListingInSitemap(stub)).toBe(false);
+  });
+
+  it('claimed listings become indexable', () => {
+    const stub = buildLaaProviderStub(record);
+    const claimed = { ...stub, ownerEmail: 'owner@firm.co.uk', email: 'owner@firm.co.uk' };
+    expect(shouldIndexLegalListingPage(claimed)).toBe(true);
+    expect(shouldIncludeLegalListingInSitemap(claimed)).toBe(true);
   });
 });

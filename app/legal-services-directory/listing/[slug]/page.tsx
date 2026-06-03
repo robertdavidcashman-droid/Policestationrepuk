@@ -13,6 +13,7 @@ import {
 import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
 import { computeListingVerification } from '@/lib/legal-directory/verification-sources';
 import { isUnclaimedSeededListing } from '@/lib/legal-directory/laa-seed';
+import { shouldIndexLegalListingPage } from '@/lib/legal-directory/indexing';
 import { phoneToTelHref } from '@/lib/phone';
 import { SITE_URL } from '@/lib/seo-layer/config';
 
@@ -35,6 +36,7 @@ export async function generateMetadata({ params }: Props) {
     title: listing.seoTitle,
     description: listing.seoDescription || listing.description.slice(0, 160),
     path: `${LEGAL_DIRECTORY_BASE}/listing/${listing.slug}`,
+    noIndex: !shouldIndexLegalListingPage(listing),
   });
 }
 

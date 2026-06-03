@@ -20,6 +20,7 @@ import { listApprovedListings } from '@/lib/legal-directory/storage';
 import { LEGAL_DIRECTORY_CATEGORIES } from '@/lib/legal-directory/categories';
 import { LEGAL_DIRECTORY_LOCATIONS } from '@/lib/legal-directory/locations';
 import { getAllLegalResources } from '@/lib/legal-directory/resources';
+import { shouldIncludeLegalListingInSitemap } from '@/lib/legal-directory/indexing';
 import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
 
 const now = new Date();
@@ -315,7 +316,9 @@ async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'weekly' as const,
         priority: 0.68,
       })),
-      ...legalListings.map((l) => ({
+      ...legalListings
+        .filter((l) => shouldIncludeLegalListingInSitemap(l))
+        .map((l) => ({
         url: `${BASE}${LEGAL_DIRECTORY_BASE}/listing/${l.slug}`,
         lastModified: safeLastModified(l.lastUpdated, now),
         changeFrequency: 'monthly' as const,
