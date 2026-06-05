@@ -74,7 +74,7 @@
     "laa:fetch": "npx tsx scripts/fetch-laa-crime-providers.ts",
     "laa:seed": "npx tsx scripts/seed-laa-crime-providers.ts",
     "audit:station-phones": "npx tsx scripts/verify-station-phone-accuracy.ts",
-    "audit:station-phones:fix": "npx tsx scripts/correct-station-phones.ts --write && npx tsx scripts/verify-station-phone-accuracy.ts --write",
+    "audit:station-phones:fix": "npx tsx scripts/restore-cleared-station-phones.ts --write && npx tsx scripts/correct-station-phones.ts --write && npx tsx scripts/verify-station-phone-accuracy.ts --write",
     "laa:refresh": "npm run laa:fetch && npm run laa:seed"
   },
   "dependencies": {

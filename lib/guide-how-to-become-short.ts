@@ -12,17 +12,18 @@ export const HOW_TO_BECOME_SHORT_ON_THIS_PAGE = [
 export const HOW_TO_BECOME_ROUTE = [
   { n: 1, title: 'Secure an SCC firm', body: 'A Standard Crime Contract firm must sponsor and supervise you before enrolment.' },
   { n: 2, title: 'Enrol with Cardiff or Datalaw', body: 'Pay enrolment fee and receive your PSRAS candidate handbook.' },
-  { n: 3, title: 'Pass the written test', body: 'PACE, criminal procedure, ethics, adverse inference — unless exempt (see full guide).' },
-  { n: 4, title: 'Register as probationary', body: 'Firm submits DSCC ADMIN 2; you attend under supervision.' },
-  { n: 5, title: 'Complete portfolio', body: 'Part A observations and Part B lead attendances with signed case reports.' },
-  { n: 6, title: 'Pass the CIT', body: 'Critical Incidents Test — simulated consultation and interview scenarios.' },
+  { n: 3, title: 'Pass the written test', body: 'Two-hour exam (four of five questions, 50% pass — Datalaw). Exemptions per PSRA 2025. See Written Exam guide.' },
+  { n: 4, title: 'Register as probationary', body: 'After written pass and Part A portfolio pass — ADMIN 2 to DSCC; probationary PIN issued.' },
+  { n: 5, title: 'Complete portfolio', body: 'Nine case studies total: Part A (2+2 observed) and Part B (5 unsupervised).' },
+  { n: 6, title: 'Pass the CIT', body: 'Audio role-play assessment — Content, Confidence, Control (50% each per scenario).' },
   { n: 7, title: 'Full accreditation', body: 'Added to the Register as fully accredited; freelance work becomes possible.' },
 ] as const;
 
 export const HOW_TO_BECOME_RELATED = [
   { href: '/HowToBecomePoliceStationRep', label: 'Complete 2026 PSRAS guide', desc: 'In-depth stages, costs, timelines, FAQs' },
+  { href: '/PrepareForWrittenExam', label: 'Written exam guide', desc: 'Format, exemptions, study plan' },
   { href: '/FindSupervisingSolicitor', label: 'Find a supervising solicitor', desc: 'How to approach firms' },
-  { href: '/BuildPortfolioGuide', label: 'Portfolio guide', desc: 'Case reports and common mistakes' },
-  { href: '/PrepareForCIT', label: 'CIT preparation', desc: 'Exam topics and tips' },
+  { href: '/BuildPortfolioGuide', label: 'Portfolio guide', desc: 'Nine case studies — Part A and Part B' },
+  { href: '/PrepareForCIT', label: 'CIT guide', desc: 'Role-play assessment prep' },
   { href: '/GettingStarted', label: 'Getting started', desc: 'Onboarding path for new candidates' },
 ] as const;

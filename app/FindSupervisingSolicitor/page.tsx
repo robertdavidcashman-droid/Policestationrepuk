@@ -92,7 +92,7 @@ const APPLICATION_BUILDING_BLOCKS = [
   },
   {
     title: 'PSRAS progress (or a clear, funded plan)',
-    body: 'State which assessment organisation you have applied to (Cardiff or Datalaw), whether you are exempt from the written exam (LPC / BTC / SQE Parts 1 & 2 / current practising certificate), and how Part A of the portfolio will be funded — by you or by the firm.',
+    body: 'State which assessment organisation you have applied to (Cardiff or Datalaw), whether you are exempt from the written exam (LPC / BPTC / solicitor / barrister / specified CILEX papers — see PSRA 2025), and how Part A of the portfolio will be funded — by you or by the firm.',
   },
   {
     title: 'Resilience and judgement, not entitlement',
@@ -250,7 +250,7 @@ const ALTERNATIVE_ROUTES = [
   },
   {
     title: 'SQE route → in-house police station rep',
-    body: 'If you complete SQE 1 & 2, you are exempt from the PSRAS written exam. You still need a supervising solicitor and portfolio attendances, but you remove one obstacle.',
+    body: 'PSRA 2025 does not exempt candidates who have only passed the Solicitors Qualifying Examination from the written exam — confirm exemption status with the LAA. Once admitted as a solicitor you may be exempt. You still need a supervising solicitor and portfolio attendances regardless.',
   },
   {
     title: 'Public Defender Service (England & Wales)',

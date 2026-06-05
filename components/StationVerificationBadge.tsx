@@ -50,7 +50,7 @@ export function StationVerificationBadge({ station }: { station: PoliceStation }
       )}
       {phone?.status === 'unverified' && isDialablePhone(station.phone) && (
         <p className="text-amber-700">
-          Main line on file is unverified and not shown — use the non-emergency number below or{' '}
+          Main line is shown as <strong>unverified</strong> — please confirm before relying on it, or{' '}
           <Link href="/HelpUsStationNumbers" className="font-semibold underline">
             report a correction
           </Link>
@@ -59,7 +59,11 @@ export function StationVerificationBadge({ station }: { station: PoliceStation }
       )}
       {custody?.status === 'unverified' && isDialablePhone(station.custodyPhone) && (
         <p className="text-amber-700">
-          Custody desk number on file is unverified and not shown publicly until checked.
+          Custody desk number is shown as <strong>unverified</strong> —{' '}
+          <Link href="/HelpUsStationNumbers" className="font-semibold underline">
+            help verify or update it
+          </Link>
+          .
         </p>
       )}
       {phone?.status === 'unverified' && !isDialablePhone(station.phone) && (

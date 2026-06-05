@@ -77,26 +77,27 @@ const STAGE_1_STEPS = [
 ];
 
 const STAGE_2_STEPS = [
-  'Study the PACE Codes A–H (in particular Code C and Code G), the Criminal Procedure Rules, the Standard Crime Contract 2025, and the Law Society Police Station Skills practice notes.',
-  'Sit a written/multiple-choice exam assessing knowledge of PACE, criminal law, interview law (Sections 34–38 CJPOA 1994 on adverse inference), identification (Code D), and ethical duties.',
-  'Pass marks are typically 60–70%. Resits are permitted but most assessment organisations cap them; check current Cardiff/Datalaw rules before enrolling.',
-  'Once the written stage is passed, your supervising solicitor submits ADMIN 2 to the Defence Solicitor Call Centre (DSCC) and you are added to the Register as a Probationary Representative.',
+  'Study the PACE Codes A–H (in particular Code C and Code G), the Criminal Procedure Rules, the Standard Crime Contract 2025, and the SRA Standards of competence for police station work.',
+  'Sit the written examination — two hours, five questions, answer four (Datalaw format). Pass mark is at least 50% overall. See our full Written Exam guide.',
+  'Exemptions: solicitors, barristers, LPC, BPTC, and specified CILEX qualifications (PSRA 2025). SQE pass alone is not listed as exempt — confirm with the LAA if unsure.',
+  'The written exam must be passed before Part A portfolio cases begin (Datalaw). Resits are permitted under provider regulations — check current Cardiff/Datalaw timetables.',
 ];
 
 const STAGE_3_STEPS = [
-  'Part A — minimum 6 observed police station attendances with your supervising solicitor or another fully accredited rep. You are not yet allowed to advise alone.',
-  'Part B — minimum 10 attendances on which you are the primary adviser, supervised remotely. Most candidates need more — 15–25 is realistic to cover the variety of offence types the assessment organisation expects to see.',
-  'For each attendance you produce a portfolio entry: facts, disclosure analysis, advice given, interview strategy, outcome, and a reflective learning point. Your supervisor signs each entry.',
-  'The portfolio must show breadth: violence, dishonesty, drugs, road traffic, sexual offences, domestic abuse, juveniles, vulnerable adults, identification, and an &quot;adverse inference&quot; case (no comment / prepared statement).',
-  'Portfolios are submitted to Cardiff/Datalaw for assessment. Expect rounds of feedback — the first submission is rarely accepted without amendment.',
+  'Part A Stage 1 — two cases observing your supervising solicitor advising at the police station.',
+  'Part A Stage 2 — two cases where you are the primary adviser while observed; signed supervisor feedback required (Datalaw).',
+  'Part B — five unsupervised case studies once you hold a probationary PIN (nine portfolio cases in total).',
+  'Each case study covers advice and a police interview. Produce reflective write-ups: facts, disclosure, strategy, interview, learning point.',
+  'Spread breadth across the nine cases: violence, dishonesty, drugs, traffic, youth, vulnerability, identification, adverse inference — not nine identical files.',
+  'Submit to Cardiff/Datalaw for assessment. Expect feedback rounds before final pass. Full guide: Build Your PSRAS Portfolio.',
 ];
 
 const STAGE_4_STEPS = [
-  'Once your portfolio is signed off, you book the Critical Incidents Test (CIT) — the one-day final assessment.',
-  'You receive a pack of disclosure ~30 minutes before each scenario. You then conduct a recorded simulated consultation with an actor playing the suspect, followed by a simulated police interview with an actor playing the officer.',
-  'Assessors mark you against the published competency framework: rapport, advice on the right to silence and adverse inference, interview interventions, professional conduct, and management of complex disclosure (e.g. vulnerable suspects, third-party material).',
-  'You typically face 2–3 scenarios. Pass marks are scenario-by-scenario; failing any scenario means a partial resit.',
-  'Most candidates pass on the first or second attempt. Failure rates rise sharply for candidates who took the CIT before completing a varied portfolio.',
+  'Once probationary (Part A + written pass), you may undertake Part B and the CIT in either order (Datalaw).',
+  'The CIT is a role-play under exam conditions. Datalaw uses audio scenarios — you respond aloud and are recorded. Confirm Cardiff format in their handbook.',
+  'Marking (Datalaw): Content, Confidence, and Control — at least 50% on each criterion in each scenario.',
+  'Scenarios follow chronological station attendance: telephone → custody → disclosure → consultation → interview → post-interview.',
+  'Stay in role throughout — breaking character scores zero on that question (Datalaw). See our full CIT preparation guide.',
 ];
 
 const STAGE_5_STEPS = [
@@ -110,8 +111,8 @@ const COST_TABLE = [
   { label: 'Assessment organisation enrolment', range: '£200 – £400' },
   { label: 'Training course (Cardiff / Datalaw, including written prep)', range: '£800 – £1,500' },
   { label: 'Portfolio assessment fees', range: '£300 – £500' },
-  { label: 'Critical Incidents Test (CIT) fee', range: '£450 – £650' },
-  { label: 'CIT resit (if needed)', range: '£200 – £400 per scenario' },
+  { label: 'Critical Incidents Test (CIT) fee', range: 'Check provider timetable (indicative £450–£650)' },
+  { label: 'CIT resit (if needed)', range: 'Check provider regulations' },
   { label: 'SRA / Law Society administrative fees', range: '£0 – £100' },
   { label: 'Travel, accommodation, materials', range: '£200 – £600' },
   { label: 'Total range (single attempt)', range: '£1,950 – £3,750' },
@@ -175,7 +176,7 @@ const FAQS = [
   },
   {
     q: 'What is the Critical Incidents Test (CIT)?',
-    a: 'The CIT is the final, exam-day assessment for PSRAS. You handle 2–3 simulated police station scenarios with actors as suspect and officer. Assessors mark advice, interview interventions, ethics, and disclosure analysis. Pass rates are high for candidates who completed a varied portfolio — and much lower for those who rushed the portfolio stage.',
+    a: 'The CIT is the final practical PSRAS assessment — role-play under exam conditions testing advice at the police station. Datalaw uses audio scenarios with recorded verbal responses; marking is Content, Confidence, and Control (50% minimum each per scenario). Prepare with our <a href="/PrepareForCIT" class="font-semibold underline">CIT guide</a> after a varied portfolio.',
   },
   {
     q: 'Will I get work straight after accreditation?',
@@ -198,9 +199,10 @@ const SOURCES = [
 ];
 
 const RELATED = [
+  { href: '/PrepareForWrittenExam', label: 'PSRAS written exam guide', desc: 'Format, exemptions, syllabus, and study plan' },
   { href: '/FindSupervisingSolicitor', label: 'How to find a supervising solicitor', desc: 'In-depth playbook for the single hardest stage' },
-  { href: '/BuildPortfolioGuide', label: 'Build your PSRAS portfolio', desc: 'Variety, depth, reflective entries — what assessors actually look for' },
-  { href: '/PrepareForCIT', label: 'Prepare for the CIT', desc: 'Scenario rehearsal, ethical traps, and timing' },
+  { href: '/BuildPortfolioGuide', label: 'PSRAS portfolio guide', desc: 'Nine case studies — Part A and Part B requirements' },
+  { href: '/PrepareForCIT', label: 'PSRAS CIT guide', desc: 'Audio role-play format, marking, and prep plan' },
   { href: '/DSCCRegistrationGuide', label: 'DSCC Registration Guide', desc: 'ADMIN 2 / ADMIN 3 and how the duty call flow really works' },
   { href: '/GetWork', label: 'Getting work after accreditation', desc: 'Six-phase action plan for your first freelance year' },
   { href: '/Wiki', label: 'Rep Wiki', desc: 'Operational guides for live cases (no comment, identification, juveniles)' },
@@ -470,8 +472,12 @@ export default function HowToBecomePage() {
           <section className="mb-12">
             <SectionHeading id="stage-3">Stage 3 — Portfolio (Part A and Part B)</SectionHeading>
             <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
-              The portfolio is the heart of PSRAS. It is the only stage where assessors see how you
-              actually behave in custody — and it is where most weak candidates are filtered out.
+              The portfolio is the heart of PSRAS — nine case studies in total (Part A: four observed
+              cases; Part B: five unsupervised). See our{' '}
+              <Link href="/BuildPortfolioGuide" className="font-semibold text-[var(--navy)] underline">
+                PSRAS Portfolio Guide
+              </Link>{' '}
+              for the full requirements.
             </p>
             <ol className="mt-4 list-decimal space-y-2 pl-6 text-sm leading-relaxed text-[var(--muted)]">
               {STAGE_3_STEPS.map((s) => (
@@ -491,9 +497,13 @@ export default function HowToBecomePage() {
           <section className="mb-12">
             <SectionHeading id="stage-4">Stage 4 — Pass the Critical Incidents Test (CIT)</SectionHeading>
             <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
-              The CIT is the final, live-marked assessment. It is the closest thing in legal
-              practice to a flight simulator — you are tested under realistic time pressure on
-              advice, interview interventions, ethics, and disclosure analysis.
+              The CIT is the final practical assessment — role-play under exam conditions. Datalaw uses
+              audio scenarios; you respond aloud and are marked on Content, Confidence, and Control.
+              Full preparation guide:{' '}
+              <Link href="/PrepareForCIT" className="font-semibold text-[var(--navy)] underline">
+                PSRAS CIT Guide
+              </Link>
+              .
             </p>
             <ol className="mt-4 list-decimal space-y-2 pl-6 text-sm leading-relaxed text-[var(--muted)]">
               {STAGE_4_STEPS.map((s) => <li key={s}>{s}</li>)}

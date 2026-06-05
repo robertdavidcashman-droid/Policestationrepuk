@@ -82,16 +82,26 @@ export const FOOTER_DIRECTORIES: FooterLink[] = [
   { href: '/UpdateStation', label: 'Report station phone number' },
 ];
 
+/** PSRAS accreditation study guides — promoted in header For Reps menu. */
+export const HEADER_NAV_PSRAS: HeaderNavLink[] = [
+  { href: '/PrepareForWrittenExam', text: 'PSRAS Written Exam Guide' },
+  { href: '/BuildPortfolioGuide', text: 'PSRAS Portfolio Guide' },
+  { href: '/PrepareForCIT', text: 'PSRAS CIT Exam Guide' },
+  { href: '/HowToBecomePoliceStationRep', text: 'How to Become a Rep (2026)' },
+  { href: '/FindSupervisingSolicitor', text: 'Find a Supervising Solicitor' },
+];
+
 /** Footer column “For Reps” — order & labels from homepage crawl */
 export const FOOTER_FOR_REPRESENTATIVES: FooterLink[] = [
   { href: '/register', label: 'Join the Directory (Free)' },
   { href: '/Profile', label: 'My Profile' },
   { href: '/GoFeatured', label: 'Become Featured' },
   { href: '/PoliceStationRepJobsUK', label: 'Rep Jobs UK' },
+  { href: '/PrepareForWrittenExam', label: 'PSRAS Written Exam Guide' },
+  { href: '/BuildPortfolioGuide', label: 'PSRAS Portfolio Guide' },
+  { href: '/PrepareForCIT', label: 'PSRAS CIT Exam Guide' },
   { href: '/HowToBecomePoliceStationRep', label: 'How to Become a Rep' },
   { href: '/FindSupervisingSolicitor', label: 'Find a Supervising Solicitor' },
-  { href: '/PrepareForCIT', label: 'Prepare for the CIT' },
-  { href: '/BuildPortfolioGuide', label: 'Build Your PSRAS Portfolio' },
   { href: '/GettingStarted', label: 'Getting Started' },
   { href: '/BeginnersGuide', label: "Beginner's Guide" },
   { href: '/WhatDoesRepDo', label: 'What Does a Rep Do?' },
@@ -107,6 +117,9 @@ export const FOOTER_FOR_REPRESENTATIVES: FooterLink[] = [
 /** Training & reference guides — header “Guides” menu + footer tools block. */
 export const HEADER_NAV_GUIDES: HeaderNavLink[] = [
   { href: '/Resources', text: 'Knowledge Centre (all resources)' },
+  { href: '/PrepareForWrittenExam', text: 'PSRAS Written Exam Guide' },
+  { href: '/BuildPortfolioGuide', text: 'PSRAS Portfolio Guide' },
+  { href: '/PrepareForCIT', text: 'PSRAS CIT Exam Guide' },
   { href: '/Wiki', text: 'Rep Wiki' },
   { href: '/CommonOffencesGuide', text: 'Common Offences Guide' },
   { href: '/BeginnersGuide', text: "Beginner's Guide" },
@@ -203,7 +216,13 @@ export const FOOTER_TOOLS: FooterLink[] = [
 /** Grouped desktop dropdown menus — keep the header row readable (5 menus, not 8). */
 export const HEADER_NAV_DROPDOWNS: { label: string; links: HeaderNavLink[] }[] = [
   { label: 'Blog', links: HEADER_NAV_BLOG_LINKS },
-  { label: 'For Reps', links: footerLinksToNav(FOOTER_FOR_REPRESENTATIVES) },
+  {
+    label: 'For Reps',
+    links: dedupeNavLinks([
+      ...HEADER_NAV_PSRAS,
+      ...footerLinksToNav(FOOTER_FOR_REPRESENTATIVES),
+    ]),
+  },
   { label: 'Guides', links: HEADER_NAV_GUIDES },
   { label: 'Fees & Forms', links: HEADER_NAV_FEES_FORMS },
   { label: 'More', links: HEADER_NAV_MORE },

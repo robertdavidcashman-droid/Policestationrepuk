@@ -3,8 +3,23 @@ import { PsrTrainPromo } from '@/components/PsrTrainPromo';
 
 const GUIDES = [
   {
+    title: 'PSRAS Written Exam Guide',
+    body: 'Format (4 of 5 questions, 50% pass), LAA exemptions, examination topics mapped to SRA standards, open-book rules, and structured study plan.',
+    href: '/PrepareForWrittenExam',
+  },
+  {
+    title: 'PSRAS Portfolio Guide',
+    body: 'Nine case studies, probationary deadlines, case report blueprint, breadth matrix, assessor fail patterns, and submission workflow.',
+    href: '/BuildPortfolioGuide',
+  },
+  {
+    title: 'PSRAS CIT Exam Guide',
+    body: 'Critical Incidents Test preparation: audio role-play format, Content/Confidence/Control marking, syllabus modules, and exam-day tips.',
+    href: '/PrepareForCIT',
+  },
+  {
     title: 'How to Become a Police Station Rep',
-    body: 'Complete PSRAS accreditation roadmap: eligibility requirements, enrollment process, portfolio building, Critical Incidents Test preparation, assessment stages, typical timelines, costs breakdown, and career progression pathways.',
+    body: 'Complete PSRAS accreditation roadmap: eligibility, supervision, costs, timelines, and career progression.',
     href: '/HowToBecomePoliceStationRep',
   },
   {

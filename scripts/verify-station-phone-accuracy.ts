@@ -110,7 +110,7 @@ const report = {
   mode: WRITE ? 'write' : 'dry-run',
   cleared: { phone: 0, custodyPhone: 0, custodyPhone2: 0 },
   verified: { phone: 0, custodyPhone: 0 },
-  hiddenBeforeWrite: 0,
+  markedUnverified: 0,
   publishableAfter: 0,
   samples: [] as Array<{ name: string; action: string }>,
 };
@@ -126,11 +126,14 @@ for (const station of stations) {
     const existing = fields[field];
 
     if (UNTRUSTED.test(existing?.notes ?? '') || UNTRUSTED.test(provenance[key]?.[field as 'custodyPhone']?.source ?? '')) {
-      if (WRITE) station[field] = '';
-      report.cleared[field]++;
-      delete fields[field];
+      fields[field] = {
+        status: 'unverified',
+        dateVerified: TODAY,
+        notes: 'Legacy directory import — shown with unverified label until confirmed.',
+      };
+      report.markedUnverified++;
       if (report.samples.length < 20) {
-        report.samples.push({ name: station.name, action: `cleared ${field} (legacy/untrusted seed)` });
+        report.samples.push({ name: station.name, action: `marked ${field} unverified (legacy import): ${raw}` });
       }
       continue;
     }
@@ -140,14 +143,14 @@ for (const station of stations) {
     const forceOk = isAlwaysPublishableForceContact(stationWithMeta, field, raw);
 
     if (!trusted && !forceOk) {
-      report.hiddenBeforeWrite++;
+      report.markedUnverified++;
       fields[field] = {
         status: 'unverified',
         dateVerified: TODAY,
-        notes: 'Station-specific number not verified against official force source — withheld from public directory.',
+        notes: 'Shown with unverified label — not yet confirmed against an official force source.',
       };
       if (report.samples.length < 20) {
-        report.samples.push({ name: station.name, action: `withheld ${field} from display: ${raw}` });
+        report.samples.push({ name: station.name, action: `marked ${field} unverified: ${raw}` });
       }
       continue;
     }
@@ -187,17 +190,6 @@ writeFileSync(REPORT_PATH, JSON.stringify(report, null, 2) + '\n');
 if (WRITE) {
   writeFileSync(STATIONS_PATH, JSON.stringify(stations, null, 2) + '\n');
   saveStationVerification(verification);
-
-  for (const [key, row] of Object.entries(provenance)) {
-    for (const field of ['custodyPhone', 'custodyPhone2'] as const) {
-      const entry = row[field];
-      if (entry && UNTRUSTED.test(entry.source)) {
-        delete row[field];
-      }
-    }
-    if (!row.custodyPhone && !row.custodyPhone2) delete provenance[key];
-  }
-  savePhoneProvenance(provenance);
 }
 
 console.log(JSON.stringify(report, null, 2));

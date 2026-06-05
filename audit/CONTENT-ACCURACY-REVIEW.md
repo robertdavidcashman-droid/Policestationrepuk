@@ -302,3 +302,18 @@ Every primary/authoritative source cited above, de-duplicated. All URLs verified
 - *R v DPP ex p Lee* [1999] 2 Cr App R 304 (common-law duty of pre-committal/early disclosure where fairness requires).
 
 > Removed during this review as unverifiable/misattributed (not sources — flagged so they are not reinstated): *"R v ATH [2023] EWCA Crim 1047"* (no such case); *"R v Dobson [2011]"* cited for BWV disclosure (actually the Stephen Lawrence retrial — wrong subject); *"R v Inland Revenue ex parte Dhesi [1995]"* (unverifiable in the threshold-test context).
+
+---
+
+## Tier 7 — PSRAS portfolio, written exam, and CIT guides (2026-06-05)
+
+Scope: `/BuildPortfolioGuide`, `/PrepareForCIT`, `/PrepareForWrittenExam`, and cross-references in career/how-to pages. Verified against PSRA 2025 PDF, SRA PSRAS/Standards pages, and Datalaw portfolio/CIT/written exam guides.
+
+### Key fixes
+
+- Part A/B case counts corrected to nine cases (2+2+5), not 6+10.
+- CIT format corrected to Datalaw audio role-play; 50% Content/Confidence/Control marking.
+- Written exam: 50% pass, four of five questions; SQE-only not exempt per PSRA 2025.
+- New comprehensive `/PrepareForWrittenExam` guide added.
+- Header For Reps and Guides menus promote all three PSRAS study guides.
+

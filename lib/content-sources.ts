@@ -27,6 +27,35 @@ const CPS_CHARGING = { label: "CPS — Director's Guidance on Charging", href: '
 const CPS_CTL = { label: 'CPS — Custody time limits', href: 'https://www.cps.gov.uk/legal-guidance/custody-time-limits' };
 const HMRC_MILEAGE = { label: 'HMRC — travel and subsistence mileage rates', href: 'https://www.gov.uk/travel-mileage-fuel-rates/travel-and-subsistence' };
 const SENTENCING_ACT_2026 = { label: 'Sentencing Act 2026', href: 'https://www.legislation.gov.uk/ukpga/2026/2/2026-03-22' };
+const PSRA_2025_PDF = {
+  label: 'Police Station Register Arrangements 2025 (PDF)',
+  href: 'https://assets.publishing.service.gov.uk/media/68dcf841ef1c2f72bc1e4c9f/Police_Station_Register_Arrangements_2025.pdf',
+};
+const SRA_PSRAS = {
+  label: 'SRA — Police station representative accreditation scheme',
+  href: 'https://www.sra.org.uk/solicitors/resources/specific-areas-of-practice/police-station-representative-accreditation-scheme/',
+};
+const SRA_STANDARDS = {
+  label: 'SRA — Standards of competence (police station)',
+  href: 'https://www.sra.org.uk/solicitors/resources/specific-areas-of-practice/standards/',
+};
+const DATALAW_PORTFOLIO = {
+  label: 'Datalaw — PSRAS portfolio guide',
+  href: 'https://datalaw.crisp.help/en/article/psras-portfolio-a-guide-wl5v2o/',
+};
+const DATALAW_CIT = {
+  label: 'Datalaw — PSRAS CIT guide',
+  href: 'https://datalaw.crisp.help/en/article/psras-critical-incidents-test-a-guide-1lyt0pg/',
+};
+const DATALAW_WRITTEN = {
+  label: 'Datalaw — PSRAS written exam guide',
+  href: 'https://datalaw.crisp.help/en/article/written-exam-a-guide-66feem/',
+};
+const CARDIFF_PSRAS = {
+  label: 'Cardiff University — PSRAS course',
+  href: 'https://www.cardiff.ac.uk/study/professional/courses/professional-skills-and-qualifications-for-non-lawyers/police-station-representatives-accreditation-scheme',
+};
+
 const PSRAS = { label: 'PSRAS — Police Station Register Arrangements 2025', href: 'https://www.gov.uk/guidance/police-station-representatives-and-duty-solicitors' };
 const BAILII = { label: 'BAILII — free UK case law', href: 'https://www.bailii.org/' };
 
@@ -89,8 +118,9 @@ const CRAWL_SLUG: Record<string, ContentSource[]> = {
   InterviewUnderCaution: [CJPOA, CPS_ADVERSE, PACE],
   DutySolicitorVsRep: [PSRAS, SCC_2025, PACE],
   WhatDoesRepDo: [PACE, PSRAS, SCC_2025],
-  PrepareForCIT: [PSRAS, PACE, SCC_2025],
-  BuildPortfolioGuide: [PSRAS, SCC_2025],
+  PrepareForCIT: [PSRA_2025_PDF, SRA_PSRAS, SRA_STANDARDS, DATALAW_CIT, PACE, CJPOA, CPS_ADVERSE],
+  BuildPortfolioGuide: [PSRA_2025_PDF, SRA_PSRAS, SRA_STANDARDS, DATALAW_PORTFOLIO, SCC_2025],
+  PrepareForWrittenExam: [PSRA_2025_PDF, SRA_PSRAS, SRA_STANDARDS, DATALAW_WRITTEN, PACE, CARDIFF_PSRAS],
   GettingStarted: [PSRAS, PACE],
   CriminalLawCareerGuide: [PSRAS, SCC_2025],
   AccreditedRepresentativeGuide: [PSRAS, SCC_2025],
@@ -119,8 +149,9 @@ const PAGE_PATH: Record<string, ContentSource[]> = {
   '/PoliceDisclosureGuide': [CPIA, AG_DISCLOSURE, CPS_DISCLOSURE],
   '/WhatDoesRepDo': [PACE, PSRAS, SCC_2025],
   '/DutySolicitorVsRep': [PSRAS, SCC_2025, PACE],
-  '/PrepareForCIT': [PSRAS, PACE, CJPOA, CPS_ADVERSE],
-  '/BuildPortfolioGuide': [PSRAS, SCC_2025],
+  '/PrepareForCIT': [PSRA_2025_PDF, SRA_PSRAS, SRA_STANDARDS, DATALAW_CIT, PACE, CJPOA, CPS_ADVERSE],
+  '/BuildPortfolioGuide': [PSRA_2025_PDF, SRA_PSRAS, SRA_STANDARDS, DATALAW_PORTFOLIO, SCC_2025],
+  '/PrepareForWrittenExam': [PSRA_2025_PDF, SRA_PSRAS, SRA_STANDARDS, DATALAW_WRITTEN, PACE, CARDIFF_PSRAS],
   '/GettingStarted': [PSRAS, PACE, SCC_2025],
   '/AccreditedRepresentativeGuide': [PSRAS, SCC_2025],
   '/HowToBecome': [PSRAS, SCC_2025],

@@ -141,7 +141,30 @@ describe('stationPhoneNumbers', () => {
       }),
     );
     expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({ className: 'generic', number: '0800 40 50 40' });
+    expect(entries[0]).toMatchObject({ className: 'generic', number: '0800 40 50 40', verified: true });
+  });
+
+  it('includes unverified station lines with verified flag false', () => {
+    const entries = stationPhoneNumbers(
+      stub({
+        forceName: 'British Transport Police',
+        phone: '0118 957 2022',
+        verificationMeta: {
+          fields: {
+            phone: {
+              status: 'unverified',
+              dateVerified: '2026-06-02',
+            },
+          },
+        },
+      }),
+    );
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      number: '0118 957 2022',
+      className: 'station',
+      verified: false,
+    });
   });
 });
 

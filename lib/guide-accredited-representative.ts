@@ -16,7 +16,7 @@ export const ACCREDITED_FAQS = [
   },
   {
     q: 'What is the difference between probationary and fully accredited?',
-    a: 'After the written test, you are added to the Register as a probationary representative and must work under direct supervision. After portfolio sign-off and passing the CIT, you become fully accredited and can work with reduced supervision subject to firm and contract rules.',
+    a: 'After passing the written exam (or proving exemption) and Part A of the portfolio, you are registered as a probationary representative with a PIN. After Part B and the CIT, you become fully accredited.',
   },
   {
     q: 'Can I work freelance once accredited?',
@@ -30,8 +30,9 @@ export const ACCREDITED_FAQS = [
 
 export const ACCREDITED_RELATED = [
   { href: '/HowToBecomePoliceStationRep', label: 'How to become a rep', desc: 'Full step-by-step PSRAS route' },
-  { href: '/BuildPortfolioGuide', label: 'Portfolio guide', desc: 'Part A and Part B evidence' },
-  { href: '/PrepareForCIT', label: 'CIT preparation', desc: 'Final assessment guide' },
+  { href: '/PrepareForWrittenExam', label: 'Written exam guide', desc: 'First assessment stage' },
+  { href: '/BuildPortfolioGuide', label: 'Portfolio guide', desc: 'Nine case studies — Part A and Part B' },
+  { href: '/PrepareForCIT', label: 'CIT guide', desc: 'Final role-play assessment' },
   { href: '/DSCCRegistrationGuide', label: 'DSCC registration', desc: 'Register forms and engaged requirements' },
   { href: '/GetWork', label: 'Get work', desc: 'Finding instructions after accreditation' },
 ] as const;

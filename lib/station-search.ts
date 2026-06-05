@@ -1,9 +1,9 @@
 import type { PoliceStation } from '@/lib/types';
 import { levenshtein } from '@/lib/rep-search';
+import { isDialablePhone } from '@/lib/station-phone-dialable';
 import {
   isAlwaysPublishableForceContact,
-  isTrustedStationPhoneField,
-  trustedPhoneValue,
+  isVerifiedStationPhoneField,
 } from '@/lib/station-phone-trust';
 
 /* ------------------------------------------------------------------ */
@@ -120,26 +120,18 @@ const GENERIC_NUMBERS_NORM = new Set(Array.from(GENERIC_NUMBERS, normalizePhone)
 /* ------------------------------------------------------------------ */
 
 export function classifyPhone(station: PoliceStation): PhoneClass {
-  const raw = (
-    trustedPhoneValue(station, 'custodyPhone') ||
-    trustedPhoneValue(station, 'phone') ||
-    trustedPhoneValue(station, 'custodyPhone2') ||
-    trustedPhoneValue(station, 'nonEmergencyPhone') ||
-    ''
-  ).trim();
-  if (!raw) return 'none';
-  const norm = normalizePhone(raw);
-  if (GENERIC_NUMBERS_NORM.has(norm)) return 'generic';
-  if (SWITCHBOARD_NUMBERS_NORM.has(norm)) return 'switchboard';
-  return 'station';
+  const entries = stationPhoneNumbers(station);
+  const primary =
+    entries.find((e) => e.className === 'station') ??
+    entries.find((e) => e.className === 'switchboard') ??
+    entries[0];
+  if (!primary) return 'none';
+  return primary.className;
 }
 
 export function displayPhoneNumber(station: PoliceStation): string | null {
-  for (const field of ['custodyPhone', 'phone', 'custodyPhone2', 'nonEmergencyPhone'] as const) {
-    const trusted = trustedPhoneValue(station, field);
-    if (trusted) return trusted;
-  }
-  return null;
+  const entries = stationPhoneNumbers(station);
+  return entries.find((e) => e.verified)?.number ?? entries[0]?.number ?? null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -150,6 +142,8 @@ export interface StationPhoneEntry {
   label: string;
   number: string;
   className: PhoneClass;
+  /** True when backed by official force contact or verified provenance. */
+  verified: boolean;
 }
 
 export function stationPhoneNumbers(station: PoliceStation): StationPhoneEntry[] {
@@ -164,11 +158,8 @@ export function stationPhoneNumbers(station: PoliceStation): StationPhoneEntry[]
   const entries: StationPhoneEntry[] = [];
   for (const { label, field, value } of candidates) {
     const trimmed = (value || '').trim();
-    if (!trimmed) continue;
-    const trusted =
-      isTrustedStationPhoneField(station, field, trimmed) ||
-      isAlwaysPublishableForceContact(station, field, trimmed);
-    if (!trusted) continue;
+    if (!isDialablePhone(trimmed)) continue;
+    const verified = isVerifiedStationPhoneField(station, field, trimmed);
     const norm = normalizePhone(trimmed);
     if (!norm || seen.has(norm)) continue;
     seen.add(norm);
@@ -178,7 +169,7 @@ export function stationPhoneNumbers(station: PoliceStation): StationPhoneEntry[]
     else if (isAlwaysPublishableForceContact(station, field, trimmed)) {
       className = GENERIC_NUMBERS_NORM.has(norm) ? 'generic' : 'switchboard';
     }
-    entries.push({ label, number: trimmed, className });
+    entries.push({ label, number: trimmed, className, verified });
   }
   return entries;
 }

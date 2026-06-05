@@ -13,6 +13,7 @@ import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCre
 import { FirmCoverCTA } from '@/components/FirmCoverCTA';
 import { phoneToTelHref } from '@/lib/phone';
 import { displayPhoneNumber, stationPhoneNumbers } from '@/lib/station-search';
+import { stationPhoneEntryHint } from '@/lib/station-phone-labels';
 import { isCustodyStation } from '@/lib/custody-station';
 import {
   DEFAULT_NON_EMERGENCY,
@@ -431,13 +432,12 @@ function StationPhoneDetail({ station }: { station: PoliceStation }) {
             >
               {entry.number}
             </a>
-            <span className="ml-2 text-[10px] text-[var(--muted)]">
-              {entry.className === 'switchboard'
-                ? `${entry.label} · force switchboard`
-                : entry.className === 'generic'
-                  ? `${entry.label} · non-emergency`
-                  : entry.label}
-            </span>
+            <span className="ml-2 text-[10px] text-[var(--muted)]">{stationPhoneEntryHint(entry)}</span>
+            {!entry.verified && (
+              <span className="ml-2 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-900">
+                Unverified
+              </span>
+            )}
           </div>
         ))}
         {custody && !hasCustodyLine && (

@@ -1,10 +1,14 @@
 import type { PoliceStation } from '@/lib/types';
+import Link from 'next/link';
+import { isDialablePhone } from '@/lib/station-phone-dialable';
 import {
   classifyPhone,
   displayPhoneNumber,
   stationPhoneNumbers,
   type PhoneClass,
+  type StationPhoneEntry,
 } from '@/lib/station-search';
+import { stationPhoneEntryHint } from '@/lib/station-phone-labels';
 import { phoneToTelHref } from '@/lib/phone';
 import { formatPhoneUk } from '@/lib/phone-format';
 import {
@@ -49,6 +53,23 @@ function PhoneValue({
   return <span className={className ?? 'font-medium text-[var(--gold-link)]'}>{number}</span>;
 }
 
+function EntryMeta({ entry }: { entry: StationPhoneEntry }) {
+  return (
+    <span className="ml-1 text-[10px] text-[var(--muted)]">
+      {stationPhoneEntryHint(entry)}
+      {!entry.verified && (
+        <>
+          {' '}
+          ·{' '}
+          <Link href="/HelpUsStationNumbers" className="font-semibold text-[var(--gold-link)] hover:underline">
+            verify
+          </Link>
+        </>
+      )}
+    </span>
+  );
+}
+
 /**
  * Shared phone display used by the directory explorer and station cards so the
  * switchboard / generic / none labelling is identical everywhere.
@@ -71,11 +92,7 @@ export function StationPhone({
         {entries.map((entry) => (
           <div key={`${entry.label}-${entry.number}`}>
             <PhoneValue number={entry.number} link={link} />
-            <span className="ml-1 text-[10px] text-[var(--muted)]">
-              {entry.label}
-              {entry.className === 'switchboard' ? ' · force switchboard' : ''}
-              {entry.className === 'generic' ? ' · non-emergency' : ''}
-            </span>
+            <EntryMeta entry={entry} />
           </div>
         ))}
       </div>

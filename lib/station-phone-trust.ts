@@ -81,13 +81,26 @@ export function isAlwaysPublishableForceContact(
   return matchesOfficialForceNumber(station, trimmed);
 }
 
+export function isVerifiedStationPhoneField(
+  station: PoliceStation,
+  field: StationPhoneField,
+  value: string | undefined,
+): boolean {
+  const trimmed = (value ?? '').trim();
+  if (!isDialablePhone(trimmed)) return false;
+  return (
+    isTrustedStationPhoneField(station, field, trimmed) ||
+    isAlwaysPublishableForceContact(station, field, trimmed)
+  );
+}
+
+/** @deprecated Use isVerifiedStationPhoneField */
 export function trustedPhoneValue(
   station: PoliceStation,
   field: StationPhoneField,
 ): string | undefined {
   const value = station[field]?.trim();
   if (!value) return undefined;
-  if (isTrustedStationPhoneField(station, field, value)) return value;
-  if (isAlwaysPublishableForceContact(station, field, value)) return value;
+  if (isVerifiedStationPhoneField(station, field, value)) return value;
   return undefined;
 }

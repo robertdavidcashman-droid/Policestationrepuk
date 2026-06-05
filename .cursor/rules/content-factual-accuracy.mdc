@@ -1,0 +1,40 @@
+---
+description: Factual accuracy and sourced citations for all site content (guides, blog, wiki, legal pages)
+globs: app/**/*.tsx,lib/guide-*.ts,lib/blog/**/*,content/**/*,data/legal-updates.json,data/wiki*.json
+alwaysApply: false
+---
+
+# Content factual accuracy — no hallucination
+
+PoliceStationRepUK publishes criminal-law and career guidance. **Wrong law, wrong fees, or invented requirements harm readers.**
+
+## Mandatory standard (every new or edited page, article, or guide)
+
+1. **Verify before publish.** Every substantive claim (statute, section, fee, deadline, exam format, case count, pass mark, regulatory requirement) must be checked against **at least two independent primary sources** (e.g. legislation.gov.uk + gov.uk/LAA; SRA + PSRA PDF; Datalaw + PSRA 2025).
+2. **No guessing.** If a figure or rule cannot be verified, **soften or omit** — use “check your assessment organisation handbook” rather than inventing numbers.
+3. **Sources footer required** on static guides and substantive legal pages. Use `ResolvedContentSources` with `sourcesContext` and extend `lib/content-sources.ts` (`PAGE_PATH`, `BLOG_SLUG`, `WIKI_SLUG`, etc.) with authoritative URLs.
+4. **Reliability notice.** Guides and legal content use `ContentReliabilityNotice` (banner or inline). Do not remove site-wide footer reliance block.
+5. **Case law** follows `.cursor/rules/case-law-citations.mdc` — registry in `lib/case-law-registry.ts`, never cite from memory.
+6. **Log corrections** in `audit/CONTENT-ACCURACY-REVIEW.md` (OK / FIXED / REMOVED / SOFTENED).
+
+## Preferred sources (in order)
+
+- legislation.gov.uk, gov.uk (LAA, CPS, Home Office, PACE Codes)
+- SRA, Sentencing Council, official assessment org docs (Cardiff, Datalaw help articles)
+- PSRA / Standard Crime Contract PDFs on gov.uk
+- CPS legal guidance — not random blogs or training course marketing
+
+## Out of scope / honest limits
+
+- **Directory listings** (`reps.json`, `stations.json`) — operational data, not editorial; verify separately.
+- **Legacy Wix crawl JSON** not wired to live routes — do not treat as canonical.
+- **Marketing tone** on About/Contact — no fabricated legal claims.
+- **100% retroactive audit of every URL** is a ongoing tiered process (`audit/CONTENT-ACCURACY-REVIEW.md`), not a one-time guarantee.
+
+## Implementation checklist
+
+- [ ] Substantive claims traceable to cited sources
+- [ ] `lib/content-sources.ts` updated for the page path or slug
+- [ ] No unverified pass rates, fees, or portfolio/CIT numbers
+- [ ] Cross-links to related verified guides where helpful
+- [ ] `npm test` and `npm run build` pass after legal content changes

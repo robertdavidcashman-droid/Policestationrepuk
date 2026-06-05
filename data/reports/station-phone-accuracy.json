@@ -1,97 +1,97 @@
 {
-  "generatedAt": "2026-06-05T17:56:19.704Z",
+  "generatedAt": "2026-06-05T19:43:35.816Z",
   "mode": "write",
   "cleared": {
     "phone": 0,
-    "custodyPhone": 8,
+    "custodyPhone": 0,
     "custodyPhone2": 0
   },
   "verified": {
     "phone": 157,
     "custodyPhone": 8
   },
-  "hiddenBeforeWrite": 622,
-  "publishableAfter": 554,
+  "markedUnverified": 630,
+  "publishableAfter": 896,
   "samples": [
     {
       "name": "Norwich Police Station",
-      "action": "withheld phone from display: 01603 675496"
+      "action": "marked phone unverified: 01603 675496"
     },
     {
       "name": "Reading Police Station",
-      "action": "withheld phone from display: 0118 957 2022"
+      "action": "marked phone unverified: 0118 957 2022"
     },
     {
       "name": "Reading Police Station",
-      "action": "cleared custodyPhone (legacy/untrusted seed)"
+      "action": "marked custodyPhone unverified (legacy import): 0118 953 6000"
     },
     {
       "name": "Cambridge Police Station",
-      "action": "withheld phone from display: 01223 352031"
+      "action": "marked phone unverified: 01223 352031"
     },
     {
       "name": "Peterborough Police Station",
-      "action": "withheld phone from display: 01223 536153"
+      "action": "marked phone unverified: 01223 536153"
     },
     {
       "name": "Exeter St Davids Police Station",
-      "action": "withheld phone from display: 01392 433 500"
+      "action": "marked phone unverified: 01392 433 500"
     },
     {
       "name": "Plymouth Police Station",
-      "action": "cleared custodyPhone (legacy/untrusted seed)"
+      "action": "marked custodyPhone unverified (legacy import): 01752 487500"
     },
     {
       "name": "Preston Police Station",
-      "action": "withheld phone from display: 01772 236000"
+      "action": "marked phone unverified: 01772 236000"
     },
     {
       "name": "Manchester Piccadilly Police Station",
-      "action": "withheld phone from display: 0161 832 5000"
+      "action": "marked phone unverified: 0161 832 5000"
     },
     {
       "name": "Edinburgh Waverley Police Station",
-      "action": "withheld phone from display: 0131 556 3931"
+      "action": "marked phone unverified: 0131 556 3931"
     },
     {
       "name": "Aberdeen Police Station",
-      "action": "withheld phone from display: 01224 328001"
+      "action": "marked phone unverified: 01224 328001"
     },
     {
       "name": "Ministry of Defence Headquarters",
-      "action": "withheld phone from display: 01371 854000"
+      "action": "marked phone unverified: 01371 854000"
     },
     {
       "name": "Bristol Temple Meads Police Station",
-      "action": "withheld phone from display: 0117 927 7222"
+      "action": "marked phone unverified: 0117 927 7222"
     },
     {
       "name": "Brighton Police Station",
-      "action": "cleared custodyPhone (legacy/untrusted seed)"
+      "action": "marked custodyPhone unverified (legacy import): 01273 665511"
     },
     {
       "name": "Civil Nuclear Constabulary Headquarters",
-      "action": "withheld phone from display: 01235 466606"
+      "action": "marked phone unverified: 01235 466606"
     },
     {
       "name": "Sheffield Police Station",
-      "action": "withheld phone from display: 0114 259 2001"
+      "action": "marked phone unverified: 0114 259 2001"
     },
     {
       "name": "Birmingham New Street Police Station",
-      "action": "withheld phone from display: 0121 634 2040"
+      "action": "marked phone unverified: 0121 634 2040"
     },
     {
       "name": "Swansea Police Station",
-      "action": "withheld phone from display: 01792 456 000"
+      "action": "marked phone unverified: 01792 456 000"
     },
     {
       "name": "Swanage Police Station",
-      "action": "withheld phone from display: 01305 222 222"
+      "action": "marked phone unverified: 01305 222 222"
     },
     {
       "name": "Sheerness Police Station",
-      "action": "withheld phone from display: 01795 477 111"
+      "action": "marked phone unverified: 01795 477 111"
     }
   ]
 }

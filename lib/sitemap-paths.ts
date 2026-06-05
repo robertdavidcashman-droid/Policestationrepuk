@@ -59,6 +59,7 @@ export const SITEMAP_PATHS: string[] = [
   'PoliceStationRepsByCounty',
   'Premium',
   'PrepareForCIT',
+  'PrepareForWrittenExam',
   'Privacy',
   'RepFAQMaster',
   'RepsHub',

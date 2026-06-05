@@ -152,6 +152,33 @@ const LEGAL_AID = [
   },
 ];
 
+const PSRAS_ACCREDITATION = [
+  {
+    title: 'PSRAS Written Exam Guide',
+    href: '/PrepareForWrittenExam',
+    desc: 'Two-hour format, LAA exemptions, syllabus, open-book rules, and 6-week study plan.',
+    external: false,
+  },
+  {
+    title: 'PSRAS Portfolio Guide',
+    href: '/BuildPortfolioGuide',
+    desc: 'Nine case studies (2+2+5), deadlines, SRA competence mapping, and submission workflow.',
+    external: false,
+  },
+  {
+    title: 'PSRAS CIT Exam Guide',
+    href: '/PrepareForCIT',
+    desc: 'Role-play assessment: marking criteria, scenario flow, study modules, and prep plan.',
+    external: false,
+  },
+  {
+    title: 'How to Become a Police Station Rep (2026)',
+    href: '/HowToBecomePoliceStationRep',
+    desc: 'Full accreditation roadmap — supervision, costs, timelines, and FAQs.',
+    external: false,
+  },
+];
+
 const CAREER = [
   {
     title: 'How to Become a Police Station Representative',
@@ -301,6 +328,19 @@ export default function ResourcesPage() {
           the rep directory above.
         </p>
         <OfficialResourcesCrossLink variant="compact" />
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-h2 mb-2 text-[var(--navy)]">PSRAS Accreditation — Exam Prep</h2>
+        <p className="mb-6 text-sm text-[var(--muted)]">
+          Comprehensive study guides for the written exam, portfolio, and Critical Incidents Test —
+          verified against PSRA 2025 and assessment organisation guidance.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {PSRAS_ACCREDITATION.map((item) => (
+            <ResourceCard key={item.href} item={item} />
+          ))}
+        </div>
       </section>
 
       <section className="mb-12">
