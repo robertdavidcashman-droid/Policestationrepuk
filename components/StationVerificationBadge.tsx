@@ -1,5 +1,6 @@
 import type { PoliceStation } from '@/lib/types';
-import { isDialablePhone } from '@/lib/station-verification';
+import Link from 'next/link';
+import { isDialablePhone } from '@/lib/station-phone-dialable';
 
 export function StationVerificationBadge({ station }: { station: PoliceStation }) {
   const meta = station.verificationMeta;
@@ -50,9 +51,9 @@ export function StationVerificationBadge({ station }: { station: PoliceStation }
       {phone?.status === 'unverified' && isDialablePhone(station.phone) && (
         <p className="text-amber-700">
           Main line on file is unverified and not shown — use the non-emergency number below or{' '}
-          <a href="/HelpUsStationNumbers" className="font-semibold underline">
+          <Link href="/HelpUsStationNumbers" className="font-semibold underline">
             report a correction
-          </a>
+          </Link>
           .
         </p>
       )}

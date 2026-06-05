@@ -4,18 +4,19 @@
 
 import { getOfficialContact } from './official-force-contacts';
 import { phonesEquivalent } from './phone-format';
-import {
-  isDialablePhone,
-  type StationVerificationFieldKey,
-} from './station-verification';
+import { isDialablePhone } from './station-phone-dialable';
 import type { PoliceStation } from './types';
+import type { StationVerificationFieldKey } from './station-verification';
 
-export type StationPhoneField = StationVerificationFieldKey;
+export type StationPhoneField = 'phone' | 'custodyPhone' | 'custodyPhone2' | 'nonEmergencyPhone';
+
+type VerifiedFieldKey = Extract<StationVerificationFieldKey, 'phone' | 'custodyPhone' | 'custodyPhone2'>;
 
 const UNTRUSTED_SOURCE = /generate-data\.js|legacy custody seed/i;
 
 function fieldMeta(station: PoliceStation, field: StationPhoneField) {
-  return station.verificationMeta?.fields?.[field];
+  if (field === 'nonEmergencyPhone') return undefined;
+  return station.verificationMeta?.fields?.[field as VerifiedFieldKey];
 }
 
 function matchesOfficialForceNumber(station: PoliceStation, value: string): boolean {
