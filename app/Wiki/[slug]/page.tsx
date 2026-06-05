@@ -6,6 +6,7 @@ import { marked } from 'marked';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
+import { OfficialResourcesCrossLink } from '@/components/legal-directory/OfficialResourcesCrossLink';
 import { buildMetadata } from '@/lib/seo';
 import { getAllWikiArticles, getWikiArticleBySlug, getWikiArticlesByCategory } from '@/lib/data';
 
@@ -180,6 +181,10 @@ export default async function WikiArticlePage({ params }: PageProps) {
                   </div>
                 </div>
               )}
+            </div>
+
+            <div className="mt-6">
+              <OfficialResourcesCrossLink variant="sidebar" />
             </div>
 
             {/* Related articles */}

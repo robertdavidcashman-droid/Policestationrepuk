@@ -3,6 +3,7 @@ import { buildMetadata, breadcrumbSchema } from '@/lib/seo';
 import { JsonLd } from '@/components/JsonLd';
 import { LegalDirectoryHero } from '@/components/legal-directory/LegalDirectoryHero';
 import { LegalDirectoryDisclaimer } from '@/components/legal-directory/LegalDirectoryDisclaimer';
+import { RepGuidesCrossLink } from '@/components/legal-directory/OfficialResourcesCrossLink';
 import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
 import { getLegalResourcesByGroup } from '@/lib/legal-directory/resources';
 import { SITE_URL } from '@/lib/seo-layer/config';
@@ -104,6 +105,8 @@ export default function LegalResourcesPage() {
             </div>
           </section>
         ))}
+
+        <RepGuidesCrossLink />
 
         <LegalDirectoryDisclaimer />
       </div>

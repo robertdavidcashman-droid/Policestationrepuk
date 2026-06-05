@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { PsrTrainPromo } from '@/components/PsrTrainPromo';
+import { OfficialResourcesCrossLink } from '@/components/legal-directory/OfficialResourcesCrossLink';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -276,6 +277,7 @@ export default function ResourcesPage() {
               { href: '/StationsDirectory', label: 'Station Numbers', desc: 'Custody suite phone directory' },
               { href: '/PACE', label: 'PACE Codes', desc: 'Codes A–H reference summaries' },
               { href: '/Blog', label: 'Professional Blog', desc: 'Practical articles for the profession' },
+              { href: '/legal-services-directory/resources', label: 'Official Legal Links', desc: 'CPS, SRA, LAA & regulator signposts' },
             ].map((q) => (
               <Link
                 key={q.href}
@@ -291,6 +293,15 @@ export default function ResourcesPage() {
       </section>
 
       <div className="page-container">
+
+      <section className="mb-12">
+        <h2 className="text-h2 mb-2 text-[var(--navy)]">Legal Services Directory</h2>
+        <p className="mb-6 text-sm text-[var(--muted)]">
+          Official regulator links and searchable criminal justice provider listings — separate from
+          the rep directory above.
+        </p>
+        <OfficialResourcesCrossLink variant="compact" />
+      </section>
 
       <section className="mb-12">
         <h2 className="text-h2 mb-2 text-[var(--navy)]">Career &amp; Professional Development</h2>

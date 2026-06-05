@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { WikiArticleIndex } from '@/components/WikiArticleIndex';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
+import { OfficialResourcesCrossLink } from '@/components/legal-directory/OfficialResourcesCrossLink';
 import { buildMetadata } from '@/lib/seo';
 import { getAllWikiArticles } from '@/lib/data';
 
@@ -56,6 +57,10 @@ export default async function WikiPage() {
                 <p className="mt-1 text-sm text-[var(--muted)]">{item.desc}</p>
               </Link>
             ))}
+            <OfficialResourcesCrossLink />
+          </div>
+          <div className="mt-4">
+            <OfficialResourcesCrossLink variant="compact" />
           </div>
         </section>
 
