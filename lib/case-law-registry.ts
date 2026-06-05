@@ -328,6 +328,35 @@ export const VERIFIED_CASES: VerifiedCase[] = [
     topics: ['disclosure'],
     verifiedSources: ['https://www.cps.gov.uk/legal-guidance/disclosure-manual'],
   },
+  {
+    id: 'paris-abdullahi-miller',
+    name: 'R v Paris, Abdullahi and Miller',
+    citation: '[1994] Crim LR 836',
+    holding: 'Oppressive questioning can render an interview inadmissible; reps should note breaches of PACE and Code C.',
+    topics: ['interview', 'pace-code-c'],
+    verifiedSources: [
+      'https://www.gov.uk/government/publications/pace-code-c-2023',
+      'https://www.bailii.org/ew/cases/EWCA/Crim/1993/1.html',
+    ],
+    bailiiUrl: 'https://www.bailii.org/ew/cases/EWCA/Crim/1993/1.html',
+  },
+  {
+    id: 'mason-1988',
+    name: 'R v Mason',
+    citation: '[1988] 1 WLR 139',
+    holding: 'Police may use legitimate stratagems in interview but not oppression or impropriety that renders evidence unreliable.',
+    topics: ['interview', 'pace-code-c'],
+    verifiedSources: ['https://www.gov.uk/government/publications/pace-code-c-2023'],
+  },
+  {
+    id: 'southwark-bowles',
+    name: 'R v Southwark Crown Court, ex parte Bowles',
+    citation: '[1998] QB 638',
+    holding: 'Production-order applications require proper statutory grounds; judicial scrutiny of access conditions.',
+    topics: ['warrants', 'production-orders'],
+    verifiedSources: ['https://www.bailii.org/ew/cases/EWCA/Crim/1998/103.html'],
+    bailiiUrl: 'https://www.bailii.org/ew/cases/EWCA/Crim/1998/103.html',
+  },
 ];
 
 export function getVerifiedCase(id: string): VerifiedCase | undefined {

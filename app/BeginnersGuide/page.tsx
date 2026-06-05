@@ -151,7 +151,7 @@ const MYTHS = [
   },
   {
     myth: '&quot;The duty solicitor is on the police side.&quot;',
-    truth: 'Duty solicitors and accredited reps are independent of the police. They are paid by Legal Aid, not by the force. Their professional duty is to the suspect alone. Suspects who name a specific solicitor often receive worse service — because they may be at a firm with no out-of-hours cover.',
+    truth: 'Duty solicitors and accredited reps are independent of the police. They are paid by Legal Aid, not by the force. Their professional duty is to the suspect alone. If you **name a solicitor**, the police will try to contact that firm; if they cannot reach them promptly, the DSCC may allocate another firm from the duty scheme. Naming a firm you trust is fine — what matters is that the firm can attend without undue delay.',
   },
   {
     myth: '&quot;Going no comment automatically gets the case dropped.&quot;',
@@ -190,7 +190,7 @@ const FAQS = [
   },
   {
     q: 'Can I have a solicitor at a voluntary interview?',
-    a: 'Yes. Even if you have not been arrested, any interview under caution (including a &quot;voluntary&quot; one at the police station or at home) triggers the right to free legal advice. Never accept a voluntary interview without legal advice first — the consequences of a caution-warned admission are the same whether you were arrested or not.',
+    a: 'Yes. Even if you have not been arrested, any interview under caution (including a &quot;voluntary&quot; one at the police station or at home) can trigger the right to legal aid advice. You should **take legal advice before deciding** whether and how to attend — the consequences of a caution-warned admission are the same whether you were arrested or not.',
   },
 ];
 
@@ -198,7 +198,9 @@ const SOURCES = [
   { label: 'Police and Criminal Evidence Act 1984', href: 'https://www.legislation.gov.uk/ukpga/1984/60/contents' },
   { label: 'PACE Codes of Practice (A–H)', href: 'https://www.gov.uk/guidance/police-and-criminal-evidence-act-1984-pace-codes-of-practice' },
   { label: 'Criminal Justice and Public Order Act 1994 (adverse inference)', href: 'https://www.legislation.gov.uk/ukpga/1994/33/contents' },
-  { label: 'Standard Crime Contract 2022', href: 'https://www.gov.uk/government/publications/standard-crime-contract-2022' },
+  { label: 'Standard Crime Contract 2025', href: 'https://www.gov.uk/government/publications/standard-crime-contract-2025' },
+  { label: 'Criminal Legal Aid (Remuneration) (Amendment) Regulations 2025 (SI 2025/1251, from 22 Dec 2025)', href: 'https://www.legislation.gov.uk/uksi/2025/1251/made' },
+  { label: 'Standard Crime Contract 2022 (historical)', href: 'https://www.gov.uk/government/publications/standard-crime-contract-2022' },
   { label: 'Legal Aid Agency', href: 'https://www.gov.uk/government/organisations/legal-aid-agency' },
   { label: 'Police Station Register Arrangements 2025', href: 'https://www.gov.uk/guidance/police-station-representatives-and-duty-solicitors' },
 ];

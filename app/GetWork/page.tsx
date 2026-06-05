@@ -258,7 +258,7 @@ const FAQS = [
   },
   {
     q: 'How quickly should I expect to find work?',
-    a: 'A motivated, well-referenced newly accredited rep with a tidy CV and PSRUK profile typically lands their first paid attendance within 4–8 weeks of going freelance. Reaching 10–15 attendances/month — roughly the threshold for full-time income — takes 6–12 months of consistent outreach. Reps without a strong training-firm reference take longer.',
+    a: 'Timelines vary widely by area, references, and outreach. Some newly accredited reps land their first paid attendance within a few weeks; reaching a steady flow of work often takes several months of consistent contact with firms. Treat any figures as **illustrative only** — build income gradually and confirm rates with each instructing firm.',
   },
   {
     q: 'Do firms pay mileage on top of the LAA fee, or is it included?',
@@ -271,7 +271,9 @@ const FAQS = [
 ];
 
 const SOURCES = [
-  { label: 'Standard Crime Contract 2022 (Police Station fees)', href: 'https://www.gov.uk/government/publications/standard-crime-contract-2022' },
+  { label: 'Standard Crime Contract 2025', href: 'https://www.gov.uk/government/publications/standard-crime-contract-2025' },
+  { label: 'Criminal Legal Aid (Remuneration) (Amendment) Regulations 2025 (SI 2025/1251, from 22 Dec 2025)', href: 'https://www.legislation.gov.uk/uksi/2025/1251/made' },
+  { label: 'Standard Crime Contract 2022 (historical)', href: 'https://www.gov.uk/government/publications/standard-crime-contract-2022' },
   { label: 'LAA — Criminal Bills Assessment Manual', href: 'https://www.gov.uk/guidance/criminal-bills-assessment-manual' },
   { label: 'LAA — Criminal Legal Aid Manual', href: 'https://www.gov.uk/guidance/criminal-legal-aid-manual' },
   { label: 'HMRC — Self-employed work and expenses', href: 'https://www.gov.uk/working-for-yourself' },

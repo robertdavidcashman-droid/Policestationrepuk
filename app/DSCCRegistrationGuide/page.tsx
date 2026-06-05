@@ -59,7 +59,7 @@ const CALL_FLOW = [
   {
     n: 7,
     title: 'Billing and reporting',
-    body: 'After the attendance, the firm reports the work to the LAA each month through the Submit a Bulk Claim (SaBC) service — which replaced Contracted Work and Administration (CWA) — using fee code INVC, and SaBC pays the fixed fee for the scheme the police station sits in. If the actual profit, travel and waiting costs cross the &quot;escape&quot; threshold (around £650), the firm completes an Escape Fee Claim Form (CRM18) for individual costs assessment instead. The DSCC record of the call is the audit trail.',
+    body: 'After the attendance, the firm reports the work to the LAA each month through the Submit a Bulk Claim (SaBC) service — which replaced Contracted Work and Administration (CWA) — using fee code INVC, and SaBC pays the fixed fee for the scheme the police station sits in. If the actual profit, travel and waiting costs cross the harmonised &quot;escape&quot; threshold (around £650 from 22 December 2025 — SI 2025/1251), the firm completes an Escape Fee Claim Form (CRM18) for individual costs assessment instead. The DSCC record of the call is the audit trail.',
   },
 ];
 

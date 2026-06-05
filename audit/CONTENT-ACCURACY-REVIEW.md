@@ -6,16 +6,20 @@ Legal/factual accuracy review of site content, verified against primary sources 
 - **Method:** Each substantive claim (statute, section, figure, date, time limit, case citation) checked against `legislation.gov.uk`, `gov.uk` (LAA, CPS, Home Office, Sentencing Council), official PACE Codes, or other primary/authoritative sources. Unverifiable claims corrected, softened, or removed. Existing "general information, not legal advice" disclaimers preserved.
 - **Verdict key:** OK (accurate) · FIXED (corrected) · REMOVED (unverifiable/hallucinated) · SOFTENED (reworded to a defensible statement).
 
-### Status (as of 2026-06-01)
+### Status (as of 2026-06-05)
 
 | Tier | Scope | State |
 |---|---|---|
 | 1 | 8 legal updates, fee pages, PACE, DSCC guide | ✅ Complete |
 | 2 | Public rights pages (rights, free advice, interview, disclosure) | ✅ Complete |
 | 3 | 49 wiki articles | ✅ Complete (49/49 verified) |
-| 4 | 22 blog articles | ✅ Complete (verified accurate; no corrections) |
+| 4 | 26 blog articles | ✅ Complete (re-verified Tier 8) |
 | 5 | County geographic claims | ✅ Softened + systemic verification note |
+| 6 | Static guides, FAQs, crawl mirrors | ✅ Complete |
+| 7 | PSRAS portfolio, written exam, CIT guides | ✅ Complete |
+| 8 | Site-wide editorial scan + content-sources expansion | ✅ Complete |
 | — | Site-wide reliance/verification warning | ✅ Footer + content/legal/fee/county/rights/career/crawl templates |
+| — | Automated red-flag scan (`npm run audit:content-accuracy`) | ✅ CI gate — fails on new Critical patterns |
 
 **Validation:** `vitest` 226/226 passing · `tsc --noEmit` clean · `next build` succeeds (all pages prerender).
 
@@ -316,4 +320,66 @@ Scope: `/BuildPortfolioGuide`, `/PrepareForCIT`, `/PrepareForWrittenExam`, and c
 - Written exam: 50% pass, four of five questions; SQE-only not exempt per PSRA 2025.
 - New comprehensive `/PrepareForWrittenExam` guide added.
 - Header For Reps and Guides menus promote all three PSRAS study guides.
+
+---
+
+## Tier 8 — Site-wide editorial accuracy audit (2026-06-05)
+
+Scope: all editorial URLs (~107): blog (26), wiki (49), legal updates (8), static guides, fee/rights pages. Method: automated inventory + red-flag scan (`scripts/audit/content-accuracy-scan.ts`) plus manual re-verification of flagged items against 2+ primary sources. Outputs: `audit/content-accuracy-register.json`, `audit/content-accuracy-problems.md`.
+
+**Out of scope:** rep profiles, `stations.json`, legal directory listings, legacy Wix crawl JSON not served live.
+
+### Automated scan (Phase 1)
+
+- **PROBLEM patterns:** Bail Act 2024, £181/£219, CRM6 billing, portfolio 6+10, 60–70% exam pass, live-actor CIT, DSCC duty-rota for reps — **0 hits** on live editorial content after Tier 7 fixes.
+- **Case-law registry:** extended with *R v Paris, Abdullahi and Miller*, *R v Mason* [1988], *R v Southwark Crown Court, ex parte Bowles* for wiki interview/warrant articles.
+- **Register:** 107 URLs inventoried; scan re-run clean on Critical patterns.
+
+### Blog (26 articles) — OK
+
+All slugs in `lib/blog/articles-data.ts` re-scanned. Prior Tier 4 manual verification retained. Page-specific `BLOG_SLUG` sources added for all 26 articles in `lib/content-sources.ts`.
+
+### Wiki (49 articles) — OK
+
+All slugs in `data/wiki-articles.json` re-scanned. Prior Tier 3 verification retained; `police-caution-explained` footnotes aligned with case-law registry (2026). Page-specific `WIKI_SLUG` sources added for all 49 articles.
+
+### Legal updates (8) — OK (spot-check)
+
+Prior Tier 1 fixes retained (`bail-act-2024-changes` retitled to PCSC Act 2022; ATH/Dobson/Dhesi removed). Spot-check confirmed no regression.
+
+### Career / static guides — OK + FIXED
+
+| Page | Verdict | Notes |
+|---|---|---|
+| `/CriminalLawCareerGuide` | OK | PSRAS pathway; sources footer via StructuredGuideShell |
+| `/AccreditedRepresentativeGuide` | OK | PSRA 2025 framing |
+| `/DutySolicitorVsRep` | OK | Rep vs duty solicitor distinction |
+| `/WhatDoesRepDo` | OK | Role description consistent with PACE/SCC |
+| `/GettingStarted` | OK | Getting-started pathway |
+| `/HowToBecome` | OK | Short career guide |
+| `/HowToBecomePoliceStationRep` | **FIXED** | `PAGE_PATH` now uses PSRA 2025 PDF + Datalaw exam guides (not generic PSRAS gov.uk only) |
+| `/Resources` | **FIXED** | Added `ContentReliabilityNotice` (sources footer was already present) |
+| `/DSCCRegistrationGuide` | **FIXED** | £650 escape threshold now cites SI 2025/1251 / 22 Dec 2025 |
+| `/PrepareForCIT` | **FIXED** | *R v DPP, ex parte Lee* citation normalised to registry entry |
+| `/BuildPortfolioGuide`, `/PrepareForWrittenExam` | OK | Tier 7 verified |
+| `/BeginnersGuide`, `/FAQ`, `/RepFAQMaster`, `/GetWork`, `/FindSupervisingSolicitor` | OK | Tier 6 verified |
+| `/PACE`, `/InterviewUnderCaution`, `/PoliceDisclosureGuide` | OK | Tier 1–2 verified |
+| `/PoliceStationRates`, `/PoliceStationRepPay`, `/EscapeFeeCalculator` | OK | SI 2025/1251 figures |
+| `/MagistratesCourtFees`, `/CrownCourtFees` | OK | Fee tables with SI date context |
+| `/free-legal-advice-police-station`, `/police-station-rights-uk` | OK | Public rights pillars |
+| `/CommonOffencesGuide` | OK | Registry-linked case refs only |
+
+### Compliance tooling
+
+- `hasSlugSpecificSources()` exported from `lib/content-sources.ts` for scan compliance checks.
+- `npm run audit:content-accuracy` added; CI gate fails on new **Critical** red flags.
+- `__tests__/case-law-registry.test.ts` extended to scan blog/wiki for known-bad citation patterns.
+
+### Sources checked (Tier 8 sample)
+
+- PSRA 2025 PDF — https://assets.publishing.service.gov.uk/media/68dcf841ef1c2f72bc1e4c9f/Police_Station_Register_Arrangements_2025.pdf
+- SI 2025/1251 — https://www.legislation.gov.uk/uksi/2025/1251/made
+- LAA SaBC / INVC — https://www.gov.uk/guidance/submit-a-bulk-claim-sabc
+- CPS adverse inferences — https://www.cps.gov.uk/legal-guidance/adverse-inferences
+- PACE Code C (2023) — https://www.gov.uk/government/publications/pace-code-c-2023
 

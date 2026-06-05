@@ -81,7 +81,7 @@ export const CIT_SYLLABUS_MODULES = [
   },
   {
     title: 'Disclosure and pre-interview advice',
-    body: 'Code C para 11.1A — sufficient disclosure to advise. Fairness duty (R v DPP ex p Lee [1999] — cite CPS/disclosure guidance, not invented cases). Chase missing material before advising interview strategy.',
+    body: 'Code C para 11.1A — sufficient disclosure to advise. Fairness duty (*R v DPP, ex parte Lee* [1999] 2 Cr App R 304 — see CPS disclosure guidance). Chase missing material before advising interview strategy.',
     source: 'PACE Code C; CPS Disclosure Manual',
     href: '/PoliceDisclosureGuide',
   },

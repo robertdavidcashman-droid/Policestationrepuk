@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { PsrTrainPromo } from '@/components/PsrTrainPromo';
 import { OfficialResourcesCrossLink } from '@/components/legal-directory/OfficialResourcesCrossLink';
@@ -136,9 +137,19 @@ const LEGAL_AID = [
     desc: 'How the LAA assesses bills submitted by criminal legal aid providers.',
   },
   {
-    title: 'Standard Crime Contract 2022',
+    title: 'Standard Crime Contract 2025',
+    url: 'https://www.gov.uk/government/publications/standard-crime-contract-2025',
+    desc: 'The current standard contract for criminal legal aid providers (from 1 October 2025).',
+  },
+  {
+    title: 'Criminal Legal Aid (Remuneration) (Amendment) Regulations 2025 (SI 2025/1251)',
+    url: 'https://www.legislation.gov.uk/uksi/2025/1251/made',
+    desc: 'Harmonised police-station fixed fees and related remuneration changes (in force 22 December 2025).',
+  },
+  {
+    title: 'Standard Crime Contract 2022 (historical)',
     url: 'https://www.gov.uk/government/publications/standard-crime-contract-2022',
-    desc: 'The current standard contract for criminal legal aid providers.',
+    desc: 'Previous standard contract (1 October 2022 – 30 September 2025).',
   },
   {
     title: 'Police Station Register Arrangements 2025',
@@ -320,6 +331,7 @@ export default function ResourcesPage() {
       </section>
 
       <div className="page-container">
+      <ContentReliabilityNotice className="mb-10" />
 
       <section className="mb-12">
         <h2 className="text-h2 mb-2 text-[var(--navy)]">Legal Services Directory</h2>

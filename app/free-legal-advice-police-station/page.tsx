@@ -5,15 +5,15 @@ import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice'
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 
 export const metadata = buildMetadata({
-  title: 'Your Rights at the Police Station (UK) | PACE Guide',
+  title: 'Legal Advice at the Police Station (UK) | Legal Aid Guide',
   description:
-    'PACE custody rights explained: what happens when you are arrested, your right to legal advice, custody procedures, and the role of accredited police station representatives in England and Wales.',
+    'How legal-aid-funded advice at the police station works in England and Wales: PACE rights, who provides advice, and why PoliceStationRepUK is a directory — not a legal aid provider.',
   path: '/free-legal-advice-police-station',
 });
 
 const BC = [
   { name: 'Home', url: '/' },
-  { name: 'Free legal advice — police station', url: '/free-legal-advice-police-station' },
+  { name: 'Legal aid at the police station', url: '/free-legal-advice-police-station' },
 ];
 
 const FAQS = [
@@ -35,9 +35,9 @@ export default function FreeLegalAdvicePoliceStationPage() {
   return (
     <>
     <PillarSeoLayout
-      title="Free legal advice at the police station"
+      title="Legal advice at the police station (England & Wales)"
       breadcrumbItems={BC}
-      quickAnswer="In England and Wales, suspects at a police station usually have a right to free legal advice under legal aid for police station work, delivered by a solicitor or accredited representative instructed by a firm. PoliceStationRepUK does not provide that advice — it helps firms find representatives."
+      quickAnswer="In England and Wales, suspects at a police station usually have a right to legal aid-funded advice for police-station work, delivered by a solicitor or accredited representative instructed by a firm. PoliceStationRepUK does not provide that advice — it helps firms find representatives."
       faqs={FAQS}
     >
       <ContentReliabilityNotice className="not-prose mb-8" />

@@ -86,12 +86,49 @@ const WIKI_SLUG: Record<string, ContentSource[]> = {
   'digital-evidence-police-station-basics': [CPIA, AG_DISCLOSURE, PACE],
   'adverse-inference-section-34-guide': [CJPOA, CPS_ADVERSE, PACE],
   'no-comment-interviews': [CJPOA, CPS_ADVERSE, PACE],
+  'no-comment-strategy': [CJPOA, CPS_ADVERSE, PACE],
   'police-caution-explained': [CJPOA, CPS_ADVERSE, PACE],
   'maximizing-legal-aid-claims': [SI_2025_1251, SABC, LAA_MANUAL],
   'legal-aid-guide': [SI_2025_1251, SABC, LAA_MANUAL],
+  'legal-aid-billing-complete-guide': [SI_2025_1251, SABC, LAA_MANUAL],
   'claiming-fees-police-station': [SI_2025_1251, SABC, LAA_MANUAL],
   'pace-code-c-custody': [{ label: 'PACE Code C (2023)', href: 'https://www.gov.uk/government/publications/pace-code-c-2023' }, PACE_ACT],
   'pace-codes-quick-reference': [PACE, PACE_ACT],
+  'client-care-management-complete': [SCC_2025, LAA_MANUAL],
+  'police-complaints-guide': [PACE_ACT, PACE],
+  'professional-development-for-police-station-representatives-enhancing-your-career-and-expertise': [PSRAS, SCC_2025, SRA_PSRAS],
+  'common-problems-solutions': [PCSC_BAIL, PRECHARGE_BAIL, CJPOA],
+  'dealing-with-police-custody': [PACE_ACT, PACE, CJPOA],
+  'mental-health-custody': [PACE, PACE_ACT, { label: 'Mental Health Act 1983', href: 'https://www.legislation.gov.uk/ukpga/1983/20/contents' }],
+  'leveson-review-police-station-reps-defence-solicitors': [PSRAS, SCC_2025],
+  'leveson-criminal-courts-review': [PSRAS, SCC_2025],
+  'seized-property-guide': [PACE_ACT, PACE, { label: 'Police (Property) Act 1897', href: 'https://www.legislation.gov.uk/ukpga/1897/30/contents' }],
+  'professional-development-career-growth': [PSRAS, SCC_2025, SRA_PSRAS],
+  'interview-techniques-advanced': [PACE, CJPOA, CPS_ADVERSE],
+  'interview-techniques-work': [PACE, CJPOA, CPS_ADVERSE],
+  'police-station-interview-evidence-hub': [PACE, CJPOA, CPS_ADVERSE],
+  'top-10-police-station-fails': [PACE, PACE_ACT, CJPOA],
+  'first-police-station-call-out': [PSRAS, PACE, SCC_2025],
+  'common-offenses-quick-guide': [SENTENCING, CPS_OAP, BAILII],
+  'difficult-clients-management': [SCC_2025, LAA_MANUAL],
+  'dealing-with-police-rights-powers': [PACE_ACT, PACE, CJPOA],
+  'first-attendance-walkthrough': [PACE, PACE_ACT, PSRAS],
+  'getting-started-complete-guide': [PSRAS, PACE, SCC_2025],
+  'training-contract-after-psras': [PSRAS, SRA_PSRAS, SCC_2025],
+  'difficult-custody-staff': [PACE, PACE_ACT, CJPOA],
+  'client-retention': [SCC_2025, LAA_MANUAL],
+  'top-10-rep-tips': [PACE, PSRAS, SCC_2025],
+  'duty-solicitor-guide': [PSRAS, SCC_2025, PACE],
+  'voluntary-police-interview-guide': [PACE, CJPOA, CPS_ADVERSE],
+  'voluntary-police-interview-guide-2': [PSRAS, PACE, SCC_2025],
+  'no-further-action-after-interview': [PCSC_BAIL, PRECHARGE_BAIL, CJPOA],
+  'police-cautions-england-guide': [CJPOA, CPS_ADVERSE, PACE],
+  'youth-justice-under-18s': [PACE, PACE_ACT, { label: 'Crime and Disorder Act 1998', href: 'https://www.legislation.gov.uk/ukpga/1998/37/contents' }],
+  'youth-suspects-procedures': [PACE, PACE_ACT, { label: 'Crime and Disorder Act 1998', href: 'https://www.legislation.gov.uk/ukpga/1998/37/contents' }],
+  'building-career-police-station-rep': [PSRAS, SRA_PSRAS, SCC_2025],
+  'building-rep-business': [PSRAS, SCC_2025, LAA_MANUAL],
+  'station-intelligence': [PACE, SCC_2025, LAA_MANUAL],
+  'fitness-for-interview-custody': [{ label: 'PACE Code C (2023)', href: 'https://www.gov.uk/government/publications/pace-code-c-2023' }, PACE_ACT],
 };
 
 const LEGAL_UPDATE_SLUG: Record<string, ContentSource[]> = {
@@ -111,6 +148,23 @@ const BLOG_SLUG: Record<string, ContentSource[]> = {
   'handling-disclosure-police-station': [CPIA, AG_DISCLOSURE, CPS_DISCLOSURE],
   'how-to-review-custody-record': [{ label: 'PACE Code C (2023)', href: 'https://www.gov.uk/government/publications/pace-code-c-2023' }, PACE_ACT],
   'police-station-rep-fee-rates-2026': [SI_2025_1251, SABC, SCC_2025],
+  'what-does-a-freelance-police-station-representative-do': [PSRAS, SCC_2025, PACE],
+  'how-firms-can-instruct-freelance-police-station-reps': [SCC_2025, PSRAS],
+  'police-station-attendance-checklist': [{ label: 'PACE Code C (2023)', href: 'https://www.gov.uk/government/publications/pace-code-c-2023' }, PACE, SCC_2025],
+  'what-to-include-in-a-police-station-brief': [PACE, SCC_2025, PSRAS],
+  'freelance-police-station-representative-vs-duty-solicitor': [PSRAS, SCC_2025, PACE],
+  'common-mistakes-when-instructing-freelance-police-station-reps': [SCC_2025, PSRAS],
+  'best-practice-handover-notes-after-police-station-attendance': [PACE, SCC_2025],
+  'out-of-hours-police-station-cover-for-law-firms': [SCC_2025, PSRAS],
+  'why-firms-need-rep-directory': [PSRAS, SCC_2025],
+  'how-firms-source-emergency-rep-cover': [SCC_2025, PSRAS],
+  'freelance-police-station-rep-career': [PSRA_2025_PDF, SRA_PSRAS, PSRAS],
+  'professional-indemnity-insurance-reps': [SCC_2025, SRA_STANDARDS],
+  'pre-interview-consultation-rep-guide': [PACE, CJPOA, CPS_ADVERSE],
+  'accreditation-and-standards-in-freelance-police-station-work': [PSRA_2025_PDF, SRA_PSRAS, SRA_STANDARDS],
+  'how-freelance-police-station-reps-win-repeat-instructions': [SCC_2025, PSRAS],
+  'what-makes-a-good-police-station-representative': [PSRAS, PACE, SRA_STANDARDS],
+  'why-fast-clear-communication-matters-in-police-station-representation': [SCC_2025, PSRAS],
 };
 
 const CRAWL_SLUG: Record<string, ContentSource[]> = {
@@ -131,7 +185,7 @@ const PAGE_PATH: Record<string, ContentSource[]> = {
   '/PACE': [PACE, PACE_ACT],
   '/FAQ': [PSRAS, PACE, SCC_2025],
   '/BeginnersGuide': [PACE_ACT, PACE, CJPOA, SCC_2025, PSRAS],
-  '/HowToBecomePoliceStationRep': [PSRAS, SCC_2025, PACE],
+  '/HowToBecomePoliceStationRep': [PSRA_2025_PDF, SRA_PSRAS, DATALAW_WRITTEN, DATALAW_PORTFOLIO, DATALAW_CIT, SCC_2025, PACE],
   '/DSCCRegistrationGuide': [SCC_2025, SABC, LAA_MANUAL, PACE],
   '/GetWork': [SCC_2025, LAA_MANUAL, { label: 'SRA — Standards and Regulations', href: 'https://www.sra.org.uk/solicitors/standards-regulations/' }],
   '/FindSupervisingSolicitor': [PSRAS, { label: 'SRA — PSRAS guidance', href: 'https://www.sra.org.uk/solicitors/resources/specific-areas-of-practice/police-station-representative-accreditation-scheme/' }],
@@ -173,6 +227,22 @@ export type ContentSourceContext =
   | { kind: 'legal-update'; slug: string }
   | { kind: 'crawl'; slug: string }
   | { kind: 'page'; path: string };
+
+/** True when the page has a dedicated slug/path map (not only category or blog defaults). */
+export function hasSlugSpecificSources(ctx: ContentSourceContext): boolean {
+  switch (ctx.kind) {
+    case 'wiki':
+      return ctx.slug in WIKI_SLUG;
+    case 'blog':
+      return ctx.slug in BLOG_SLUG;
+    case 'legal-update':
+      return ctx.slug in LEGAL_UPDATE_SLUG;
+    case 'crawl':
+      return ctx.slug in CRAWL_SLUG;
+    case 'page':
+      return ctx.path in PAGE_PATH;
+  }
+}
 
 export function getContentSources(ctx: ContentSourceContext, extra: ContentSource[] = []): ContentSource[] {
   let specific: ContentSource[] = [];

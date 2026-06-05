@@ -46,6 +46,7 @@
     "audit:full": "node scripts/audit/full-site-audit.mjs",
     "audit:seo": "node scripts/audit/seo-audit.mjs --concurrency 8",
     "audit:blog-seo": "npx tsx scripts/audit/blog-seo.ts",
+    "audit:content-accuracy": "npx tsx scripts/audit/content-accuracy-scan.ts",
     "validate:schema": "npx tsx scripts/audit/validate-blog-schema.ts",
     "test:directory-search": "npx tsx scripts/directory-search-selftest.ts",
     "blog:heroes": "node scripts/blog/build-blog-hero-webp.mjs",

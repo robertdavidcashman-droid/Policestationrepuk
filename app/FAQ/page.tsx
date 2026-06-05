@@ -35,7 +35,7 @@ const FAQS = [
   },
   {
     q: 'How does the WhatsApp group work?',
-    a: "Our WhatsApp group is restricted to accredited police station representatives only. To join, you must provide proof of accreditation (LCCSA or CLSA membership, or Law Society accreditation). Once verified, you'll receive urgent cover requests from solicitor firms posted in real time. Join via the WhatsApp page.",
+    a: "Our WhatsApp group is restricted to accredited police station representatives only. To join, you must provide proof of **PSRAS accreditation** (Police Station Register status via an SCC firm — probationary or accredited) or other verification listed on the Join page. Once verified, you'll receive urgent cover requests from solicitor firms posted in real time. Join via the WhatsApp page.",
   },
   {
     q: "Who operates PoliceStationRepUK?",

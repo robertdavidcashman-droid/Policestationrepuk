@@ -271,7 +271,10 @@ export default function PACEPage() {
 
       <section className="mt-10 rounded-[var(--radius-lg)] bg-[var(--navy)] p-8 text-center">
         <h2 className="text-xl font-bold text-white">Need Representation?</h2>
-        <p className="mt-3 text-white">Find an accredited police station representative via our free directory.</p>
+        <p className="mt-3 text-white">
+          Search our <strong>free directory</strong> to find an accredited representative. Directory search is free;
+          legal advice at the police station is provided by solicitor firms under legal aid rules — not by this website.
+        </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Link href="/directory" className="btn-gold no-underline">Find a Rep</Link>
           <Link href="/Contact" className="btn-outline !border-slate-500 !text-white hover:!border-[var(--gold)] hover:!text-[var(--gold)] no-underline">Contact Us</Link>

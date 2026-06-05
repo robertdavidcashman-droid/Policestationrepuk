@@ -31,7 +31,7 @@ export default function MagistratesCourtFeesPage() {
           <h1 className="mt-3 text-h1 text-white">Magistrates&apos; court standard fees</h1>
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-slate-300">
             Legal aid payment rates for representation in the magistrates&apos; court under the Standard Fee scheme.
-            Source: SI 2013/435 Schedule 4, paragraph 5, as amended (including SI 2025/1251 for amounts). Verify against
+            Source: SI 2013/435 Schedule 4, paragraph 5, as amended (including SI 2025/1251 for amounts from 22 December 2025). Verify against
             current LAA guidance before claiming.
           </p>
         </div>
