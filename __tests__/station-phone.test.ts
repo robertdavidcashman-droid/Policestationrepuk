@@ -30,16 +30,52 @@ describe('normalizePhone', () => {
 
 describe('classifyPhone', () => {
   it('classifies a direct station line', () => {
-    expect(classifyPhone(stub({ custodyPhone: '01622 690999' }))).toBe('station');
+    expect(
+      classifyPhone(
+        stub({
+          forceName: 'Devon and Cornwall Police',
+          custodyPhone: '01392 290820',
+          verificationMeta: {
+            fields: {
+              custodyPhone: {
+                status: 'verified',
+                sourceUrl: 'https://www.devon-cornwall.police.uk/contact/custody-information/',
+                dateVerified: '2026-06-02',
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe('station');
   });
   it('classifies a known switchboard regardless of format', () => {
-    expect(classifyPhone(stub({ phone: '+44 20 7230 1212' }))).toBe('switchboard');
+    expect(classifyPhone(stub({ forceName: 'Metropolitan Police', phone: '+44 20 7230 1212' }))).toBe(
+      'switchboard',
+    );
   });
   it('treats nonEmergencyPhone "101" as generic (was previously none)', () => {
-    expect(classifyPhone(stub({ nonEmergencyPhone: '101' }))).toBe('generic');
+    expect(
+      classifyPhone(stub({ forceName: 'Kent Police', nonEmergencyPhone: '101' })),
+    ).toBe('generic');
   });
   it('falls back to custodyPhone2 when other fields empty', () => {
-    expect(classifyPhone(stub({ custodyPhone2: '01865 000000' }))).toBe('station');
+    expect(
+      classifyPhone(
+        stub({
+          forceName: 'Devon and Cornwall Police',
+          custodyPhone2: '01392 290820',
+          verificationMeta: {
+            fields: {
+              custodyPhone2: {
+                status: 'verified',
+                sourceUrl: 'https://www.devon-cornwall.police.uk/contact/custody-information/',
+                dateVerified: '2026-06-02',
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe('station');
   });
   it('returns none when no number present', () => {
     expect(classifyPhone(stub({}))).toBe('none');
@@ -47,9 +83,27 @@ describe('classifyPhone', () => {
 });
 
 describe('stationPhoneNumbers', () => {
+  const officialCustodyMeta = {
+    verificationMeta: {
+      fields: {
+        custodyPhone: {
+          status: 'verified' as const,
+          sourceUrl: 'https://www.devon-cornwall.police.uk/contact/custody-information/',
+          dateVerified: '2026-06-02',
+        },
+      },
+    },
+  };
+
   it('returns distinct labelled numbers', () => {
     const entries = stationPhoneNumbers(
-      stub({ custodyPhone: '01622 690999', phone: '101', nonEmergencyPhone: '101' }),
+      stub({
+        custodyPhone: '01392 290820',
+        phone: '101',
+        nonEmergencyPhone: '101',
+        forceName: 'Devon and Cornwall Police',
+        ...officialCustodyMeta,
+      }),
     );
     expect(entries).toHaveLength(2);
     expect(entries[0]).toMatchObject({ label: 'Custody desk', className: 'station' });
@@ -57,7 +111,10 @@ describe('stationPhoneNumbers', () => {
   });
   it('dedupes numbers that differ only by formatting', () => {
     const entries = stationPhoneNumbers(
-      stub({ custodyPhone: '020 7230 1212', phone: '+44 20 7230 1212' }),
+      stub({
+        forceName: 'Metropolitan Police',
+        phone: '+44 20 7230 1212',
+      }),
     );
     expect(entries).toHaveLength(1);
   });
@@ -65,10 +122,11 @@ describe('stationPhoneNumbers', () => {
   it('lists custody before generic non-emergency', () => {
     const entries = stationPhoneNumbers(
       stub({
-        custodyPhone: '01622 690999',
+        custodyPhone: '01392 290820',
         phone: '101',
         nonEmergencyPhone: '101',
-        forceName: 'Kent Police',
+        forceName: 'Devon and Cornwall Police',
+        ...officialCustodyMeta,
       }),
     );
     expect(entries[0]?.label).toBe('Custody desk');

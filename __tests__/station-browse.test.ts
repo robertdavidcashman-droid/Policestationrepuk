@@ -16,9 +16,26 @@ const stub = (overrides: Partial<PoliceStation>): PoliceStation =>
     ...overrides,
   }) as PoliceStation;
 
+const officialCustody = {
+  verificationMeta: {
+    fields: {
+      custodyPhone: {
+        status: 'verified' as const,
+        sourceUrl: 'https://www.devon-cornwall.police.uk/contact/custody-information/',
+        dateVerified: '2026-06-02',
+      },
+    },
+  },
+};
+
 const stations: PoliceStation[] = [
-  stub({ forceName: 'Kent Police', county: 'Kent', custodyPhone: '01622 690999' }),
-  stub({ forceName: 'Kent Police', county: 'Kent', phone: '101' }),
+  stub({
+    forceName: 'Kent Police',
+    county: 'Kent',
+    custodyPhone: '01392 290820',
+    ...officialCustody,
+  }),
+  stub({ forceName: 'Kent Police', county: 'Kent', phone: '101', nonEmergencyPhone: '101' }),
   stub({ forceName: 'Thames Valley Police', county: 'Thames Valley', phone: '101' }),
   stub({ forceName: 'Metropolitan Police', county: 'London', phone: '020 7230 1212' }),
 ];

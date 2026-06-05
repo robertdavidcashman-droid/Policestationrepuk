@@ -1,31 +1,4 @@
 {
-  "PE234300019": {
-    "custodyPhone": {
-      "number": "0118 953 6000",
-      "source": "scripts/generate-data.js (legacy custody seed)",
-      "verifiedAt": "2026-06-02",
-      "confidence": "medium",
-      "field": "custodyPhone"
-    }
-  },
-  "PE234300033": {
-    "custodyPhone": {
-      "number": "01752 487500",
-      "source": "scripts/generate-data.js (legacy custody seed)",
-      "verifiedAt": "2026-06-02",
-      "confidence": "medium",
-      "field": "custodyPhone"
-    }
-  },
-  "PE234300018": {
-    "custodyPhone": {
-      "number": "01273 665511",
-      "source": "scripts/generate-data.js (legacy custody seed)",
-      "verifiedAt": "2026-06-02",
-      "confidence": "medium",
-      "field": "custodyPhone"
-    }
-  },
   "PE234000002": {
     "custodyPhone": {
       "number": "01634 792190",
@@ -80,57 +53,12 @@
       "field": "custodyPhone"
     }
   },
-  "PE234100002": {
-    "custodyPhone": {
-      "number": "01273 665511",
-      "source": "scripts/generate-data.js (legacy custody seed)",
-      "verifiedAt": "2026-06-02",
-      "confidence": "medium",
-      "field": "custodyPhone"
-    }
-  },
-  "PE233800004": {
-    "custodyPhone": {
-      "number": "023 8084 5511",
-      "source": "scripts/generate-data.js (legacy custody seed)",
-      "verifiedAt": "2026-06-02",
-      "confidence": "medium",
-      "field": "custodyPhone"
-    }
-  },
-  "PE234200002": {
-    "custodyPhone": {
-      "number": "0118 953 6000",
-      "source": "scripts/generate-data.js (legacy custody seed)",
-      "verifiedAt": "2026-06-02",
-      "confidence": "medium",
-      "field": "custodyPhone"
-    }
-  },
   "PE233600004": {
     "custodyPhone": {
       "number": "01392 854233",
       "source": "https://www.devon-cornwall.police.uk/contact/custody-information",
       "verifiedAt": "2026-05-29",
       "confidence": "high",
-      "field": "custodyPhone"
-    }
-  },
-  "PE230400013": {
-    "custodyPhone": {
-      "number": "01702 431212",
-      "source": "scripts/generate-data.js (legacy custody seed)",
-      "verifiedAt": "2026-06-02",
-      "confidence": "medium",
-      "field": "custodyPhone"
-    }
-  },
-  "PE230100170": {
-    "custodyPhone": {
-      "number": "020 7240 1212",
-      "source": "scripts/generate-data.js (legacy custody seed)",
-      "verifiedAt": "2026-06-02",
-      "confidence": "medium",
       "field": "custodyPhone"
     }
   },

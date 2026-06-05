@@ -28,10 +28,22 @@ describe('station-numbers-campaign', () => {
 
   it('computeStationPhoneStats classifies stations', () => {
     const stats = computeStationPhoneStats([
-      stub({ custodyPhone: '01234 567890' }),
-      stub({ phone: '101' }),
+      stub({
+        forceName: 'Devon and Cornwall Police',
+        custodyPhone: '01392 290820',
+        verificationMeta: {
+          fields: {
+            custodyPhone: {
+              status: 'verified',
+              sourceUrl: 'https://www.devon-cornwall.police.uk/contact/custody-information/',
+              dateVerified: '2026-06-02',
+            },
+          },
+        },
+      }),
+      stub({ phone: '101', nonEmergencyPhone: '101', forceName: 'Kent Police' }),
       stub({ phone: '' }),
-      stub({ phone: '020 7230 1212' }),
+      stub({ phone: '020 7230 1212', forceName: 'Metropolitan Police' }),
     ]);
     expect(stats.total).toBe(4);
     expect(stats.directLine).toBe(1);

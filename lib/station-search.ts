@@ -1,5 +1,10 @@
 import type { PoliceStation } from '@/lib/types';
 import { levenshtein } from '@/lib/rep-search';
+import {
+  isAlwaysPublishableForceContact,
+  isTrustedStationPhoneField,
+  trustedPhoneValue,
+} from '@/lib/station-phone-trust';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -116,10 +121,10 @@ const GENERIC_NUMBERS_NORM = new Set(Array.from(GENERIC_NUMBERS, normalizePhone)
 
 export function classifyPhone(station: PoliceStation): PhoneClass {
   const raw = (
-    station.custodyPhone ||
-    station.phone ||
-    station.custodyPhone2 ||
-    station.nonEmergencyPhone ||
+    trustedPhoneValue(station, 'custodyPhone') ||
+    trustedPhoneValue(station, 'phone') ||
+    trustedPhoneValue(station, 'custodyPhone2') ||
+    trustedPhoneValue(station, 'nonEmergencyPhone') ||
     ''
   ).trim();
   if (!raw) return 'none';
@@ -130,8 +135,11 @@ export function classifyPhone(station: PoliceStation): PhoneClass {
 }
 
 export function displayPhoneNumber(station: PoliceStation): string | null {
-  const raw = (station.custodyPhone || station.phone || station.custodyPhone2 || station.nonEmergencyPhone || '').trim();
-  return raw || null;
+  for (const field of ['custodyPhone', 'phone', 'custodyPhone2', 'nonEmergencyPhone'] as const) {
+    const trusted = trustedPhoneValue(station, field);
+    if (trusted) return trusted;
+  }
+  return null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -145,24 +153,31 @@ export interface StationPhoneEntry {
 }
 
 export function stationPhoneNumbers(station: PoliceStation): StationPhoneEntry[] {
-  const candidates: Array<{ label: string; value?: string }> = [
-    { label: 'Custody desk', value: station.custodyPhone },
-    { label: 'Custody desk (alt)', value: station.custodyPhone2 },
-    { label: 'Main line', value: station.phone },
-    { label: 'Non-emergency', value: station.nonEmergencyPhone },
+  const candidates: Array<{ label: string; field: 'custodyPhone' | 'custodyPhone2' | 'phone' | 'nonEmergencyPhone'; value?: string }> = [
+    { label: 'Custody desk', field: 'custodyPhone', value: station.custodyPhone },
+    { label: 'Custody desk (alt)', field: 'custodyPhone2', value: station.custodyPhone2 },
+    { label: 'Main line', field: 'phone', value: station.phone },
+    { label: 'Non-emergency', field: 'nonEmergencyPhone', value: station.nonEmergencyPhone },
   ];
 
   const seen = new Set<string>();
   const entries: StationPhoneEntry[] = [];
-  for (const { label, value } of candidates) {
+  for (const { label, field, value } of candidates) {
     const trimmed = (value || '').trim();
     if (!trimmed) continue;
+    const trusted =
+      isTrustedStationPhoneField(station, field, trimmed) ||
+      isAlwaysPublishableForceContact(station, field, trimmed);
+    if (!trusted) continue;
     const norm = normalizePhone(trimmed);
     if (!norm || seen.has(norm)) continue;
     seen.add(norm);
     let className: PhoneClass = 'station';
     if (GENERIC_NUMBERS_NORM.has(norm)) className = 'generic';
     else if (SWITCHBOARD_NUMBERS_NORM.has(norm)) className = 'switchboard';
+    else if (isAlwaysPublishableForceContact(station, field, trimmed)) {
+      className = GENERIC_NUMBERS_NORM.has(norm) ? 'generic' : 'switchboard';
+    }
     entries.push({ label, number: trimmed, className });
   }
   return entries;

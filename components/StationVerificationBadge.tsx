@@ -1,4 +1,5 @@
 import type { PoliceStation } from '@/lib/types';
+import { isDialablePhone } from '@/lib/station-verification';
 
 export function StationVerificationBadge({ station }: { station: PoliceStation }) {
   const meta = station.verificationMeta;
@@ -46,7 +47,23 @@ export function StationVerificationBadge({ station }: { station: PoliceStation }
       {custody?.status === 'not_publicly_listed' && (
         <p>Custody desk number: not publicly listed by the force.</p>
       )}
-      {phone?.status === 'unverified' && <p>Main line: unverified — use Report correction if you have an update.</p>}
+      {phone?.status === 'unverified' && isDialablePhone(station.phone) && (
+        <p className="text-amber-700">
+          Main line on file is unverified and not shown — use the non-emergency number below or{' '}
+          <a href="/HelpUsStationNumbers" className="font-semibold underline">
+            report a correction
+          </a>
+          .
+        </p>
+      )}
+      {custody?.status === 'unverified' && isDialablePhone(station.custodyPhone) && (
+        <p className="text-amber-700">
+          Custody desk number on file is unverified and not shown publicly until checked.
+        </p>
+      )}
+      {phone?.status === 'unverified' && !isDialablePhone(station.phone) && (
+        <p>Main line: unverified — use Report correction if you have an update.</p>
+      )}
     </div>
   );
 }

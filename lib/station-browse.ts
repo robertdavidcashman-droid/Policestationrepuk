@@ -1,5 +1,5 @@
 import type { PoliceStation } from '@/lib/types';
-import { classifyPhone } from '@/lib/station-search';
+import { stationPhoneNumbers } from '@/lib/station-search';
 import { deriveStationCounty } from '@/lib/force-county';
 import { forceMatchesCounty } from '@/lib/police-force-to-counties';
 
@@ -63,7 +63,7 @@ export function filterByArea(
   return stations.filter((s) => areaKey(s, 'force') === area.value);
 }
 
-/** Whether a station has a direct (non-switchboard, non-101) number. */
+/** Whether a station has a verified direct line shown in the directory. */
 export function hasDirectNumber(station: PoliceStation): boolean {
-  return classifyPhone(station) === 'station';
+  return stationPhoneNumbers(station).some((entry) => entry.className === 'station');
 }
