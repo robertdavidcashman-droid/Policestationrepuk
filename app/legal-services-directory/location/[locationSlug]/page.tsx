@@ -4,7 +4,9 @@ import { buildMetadata } from '@/lib/seo';
 import { LegalDirectoryHero } from '@/components/legal-directory/LegalDirectoryHero';
 import { LegalDirectoryCard } from '@/components/legal-directory/LegalDirectoryCard';
 import { LegalDirectoryDisclaimer } from '@/components/legal-directory/LegalDirectoryDisclaimer';
+import { UnclaimedListingsBanner } from '@/components/legal-directory/UnclaimedListingsBanner';
 import { getLocationBySlug, LEGAL_DIRECTORY_LOCATIONS, matchListingToLocation } from '@/lib/legal-directory/locations';
+import { getLocationHubBody } from '@/lib/legal-directory/hub-copy';
 import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
 import { listApprovedListings, toPublicListing } from '@/lib/legal-directory/storage';
 import { LEGAL_DIRECTORY_CATEGORIES } from '@/lib/legal-directory/categories';
@@ -44,6 +46,12 @@ export default async function LocationPage({ params }: Props) {
   const results = approved
     .filter((l) => matchListingToLocation(l, locationSlug))
     .map(toPublicListing);
+  const unclaimedCount = results.filter((l) => l.unclaimedSeeded).length;
+  const hubBody = getLocationHubBody(loc);
+  const stationsHref =
+    loc.type === 'county'
+      ? `/StationsDirectory?county=${encodeURIComponent(loc.label)}`
+      : '/StationsDirectory';
 
   return (
     <>
@@ -58,6 +66,21 @@ export default async function LocationPage({ params }: Props) {
         ]}
       />
       <div className="page-container section-pad space-y-8">
+        <section className="card-surface p-6">
+          <p className="leading-relaxed text-[var(--muted)]">{hubBody}</p>
+          <p className="mt-3 text-sm text-[var(--muted)]">
+            <Link href={`${LEGAL_DIRECTORY_BASE}/search`} className="font-semibold text-[var(--gold-link)] hover:underline">
+              Search the full directory
+            </Link>
+            {' · '}
+            <Link href={stationsHref} className="font-semibold text-[var(--gold-link)] hover:underline">
+              Police station numbers{loc.type === 'county' ? ` in ${loc.label}` : ''}
+            </Link>
+          </p>
+        </section>
+
+        <UnclaimedListingsBanner unclaimedCount={unclaimedCount} />
+
         {results.length === 0 ? (
           <div className="card-surface p-8">
             <p className="leading-relaxed text-[var(--muted)]">

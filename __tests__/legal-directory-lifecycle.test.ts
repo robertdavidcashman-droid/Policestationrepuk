@@ -11,6 +11,7 @@ import {
   resolveManagementToken,
   issueManagementTokenForListing,
   filterListings,
+  upsertSeededListing,
 } from '@/lib/legal-directory/storage';
 import { scoreLegalDirectorySubmission } from '@/lib/legal-directory/risk';
 import {
@@ -20,6 +21,7 @@ import {
   containsScriptOrInjection,
   validateDescription,
 } from '@/lib/legal-directory/sanitize';
+import { buildLaaProviderStub } from '@/lib/legal-directory/laa-seed';
 import { getCategoryBySlug } from '@/lib/legal-directory/categories';
 import { matchListingToLocation } from '@/lib/legal-directory/locations';
 
@@ -188,6 +190,7 @@ describe('Legal Directory — full lifecycle (in-memory store)', () => {
     expect((pub as Record<string, unknown>).managementTokenHash).toBeUndefined();
     expect((pub as Record<string, unknown>).riskScore).toBeUndefined();
     expect(pub.businessName).toBe(listing!.businessName);
+    expect(pub.unclaimedSeeded).toBe(false);
   });
 
   it('applies owner amendments immediately via applyListingPatch', async () => {
@@ -248,6 +251,29 @@ describe('Legal Directory — full lifecycle (in-memory store)', () => {
     expect(filterListings(all, { categorySlug: 'barristers' }).find((l) => l.id === res.id)).toBeUndefined();
     expect(filterListings(all, { county: 'Kent' }).find((l) => l.id === res.id)).toBeDefined();
     expect(filterListings(all, { availability24Hour: true }).find((l) => l.id === res.id)).toBeDefined();
+  });
+
+  it('filters claimed and verified listings', async () => {
+    const res = await createListing(
+      baseInput({ email: 'claimed-filter@example.com', businessName: 'Filter Test Firm LLP' }),
+    );
+    if (!res.ok) return;
+    const listing = (await getListingById(res.id))!;
+    listing.status = 'approved';
+    await saveListing(listing);
+
+    const all = await listAllListings();
+    expect(filterListings(all, { claimed: 'yes' }).find((l) => l.id === res.id)).toBeDefined();
+
+    const stub = buildLaaProviderStub({
+      firmName: 'Stub For Filter Test',
+      category: 'Crime',
+      town: 'Leeds',
+    });
+    await upsertSeededListing(stub);
+    const merged = await listAllListings();
+    expect(filterListings(merged, { claimed: 'no' }).find((l) => l.id === stub.id)).toBeDefined();
+    expect(filterListings(merged, { claimed: 'yes' }).find((l) => l.id === stub.id)).toBeUndefined();
   });
 });
 

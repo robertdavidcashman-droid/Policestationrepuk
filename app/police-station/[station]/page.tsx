@@ -6,6 +6,7 @@ import { buildMetadata, localBusinessSchema, breadcrumbSchema } from '@/lib/seo'
 import { JsonLd } from '@/components/JsonLd';
 import { StationsDataContributeCta } from '@/components/StationsDataContributeCta';
 import { StationVerificationBadge } from '@/components/StationVerificationBadge';
+import { CustodyContributePrompt } from '@/components/CustodyContributePrompt';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { RepCard } from '@/components/RepCard';
 import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCredentialVerificationNotice';
@@ -21,6 +22,8 @@ import { formatPhoneUk } from '@/lib/phone-format';
 import { StationLocationMap } from '@/components/StationLocationMap';
 import { countRepsForStation, shouldIndexPoliceStationPage } from '@/lib/station-indexing';
 import { directoryHrefForAreaName } from '@/lib/county-links';
+import { legalDirectoryHrefForAreaName } from '@/lib/legal-directory/area-links';
+import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
 import {
   CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
@@ -80,6 +83,9 @@ export default async function PoliceStationPage({ params }: PageProps) {
   const countyDirHref =
     directoryHrefForAreaName(station.county, counties) ??
     directoryHrefForAreaName(station.forceName, counties);
+  const legalDirHref =
+    legalDirectoryHrefForAreaName(station.county) ??
+    legalDirectoryHrefForAreaName(station.forceName);
   const repCount = countRepsForStation(station, allReps, allStations);
   const indexable = shouldIndexPoliceStationPage(station, repCount);
   const listedPhone = displayPhoneNumber(station);
@@ -160,7 +166,16 @@ export default async function PoliceStationPage({ params }: PageProps) {
                     <Link href="/directory" className="font-medium text-[var(--gold-link)] hover:underline">
                       search directory
                     </Link>
-                    .
+                    {legalDirHref ? (
+                      <>
+                        . For criminal defence solicitors and related providers in the area, see the{' '}
+                        <Link href={legalDirHref} className="font-medium text-[var(--gold-link)] hover:underline">
+                          Legal Services Directory
+                        </Link>
+                      </>
+                    ) : (
+                      '.'
+                    )}
                   </p>
                 </div>
               </section>
@@ -276,6 +291,7 @@ export default async function PoliceStationPage({ params }: PageProps) {
                   .
                 </p>
                 <StationVerificationBadge station={station} />
+                <CustodyContributePrompt station={station} />
               </section>
 
               <StationsDataContributeCta variant="slim" />
@@ -319,6 +335,21 @@ export default async function PoliceStationPage({ params }: PageProps) {
           </div>
 
           <nav className="mt-10 flex flex-wrap gap-4" aria-label="Related directory links">
+            {legalDirHref ? (
+              <Link
+                href={legalDirHref}
+                className="font-medium text-[var(--gold-link)] no-underline hover:text-[var(--gold)]"
+              >
+                Criminal legal services in {areaLabel || 'this area'} →
+              </Link>
+            ) : (
+              <Link
+                href={LEGAL_DIRECTORY_BASE}
+                className="font-medium text-[var(--gold-link)] no-underline hover:text-[var(--gold)]"
+              >
+                Legal Services Directory →
+              </Link>
+            )}
             {countyDirHref ? (
               <Link
                 href={countyDirHref}

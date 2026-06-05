@@ -80,7 +80,7 @@ export async function POST(request: Request) {
         console.warn('[legal-directory/claim] management email failed:', err),
       );
     }
-    await notifyAdminListingChange(finalListing, 'updated').catch(() => undefined);
+    await notifyAdminListingChange(finalListing, 'claimed').catch(() => undefined);
 
     return NextResponse.json({ ok: true, message: GENERIC_OK });
   } catch (e) {

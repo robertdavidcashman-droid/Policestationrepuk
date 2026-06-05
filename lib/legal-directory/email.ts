@@ -148,12 +148,14 @@ export async function sendLegalDirectoryAdminAlert(opts: {
 
 export async function notifyAdminListingChange(
   listing: LegalDirectoryListing,
-  event: 'new' | 'updated' | 'deleted',
+  event: 'new' | 'updated' | 'deleted' | 'claimed',
 ): Promise<void> {
   const actionUrls = await buildAdminActionUrls(listing.id);
   const eventLabel =
     event === 'new'
       ? 'New listing registered'
+      : event === 'claimed'
+        ? 'LAA listing claimed by firm'
       : event === 'updated'
         ? 'Listing updated'
         : 'Listing deleted by provider';

@@ -32,6 +32,7 @@ import {
   validateDescription,
 } from './sanitize';
 import { MANAGEMENT_TOKEN_TTL_MS } from './constants';
+import { isUnclaimedSeededListing } from './laa-seed';
 import type {
   LegalDirectoryListing,
   LegalDirectoryListingRequest,
@@ -156,6 +157,7 @@ export function toPublicListing(listing: LegalDirectoryListing): PublicLegalDire
   delete (pub as Partial<LegalDirectoryListing>).riskScore;
   delete (pub as Partial<LegalDirectoryListing>).pendingChanges;
   delete (pub as Partial<LegalDirectoryListing>).submitterIp;
+  pub.unclaimedSeeded = isUnclaimedSeededListing(listing);
   return pub as PublicLegalDirectoryListing;
 }
 
@@ -583,6 +585,10 @@ export function filterListings(
     region?: string;
     legalAid?: LegalAidStatus;
     availability24Hour?: boolean;
+    /** `yes` = claimed (has owner), `no` = unclaimed LAA stubs */
+    claimed?: 'yes' | 'no';
+    /** When true, only listings with verificationStatus verified or admin verified badge */
+    verifiedOnly?: boolean;
     featuredFirst?: boolean;
   },
 ): LegalDirectoryListing[] {
@@ -616,6 +622,14 @@ export function filterListings(
   }
   if (opts.availability24Hour) {
     result = result.filter((l) => l.availability24Hour);
+  }
+  if (opts.claimed === 'yes') {
+    result = result.filter((l) => Boolean(l.ownerEmail?.trim()));
+  } else if (opts.claimed === 'no') {
+    result = result.filter((l) => isUnclaimedSeededListing(l));
+  }
+  if (opts.verifiedOnly) {
+    result = result.filter((l) => l.verified || l.verificationStatus === 'verified');
   }
   if (opts.q) {
     const q = opts.q.toLowerCase();

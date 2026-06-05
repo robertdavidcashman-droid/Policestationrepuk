@@ -70,7 +70,10 @@
     "test:audit:seo": "playwright test --config=playwright.audit.config.ts tests/audit/seo.spec.ts",
     "test:audit:responsive": "playwright test --config=playwright.audit.config.ts tests/audit/responsive.spec.ts",
     "test:audit:console": "playwright test --config=playwright.audit.config.ts tests/audit/console-errors.spec.ts",
-    "indexnow": "npx tsx scripts/submit-indexnow.ts"
+    "indexnow": "npx tsx scripts/submit-indexnow.ts",
+    "laa:fetch": "npx tsx scripts/fetch-laa-crime-providers.ts",
+    "laa:seed": "npx tsx scripts/seed-laa-crime-providers.ts",
+    "laa:refresh": "npm run laa:fetch && npm run laa:seed"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

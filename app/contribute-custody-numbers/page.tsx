@@ -16,13 +16,20 @@ export const metadata = buildMetadata({
   path: '/contribute-custody-numbers',
 });
 
-export default async function ContributeCustodyNumbersPage() {
+interface PageProps {
+  searchParams?: Promise<{ station?: string }>;
+}
+
+export default async function ContributeCustodyNumbersPage({ searchParams }: PageProps) {
   const email = await getSession();
+  const sp = (await searchParams) ?? {};
+  const initialStationSlug = sp.station?.trim() || undefined;
   const stations = await getAllStations();
 
   const slim: ContributeStation[] = stations
     .map((s) => ({
       id: s.id,
+      slug: s.slug,
       name: s.name,
       forceName: s.forceName ?? s.county ?? '',
       current: isDialablePhone(s.custodyPhone) ? (s.custodyPhone as string) : '',
@@ -48,7 +55,11 @@ export default async function ContributeCustodyNumbersPage() {
 
       <div className="page-container">
         {email ? (
-          <ContributeCustodyForm stations={slim} requiredForReward={CONTRIBUTOR_STATIONS_REQUIRED} />
+          <ContributeCustodyForm
+            stations={slim}
+            requiredForReward={CONTRIBUTOR_STATIONS_REQUIRED}
+            initialStationSlug={initialStationSlug}
+          />
         ) : (
           <div className="mx-auto max-w-xl rounded-xl border border-[var(--border)] bg-white p-8 text-center shadow-sm">
             <h2 className="text-h3 text-[var(--navy)]">Sign in to contribute</h2>

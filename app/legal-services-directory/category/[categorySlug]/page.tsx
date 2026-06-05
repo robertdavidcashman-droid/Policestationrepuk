@@ -4,7 +4,9 @@ import { buildMetadata } from '@/lib/seo';
 import { LegalDirectoryHero } from '@/components/legal-directory/LegalDirectoryHero';
 import { LegalDirectoryCard } from '@/components/legal-directory/LegalDirectoryCard';
 import { LegalDirectoryDisclaimer } from '@/components/legal-directory/LegalDirectoryDisclaimer';
+import { UnclaimedListingsBanner } from '@/components/legal-directory/UnclaimedListingsBanner';
 import { getCategoryBySlug, LEGAL_DIRECTORY_CATEGORIES } from '@/lib/legal-directory/categories';
+import { getCategoryHubBody } from '@/lib/legal-directory/hub-copy';
 import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
 import {
   filterListings,
@@ -45,6 +47,8 @@ export default async function CategoryPage({ params }: Props) {
 
   const all = await listApprovedListings();
   const results = filterListings(all, { categorySlug, featuredFirst: true }).map(toPublicListing);
+  const unclaimedCount = results.filter((l) => l.unclaimedSeeded).length;
+  const hubBody = getCategoryHubBody(cat);
 
   const related = LEGAL_DIRECTORY_CATEGORIES.filter((c) => c.slug !== cat.slug).slice(0, 4);
 
@@ -61,6 +65,21 @@ export default async function CategoryPage({ params }: Props) {
         ]}
       />
       <div className="page-container section-pad space-y-8">
+        <section className="card-surface p-6">
+          <p className="leading-relaxed text-[var(--muted)]">{hubBody}</p>
+          <p className="mt-3 text-sm text-[var(--muted)]">
+            <Link href={`${LEGAL_DIRECTORY_BASE}/search?category=${cat.slug}`} className="font-semibold text-[var(--gold-link)] hover:underline">
+              Search all {cat.label.toLowerCase()}
+            </Link>
+            {' · '}
+            <Link href={`${LEGAL_DIRECTORY_BASE}/resources`} className="font-semibold text-[var(--gold-link)] hover:underline">
+              Official resources &amp; regulators
+            </Link>
+          </p>
+        </section>
+
+        <UnclaimedListingsBanner unclaimedCount={unclaimedCount} />
+
         {results.length === 0 ? (
           <div className="card-surface p-8">
             <p className="text-[var(--muted)]">

@@ -18,6 +18,7 @@ import {
   type LaaProviderRecord,
 } from '@/lib/legal-directory/laa-seed';
 import {
+  isEnrichedUnclaimedLegalListing,
   shouldIndexLegalListingPage,
   shouldIncludeLegalListingInSitemap,
 } from '@/lib/legal-directory/indexing';
@@ -159,5 +160,26 @@ describe('legal listing indexing rules', () => {
     const claimed = { ...stub, ownerEmail: 'owner@firm.co.uk', email: 'owner@firm.co.uk' };
     expect(shouldIndexLegalListingPage(claimed)).toBe(true);
     expect(shouldIncludeLegalListingInSitemap(claimed)).toBe(true);
+  });
+
+  it('plain LAA stubs with only seed data stay noindex', () => {
+    const stub = buildLaaProviderStub({
+      ...record,
+      phone: '0161 123 4567',
+      postcode: 'M1 1AA',
+    });
+    expect(isEnrichedUnclaimedLegalListing(stub)).toBe(false);
+    expect(shouldIndexLegalListingPage(stub)).toBe(false);
+  });
+
+  it('enriched unclaimed stubs can become indexable', () => {
+    const stub = buildLaaProviderStub({
+      ...record,
+      phone: '0161 123 4567',
+      postcode: 'M1 1AA',
+    });
+    const enriched = { ...stub, websiteUrl: 'https://example-defence.co.uk' };
+    expect(isEnrichedUnclaimedLegalListing(enriched)).toBe(true);
+    expect(shouldIndexLegalListingPage(enriched)).toBe(true);
   });
 });

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 
 export interface ContributeStation {
   id: string;
+  slug: string;
   name: string;
   forceName: string;
   /** Current custody number on file, if any (for confirm-or-correct). */
@@ -47,9 +48,11 @@ function blankRow(): Row {
 export function ContributeCustodyForm({
   stations,
   requiredForReward,
+  initialStationSlug,
 }: {
   stations: ContributeStation[];
   requiredForReward: number;
+  initialStationSlug?: string;
 }) {
   const byLabel = useMemo(() => {
     const m = new Map<string, ContributeStation>();
@@ -57,9 +60,20 @@ export function ContributeCustodyForm({
     return m;
   }, [stations]);
 
-  const [rows, setRows] = useState<Row[]>(() =>
-    Array.from({ length: requiredForReward }, () => blankRow()),
-  );
+  const initialRow = useMemo((): Row | null => {
+    if (!initialStationSlug) return null;
+    const station = stations.find((s) => s.slug === initialStationSlug || s.id === initialStationSlug);
+    if (!station) return null;
+    return { key: nextKey++, label: labelFor(station), number: station.current };
+  }, [initialStationSlug, stations]);
+
+  const [rows, setRows] = useState<Row[]>(() => {
+    if (initialRow) {
+      const rest = Math.max(0, requiredForReward - 1);
+      return [initialRow, ...Array.from({ length: rest }, () => blankRow())];
+    }
+    return Array.from({ length: requiredForReward }, () => blankRow());
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<SubmitResult[] | null>(null);

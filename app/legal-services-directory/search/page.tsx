@@ -4,6 +4,7 @@ import { LegalDirectoryHero } from '@/components/legal-directory/LegalDirectoryH
 import { DirectorySearchFilters } from '@/components/legal-directory/DirectorySearchFilters';
 import { LegalDirectoryCard } from '@/components/legal-directory/LegalDirectoryCard';
 import { LegalDirectoryDisclaimer } from '@/components/legal-directory/LegalDirectoryDisclaimer';
+import { UnclaimedListingsBanner } from '@/components/legal-directory/UnclaimedListingsBanner';
 import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
 import {
   filterListings,
@@ -28,11 +29,15 @@ type SearchParams = Promise<{
   region?: string;
   legalAid?: string;
   availability24Hour?: string;
+  claimed?: string;
+  verifiedOnly?: string;
 }>;
 
 export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
   const all = await listApprovedListings();
+  const claimedFilter =
+    sp.claimed === 'yes' || sp.claimed === 'no' ? (sp.claimed as 'yes' | 'no') : undefined;
   const results = filterListings(all, {
     q: sp.q,
     categorySlug: sp.category,
@@ -41,8 +46,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
     region: sp.region,
     legalAid: sp.legalAid as LegalAidStatus | undefined,
     availability24Hour: sp.availability24Hour === '1',
+    claimed: claimedFilter,
+    verifiedOnly: sp.verifiedOnly === '1',
     featuredFirst: true,
   }).map(toPublicListing);
+  const unclaimedCount = results.filter((l) => l.unclaimedSeeded).length;
 
   return (
     <>
@@ -59,6 +67,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
         <Suspense fallback={<p className="text-sm text-[var(--muted)]">Loading filters…</p>}>
           <DirectorySearchFilters />
         </Suspense>
+
+        <UnclaimedListingsBanner unclaimedCount={unclaimedCount} compact />
 
         <p className="text-sm font-semibold text-[var(--navy)]">
           {results.length} result{results.length === 1 ? '' : 's'}

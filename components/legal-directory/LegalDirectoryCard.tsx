@@ -57,6 +57,11 @@ export function LegalDirectoryCard({ listing }: { listing: PublicLegalDirectoryL
               24h
             </span>
           )}
+          {listing.unclaimedSeeded && (
+            <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-0.5 text-[11px] font-bold uppercase text-slate-700">
+              Unclaimed
+            </span>
+          )}
         </div>
 
         <h3 className="text-lg font-bold tracking-tight text-[var(--navy)]">
@@ -130,6 +135,14 @@ export function LegalDirectoryCard({ listing }: { listing: PublicLegalDirectoryL
           >
             View full profile
           </Link>
+          {listing.unclaimedSeeded && (
+            <Link
+              href={`${LEGAL_DIRECTORY_BASE}/claim/${listing.slug}`}
+              className="btn-gold w-full !min-h-[40px] !py-2 !text-sm text-center no-underline sm:w-auto sm:flex-1"
+            >
+              Claim listing
+            </Link>
+          )}
         </div>
       </div>
     </article>

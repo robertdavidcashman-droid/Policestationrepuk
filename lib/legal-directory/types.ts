@@ -131,6 +131,9 @@ export type PublicLegalDirectoryListing = Omit<
   | 'riskScore'
   | 'pendingChanges'
   | 'submitterIp'
->;
+> & {
+  /** True for unclaimed listings seeded from published LAA data. */
+  unclaimedSeeded: boolean;
+};
 
 export const PUBLIC_LISTING_STATUSES: LegalDirectoryListingStatus[] = ['approved'];

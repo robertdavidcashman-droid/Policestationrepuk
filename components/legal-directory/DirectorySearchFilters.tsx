@@ -103,6 +103,28 @@ export function DirectorySearchFilters() {
             <option value="not_applicable">Not applicable</option>
           </select>
         </label>
+        <label className="block">
+          <span className="text-sm font-semibold text-[var(--navy)]">Listing status</span>
+          <select
+            name="claimed"
+            defaultValue={params.get('claimed') ?? ''}
+            className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+          >
+            <option value="">All listings</option>
+            <option value="yes">Claimed by provider</option>
+            <option value="no">Unclaimed (LAA seed)</option>
+          </select>
+        </label>
+        <label className="flex items-end gap-2 pb-2">
+          <input
+            type="checkbox"
+            name="verifiedOnly"
+            value="1"
+            defaultChecked={params.get('verifiedOnly') === '1'}
+            className="h-4 w-4"
+          />
+          <span className="text-sm font-semibold text-[var(--navy)]">Verified only</span>
+        </label>
         <label className="flex items-end gap-2 pb-2">
           <input
             type="checkbox"

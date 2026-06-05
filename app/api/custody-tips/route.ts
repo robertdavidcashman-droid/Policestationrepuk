@@ -16,6 +16,7 @@ import { getAllReps, getAllStations, getRegisteredRepByEmail } from '@/lib/data'
 import { validateCustodyNumber } from '@/lib/custody-tips/validate';
 import { recordTip, countRepActiveStations, invalidateCustodyConsensusCache } from '@/lib/custody-tips/storage';
 import { grantContributorReward } from '@/lib/custody-tips/reward';
+import { notifyAdminCustodyConflict } from '@/lib/custody-tips/email';
 import type { CustodyTipSource } from '@/lib/custody-tips/types';
 import type { PoliceStation } from '@/lib/types';
 
@@ -129,7 +130,7 @@ export async function POST(request: Request) {
         continue;
       }
 
-      const { consensus } = await recordTip({
+      const { consensus, conflictNew } = await recordTip({
         stationId: station.id,
         stationSlug: station.slug,
         stationName: station.name,
@@ -140,6 +141,15 @@ export async function POST(request: Request) {
         submitterIp: ip,
         officialNumber: officialNumberFor(station),
       });
+
+      if (conflictNew) {
+        await notifyAdminCustodyConflict({
+          stationId: station.id,
+          stationName: station.name,
+          stationSlug: station.slug,
+          confirmedBy: consensus.confirmedBy,
+        }).catch((err) => console.warn('[custody-tips] conflict alert failed:', err));
+      }
 
       results.push({
         stationId: station.id,

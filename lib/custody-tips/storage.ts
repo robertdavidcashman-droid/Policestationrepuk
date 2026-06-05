@@ -118,6 +118,8 @@ export interface RecordTipResult {
   consensus: CustodyConsensus;
   /** True when this submission caused/maintained a verified number. */
   verified: boolean;
+  /** True when this submission newly created a rep disagreement on numbers. */
+  conflictNew: boolean;
 }
 
 /**
@@ -190,7 +192,12 @@ export async function recordTip(input: RecordTipInput): Promise<RecordTipResult>
     }
   }
 
-  return { tip, consensus, verified: consensus.status === 'verified' };
+  return {
+    tip,
+    consensus,
+    verified: consensus.status === 'verified',
+    conflictNew: Boolean(consensus.conflict && !prevConsensus?.conflict),
+  };
 }
 
 function fallbackConsensus(
