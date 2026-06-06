@@ -36,7 +36,7 @@ test.beforeEach(() => {
 async function askAssistant(page: import('@playwright/test').Page, question: string) {
   const input = page.getByLabel('Ask a question');
   await input.fill(question);
-  await page.getByRole('button', { name: 'Ask', exact: true }).click();
+  await page.getByRole('button', { name: 'Send', exact: true }).click();
 }
 
 async function waitForAssistantResult(page: import('@playwright/test').Page) {
@@ -55,11 +55,13 @@ test.describe('POST /api/assistant/query — live API', () => {
       mode?: string;
       refused?: boolean;
       matches?: unknown[];
+      primaryMatch?: unknown;
       disclaimer?: string;
     };
     expect(body.refused).toBe(false);
     expect(body.mode).toBe('faq');
     expect(body.matches?.length).toBeGreaterThan(0);
+    expect(body.primaryMatch).toBeTruthy();
     expect(body.disclaimer).toMatch(/not legal advice/i);
   });
 
@@ -92,21 +94,20 @@ test.describe('POST /api/assistant/query — live API', () => {
 });
 
 test.describe('/guided-assistant page', () => {
-  test('loads with form, disclaimer, and starter prompts', async ({ page }) => {
+  test('loads with chat input, disclaimer, and starter prompts', async ({ page }) => {
     const response = await page.goto('/guided-assistant');
     expect(response?.status()).toBe(200);
-    await expect(page.getByRole('heading', { name: /guided assistant/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /AI assistant/i })).toBeVisible();
     await expect(page.getByLabel('Ask a question')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Ask', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Send', exact: true })).toBeVisible();
     await expect(page.getByText(/not legal advice/i).first()).toBeVisible();
     await expect(page.getByRole('button', { name: 'How do I register on the directory?' })).toBeVisible();
   });
 
-  test('FAQ question shows a matched guide card', async ({ page }) => {
+  test('FAQ question shows assistant chat reply', async ({ page }) => {
     await page.goto('/guided-assistant');
     await askAssistant(page, 'Do I need a DSCC PIN number?');
     const liveRegion = await waitForAssistantResult(page);
-    await expect(liveRegion.getByRole('heading', { level: 3 }).first()).toBeVisible();
     await expect(liveRegion).toContainText(/dscc/i);
   });
 
@@ -131,7 +132,7 @@ test.describe('/guided-assistant page', () => {
     await input.fill('How do I register on the directory?');
     await input.press('Enter');
     const liveRegion = await waitForAssistantResult(page);
-    await expect(liveRegion.getByRole('heading', { level: 3 }).first()).toBeVisible();
+    await expect(liveRegion).toContainText(/register|directory/i);
   });
 
   test('mobile viewport remains usable', async ({ page }) => {
@@ -144,14 +145,14 @@ test.describe('/guided-assistant page', () => {
   });
 });
 
-test.describe('floating help widget', () => {
-  test('Ask tab returns FAQ answers', async ({ page }) => {
+test.describe('floating AI chat widget', () => {
+  test('Ask AI tab returns FAQ answers in chat bubbles', async ({ page }) => {
     await page.goto('/FAQ');
-    await page.getByRole('button', { name: 'Open help assistant' }).click();
-    await expect(page.getByText('Search our FAQs and guides')).toBeVisible();
+    await page.getByRole('button', { name: 'Open AI assistant' }).click();
+    await expect(page.getByText(/AI assistant · Site/i)).toBeVisible();
     await askAssistant(page, 'How do I register on the directory?');
     const liveRegion = await waitForAssistantResult(page);
-    await expect(liveRegion.getByRole('heading', { level: 3 }).first()).toBeVisible();
+    await expect(liveRegion).toContainText(/register|directory/i);
   });
 });
 
@@ -169,11 +170,11 @@ test.describe('LLM answers (requires OPENAI_API_KEY on server)', () => {
     expect(body.llmAnswer?.length).toBeGreaterThan(20);
   });
 
-  test('low-confidence career question shows guided answer in UI', async ({ page }) => {
+  test('low-confidence career question shows AI answer in UI', async ({ page }) => {
     await page.goto('/guided-assistant');
     await askAssistant(page, 'tell me about becoming a rep after working in another field');
     const liveRegion = await waitForAssistantResult(page);
-    await expect(liveRegion.getByText('Guided answer')).toBeVisible({ timeout: 30_000 });
+    await expect(liveRegion.getByText('AI answer')).toBeVisible({ timeout: 30_000 });
     await expect(liveRegion.getByText(/Based on our published guides/i)).toBeVisible();
   });
 });

@@ -176,7 +176,7 @@ export function matchAssistantCorpus(message: string): AssistantMatch[] {
 function buildFallbackResult(matches: AssistantMatch[], refusalMessage?: string): AssistantQueryResult {
   const suggestedLinks = matches.length > 0 ? [] : [...ASSISTANT_LOW_CONFIDENCE_LINKS];
 
-  return {
+  const result: AssistantQueryResult = {
     disclaimer: ASSISTANT_DISCLAIMER,
     matches,
     suggestedLinks,
@@ -188,6 +188,14 @@ function buildFallbackResult(matches: AssistantMatch[], refusalMessage?: string)
         ? "I couldn't find a close match in our published guides. Try rephrasing, or use the links below."
         : undefined),
   };
+
+  return enrichAssistantResult(result);
+}
+
+/** Attach primaryMatch for chat UI when FAQ matches exist. */
+export function enrichAssistantResult(result: AssistantQueryResult): AssistantQueryResult {
+  if (result.matches.length === 0) return result;
+  return { ...result, primaryMatch: result.matches[0] };
 }
 
 function logResult(message: string, result: AssistantQueryResult, extras?: { faqOnlyTopic?: string; validationCode?: string }) {
@@ -233,7 +241,7 @@ export async function queryAssistantWithLlm(message: string): Promise<AssistantQ
 
   const faqOnlyTopic = matchFaqOnlyTopic(message);
   if (faqOnlyTopic) {
-    const faqResult: AssistantQueryResult = {
+    const faqResult: AssistantQueryResult = enrichAssistantResult({
       ...base,
       mode: base.matches.length > 0 ? 'faq' : 'fallback',
       suggestedLinks:
@@ -243,14 +251,14 @@ export async function queryAssistantWithLlm(message: string): Promise<AssistantQ
               { href: faqOnlyTopic.guideHref, label: faqOnlyTopic.guideLabel },
               ...ASSISTANT_LOW_CONFIDENCE_LINKS,
             ],
-    };
+    });
     logResult(message, faqResult, { faqOnlyTopic: faqOnlyTopic.id });
     return faqResult;
   }
 
   const topScore = base.matches[0]?.score ?? 0;
   if (topScore >= ASSISTANT_HIGH_CONFIDENCE_THRESHOLD) {
-    const faqResult = { ...base, mode: 'faq' as const };
+    const faqResult = enrichAssistantResult({ ...base, mode: 'faq' as const });
     logResult(message, faqResult);
     return faqResult;
   }
@@ -276,7 +284,7 @@ export async function queryAssistantWithLlm(message: string): Promise<AssistantQ
       return rejected;
     }
 
-    const result: AssistantQueryResult = {
+    const result: AssistantQueryResult = enrichAssistantResult({
       ...base,
       mode: 'llm',
       llmAnswer,
@@ -284,7 +292,7 @@ export async function queryAssistantWithLlm(message: string): Promise<AssistantQ
       matches: base.matches,
       suggestedLinks: base.matches.length === 0 ? base.suggestedLinks : [],
       refusalMessage: undefined,
-    };
+    });
     logResult(message, result);
     return result;
   } catch (error) {

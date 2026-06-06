@@ -1,212 +1,166 @@
 'use client';
 
-import Link from 'next/link';
-import { useCallback, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ASSISTANT_STARTER_PROMPTS } from '@/lib/assistant/corpus';
 import type { AssistantQueryResult } from '@/lib/assistant/types';
+import {
+  AssistantMessageList,
+  type ChatTurn,
+} from '@/components/assistant/AssistantMessageList';
+
+const DEFAULT_DISCLAIMER =
+  'General information from our published guides only — not legal advice. For custody emergencies, instruct a criminal defence solicitor.';
 
 type AssistantChatProps = {
   compact?: boolean;
   className?: string;
 };
 
+function nextTurnId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
 export function AssistantChat({ compact = false, className = '' }: AssistantChatProps) {
   const formId = useId();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<AssistantQueryResult | null>(null);
+  const [turns, setTurns] = useState<ChatTurn[]>([]);
+  const [disclaimer, setDisclaimer] = useState(DEFAULT_DISCLAIMER);
 
-  const submit = useCallback(async (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed || loading) return;
+  const scrollToBottom = useCallback(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, []);
 
-    setLoading(true);
-    setError(null);
-    setResult(null);
+  useEffect(() => {
+    scrollToBottom();
+  }, [turns, loading, scrollToBottom]);
 
-    try {
-      const res = await fetch('/api/assistant/query', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: trimmed }),
-      });
-      const data = (await res.json()) as AssistantQueryResult & { error?: string };
-      if (!res.ok) {
-        setError(data.error ?? 'Something went wrong. Please try again.');
-        return;
+  const submit = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed || loading) return;
+
+      setMessage('');
+      setLoading(true);
+      setError(null);
+      setTurns((prev) => [...prev, { id: nextTurnId(), role: 'user', text: trimmed }]);
+
+      try {
+        const res = await fetch('/api/assistant/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: trimmed }),
+        });
+        const data = (await res.json()) as AssistantQueryResult & { error?: string };
+        if (!res.ok) {
+          setError(data.error ?? 'Something went wrong. Please try again.');
+          return;
+        }
+        if (data.disclaimer) setDisclaimer(data.disclaimer);
+        setTurns((prev) => [...prev, { id: nextTurnId(), role: 'assistant', result: data }]);
+      } catch {
+        setError('Unable to reach the assistant. Check your connection and try again.');
+      } finally {
+        setLoading(false);
+        textareaRef.current?.focus();
       }
-      setResult(data);
-    } catch {
-      setError('Unable to reach the assistant. Check your connection and try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, [loading]);
+    },
+    [loading],
+  );
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     void submit(message);
   };
 
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      void submit(message);
+    }
+  };
+
   const onPromptClick = (prompt: string) => {
-    setMessage(prompt);
     void submit(prompt);
   };
 
-  return (
-    <div className={className}>
-      <p
-        className={`rounded-lg border border-[var(--gold)]/30 bg-[var(--gold-pale)]/80 text-[var(--navy)] ${
-          compact ? 'px-3 py-2 text-[11px] leading-snug' : 'px-4 py-3 text-xs leading-relaxed'
-        }`}
-      >
-        {result?.disclaimer ??
-          'General information from our published guides only — not legal advice. For custody emergencies, instruct a criminal defence solicitor.'}
-      </p>
+  const isEmpty = turns.length === 0 && !loading;
 
-      <div className={`flex flex-wrap gap-2 ${compact ? 'mt-3' : 'mt-4'}`}>
-        {ASSISTANT_STARTER_PROMPTS.map((prompt) => (
-          <button
-            key={prompt}
-            type="button"
-            disabled={loading}
-            onClick={() => onPromptClick(prompt)}
-            className="rounded-full border border-[var(--border)] bg-white px-3 py-1 text-xs font-medium text-[var(--navy)] transition-colors hover:border-[var(--gold)]/50 hover:bg-[var(--gold-pale)] disabled:opacity-50"
-          >
-            {prompt}
-          </button>
-        ))}
+  return (
+    <div
+      className={`flex min-h-0 flex-col ${compact ? 'h-full' : 'min-h-[22rem]'} ${className}`}
+    >
+      <div
+        ref={scrollRef}
+        className={`min-h-0 flex-1 overflow-y-auto ${compact ? 'px-0.5 pb-2' : 'pb-3'}`}
+      >
+        {isEmpty ? (
+          <p className={`text-[var(--muted)] ${compact ? 'text-xs' : 'text-sm'}`}>
+            Ask about directory registration, station phone numbers, PSRAS career routes, or how
+            this site works.
+          </p>
+        ) : (
+          <AssistantMessageList turns={turns} loading={loading} compact={compact} />
+        )}
       </div>
 
-      <form onSubmit={onSubmit} className={`flex gap-2 ${compact ? 'mt-3' : 'mt-4'}`}>
+      {error && (
+        <p className="mb-2 text-sm text-red-700" role="alert">
+          {error}
+        </p>
+      )}
+
+      {isEmpty && (
+        <div className={`flex flex-wrap gap-2 ${compact ? 'mb-2' : 'mb-3'}`}>
+          {ASSISTANT_STARTER_PROMPTS.map((prompt) => (
+            <button
+              key={prompt}
+              type="button"
+              disabled={loading}
+              onClick={() => onPromptClick(prompt)}
+              className="rounded-full border border-[var(--border)] bg-white px-3 py-1 text-xs font-medium text-[var(--navy)] transition-colors hover:border-[var(--gold)]/50 hover:bg-[var(--gold-pale)] disabled:opacity-50"
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <form onSubmit={onSubmit} className="mt-auto flex shrink-0 items-end gap-2 border-t border-[var(--border)] pt-3">
         <label htmlFor={formId} className="sr-only">
           Ask a question
         </label>
-        <input
-          ref={inputRef}
+        <textarea
+          ref={textareaRef}
           id={formId}
-          type="text"
+          rows={compact ? 2 : 2}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={onKeyDown}
           maxLength={500}
           placeholder="Ask about registration, station numbers, PSRAS…"
           disabled={loading}
-          className={`min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-white px-3 text-sm text-[var(--navy)] outline-none ring-[var(--gold)] focus:border-[var(--gold)] focus:ring-2 ${
-            compact ? 'py-2' : 'py-2.5'
+          className={`min-h-[2.75rem] min-w-0 flex-1 resize-none rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--navy)] outline-none ring-[var(--gold)] focus:border-[var(--gold)] focus:ring-2 ${
+            compact ? 'text-sm' : ''
           }`}
         />
         <button
           type="submit"
           disabled={loading || !message.trim()}
-          className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[var(--navy)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--navy-light)] disabled:opacity-50"
+          aria-label="Send"
+          className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[var(--navy)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--navy-light)] disabled:opacity-50"
         >
-          {loading ? '…' : 'Ask'}
+          {loading ? '…' : 'Send'}
         </button>
       </form>
 
-      {error && (
-        <p className="mt-3 text-sm text-red-700" role="alert">
-          {error}
-        </p>
-      )}
-
-      <div aria-live="polite" aria-atomic="false" className={compact ? 'mt-3 space-y-3' : 'mt-5 space-y-4'}>
-        {result?.refused && result.refusalMessage && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-            <p>{result.refusalMessage}</p>
-            {result.suggestedLinks.length > 0 && (
-              <ul className="mt-2 flex flex-wrap gap-2">
-                {result.suggestedLinks.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="font-semibold text-[var(--navy)] underline-offset-2 hover:underline"
-                    >
-                      {link.label} →
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {!result?.refused && result?.refusalMessage && result.matches.length === 0 && !result.llmAnswer && (
-          <p className="text-sm text-[var(--muted)]">{result.refusalMessage}</p>
-        )}
-
-        {result?.llmAnswer && (
-          <article className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--gold)]">Guided answer</p>
-            <div className="mt-2 space-y-2 text-sm leading-relaxed text-[var(--muted)]">
-              {result.llmAnswer.split(/\n\n+/).map((paragraph) => (
-                <p key={paragraph.slice(0, 48)}>{paragraph}</p>
-              ))}
-            </div>
-            {result.sources && result.sources.length > 0 && (
-              <div className="mt-3 border-t border-[var(--border)] pt-3">
-                <p className="text-xs font-semibold text-[var(--navy)]">Based on our published guides</p>
-                <ul className="mt-2 space-y-1">
-                  {result.sources.map(({ entry }) => (
-                    <li key={entry.id}>
-                      {entry.href ? (
-                        <Link
-                          href={entry.href}
-                          className="text-xs font-semibold text-[var(--gold-link)] no-underline hover:underline"
-                        >
-                          {entry.question} →
-                        </Link>
-                      ) : (
-                        <span className="text-xs text-[var(--muted)]">{entry.question}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </article>
-        )}
-
-        {result?.mode === 'faq' &&
-          result.matches.map(({ entry, score }) => (
-          <article
-            key={entry.id}
-            className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3 shadow-sm"
-          >
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--gold)]">{entry.category}</p>
-            <h3 className="mt-1 text-sm font-bold text-[var(--navy)]">{entry.question}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">{entry.answer}</p>
-            {entry.href && (
-              <Link
-                href={entry.href}
-                className="mt-2 inline-block text-xs font-semibold text-[var(--gold-link)] no-underline hover:underline"
-              >
-                Read more on this topic →
-              </Link>
-            )}
-            {!compact && result.mode === 'faq' && (
-              <p className="mt-2 text-[10px] text-[var(--muted)]">Match confidence: {Math.round(score * 100)}%</p>
-            )}
-          </article>
-        ))}
-
-        {!result?.refused && result && result.matches.length === 0 && !result.llmAnswer && result.suggestedLinks.length > 0 && (
-          <ul className="flex flex-wrap gap-2">
-            {result.suggestedLinks.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="inline-flex rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-xs font-semibold text-[var(--navy)] no-underline hover:border-[var(--gold)]"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <p className={`mt-2 text-center text-[var(--muted)] ${compact ? 'text-[10px]' : 'text-xs'}`}>
+        {disclaimer}
+      </p>
     </div>
   );
 }

@@ -31,4 +31,6 @@ export type AssistantQueryResult = {
   llmAnswer?: string;
   /** Corpus entries used as RAG context for an LLM answer. */
   sources?: AssistantMatch[];
+  /** Top FAQ match when presenting hybrid FAQ replies in chat UI. */
+  primaryMatch?: AssistantMatch;
 };

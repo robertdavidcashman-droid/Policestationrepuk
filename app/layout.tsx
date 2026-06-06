@@ -5,6 +5,7 @@ import { PromoBannerStack } from '@/components/PromoBannerStack';
 import { Footer } from '@/components/Footer';
 import { SiteWidePromoStrip } from '@/components/SiteWidePromoStrip';
 import { DeferredGlobalWidgets } from '@/components/DeferredGlobalWidgets';
+import { AssistantUiProvider } from '@/components/assistant/AssistantUiProvider';
 import { JsonLd } from '@/components/JsonLd';
 import './globals.css';
 import { SITE_URL, SITE_NAME, SITE_KEYWORDS, socialPreviewImageUrl } from '@/lib/seo-layer/config';
@@ -111,7 +112,9 @@ export default function RootLayout({
         <main id="main-content" className="site-shell-main flex-1 w-full min-w-0">{children}</main>
         <SiteWidePromoStrip />
         <Footer />
-        <DeferredGlobalWidgets />
+        <AssistantUiProvider>
+          <DeferredGlobalWidgets />
+        </AssistantUiProvider>
       </body>
     </html>
   );

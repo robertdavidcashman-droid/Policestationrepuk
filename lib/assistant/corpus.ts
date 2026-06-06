@@ -97,9 +97,9 @@ const SITE_INTENT_ENTRIES: AssistantEntry[] = [
   },
   {
     id: 'site-guided-assistant',
-    question: 'What is the guided assistant?',
+    question: 'What is the AI assistant?',
     answer:
-      'The guided assistant searches our published FAQs and guides to answer questions about the directory, registration, PSRAS career routes, and general police station practice topics on this site.',
+      'The AI assistant answers questions about the directory, registration, PSRAS career routes, and general police station practice topics on this site, using our published FAQs and guides.',
     category: 'Site help',
     href: '/guided-assistant',
     keywords: ['assistant', 'chat', 'help bot', 'faq search'],

@@ -1,84 +1,106 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AssistantChat } from '@/components/AssistantChat';
+import { useAssistantUi } from '@/components/assistant/AssistantUiProvider';
 import { CONTACT_WHATSAPP_HREF } from '@/lib/contact-constants';
 import { SUPPORT_MAILTO_HREF } from '@/lib/site-contact';
 
-type PanelTab = 'ask' | 'contact';
+function SparkleIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="h-5 w-5"
+      aria-hidden
+    >
+      <path d="M9.813 2.25a.75.75 0 0 1 .726.568l.66 2.631a3.75 3.75 0 0 0 2.805 2.805l2.631.66a.75.75 0 0 1 0 1.456l-2.631.66a3.75 3.75 0 0 0-2.805 2.805l-.66 2.631a.75.75 0 0 1-1.456 0l-.66-2.631a3.75 3.75 0 0 0-2.805-2.805l-2.631-.66a.75.75 0 0 1 0-1.456l2.631-.66a3.75 3.75 0 0 0 2.805-2.805l.66-2.631a.75.75 0 0 1 .73-.568Z" />
+    </svg>
+  );
+}
 
 export function HelpChatButton() {
-  const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<PanelTab>('ask');
+  const { open, setOpen, tab, setTab, showHint } = useAssistantUi();
   const pathname = usePathname();
   const isHome = pathname === '/';
 
   return (
     <>
-      <button
-        type="button"
-        data-parity-mask
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Open help assistant"
-        aria-expanded={open}
-        className="fixed-ui-bottom-raised fixed-ui-right z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--navy)] text-xl text-white shadow-lg transition-all hover:bg-[var(--navy-light)] hover:shadow-xl"
-      >
-        💬
-      </button>
+      <div className="fixed-ui-bottom-raised fixed-ui-right z-40 flex flex-col items-end gap-1">
+        <span className="hidden rounded-full bg-[var(--navy)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow md:inline">
+          Ask AI
+        </span>
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          aria-label="Open AI assistant"
+          aria-expanded={open}
+          className={`relative flex h-14 w-14 items-center justify-center rounded-full bg-[var(--navy)] text-white shadow-lg transition-all hover:bg-[var(--navy-light)] hover:shadow-xl ${
+            showHint && !open ? 'ring-2 ring-[var(--gold)] ring-offset-2 animate-pulse' : ''
+          }`}
+        >
+          <SparkleIcon />
+        </button>
+      </div>
 
       {open && (
         <div
           data-parity-mask
-          className="fixed-ui-bottom-raised fixed-ui-right z-[60] flex max-h-[min(85vh,32rem)] w-[min(calc(100vw-2rem-var(--safe-area-left)-var(--safe-area-right)),24rem)] flex-col overflow-hidden rounded-xl border border-[var(--card-border)] bg-white shadow-2xl"
+          className="fixed-ui-bottom-raised fixed-ui-right z-[60] flex max-h-[min(90vh,36rem)] w-[min(calc(100vw-2rem-var(--safe-area-left)-var(--safe-area-right)),24rem)] flex-col overflow-hidden rounded-xl border border-[var(--card-border)] bg-white shadow-2xl"
         >
-          <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
-            <div className="flex gap-1 rounded-lg bg-slate-100 p-0.5">
-              <button
-                type="button"
-                onClick={() => setTab('ask')}
-                className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
-                  tab === 'ask' ? 'bg-white text-[var(--navy)] shadow-sm' : 'text-[var(--muted)]'
-                }`}
-              >
-                Ask
-              </button>
-              <button
-                type="button"
-                onClick={() => setTab('contact')}
-                className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
-                  tab === 'contact' ? 'bg-white text-[var(--navy)] shadow-sm' : 'text-[var(--muted)]'
-                }`}
-              >
-                Contact
-              </button>
+          <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex gap-1 rounded-lg bg-slate-100 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setTab('ask')}
+                  className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+                    tab === 'ask' ? 'bg-white text-[var(--navy)] shadow-sm' : 'text-[var(--muted)]'
+                  }`}
+                >
+                  Ask AI
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTab('contact')}
+                  className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+                    tab === 'contact' ? 'bg-white text-[var(--navy)] shadow-sm' : 'text-[var(--muted)]'
+                  }`}
+                >
+                  Contact
+                </button>
+              </div>
+              {tab === 'ask' && (
+                <p className="mt-2 text-[11px] leading-snug text-[var(--muted)]">
+                  AI assistant · Site &amp; career guides · not legal advice
+                </p>
+              )}
             </div>
             <button
+              type="button"
               onClick={() => setOpen(false)}
-              className="text-[var(--muted)] hover:text-[var(--navy)]"
-              aria-label="Close help assistant"
+              className="shrink-0 text-[var(--muted)] hover:text-[var(--navy)]"
+              aria-label="Close AI assistant"
             >
               ✕
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className={`min-h-0 flex-1 overflow-hidden ${tab === 'ask' ? 'flex flex-col p-4 pt-3' : 'overflow-y-auto p-4'}`}>
             {tab === 'ask' ? (
               <>
-                <p className="mb-2 text-xs text-[var(--muted)]">
-                  Search our FAQs and guides. Not legal advice.
-                </p>
-                <AssistantChat compact />
-                <p className="mt-3 text-center text-[11px] text-[var(--muted)]">
+                <AssistantChat compact className="min-h-0 flex-1" />
+                <p className="mt-2 shrink-0 text-center text-[11px] text-[var(--muted)]">
                   <Link href="/guided-assistant" className="font-semibold text-[var(--navy)] hover:underline">
-                    Open full assistant page →
+                    Open full AI assistant page →
                   </Link>
                 </p>
               </>
             ) : (
               <>
-                <h4 className="text-sm font-bold text-[var(--navy)]">Need Help?</h4>
+                <h4 className="text-sm font-bold text-[var(--navy)]">Need help?</h4>
                 <p className="mt-2 text-xs text-[var(--muted)]">
                   {isHome
                     ? 'Use the directory to find reps nationwide. Kent agency phone and WhatsApp are in the Kent section on this page.'

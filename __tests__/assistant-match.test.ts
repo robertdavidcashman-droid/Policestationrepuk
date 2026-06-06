@@ -97,6 +97,12 @@ describe('assistant matcher', () => {
     expect(result.disclaimer.length).toBeGreaterThan(20);
   });
 
+  it('sets primaryMatch on FAQ responses', () => {
+    const result = queryAssistant('How do I register on the directory for free?');
+    expect(result.primaryMatch).toBeDefined();
+    expect(result.primaryMatch?.entry.id).toBe(result.matches[0]?.entry.id);
+  });
+
   it('retrieves RAG context for partial queries', () => {
     const context = retrieveAssistantContext('register directory free listing');
     expect(context.length).toBeGreaterThan(0);

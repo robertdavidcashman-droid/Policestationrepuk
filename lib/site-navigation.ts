@@ -155,7 +155,7 @@ function dedupeNavLinks(links: HeaderNavLink[]): HeaderNavLink[] {
 
 /** Footer column “Community” — order from homepage crawl (/) */
 export const FOOTER_COMMUNITY: FooterLink[] = [
-  { href: '/guided-assistant', label: 'Guided assistant' },
+  { href: '/guided-assistant', label: 'AI assistant' },
   { href: '/WhatsApp', label: 'WhatsApp group — overview' },
   { href: WHATSAPP_PAGE_REPS, label: 'Join WhatsApp — reps' },
   { href: WHATSAPP_PAGE_SOLICITORS, label: 'Join WhatsApp — solicitors' },
@@ -188,7 +188,7 @@ export const FOOTER_LEGAL: FooterLink[] = [
 /** Partner tools, directories, community, legal & SEO landing pages — header “More” menu. */
 export const HEADER_NAV_MORE: HeaderNavLink[] = dedupeNavLinks([
   { href: '/links', text: 'Quick links hub' },
-  { href: '/guided-assistant', text: 'Guided assistant' },
+  { href: '/guided-assistant', text: 'AI assistant' },
   ...footerLinksToNav(FOOTER_DIRECTORIES),
   ...footerLinksToNav(FOOTER_COMMUNITY),
   ...footerLinksToNav(FOOTER_LEGAL),
