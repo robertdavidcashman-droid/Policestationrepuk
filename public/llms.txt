@@ -18,6 +18,7 @@ Site: https://policestationrepuk.org
 - https://policestationrepuk.org/WhatsApp/reps — Join WhatsApp (police station reps)
 - https://policestationrepuk.org/WhatsApp/solicitors — Join WhatsApp (criminal defence solicitors)
 - https://policestationrepuk.org/WhatsApp/firms — Join WhatsApp (criminal defence firms)
+- https://policestationrepuk.org/guided-assistant — Guided assistant (site & career FAQs from published guides)
 - https://policestationrepuk.org/rss.xml — Blog RSS feed
 
 # Blog articles (police station representation operations)

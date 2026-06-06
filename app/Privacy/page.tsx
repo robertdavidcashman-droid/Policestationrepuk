@@ -129,6 +129,12 @@ export default function PrivacyPage() {
               </Link>
               )
             </li>
+            <li className="flex gap-2">
+              <span className="mt-0.5 text-emerald-600">&#x2022;</span>
+              Questions you submit to the guided assistant are processed to return matching FAQ
+              answers from our published guides. We do not store the text of assistant questions in
+              our database; rate-limit counters may record anonymous request counts by IP address.
+            </li>
           </ul>
         </section>
 

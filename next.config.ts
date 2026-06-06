@@ -444,7 +444,6 @@ const nextConfig: NextConfig = {
       { source: "/arrestednow", destination: "/PACE", permanent: true },
       { source: "/arrested-what-to-do", destination: "/PACE", permanent: true },
       { source: "/emergency-police-station-representation", destination: "/PoliceStationCover", permanent: true },
-      { source: "/guided-assistant", destination: "/FAQ", permanent: true },
       { source: "/offences-we-deal-with", destination: "/About", permanent: true },
       { source: "/what-is-a-duty-solicitor", destination: "/DutySolicitorVsRep", permanent: true },
       // google03385fbe80cfcd6b verification handled by public/ static file

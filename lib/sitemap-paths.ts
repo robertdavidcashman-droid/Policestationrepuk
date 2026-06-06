@@ -34,6 +34,7 @@ export const SITEMAP_PATHS: string[] = [
   'GetWork',
   'GettingStarted',
   'GoFeatured',
+  'guided-assistant',
   'GravesendPoliceStationReps',
   'HowToBecome',
   'HowToBecomePoliceStationRep',
