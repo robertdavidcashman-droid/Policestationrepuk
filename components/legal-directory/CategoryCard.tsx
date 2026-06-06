@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { LegalDirectoryCategory } from '@/lib/legal-directory/categories';
+import { getCategoryCardCountLabel } from '@/lib/legal-directory/category-display';
 import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
 
 export function CategoryCard({ category, count }: { category: LegalDirectoryCategory; count?: number }) {
@@ -12,7 +13,7 @@ export function CategoryCard({ category, count }: { category: LegalDirectoryCate
       <p className="mt-2 text-sm leading-relaxed text-[var(--muted)] line-clamp-3">{category.intro}</p>
       {typeof count === 'number' && (
         <p className="mt-3 text-xs font-semibold text-[var(--gold-link)]">
-          {count === 0 ? 'No approved listings yet' : `${count} provider${count === 1 ? '' : 's'}`}
+          {getCategoryCardCountLabel(category.slug, count)}
         </p>
       )}
     </Link>

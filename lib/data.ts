@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import type { Representative, PoliceStation, County, SearchFilters, WikiArticle, LawFirm, LegalUpdate, FormDocument } from './types';
+import type { Representative, PoliceStation, County, SearchFilters, WikiArticle, LegalUpdate, FormDocument } from './types';
 import {
   mergeScrapedWithFallback,
   fallbackOnlyReps,
@@ -956,31 +956,6 @@ export async function getWikiArticleBySlug(slug: string): Promise<WikiArticle | 
 export async function getWikiArticlesByCategory(category: string): Promise<WikiArticle[]> {
   const articles = await getAllWikiArticles();
   return articles.filter((a) => a.category === category);
-}
-
-export async function getAllLawFirms(): Promise<LawFirm[]> {
-  const raw = loadJsonFile<LawFirm>('law-firms.json');
-  const seen = new Set<string>();
-  const deduped: LawFirm[] = [];
-  for (const f of raw) {
-    const key = f.sraNumber?.trim()
-      ? `sra:${f.sraNumber.trim()}`
-      : `slug:${f.slug}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    deduped.push(f);
-  }
-  return deduped;
-}
-
-export async function getLawFirmBySlug(slug: string): Promise<LawFirm | undefined> {
-  const firms = await getAllLawFirms();
-  return firms.find((f) => f.slug === slug);
-}
-
-export async function getLawFirmsByCounty(county: string): Promise<LawFirm[]> {
-  const firms = await getAllLawFirms();
-  return firms.filter((f) => f.county.toLowerCase() === county.toLowerCase());
 }
 
 export async function getAllLegalUpdates(): Promise<LegalUpdate[]> {

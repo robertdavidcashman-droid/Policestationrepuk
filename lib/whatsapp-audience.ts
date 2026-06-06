@@ -63,7 +63,7 @@ export const WHATSAPP_AUDIENCE_PAGES = {
     related: [
       { href: '/PoliceStationCover', label: 'Police station cover for firms' },
       { href: '/directory', label: 'Find a police station rep' },
-      { href: '/Firms', label: 'Law firms directory' },
+      { href: '/legal-services-directory/category/solicitors', label: 'Criminal defence solicitors (LAA directory)' },
     ],
   },
   firms: {
@@ -92,7 +92,7 @@ export const WHATSAPP_AUDIENCE_PAGES = {
     related: [
       { href: '/PoliceStationCover', label: 'Police station cover hub' },
       { href: '/directory', label: 'Search the reps directory' },
-      { href: '/Firms', label: 'Law firms directory' },
+      { href: '/legal-services-directory/category/solicitors', label: 'Criminal defence solicitors (LAA directory)' },
     ],
   },
 } as const satisfies Record<

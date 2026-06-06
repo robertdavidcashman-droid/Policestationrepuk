@@ -334,7 +334,23 @@ Scope: `/legal-services-directory` LAA seed import (`data/laa-crime-providers.js
 | Unclaimed stub “Listing details checked” copy | **SOFTENED** | Profile page now states “Sourced from published LAA data (unclaimed)” |
 | Empty Email button on unclaimed stubs | **FIXED** | Hidden when no email on listing |
 
-**Out of scope:** user-submitted directory listings, legacy `/Firms` dataset (`data/law-firms.json`).
+**Out of scope:** user-submitted directory listings (handled separately).
+
+---
+
+## Tier 10 — Retire `/Firms` and LAA solicitor labelling (2026-06-06)
+
+Scope: legacy `/Firms` page (`data/archive/law-firms.json` Base44 import) and public presentation of LAA auto-stubs in `/legal-services-directory/category/solicitors`.
+
+| Item | Verdict | Notes |
+|------|---------|-------|
+| `/Firms` "Duty Solicitor" badges from unverified Base44 `duty_solicitor_scheme` | **REMOVED** | Page deleted; 301 redirect to solicitors category |
+| Nav "Law Firms" → `/Firms` | **FIXED** | Points to `/legal-services-directory/category/solicitors` |
+| Unclaimed LAA stubs showing emerald "Verified" / generic "Checked {date}" | **SOFTENED** | Cards and profiles use "Unclaimed · LAA listed" + "LAA data checked {date}" |
+| Crime legal aid contract implied as duty rota membership | **SOFTENED** | Solicitors category hub + listing copy state this is not a duty solicitor register |
+| Legal Aid sidebar "Yes" on unclaimed stubs | **SOFTENED** | "Crime legal aid contract (LAA published data)" |
+
+**Archived:** `data/law-firms.json` → `data/archive/law-firms.json` (reference only; not served publicly).
 
 ---
 

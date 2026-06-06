@@ -12,6 +12,11 @@ import {
 } from '@/lib/legal-directory/storage';
 import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
 import { computeListingVerification } from '@/lib/legal-directory/verification-sources';
+import {
+  formatLegalAidStatusLabel,
+  getListingTrustBadges,
+  listingTrustBadgeHeroClassName,
+} from '@/lib/legal-directory/listing-display';
 import { isUnclaimedSeededListing } from '@/lib/legal-directory/laa-seed';
 import { shouldIndexLegalListingPage } from '@/lib/legal-directory/indexing';
 import { phoneToTelHref } from '@/lib/phone';
@@ -79,21 +84,15 @@ export default async function ListingProfilePage({ params }: Props) {
             {pub.category} · {[pub.town, pub.county].filter(Boolean).join(', ')}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            {pub.verified && (
-              <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-200">
-                Verified
+            {getListingTrustBadges(pub).map((badge) => (
+              <span
+                key={badge.key}
+                className={listingTrustBadgeHeroClassName(badge.variant)}
+                title={badge.title}
+              >
+                {badge.label}
               </span>
-            )}
-            {pub.verificationStatus === 'unverified' && !pub.verified && (
-              <span className="rounded-full bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-100">
-                Unverified
-              </span>
-            )}
-            {pub.verificationStatus === 'verified' && pub.dateVerified && (
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-200">
-                Checked {pub.dateVerified}
-              </span>
-            )}
+            ))}
             {pub.featured && (
               <span className="rounded-full bg-[var(--gold)]/20 px-3 py-1 text-xs font-bold text-[var(--gold)]">
                 Featured
@@ -112,6 +111,12 @@ export default async function ListingProfilePage({ params }: Props) {
                 <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
                   This listing was created from published Legal Aid Agency data and is unclaimed.
                   Claim it to confirm your details, add contact information, and complete the profile.
+                </p>
+                <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
+                  <strong>Not a duty solicitor register.</strong> A crime legal aid contract listed
+                  in LAA published data is not the same as membership of the national duty solicitor
+                  rota. Confirm duty arrangements and contact details with the firm or via official
+                  LAA and SRA tools before instructing.
                 </p>
                 <Link
                   href={`${LEGAL_DIRECTORY_BASE}/claim/${pub.slug}`}
@@ -190,7 +195,7 @@ export default async function ListingProfilePage({ params }: Props) {
                 </a>
               )}
               <p className="mt-4 text-xs text-[var(--muted)]">
-                Legal Aid: {pub.legalAidStatus === 'yes' ? 'Yes' : pub.legalAidStatus === 'no' ? 'No' : 'N/A'}
+                Legal Aid: {formatLegalAidStatusLabel(pub)}
                 {pub.availability24Hour ? ' · 24-hour availability' : ''}
               </p>
               {unclaimed ? (

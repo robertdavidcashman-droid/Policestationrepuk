@@ -127,11 +127,13 @@ export function buildLaaVerificationSource(
   };
 }
 
-function buildDescription(record: LaaProviderRecord, categoryLabel: string): string {
+function buildDescription(record: LaaProviderRecord, categorySlug: string, categoryLabel: string): string {
   const where = record.town ? ` in ${record.town}` : '';
+  const contractLabel =
+    categorySlug === 'solicitors' ? 'crime legal aid' : categoryLabel.toLowerCase();
   return (
     `${record.firmName} is listed in the Legal Aid Agency's published Directory of legal aid ` +
-    `providers as holding a ${categoryLabel.toLowerCase()} legal aid contract${where}. ` +
+    `providers as holding a ${contractLabel} legal aid contract${where}. ` +
     `This entry was created automatically from published LAA data and is currently unclaimed — ` +
     `the firm has not yet confirmed or completed its details. If this is your firm, you can claim ` +
     `this listing to add contact information, specialisms, and coverage.`
@@ -183,7 +185,7 @@ export function buildLaaProviderStub(
     areasCovered: '',
     policeStationsCovered: '',
     courtsCovered: '',
-    description: buildDescription(record, categoryLabel),
+    description: buildDescription(record, categorySlug, categoryLabel),
     specialisms: '',
     legalAidStatus: 'yes',
     availability24Hour: false,

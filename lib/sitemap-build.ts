@@ -63,7 +63,6 @@ const HIGH_PRIORITY_PAGES = [
   { path: 'CustodyNote', priority: 0.85, freq: 'weekly' as const },
   { path: 'Premium', priority: 0.75, freq: 'weekly' as const },
   { path: 'Forces', priority: 0.7, freq: 'monthly' as const },
-  { path: 'Firms', priority: 0.7, freq: 'monthly' as const },
   { path: 'legal-services-directory', priority: 0.82, freq: 'weekly' as const },
   { path: 'GetWork', priority: 0.7, freq: 'monthly' as const },
   { path: 'HowToBecomePoliceStationRep', priority: 0.85, freq: 'monthly' as const },

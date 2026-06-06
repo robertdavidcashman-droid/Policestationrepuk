@@ -74,5 +74,9 @@ export const CAREER_RELATED = [
   { href: '/WhatDoesRepDo', label: 'What does a rep do?', desc: 'Police station role explained' },
   { href: '/DutySolicitorVsRep', label: 'Duty solicitor vs rep', desc: 'Compare career paths' },
   { href: '/GetWork', label: 'Get work guide', desc: 'Finding criminal defence roles' },
-  { href: '/Firms', label: 'Law firms directory', desc: 'Find firms to apply to' },
+  {
+    href: '/legal-services-directory/category/solicitors',
+    label: 'Criminal defence solicitors (LAA directory)',
+    desc: 'Find firms with crime legal aid contracts',
+  },
 ] as const;

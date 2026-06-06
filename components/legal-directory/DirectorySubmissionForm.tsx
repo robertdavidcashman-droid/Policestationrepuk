@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { LEGAL_DIRECTORY_CATEGORIES } from '@/lib/legal-directory/categories';
 import { ENGLISH_COUNTIES } from '@/lib/english-counties';
-import { UK_REGIONS, LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
+import { UK_REGIONS, LEGAL_DIRECTORY_BASE, PSR_LEGAL_DIRECTORY_CATEGORY_SLUG, REP_DIRECTORY_LINKS } from '@/lib/legal-directory/constants';
 
 const inputClass =
   'mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]';
@@ -12,6 +12,7 @@ const inputClass =
 export function DirectorySubmissionForm() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [categorySlug, setCategorySlug] = useState('');
   const [startedAt] = useState(() => Date.now());
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -82,7 +83,13 @@ export function DirectorySubmissionForm() {
         </label>
         <label className="block">
           <span className="text-sm font-semibold text-[var(--navy)]">Type of provider / category *</span>
-          <select name="categorySlug" required className={inputClass}>
+          <select
+            name="categorySlug"
+            required
+            className={inputClass}
+            value={categorySlug}
+            onChange={(e) => setCategorySlug(e.target.value)}
+          >
             <option value="">Select…</option>
             {LEGAL_DIRECTORY_CATEGORIES.map((c) => (
               <option key={c.slug} value={c.slug}>
@@ -90,6 +97,15 @@ export function DirectorySubmissionForm() {
               </option>
             ))}
           </select>
+          {categorySlug === PSR_LEGAL_DIRECTORY_CATEGORY_SLUG && (
+            <p className="mt-2 text-xs leading-relaxed text-[var(--muted)]">
+              Accredited reps should register via the{' '}
+              <Link href={REP_DIRECTORY_LINKS.register} className="font-semibold text-[var(--gold-link)] hover:underline">
+                main rep directory
+              </Link>
+              . Use this form only if you also want a business-style Legal Services Directory listing.
+            </p>
+          )}
         </label>
         <label className="block">
           <span className="text-sm font-semibold text-[var(--navy)]">Contact person *</span>

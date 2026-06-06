@@ -4,10 +4,16 @@ import { buildMetadata } from '@/lib/seo';
 import { LegalDirectoryHero } from '@/components/legal-directory/LegalDirectoryHero';
 import { LegalDirectoryCard } from '@/components/legal-directory/LegalDirectoryCard';
 import { LegalDirectoryDisclaimer } from '@/components/legal-directory/LegalDirectoryDisclaimer';
+import { PoliceStationRepsCategoryHub } from '@/components/legal-directory/PoliceStationRepsCategoryHub';
+import { SolicitorsCategoryHub } from '@/components/legal-directory/SolicitorsCategoryHub';
 import { UnclaimedListingsBanner } from '@/components/legal-directory/UnclaimedListingsBanner';
 import { getCategoryBySlug, LEGAL_DIRECTORY_CATEGORIES } from '@/lib/legal-directory/categories';
 import { getCategoryHubBody } from '@/lib/legal-directory/hub-copy';
-import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
+import {
+  LEGAL_DIRECTORY_BASE,
+  PSR_LEGAL_DIRECTORY_CATEGORY_SLUG,
+  SOLICITORS_LEGAL_DIRECTORY_CATEGORY_SLUG,
+} from '@/lib/legal-directory/constants';
 import {
   filterListings,
   listApprovedListings,
@@ -51,6 +57,8 @@ export default async function CategoryPage({ params }: Props) {
   const hubBody = getCategoryHubBody(cat);
 
   const related = LEGAL_DIRECTORY_CATEGORIES.filter((c) => c.slug !== cat.slug).slice(0, 4);
+  const isPsrCategory = categorySlug === PSR_LEGAL_DIRECTORY_CATEGORY_SLUG;
+  const isSolicitorsCategory = categorySlug === SOLICITORS_LEGAL_DIRECTORY_CATEGORY_SLUG;
 
   return (
     <>
@@ -80,16 +88,30 @@ export default async function CategoryPage({ params }: Props) {
 
         <UnclaimedListingsBanner unclaimedCount={unclaimedCount} />
 
+        {isPsrCategory && (
+          <PoliceStationRepsCategoryHub listingCount={results.length} variant="full" />
+        )}
+
+        {isSolicitorsCategory && (
+          <SolicitorsCategoryHub
+            listingCount={results.length}
+            unclaimedCount={unclaimedCount}
+            variant="full"
+          />
+        )}
+
         {results.length === 0 ? (
-          <div className="card-surface p-8">
-            <p className="text-[var(--muted)]">
-              There are no approved listings in this category yet. Meaningful information about{' '}
-              {cat.label.toLowerCase()} is shown above; check back as providers register.
-            </p>
-            <Link href={`${LEGAL_DIRECTORY_BASE}/add-listing`} className="btn-gold mt-4 inline-block no-underline">
-              Add a free listing
-            </Link>
-          </div>
+          !isPsrCategory ? (
+            <div className="card-surface p-8">
+              <p className="text-[var(--muted)]">
+                There are no approved listings in this category yet. Meaningful information about{' '}
+                {cat.label.toLowerCase()} is shown above; check back as providers register.
+              </p>
+              <Link href={`${LEGAL_DIRECTORY_BASE}/add-listing`} className="btn-gold mt-4 inline-block no-underline">
+                Add a free listing
+              </Link>
+            </div>
+          ) : null
         ) : (
           <>
             <p className="text-sm font-semibold text-[var(--navy)]">{results.length} approved listing(s)</p>

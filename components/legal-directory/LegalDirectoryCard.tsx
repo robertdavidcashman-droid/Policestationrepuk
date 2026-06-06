@@ -1,6 +1,10 @@
 import Link from 'next/link';
 import type { PublicLegalDirectoryListing } from '@/lib/legal-directory/types';
 import { LEGAL_DIRECTORY_BASE } from '@/lib/legal-directory/constants';
+import {
+  getListingTrustBadges,
+  listingTrustBadgeClassName,
+} from '@/lib/legal-directory/listing-display';
 import { phoneToTelHref } from '@/lib/phone';
 
 /** Directory result card — monetisation: featured/promoted badges sort order in search. */
@@ -34,32 +38,18 @@ export function LegalDirectoryCard({ listing }: { listing: PublicLegalDirectoryL
               Featured
             </span>
           )}
-          {listing.verified && (
-            <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold uppercase text-emerald-800">
-              Verified
-            </span>
-          )}
-          {listing.verificationStatus === 'unverified' && !listing.verified && (
-            <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold uppercase text-amber-900">
-              Unverified
-            </span>
-          )}
-          {listing.verificationStatus === 'verified' && listing.dateVerified && (
+          {getListingTrustBadges(listing).map((badge) => (
             <span
-              className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700"
-              title={listing.sourceUrl ? `Source: ${listing.sourceUrl}` : undefined}
+              key={badge.key}
+              className={listingTrustBadgeClassName(badge.variant)}
+              title={badge.title}
             >
-              Checked {listing.dateVerified}
+              {badge.label}
             </span>
-          )}
+          ))}
           {listing.availability24Hour && (
             <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-800">
               24h
-            </span>
-          )}
-          {listing.unclaimedSeeded && (
-            <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-0.5 text-[11px] font-bold uppercase text-slate-700">
-              Unclaimed
             </span>
           )}
         </div>

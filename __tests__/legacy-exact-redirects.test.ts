@@ -10,6 +10,10 @@ describe('LEGACY_EXACT_REDIRECTS', () => {
     expect(LEGACY_EXACT_REDIRECTS['/blog']).toBe('/Blog');
   });
 
+  it('maps /firms to solicitors category (retired /Firms page)', () => {
+    expect(LEGACY_EXACT_REDIRECTS['/firms']).toBe('/legal-services-directory/category/solicitors');
+  });
+
   it('has no duplicate keys (object literal must be unique for TS build)', () => {
     const keys = Object.keys(LEGACY_EXACT_REDIRECTS);
     expect(new Set(keys).size).toBe(keys.length);

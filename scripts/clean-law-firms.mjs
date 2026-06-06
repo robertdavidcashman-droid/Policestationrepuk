@@ -1,5 +1,8 @@
 #!/usr/bin/env node
-// Clean data/law-firms.json down to genuine, verifiable English & Welsh
+// DEPRECATED: legacy Base44 law-firms dataset archived at data/archive/law-firms.json.
+// The /Firms page was retired in favour of /legal-services-directory/category/solicitors.
+//
+// Clean data/archive/law-firms.json down to genuine, verifiable English & Welsh
 // criminal defence firms with real, reachable websites.
 //
 // Filters applied (order matters):
@@ -27,7 +30,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DATA_FILE = resolve(__dirname, '..', 'data', 'law-firms.json');
+const DATA_FILE = resolve(__dirname, '..', 'data', 'archive', 'law-firms.json');
 
 const args = new Set(process.argv.slice(2));
 const WRITE = args.has('--write');

@@ -3,9 +3,15 @@ import type { LegalDirectoryLocation } from './locations';
 
 const CATEGORY_HUB_EXTRA: Partial<Record<string, string>> = {
   solicitors:
-    'Many criminal defence firms hold Legal Aid Agency contracts for police station and court work. Use the search filters to narrow by Legal Aid status, 24-hour availability, or verified regulator checks. Unclaimed listings sourced from published LAA data can be claimed by the firm to complete contact details.',
+    'Entries here are auto-imported from published Legal Aid Agency crime legal aid provider data. ' +
+    'Most are unclaimed — the firm has not confirmed contact details on Police Station Rep UK. ' +
+    'A crime legal aid contract is not the same as membership of the national duty solicitor rota. ' +
+    'Use official LAA and SRA tools (linked below) before instructing. Firms can claim a stub or add a listing.',
   'police-station-representatives':
-    'Accredited police station representatives attend custody suites under PSRAS or equivalent schemes. Confirm accreditation and the stations a rep covers before instructing. Listings marked verified have been checked against a published regulator or official source.',
+    'Accredited police station representatives attend custody suites under PSRAS or equivalent schemes. ' +
+    'Live rep profiles — with station coverage and availability for firms instructing cover — are in the main ' +
+    'Police Station Rep UK directory (/directory), not as claimable listings in this Legal Services Directory category. ' +
+    'Use the links below to find or register a rep, or browse PSRAS guidance.',
   'prison-law':
     'Prison law providers listed here typically hold Legal Aid contracts for prison law work. Verify current contract status and specialisms before instructing.',
 };
