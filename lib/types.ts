@@ -156,6 +156,15 @@ export interface PoliceStation {
       dateVerified: string | null;
       source: 'rep_crowdsource';
     };
+    /** Admin-approved autonomous web discovery (KV). */
+    custodyDiscovery?: {
+      status: 'verified' | 'unverified';
+      sourceFindingId: string;
+      sourceUrl?: string;
+      approvedAt: string;
+      approvedBy: string;
+      source: 'autonomous_discovery';
+    };
   };
 }
 

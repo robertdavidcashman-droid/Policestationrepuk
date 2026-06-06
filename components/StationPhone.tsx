@@ -1,6 +1,5 @@
 import type { PoliceStation } from '@/lib/types';
 import Link from 'next/link';
-import { isDialablePhone } from '@/lib/station-phone-dialable';
 import {
   classifyPhone,
   displayPhoneNumber,
@@ -15,6 +14,8 @@ import {
   DEFAULT_NON_EMERGENCY,
   getOfficialContact,
 } from '@/lib/official-force-contacts';
+import { getCustodyPhoneDisplay } from '@/lib/custody-discovery/display';
+import { isCustodyStation } from '@/lib/custody-station';
 
 function forceNonEmergency(station: PoliceStation): { number: string; hint: string } {
   const raw = getOfficialContact(station.forceName)?.nonEmergency ?? DEFAULT_NON_EMERGENCY;
@@ -85,6 +86,20 @@ export function StationPhone({
 }) {
   const entries = stationPhoneNumbers(station);
   const wrapperClass = className ?? 'mt-2 text-xs';
+  const custodyDisplay = isCustodyStation(station) ? getCustodyPhoneDisplay(station) : null;
+
+  if (
+    custodyDisplay?.state === 'fallback_101' &&
+    custodyDisplay.message &&
+    !entries.some((e) => e.label === 'Custody desk')
+  ) {
+    return (
+      <p className={`text-[10px] text-[var(--muted)] ${wrapperClass}`}>
+        {custodyDisplay.message}{' '}
+        <PhoneValue number={custodyDisplay.number ?? '101'} link={link} className="text-[10px]" />
+      </p>
+    );
+  }
 
   if (entries.length > 0) {
     return (

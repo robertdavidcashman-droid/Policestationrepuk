@@ -1,7 +1,13 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
-export type AdminSection = 'reps' | 'legal' | 'legal-queue' | 'stations' | 'custody';
+export type AdminSection =
+  | 'reps'
+  | 'legal'
+  | 'legal-queue'
+  | 'stations'
+  | 'custody'
+  | 'custody-discovery';
 
 const NAV: { id: AdminSection; href: string; label: string }[] = [
   { id: 'reps', href: '/admin', label: 'Rep verification' },
@@ -9,6 +15,7 @@ const NAV: { id: AdminSection; href: string; label: string }[] = [
   { id: 'legal-queue', href: '/admin/legal-directory/review-queue', label: 'Flagged listings' },
   { id: 'stations', href: '/admin/station-updates', label: 'Station updates' },
   { id: 'custody', href: '/admin/custody-tips', label: 'Custody tips' },
+  { id: 'custody-discovery', href: '/admin/custody-number-review', label: 'Custody discovery' },
 ];
 
 export function AdminShell({

@@ -13,12 +13,14 @@ import { forceMatchesCounty } from './police-force-to-counties';
 import { applyStationOverrides } from './station-overrides';
 import { applyStationVerificationMeta } from './station-verification';
 import { applyCustodyConsensus } from './custody-tips/overlay';
+import { applyApprovedDiscoveryNumbers } from './custody-discovery/overlay';
 
 async function finalizeStations(stations: PoliceStation[]): Promise<PoliceStation[]> {
   const withOverrides = await applyStationOverrides(stations);
   const withMeta = applyStationVerificationMeta(withOverrides);
+  const withDiscovery = await applyApprovedDiscoveryNumbers(withMeta);
   // Consensus runs last so it merges into (not replaces) the file-based meta.
-  return applyCustodyConsensus(withMeta);
+  return applyCustodyConsensus(withDiscovery);
 }
 import { getKV, skipKVInPrerender } from './kv';
 import { loadFeaturedFlags, applyFeaturedFlags, sortFeaturedReps } from './featured';
