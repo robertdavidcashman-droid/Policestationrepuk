@@ -404,6 +404,23 @@ export async function upsertSeededListing(
   return { created: !existing };
 }
 
+/**
+ * Hard-delete a listing from KV (listing record, slug index, id index, optional email index).
+ * Used by maintenance scripts to remove duplicate LAA shadow stubs.
+ */
+export async function hardRemoveListingFromDirectory(listing: LegalDirectoryListing): Promise<void> {
+  const store = getDirectoryStore();
+  if (!store) throw new Error('Directory storage is not available.');
+
+  await store.del(listingKey(listing.id));
+  if (listing.slug) await store.del(slugKey(listing.slug));
+  if (listing.ownerEmail) await store.del(emailKey(listing.ownerEmail));
+
+  const ids = await readIds();
+  const nextIds = ids.filter((id) => id !== listing.id);
+  if (nextIds.length !== ids.length) await writeIds(nextIds);
+}
+
 export type ClaimSeededResult =
   | { ok: true; listing: LegalDirectoryListing }
   | { ok: false; error: string };

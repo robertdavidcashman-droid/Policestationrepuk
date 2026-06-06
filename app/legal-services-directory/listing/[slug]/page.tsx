@@ -174,9 +174,11 @@ export default async function ListingProfilePage({ params }: Props) {
                   Call {pub.phone}
                 </a>
               )}
-              <a href={`mailto:${pub.email}`} className="btn-outline mt-2 block text-center no-underline">
-                Email
-              </a>
+              {pub.email && (
+                <a href={`mailto:${pub.email}`} className="btn-outline mt-2 block text-center no-underline">
+                  Email
+                </a>
+              )}
               {pub.websiteUrl && (
                 <a
                   href={pub.websiteUrl}
@@ -191,7 +193,34 @@ export default async function ListingProfilePage({ params }: Props) {
                 Legal Aid: {pub.legalAidStatus === 'yes' ? 'Yes' : pub.legalAidStatus === 'no' ? 'No' : 'N/A'}
                 {pub.availability24Hour ? ' · 24-hour availability' : ''}
               </p>
-              {pub.verificationStatus === 'verified' && pub.dateVerified && (
+              {unclaimed ? (
+                <p className="mt-3 text-xs text-[var(--muted)]">
+                  Sourced from published Legal Aid Agency data (unclaimed). Contact details have not
+                  been confirmed by the firm.
+                  {pub.dateVerified ? (
+                    <>
+                      {' '}
+                      LAA listing checked {pub.dateVerified}
+                      {pub.sourceUrl ? (
+                        <>
+                          {' '}
+                          (
+                          <a
+                            href={pub.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-semibold text-[var(--gold-link)] no-underline hover:underline"
+                          >
+                            source
+                          </a>
+                          )
+                        </>
+                      ) : null}
+                      .
+                    </>
+                  ) : null}
+                </p>
+              ) : pub.verificationStatus === 'verified' && pub.dateVerified ? (
                 <p className="mt-3 text-xs text-[var(--muted)]">
                   Listing details checked {pub.dateVerified}
                   {pub.sourceUrl ? (
@@ -211,7 +240,7 @@ export default async function ListingProfilePage({ params }: Props) {
                   ) : null}
                   .
                 </p>
-              )}
+              ) : null}
               {pub.verificationStatus === 'unverified' && (
                 <p className="mt-3 text-xs font-medium text-amber-800">Contact details: unverified</p>
               )}
@@ -221,9 +250,11 @@ export default async function ListingProfilePage({ params }: Props) {
               <div className="card-surface p-6 text-sm text-[var(--muted)]">
                 <h3 className="font-semibold text-[var(--navy)]">Verification sources</h3>
                 <p className="mt-2">
-                  {derivedVerification.status === 'verified'
-                    ? `Confirmed against ${derivedVerification.tierACount > 0 ? 'an official register' : 'corroborating official sources'}${derivedVerification.dateVerified ? ` (checked ${derivedVerification.dateVerified})` : ''}.`
-                    : 'Submitted sources do not yet meet the threshold for verification.'}
+                  {unclaimed
+                    ? 'This unclaimed listing is sourced from the published Legal Aid Agency directory. The firm has not yet confirmed its contact details.'
+                    : derivedVerification.status === 'verified'
+                      ? `Confirmed against ${derivedVerification.tierACount > 0 ? 'an official register' : 'corroborating official sources'}${derivedVerification.dateVerified ? ` (checked ${derivedVerification.dateVerified})` : ''}.`
+                      : 'Submitted sources do not yet meet the threshold for verification.'}
                 </p>
                 <ul className="mt-3 space-y-2">
                   {verificationSources.map((s, i) => (

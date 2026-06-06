@@ -19,10 +19,10 @@ import * as cheerio from 'cheerio';
 import * as XLSX from 'xlsx';
 import {
   isCrimeRelatedLaaCategory,
-  laaProviderKey,
   LAA_DIRECTORY_URL,
   type LaaProviderRecord,
 } from '../lib/legal-directory/laa-seed';
+import { dedupeLaaProviderRecords } from '../lib/legal-directory/laa-dedupe';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = resolve(__dirname, '../data/laa-crime-providers.json');
@@ -157,22 +157,25 @@ async function main() {
   console.log(`[laa-fetch] Summary sheet: ${fromSummary.length} crime/prison offices`);
   console.log(`[laa-fetch] 2025 Crime Providers sheet: ${fromCrimeSheet.length} rows`);
 
-  const records: LaaProviderRecord[] = [];
-  const seen = new Set<string>();
+  const summaryFiltered = fromSummary.filter((rec) => isCrimeRelatedLaaCategory(rec.category));
+  const crimeFiltered = fromCrimeSheet.filter((rec) => isCrimeRelatedLaaCategory(rec.category));
 
-  for (const rec of [...fromSummary, ...fromCrimeSheet]) {
-    if (!isCrimeRelatedLaaCategory(rec.category)) continue;
-    const key = laaProviderKey(rec);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    records.push(rec);
-    if (limit && records.length >= limit) break;
+  const { records, summaryOnly, crimeSupplements, skippedShadows, resolvedConflicts } =
+    dedupeLaaProviderRecords(summaryFiltered, crimeFiltered);
+
+  console.log(`[laa-fetch] summary offices after conflict resolution: ${summaryOnly}`);
+  console.log(`[laa-fetch] crime-sheet supplements (no Summary match): ${crimeSupplements}`);
+  console.log(`[laa-fetch] skipped crime-sheet shadows: ${skippedShadows}`);
+  if (resolvedConflicts) {
+    console.log(`[laa-fetch] resolved Summary conflicts: ${resolvedConflicts}`);
   }
 
+  const output = limit ? records.slice(0, limit) : records;
+
   mkdirSync(dirname(OUT_PATH), { recursive: true });
-  writeFileSync(OUT_PATH, JSON.stringify(records, null, 2));
-  console.log(`[laa-fetch] wrote ${records.length} crime/prison-law providers to ${OUT_PATH}`);
-  if (records.length) console.log('[laa-fetch] sample:', JSON.stringify(records[0], null, 2));
+  writeFileSync(OUT_PATH, JSON.stringify(output, null, 2));
+  console.log(`[laa-fetch] wrote ${output.length} crime/prison-law providers to ${OUT_PATH}`);
+  if (output.length) console.log('[laa-fetch] sample:', JSON.stringify(output[0], null, 2));
 }
 
 main().catch((err) => {

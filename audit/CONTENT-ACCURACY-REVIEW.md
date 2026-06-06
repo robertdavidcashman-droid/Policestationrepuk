@@ -323,6 +323,21 @@ Scope: `/BuildPortfolioGuide`, `/PrepareForCIT`, `/PrepareForWrittenExam`, and c
 
 ---
 
+## Tier 9 — Legal Services Directory LAA dedupe (2026-06-06)
+
+Scope: `/legal-services-directory` LAA seed import (`data/laa-crime-providers.json`) and Upstash KV listings.
+
+| Item | Verdict | Notes |
+|------|---------|-------|
+| Cross-sheet duplicate import (Summary + 2025 Crime Providers) | **FIXED** | ~1,596 shadow rows removed; dedupe by `laaOfficeKey` (firm + postcode); JSON reduced 3,197 → 1,600 |
+| Orison Solicitors LLP / LS12 3HN multi-town conflict | **FIXED** | Canonical town: Leeds (postcode geography) |
+| Unclaimed stub “Listing details checked” copy | **SOFTENED** | Profile page now states “Sourced from published LAA data (unclaimed)” |
+| Empty Email button on unclaimed stubs | **FIXED** | Hidden when no email on listing |
+
+**Out of scope:** user-submitted directory listings, legacy `/Firms` dataset (`data/law-firms.json`).
+
+---
+
 ## Tier 8 — Site-wide editorial accuracy audit (2026-06-05)
 
 Scope: all editorial URLs (~107): blog (26), wiki (49), legal updates (8), static guides, fee/rights pages. Method: automated inventory + red-flag scan (`scripts/audit/content-accuracy-scan.ts`) plus manual re-verification of flagged items against 2+ primary sources. Outputs: `audit/content-accuracy-register.json`, `audit/content-accuracy-problems.md`.
