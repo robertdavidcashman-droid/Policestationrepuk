@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-06-06T18:37:18.198Z",
+  "json": {
+    "totalRecords": 1600,
+    "uniqueOffices": 1600,
+    "shadowRows": [],
+    "multiTownConflicts": [],
+    "duplicateOfficeGroups": 0
+  },
+  "kv": {
+    "totalListings": 1603,
+    "approvedListings": 1601,
+    "userSubmitted": 0,
+    "shadowDuplicates": [],
+    "claimedShadows": []
+  }
+}
