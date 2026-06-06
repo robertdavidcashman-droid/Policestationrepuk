@@ -19,8 +19,11 @@ import {
   FOOTER_COLUMN_TITLES,
   FOOTER_COMMUNITY,
   FOOTER_DIRECTORIES,
+  FOOTER_FEES_FORMS,
   FOOTER_FOR_REPRESENTATIVES,
+  FOOTER_GUIDES,
   FOOTER_LEGAL,
+  FOOTER_PARTNERS,
   FOOTER_REGULATORY_BODY,
   FOOTER_REGULATORY_TITLE,
   FOOTER_ADVERTISING_DISCLOSURE,
@@ -28,7 +31,6 @@ import {
   FOOTER_SPOTLIGHT_KENT_TITLE,
   FOOTER_SPOTLIGHT_TRAINING_BODY,
   FOOTER_SPOTLIGHT_TRAINING_TITLE,
-  FOOTER_TOOLS,
   WHATSAPP_JOIN_PHONE,
   FOOTER_UTILITY_COOKIE_SETTINGS,
   FOOTER_UTILITY_LINKS_HREF,
@@ -40,35 +42,80 @@ import {
   type FooterLink,
 } from '@/lib/site-navigation';
 
-function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) {
+const footerLinkClassName =
+  'inline-block py-0.5 text-sm leading-snug !text-[var(--footer-link)] no-underline transition-colors hover:!text-[var(--footer-link-hover)]';
+
+function FooterLinkItem({ link }: { link: FooterLink }) {
+  if (link.external) {
+    return (
+      <a href={link.href} target="_blank" rel="noopener noreferrer" className={footerLinkClassName}>
+        {link.label}
+      </a>
+    );
+  }
+  return (
+    <Link href={link.href} className={footerLinkClassName}>
+      {link.label}
+    </Link>
+  );
+}
+
+function FooterColumn({
+  title,
+  links,
+  twoColumns = false,
+}: {
+  title: string;
+  links: FooterLink[];
+  twoColumns?: boolean;
+}) {
   return (
     <div className="min-w-0">
       <h3 className="break-words text-xs font-bold uppercase leading-snug tracking-widest text-[var(--gold)]">
         {title}
       </h3>
-      <ul className="mt-4 space-y-1.5">
+      <ul
+        className={`mt-3 space-y-0.5 ${twoColumns ? 'sm:columns-2 sm:gap-x-6 [&>li]:break-inside-avoid' : ''}`}
+      >
         {links.map((link, i) => (
           <li key={`${link.href}-${link.label}-${i}`}>
+            <FooterLinkItem link={link} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function FooterPartnersColumn({ title, links }: { title: string; links: FooterLink[] }) {
+  return (
+    <div className="min-w-0">
+      <h3 className="break-words text-xs font-bold uppercase leading-snug tracking-widest text-[var(--gold)]">
+        {title}
+      </h3>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {links.map((link, i) => (
+          <span key={`${link.href}-${link.label}-${i}`}>
             {link.external ? (
               <a
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-[44px] items-center py-1 text-sm !text-[var(--footer-link)] no-underline transition-colors hover:!text-[var(--footer-link-hover)]"
+                className="inline-flex items-center rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-medium !text-[var(--footer-link)] no-underline transition-colors hover:border-[var(--gold)]/40 hover:!text-[var(--footer-link-hover)]"
               >
                 {link.label}
               </a>
             ) : (
               <Link
                 href={link.href}
-                className="inline-flex min-h-[44px] items-center py-1 text-sm !text-[var(--footer-link)] no-underline transition-colors hover:!text-[var(--footer-link-hover)]"
+                className="inline-flex items-center rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-medium !text-[var(--footer-link)] no-underline transition-colors hover:border-[var(--gold)]/40 hover:!text-[var(--footer-link-hover)]"
               >
                 {link.label}
               </Link>
             )}
-          </li>
+          </span>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
@@ -149,15 +196,18 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="grid gap-y-10 gap-x-8 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-y-8 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
           <FooterColumn title={FOOTER_COLUMN_TITLES.directories} links={FOOTER_DIRECTORIES} />
           <FooterColumn
             title={FOOTER_COLUMN_TITLES.forRepresentatives}
             links={FOOTER_FOR_REPRESENTATIVES}
+            twoColumns
           />
-          <FooterColumn title={FOOTER_COLUMN_TITLES.tools} links={FOOTER_TOOLS} />
+          <FooterColumn title={FOOTER_COLUMN_TITLES.guides} links={FOOTER_GUIDES} twoColumns />
+          <FooterColumn title={FOOTER_COLUMN_TITLES.feesForms} links={FOOTER_FEES_FORMS} />
           <FooterColumn title={FOOTER_COLUMN_TITLES.community} links={FOOTER_COMMUNITY} />
           <FooterColumn title={FOOTER_COLUMN_TITLES.legal} links={FOOTER_LEGAL} />
+          <FooterPartnersColumn title={FOOTER_COLUMN_TITLES.partners} links={FOOTER_PARTNERS} />
         </div>
 
         {/* Mid-footer spotlight — CustodyNote, Kent agent, WhatsApp, training */}
