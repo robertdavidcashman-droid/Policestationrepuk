@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { queryAssistant } from '@/lib/assistant/match';
+import { queryAssistantWithLlm } from '@/lib/assistant/match';
 import { getClientIp, rateLimitOk } from '@/lib/contact-guards';
 
 const MAX_MESSAGE_LENGTH = 500;
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const result = queryAssistant(message);
+    const result = await queryAssistantWithLlm(message);
     return NextResponse.json(result);
   } catch {
     return NextResponse.json({ error: 'Unable to process your question' }, { status: 500 });

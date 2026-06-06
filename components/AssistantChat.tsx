@@ -133,11 +133,44 @@ export function AssistantChat({ compact = false, className = '' }: AssistantChat
           </div>
         )}
 
-        {!result?.refused && result?.refusalMessage && result.matches.length === 0 && (
+        {!result?.refused && result?.refusalMessage && result.matches.length === 0 && !result.llmAnswer && (
           <p className="text-sm text-[var(--muted)]">{result.refusalMessage}</p>
         )}
 
-        {result?.matches.map(({ entry, score }) => (
+        {result?.llmAnswer && (
+          <article className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--gold)]">Guided answer</p>
+            <div className="mt-2 space-y-2 text-sm leading-relaxed text-[var(--muted)]">
+              {result.llmAnswer.split(/\n\n+/).map((paragraph) => (
+                <p key={paragraph.slice(0, 48)}>{paragraph}</p>
+              ))}
+            </div>
+            {result.sources && result.sources.length > 0 && (
+              <div className="mt-3 border-t border-[var(--border)] pt-3">
+                <p className="text-xs font-semibold text-[var(--navy)]">Based on our published guides</p>
+                <ul className="mt-2 space-y-1">
+                  {result.sources.map(({ entry }) => (
+                    <li key={entry.id}>
+                      {entry.href ? (
+                        <Link
+                          href={entry.href}
+                          className="text-xs font-semibold text-[var(--gold-link)] no-underline hover:underline"
+                        >
+                          {entry.question} →
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-[var(--muted)]">{entry.question}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </article>
+        )}
+
+        {result?.mode === 'faq' &&
+          result.matches.map(({ entry, score }) => (
           <article
             key={entry.id}
             className="rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3 shadow-sm"
@@ -153,13 +186,13 @@ export function AssistantChat({ compact = false, className = '' }: AssistantChat
                 Read more on this topic →
               </Link>
             )}
-            {!compact && (
+            {!compact && result.mode === 'faq' && (
               <p className="mt-2 text-[10px] text-[var(--muted)]">Match confidence: {Math.round(score * 100)}%</p>
             )}
           </article>
         ))}
 
-        {!result?.refused && result && result.matches.length === 0 && result.suggestedLinks.length > 0 && (
+        {!result?.refused && result && result.matches.length === 0 && !result.llmAnswer && result.suggestedLinks.length > 0 && (
           <ul className="flex flex-wrap gap-2">
             {result.suggestedLinks.map((link) => (
               <li key={link.href}>

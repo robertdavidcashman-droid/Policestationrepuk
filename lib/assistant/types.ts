@@ -17,10 +17,18 @@ export type AssistantSuggestedLink = {
   label: string;
 };
 
+export type AssistantResponseMode = 'faq' | 'llm' | 'fallback';
+
 export type AssistantQueryResult = {
   disclaimer: string;
   matches: AssistantMatch[];
   suggestedLinks: AssistantSuggestedLink[];
   refused: boolean;
   refusalMessage?: string;
+  /** How the answer was produced — FAQ matcher, LLM over corpus, or fallback links only. */
+  mode?: AssistantResponseMode;
+  /** Natural-language answer when mode is `llm`. */
+  llmAnswer?: string;
+  /** Corpus entries used as RAG context for an LLM answer. */
+  sources?: AssistantMatch[];
 };
