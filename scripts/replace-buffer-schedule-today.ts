@@ -13,7 +13,11 @@ import {
   getSchedulerTimezone,
 } from '../lib/buffer/config';
 import { runBufferBlogScheduler } from '../lib/buffer/scheduler';
-import { localDateInTimezone, timezoneOffsetForDate } from '../lib/buffer/scheduler-core';
+import {
+  localDateInTimezone,
+  postCooldownKey,
+  timezoneOffsetForDate,
+} from '../lib/buffer/scheduler-core';
 import { deleteSchedulerRunForDate } from '../lib/buffer/scheduler-storage';
 
 function loadEnvFile(filename: string) {
@@ -73,15 +77,30 @@ async function main() {
 
   const deleted: string[] = [];
   const skipped: Array<{ id: string; reason: string }> = [];
+  const extraExcludeKeys = new Set<string>();
 
   for (const post of scheduled) {
     if (!post.allowedActions.includes('deletePost')) {
-      skipped.push({ id: post.id, reason: 'deletePost not allowed' });
+      skipped.push({ id: post.id, reason: `deletePost not allowed (${post.allowedActions.join(', ')})` });
       continue;
     }
     try {
       await deleteBufferPost(apiKey, post.id);
       deleted.push(post.id);
+      const urlMatch = post.text.match(/https?:\/\/[^\s]+/);
+      if (urlMatch) {
+        try {
+          const slug = new URL(urlMatch[0]).pathname.split('/').filter(Boolean).pop();
+          if (slug) {
+            if (urlMatch[0].includes('policestationrepuk.org')) extraExcludeKeys.add(postCooldownKey('policestationrepuk', slug));
+            else if (urlMatch[0].includes('custodynote.com')) extraExcludeKeys.add(postCooldownKey('custodynote', slug));
+            else if (urlMatch[0].includes('policestationagent.com')) extraExcludeKeys.add(postCooldownKey('policestationagent', slug));
+            else if (urlMatch[0].includes('psrtrain.com')) extraExcludeKeys.add(postCooldownKey('psrtrain', slug));
+          }
+        } catch {
+          /* ignore URL parse errors */
+        }
+      }
     } catch (err) {
       skipped.push({
         id: post.id,
@@ -90,10 +109,20 @@ async function main() {
     }
   }
 
+  console.log(`Deleted ${deleted.length} posts; ${skipped.length} skipped.`);
+
   await deleteSchedulerRunForDate(localDate);
   console.log(`Cleared KV run record for ${localDate}.`);
+  console.log(`Excluded ${extraExcludeKeys.size} recently deleted slug(s) from re-pick.`);
 
-  const result = await runBufferBlogScheduler(now);
+  if (deleted.length > 0) {
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+  }
+
+  const result = await runBufferBlogScheduler(now, {
+    respectCurrentTime: true,
+    extraExcludeKeys,
+  });
 
   const postsWithImages = result.posts?.filter((p) => p.imageUrl).length ?? 0;
   const feedCounts: Record<string, number> = {};

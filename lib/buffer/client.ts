@@ -196,8 +196,8 @@ export async function listScheduledBufferPosts(
       };
     }>(
       apiKey,
-      `query ListScheduledPosts($organizationId: OrganizationId!, $input: PostsInput!, $first: Int!, $after: String) {
-        posts(organizationId: $organizationId, input: $input, first: $first, after: $after) {
+      `query ListScheduledPosts($input: PostsInput!, $first: Int!, $after: String) {
+        posts(input: $input, first: $first, after: $after) {
           edges {
             node {
               id
@@ -218,13 +218,15 @@ export async function listScheduledBufferPosts(
         }
       }`,
       {
-        organizationId,
         first: 100,
         after,
         input: {
-          status: ['scheduled'],
-          dueAt: { start: input.dueAtStart, end: input.dueAtEnd },
-          ...(input.channelIds?.length ? { channelIds: input.channelIds } : {}),
+          organizationId,
+          filter: {
+            status: ['scheduled'],
+            dueAt: { start: input.dueAtStart, end: input.dueAtEnd },
+            ...(input.channelIds?.length ? { channelIds: input.channelIds } : {}),
+          },
         },
       },
     );
@@ -251,27 +253,26 @@ export async function listScheduledBufferPosts(
 export async function deleteBufferPost(apiKey: string, postId: string): Promise<void> {
   const data = await bufferGraphql<{
     deletePost:
-      | { __typename: 'PostActionSuccess'; post: { id: string } }
+      | { __typename: 'DeletePostSuccess'; id: string }
       | BufferMutationError;
   }>(
     apiKey,
     `mutation DeletePost($input: DeletePostInput!) {
       deletePost(input: $input) {
         __typename
-        ... on PostActionSuccess {
-          post { id }
+        ... on DeletePostSuccess {
+          id
         }
-        ... on InvalidInputError { message }
-        ... on UnauthorizedError { message }
-        ... on UnexpectedError { message }
-        ... on NotFoundError { message }
+        ... on VoidMutationError {
+          message
+        }
       }
     }`,
-    { input: { postId } },
+    { input: { id: postId } },
   );
 
   const result = data.deletePost;
-  if (result.__typename !== 'PostActionSuccess') {
+  if (result.__typename !== 'DeletePostSuccess') {
     const message = 'message' in result ? result.message : result.__typename;
     throw new BufferApiError(`deletePost failed: ${message}`, result);
   }

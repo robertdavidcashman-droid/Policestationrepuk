@@ -273,6 +273,37 @@ export function generateDayNightPostTimes(
   return [...dayTimes, ...nightTimes].sort();
 }
 
+/** Ensure exactly `count` schedule times, topping up from fallback windows when day slots are tight. */
+export function ensurePostTimeCount(
+  localDate: string,
+  initial: string[],
+  count: number,
+  fallbackWindows: Array<{
+    date?: string;
+    startHour: number;
+    endHour: number;
+    minGapMinutes: number;
+  }>,
+  random: RandomFn,
+  timeZone = 'Europe/London',
+): string[] {
+  const out = [...initial];
+  for (const window of fallbackWindows) {
+    if (out.length >= count) break;
+    const need = count - out.length;
+    try {
+      const extra = generateRandomPostTimes(window.date ?? localDate, need, window, random, timeZone);
+      for (const slot of extra) {
+        if (out.length >= count) break;
+        if (!out.includes(slot)) out.push(slot);
+      }
+    } catch {
+      /* skip invalid window */
+    }
+  }
+  return out.sort().slice(0, count);
+}
+
 export function localDateInTimezone(date: Date, timeZone: string): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone,

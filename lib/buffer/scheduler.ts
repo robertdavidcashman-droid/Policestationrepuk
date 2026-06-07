@@ -19,6 +19,8 @@ import {
   mulberry32,
   pickRandomSchedulablePosts,
   slugsInCooldown,
+  ensurePostTimeCount,
+  addDaysToLocalDate,
   type RecentSlugEntry,
 } from './scheduler-core';
 import type { SchedulablePost } from './content-types';
@@ -53,7 +55,10 @@ function formatFeedLoadErrors(
   return errors.map((e) => `${e.feedId}${e.url ? ` (${e.url})` : ''}: ${e.message}`).join('; ');
 }
 
-export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSchedulerResult> {
+export async function runBufferBlogScheduler(
+  now = new Date(),
+  options?: { respectCurrentTime?: boolean; extraExcludeKeys?: Set<string> },
+): Promise<BufferSchedulerResult> {
   const apiKey = getBufferApiKey();
   if (!apiKey) {
     return { ok: false, reason: 'BUFFER_API_KEY is not configured' };
@@ -99,6 +104,11 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
 
   const recentEntries = await getRecentSlugEntries();
   const excludeKeys = slugsInCooldown(recentEntries, cooldownDays, now);
+  if (options?.extraExcludeKeys) {
+    for (const key of options.extraExcludeKeys) {
+      excludeKeys.add(key);
+    }
+  }
 
   const { posts: feedPosts, errors: feedErrors } = await loadAllFeedPosts();
   if (feedErrors.length > 0) {
@@ -111,6 +121,24 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
 
   const rng = mulberry32(hashSeed(`buffer-scheduler:${localDate}`));
   const channelOrder = shuffleChannelsRepeated(channels, totalPosts, rng);
+
+  let dayWindow = getSchedulerDayWindow();
+  if (options?.respectCurrentTime) {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: timezone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(now);
+    const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? '0');
+    const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? '0');
+    const nowSlotHour = minute > 0 ? hour + 1 : hour;
+    dayWindow = {
+      ...dayWindow,
+      startHour: Math.min(Math.max(dayWindow.startHour, nowSlotHour), dayWindow.endHour),
+      minGapMinutes: Math.min(dayWindow.minGapMinutes, 45),
+    };
+  }
 
   const toSchedule: Array<{ post: SchedulablePost; dueAt: string; channelIndex: number }> = [];
   let channelIndex = 0;
@@ -136,18 +164,42 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
       );
     }
 
-    const dueAts = generateDayNightPostTimes(
+    let dueAts = generateDayNightPostTimes(
       localDate,
       {
         dayCount: schedule.dayPosts,
         nightCount: schedule.nightPosts,
-        dayWindow: getSchedulerDayWindow(),
+        dayWindow,
         nightWindow: getSchedulerNightWindow(),
         earlyMorningWindow: getSchedulerEarlyMorningWindow(),
       },
       feedRng,
       timezone,
     );
+
+    if (dueAts.length < picked.length) {
+      const nightWindow = getSchedulerNightWindow();
+      const earlyWindow = getSchedulerEarlyMorningWindow();
+      dueAts = ensurePostTimeCount(
+        localDate,
+        dueAts,
+        picked.length,
+        [
+          nightWindow,
+          { ...earlyWindow, date: addDaysToLocalDate(localDate, 1) },
+        ],
+        feedRng,
+        timezone,
+      );
+    }
+
+    if (dueAts.length < picked.length) {
+      return {
+        ok: false,
+        reason: `Feed "${feed.id}": could not allocate ${picked.length} schedule times (got ${dueAts.length})`,
+        date: localDate,
+      };
+    }
 
     for (let i = 0; i < picked.length; i++) {
       toSchedule.push({
@@ -182,7 +234,7 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
       const channel = channelOrder[item.channelIndex % channelOrder.length]!;
       const text = buildSchedulablePostTextForService(item.post, channel.service);
 
-      const post = await createScheduledBufferPost(apiKey, {
+      const post = await createScheduledBufferPostWithRetry(apiKey, {
         channelId: channel.id,
         channelService: channel.service,
         text,
@@ -244,6 +296,34 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
 
 function poolTooSmall(pool: SchedulablePost[], required: number): boolean {
   return pool.length < required;
+}
+
+async function createScheduledBufferPostWithRetry(
+  apiKey: string,
+  input: Parameters<typeof createScheduledBufferPost>[1],
+  maxAttempts = 5,
+): Promise<Awaited<ReturnType<typeof createScheduledBufferPost>>> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      if (attempt > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
+      } else if (attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+      }
+      return await createScheduledBufferPost(apiKey, input);
+    } catch (err) {
+      lastError = err;
+      const message = err instanceof Error ? err.message : '';
+      const retryable =
+        /too many requests/i.test(message) ||
+        /posted that one recently/i.test(message);
+      if (!retryable || attempt === maxAttempts - 1) {
+        throw err;
+      }
+    }
+  }
+  throw lastError;
 }
 
 function shuffleChannelsRepeated<T>(items: T[], count: number, random: () => number): T[] {
