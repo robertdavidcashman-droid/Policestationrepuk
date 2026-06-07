@@ -229,40 +229,38 @@ export function generateDayNightPostTimes(
   random: RandomFn,
   timeZone = 'Europe/London',
 ): string[] {
-  const dayTimes = generateRandomPostTimes(
-    localDate,
-    options.dayCount,
-    options.dayWindow,
-    random,
-    timeZone,
-  );
+  const dayWindowValid = options.dayWindow.startHour < options.dayWindow.endHour;
+  const dayTimes =
+    options.dayCount > 0 && dayWindowValid
+      ? generateRandomPostTimes(localDate, options.dayCount, options.dayWindow, random, timeZone)
+      : [];
 
   const nightTimes: string[] = [];
-  if (options.nightCount <= 0) {
+  const nightWindowValid = options.nightWindow.startHour < options.nightWindow.endHour;
+  const extraDaySlots = dayWindowValid ? 0 : options.dayCount;
+  const totalNightSlots = options.nightCount + extraDaySlots;
+
+  if (totalNightSlots <= 0) {
     return [...dayTimes].sort();
   }
 
-  const eveningCount = options.nightCount >= 2 ? 1 : options.nightCount;
-  const earlyCount = options.nightCount - eveningCount;
+  const eveningCount = totalNightSlots >= 2 ? Math.min(1, totalNightSlots) : totalNightSlots;
+  const earlyCount = totalNightSlots - eveningCount;
 
-  if (eveningCount > 0) {
+  if (eveningCount > 0 && nightWindowValid) {
     nightTimes.push(
-      ...generateRandomPostTimes(
-        localDate,
-        eveningCount,
-        options.nightWindow,
-        random,
-        timeZone,
-      ),
+      ...generateRandomPostTimes(localDate, eveningCount, options.nightWindow, random, timeZone),
     );
   }
 
-  if (earlyCount > 0) {
+  const earlyMorningValid = options.earlyMorningWindow.startHour < options.earlyMorningWindow.endHour;
+  const needEarly = earlyCount + (eveningCount > 0 && !nightWindowValid ? eveningCount : 0);
+  if (needEarly > 0 && earlyMorningValid) {
     const nextDate = addDaysToLocalDate(localDate, 1);
     nightTimes.push(
       ...generateRandomPostTimes(
         nextDate,
-        earlyCount,
+        needEarly,
         options.earlyMorningWindow,
         random,
         timeZone,

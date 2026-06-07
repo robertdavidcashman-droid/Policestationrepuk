@@ -18,6 +18,7 @@ import {
   localDateInTimezone,
   mulberry32,
   pickRandomSchedulablePosts,
+  postCooldownKey,
   slugsInCooldown,
   ensurePostTimeCount,
   addDaysToLocalDate,
@@ -123,6 +124,7 @@ export async function runBufferBlogScheduler(
   const channelOrder = shuffleChannelsRepeated(channels, totalPosts, rng);
 
   let dayWindow = getSchedulerDayWindow();
+  let nightWindow = getSchedulerNightWindow();
   if (options?.respectCurrentTime) {
     const parts = new Intl.DateTimeFormat('en-GB', {
       timeZone: timezone,
@@ -137,6 +139,11 @@ export async function runBufferBlogScheduler(
       ...dayWindow,
       startHour: Math.min(Math.max(dayWindow.startHour, nowSlotHour), dayWindow.endHour),
       minGapMinutes: Math.min(dayWindow.minGapMinutes, 45),
+    };
+    nightWindow = {
+      ...nightWindow,
+      startHour: Math.min(Math.max(nightWindow.startHour, nowSlotHour), nightWindow.endHour),
+      minGapMinutes: Math.min(nightWindow.minGapMinutes, 45),
     };
   }
 
@@ -170,7 +177,7 @@ export async function runBufferBlogScheduler(
         dayCount: schedule.dayPosts,
         nightCount: schedule.nightPosts,
         dayWindow,
-        nightWindow: getSchedulerNightWindow(),
+        nightWindow,
         earlyMorningWindow: getSchedulerEarlyMorningWindow(),
       },
       feedRng,
@@ -178,7 +185,6 @@ export async function runBufferBlogScheduler(
     );
 
     if (dueAts.length < picked.length) {
-      const nightWindow = getSchedulerNightWindow();
       const earlyWindow = getSchedulerEarlyMorningWindow();
       dueAts = ensurePostTimeCount(
         localDate,
@@ -228,36 +234,64 @@ export async function runBufferBlogScheduler(
 
   const created: BufferSchedulerResult['posts'] = [];
   const newRecent: RecentSlugEntry[] = [];
+  const usedPostKeys = new Set<string>();
 
   try {
     for (const item of toSchedule) {
       const channel = channelOrder[item.channelIndex % channelOrder.length]!;
-      const text = buildSchedulablePostTextForService(item.post, channel.service);
+      let post = item.post;
+      let createdPost: Awaited<ReturnType<typeof createScheduledBufferPost>> | null = null;
 
-      const post = await createScheduledBufferPostWithRetry(apiKey, {
-        channelId: channel.id,
-        channelService: channel.service,
-        text,
-        dueAt: item.dueAt,
-        url: item.post.url,
-        imageUrl: item.post.imageUrl,
-        imageAlt: item.post.imageAlt,
-      });
+      for (let attempt = 0; attempt < 12; attempt++) {
+        const text = buildSchedulablePostTextForService(post, channel.service);
+        try {
+          createdPost = await createScheduledBufferPostWithRetry(apiKey, {
+            channelId: channel.id,
+            channelService: channel.service,
+            text,
+            dueAt: item.dueAt,
+            url: post.url,
+            imageUrl: post.imageUrl,
+            imageAlt: post.imageAlt,
+          });
+          break;
+        } catch (err) {
+          const message = err instanceof Error ? err.message : '';
+          if (!/posted that one recently/i.test(message) || attempt >= 11) {
+            throw err;
+          }
+          usedPostKeys.add(postCooldownKey(post.feedId, post.slug));
+          const pool = feedPosts.get(post.feedId) ?? [];
+          const alternate = pool.find(
+            (candidate) =>
+              !usedPostKeys.has(postCooldownKey(candidate.feedId, candidate.slug)) &&
+              !excludeKeys.has(postCooldownKey(candidate.feedId, candidate.slug)),
+          );
+          if (!alternate) throw err;
+          post = alternate;
+        }
+      }
+
+      if (!createdPost) {
+        throw new Error('Failed to schedule post after alternate attempts');
+      }
+
+      usedPostKeys.add(postCooldownKey(post.feedId, post.slug));
 
       created.push({
-        postId: post.id,
-        slug: item.post.slug,
-        feedId: item.post.feedId,
+        postId: createdPost.id,
+        slug: post.slug,
+        feedId: post.feedId,
         channelId: channel.id,
-        channelService: post.channelService,
-        dueAt: post.dueAt,
-        title: item.post.title,
-        imageUrl: item.post.imageUrl,
+        channelService: createdPost.channelService,
+        dueAt: createdPost.dueAt,
+        title: post.title,
+        imageUrl: post.imageUrl,
       });
 
       newRecent.push({
-        slug: item.post.slug,
-        feedId: item.post.feedId,
+        slug: post.slug,
+        feedId: post.feedId,
         scheduledAt: now.toISOString(),
       });
     }
@@ -315,9 +349,7 @@ async function createScheduledBufferPostWithRetry(
     } catch (err) {
       lastError = err;
       const message = err instanceof Error ? err.message : '';
-      const retryable =
-        /too many requests/i.test(message) ||
-        /posted that one recently/i.test(message);
+      const retryable = /too many requests/i.test(message);
       if (!retryable || attempt === maxAttempts - 1) {
         throw err;
       }
