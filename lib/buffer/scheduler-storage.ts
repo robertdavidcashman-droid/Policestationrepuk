@@ -26,6 +26,12 @@ export async function saveSchedulerRun(record: SchedulerRunRecord): Promise<void
   await kv.set(`${RUN_KEY_PREFIX}${record.date}`, record, { ex: 60 * 60 * 24 * 45 });
 }
 
+export async function deleteSchedulerRunForDate(date: string): Promise<void> {
+  const kv = getKV();
+  if (!kv) return;
+  await kv.del(`${RUN_KEY_PREFIX}${date}`);
+}
+
 export async function getRecentSlugEntries(): Promise<RecentSlugEntry[]> {
   const kv = getKV();
   if (!kv) return [];

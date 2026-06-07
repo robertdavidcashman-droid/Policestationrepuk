@@ -5,6 +5,7 @@ export interface RssItem {
   link: string;
   description: string;
   guid: string;
+  imageUrl?: string;
 }
 
 function decodeXmlEntities(text: string): string {
@@ -26,6 +27,56 @@ function tagValue(block: string, tag: string): string {
   return m ? decodeXmlEntities(m[1] ?? '') : '';
 }
 
+function attrValue(tag: string, attr: string): string {
+  const re = new RegExp(`${attr}\\s*=\\s*["']([^"']+)["']`, 'i');
+  const m = tag.match(re);
+  return m ? decodeXmlEntities(m[1] ?? '') : '';
+}
+
+/** Resolve a relative or protocol-relative URL against a link base. */
+export function resolveAbsoluteUrl(linkBase: string, url: string | undefined | null): string | undefined {
+  if (!url?.trim()) return undefined;
+  const trimmed = url.trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+  if (trimmed.startsWith('//')) return `https:${trimmed}`;
+  try {
+    return new URL(trimmed, linkBase).href;
+  } catch {
+    return undefined;
+  }
+}
+
+function extractImageUrl(block: string, linkBase: string): string | undefined {
+  const enclosureMatch = block.match(/<enclosure\b[^>]*\/?>/i);
+  if (enclosureMatch) {
+    const tag = enclosureMatch[0] ?? '';
+    const type = attrValue(tag, 'type');
+    const url = attrValue(tag, 'url');
+    if (url && (!type || type.startsWith('image/'))) {
+      return resolveAbsoluteUrl(linkBase, url);
+    }
+  }
+
+  const mediaContentMatch = block.match(/<media:content\b[^>]*\/?>/i);
+  if (mediaContentMatch) {
+    const tag = mediaContentMatch[0] ?? '';
+    const medium = attrValue(tag, 'medium');
+    const type = attrValue(tag, 'type');
+    const url = attrValue(tag, 'url');
+    if (url && (medium === 'image' || type.startsWith('image/'))) {
+      return resolveAbsoluteUrl(linkBase, url);
+    }
+  }
+
+  const mediaThumbMatch = block.match(/<media:thumbnail\b[^>]*\/?>/i);
+  if (mediaThumbMatch) {
+    const url = attrValue(mediaThumbMatch[0] ?? '', 'url');
+    if (url) return resolveAbsoluteUrl(linkBase, url);
+  }
+
+  return undefined;
+}
+
 /** Extract <item> entries from RSS/XML feed text. */
 export function parseRssItems(xml: string): RssItem[] {
   const items: RssItem[] = [];
@@ -38,7 +89,13 @@ export function parseRssItems(xml: string): RssItem[] {
     const description = tagValue(block, 'description');
     const guid = tagValue(block, 'guid') || link;
     if (title && link) {
-      items.push({ title, link, description, guid });
+      items.push({
+        title,
+        link,
+        description,
+        guid,
+        imageUrl: extractImageUrl(block, link),
+      });
     }
   }
   return items;

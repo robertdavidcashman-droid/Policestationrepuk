@@ -39,6 +39,48 @@ describe('buffer client', () => {
     expect(body.variables.input.mode).toBe('customScheduled');
     expect(body.variables.input.schedulingType).toBe('automatic');
     expect(body.variables.input.metadata).toBeUndefined();
+    expect(body.variables.input.assets).toEqual([]);
+  });
+
+  it('sends image assets when imageUrl is provided', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: {
+          createPost: {
+            __typename: 'PostActionSuccess',
+            post: {
+              id: 'post-image',
+              dueAt: '2026-06-08T10:00:00.000Z',
+              channelId: 'li-id',
+              channelService: 'linkedin',
+            },
+          },
+        },
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await createScheduledBufferPost('api-key', {
+      channelId: 'li-id',
+      channelService: 'linkedin',
+      text: 'Title\n\nhttps://example.com/post',
+      dueAt: '2026-06-08T11:00:00+01:00',
+      url: 'https://example.com/post',
+      imageUrl: 'https://example.com/hero.webp',
+      imageAlt: 'Hero alt',
+    });
+
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+    expect(body.variables.input.assets).toEqual([
+      {
+        image: {
+          url: 'https://example.com/hero.webp',
+          metadata: { altText: 'Hero alt' },
+        },
+      },
+    ]);
   });
 
   it('adds google business whats_new metadata', async () => {

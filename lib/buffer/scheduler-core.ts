@@ -1,4 +1,5 @@
 import type { BlogArticle } from '@/lib/blog/types';
+import type { BufferChannelService } from './config';
 import type { SchedulablePost } from './content-types';
 
 export type RandomFn = () => number;
@@ -44,6 +45,33 @@ export function buildSchedulablePostText(post: SchedulablePost): string {
     return `${post.title}\n\n${excerpt}\n\n${post.url}`;
   }
   return `${post.title}\n\n${post.url}`;
+}
+
+const TWITTER_MAX_CHARS = 280;
+
+/** Twitter/X posts must stay within 280 characters — title + URL only when needed. */
+export function buildSchedulablePostTextForService(
+  post: SchedulablePost,
+  service: BufferChannelService,
+): string {
+  const full = buildSchedulablePostText(post);
+  if (service !== 'twitter' || full.length <= TWITTER_MAX_CHARS) {
+    return full;
+  }
+
+  const suffix = `\n\n${post.url}`;
+  const budget = TWITTER_MAX_CHARS - suffix.length;
+  if (budget <= 0) {
+    return post.url.slice(0, TWITTER_MAX_CHARS);
+  }
+
+  const title = post.title.trim();
+  if (title.length <= budget) {
+    return `${title}${suffix}`;
+  }
+
+  const trimmedTitle = title.slice(0, Math.max(1, budget - 1)).trimEnd();
+  return `${trimmedTitle}…${suffix}`;
 }
 
 export function postCooldownKey(feedId: string, slug: string): string {

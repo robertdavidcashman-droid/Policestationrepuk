@@ -8,6 +8,7 @@ const mockSaveRun = vi.fn();
 const mockGetRecent = vi.fn();
 const mockSaveRecent = vi.fn();
 const mockLoadAll = vi.fn();
+const mockGetContentFeeds = vi.fn();
 
 vi.mock('@/lib/buffer/client', () => ({
   createScheduledBufferPost: (...args: unknown[]) => mockCreate(...args),
@@ -21,10 +22,7 @@ vi.mock('@/lib/buffer/scheduler-storage', () => ({
 }));
 
 vi.mock('@/lib/buffer/feeds', () => ({
-  getContentFeeds: () => [
-    { id: 'policestationrepuk', type: 'local' },
-    { id: 'custodynote', type: 'rss', url: 'https://custodynote.com/feed' },
-  ],
+  getContentFeeds: () => mockGetContentFeeds(),
   loadAllFeedPosts: (...args: unknown[]) => mockLoadAll(...args),
 }));
 
@@ -37,6 +35,8 @@ function makePosts(feedId: string, count: number): SchedulablePost[] {
     title: `${feedId} title ${i + 1}`,
     excerpt: 'Excerpt',
     url: `https://example.com/${feedId}/${i + 1}`,
+    imageUrl: `https://example.com/${feedId}/${i + 1}.webp`,
+    imageAlt: `${feedId} title ${i + 1}`,
   }));
 }
 
@@ -53,12 +53,17 @@ describe('runBufferBlogScheduler integration', () => {
     };
     mockGetRun.mockResolvedValue(null);
     mockGetRecent.mockResolvedValue([]);
-    mockLoadAll.mockResolvedValue(
-      new Map([
+    mockGetContentFeeds.mockReturnValue([
+      { id: 'policestationrepuk', type: 'local' },
+      { id: 'custodynote', type: 'rss', url: 'https://custodynote.com/feed' },
+    ]);
+    mockLoadAll.mockResolvedValue({
+      posts: new Map([
         ['policestationrepuk', makePosts('policestationrepuk', 8)],
         ['custodynote', makePosts('custodynote', 8)],
       ]),
-    );
+      errors: [],
+    });
     mockCreate.mockImplementation(async (_key, input) => ({
       id: `post-${input.channelService}-${input.dueAt}`,
       dueAt: input.dueAt,
@@ -95,7 +100,7 @@ describe('runBufferBlogScheduler integration', () => {
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
-  it('schedules 5 posts per feed with day and night times', async () => {
+  it('schedules posts per feed with day and night times', async () => {
     const result = await runBufferBlogScheduler(new Date('2026-06-08T05:00:00Z'));
 
     expect(result.ok).toBe(true);
@@ -107,14 +112,63 @@ describe('runBufferBlogScheduler integration', () => {
     expect(feedIds.filter((id) => id === 'custodynote')).toHaveLength(5);
 
     for (const call of mockCreate.mock.calls) {
-      const input = call[1] as { text: string; dueAt: string };
+      const input = call[1] as { text: string; dueAt: string; imageUrl?: string };
       expect(input.dueAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00[+-]\d{2}:\d{2}$/);
       expect(input.text).toContain('https://example.com/');
+      expect(input.imageUrl).toMatch(/^https:\/\/example.com\//);
     }
 
     expect(mockSaveRun).toHaveBeenCalledOnce();
     const savedRun = mockSaveRun.mock.calls[0]?.[0];
     expect(savedRun.feedIds).toHaveLength(10);
+  });
+
+  it('schedules 6 posts for psrtrain when feed uses 4 day + 2 night', async () => {
+    mockGetContentFeeds.mockReturnValue([
+      {
+        id: 'psrtrain',
+        type: 'rss',
+        url: 'https://psrtrain.com/feed',
+        postsPerDay: 6,
+        dayPosts: 4,
+        nightPosts: 2,
+      },
+    ]);
+    mockLoadAll.mockResolvedValue({
+      posts: new Map([['psrtrain', makePosts('psrtrain', 10)]]),
+      errors: [],
+    });
+
+    const result = await runBufferBlogScheduler(new Date('2026-06-08T05:00:00Z'));
+    expect(result.ok).toBe(true);
+    expect(result.posts).toHaveLength(6);
+    expect(result.posts!.every((p) => p.feedId === 'psrtrain')).toBe(true);
+
+    const daySlots = result.posts!.filter((p) => {
+      const h = Number(p.dueAt?.match(/T(\d{2}):/)?.[1]);
+      return h >= 8 && h <= 21;
+    });
+    const nightSlots = result.posts!.filter((p) => {
+      const h = Number(p.dueAt?.match(/T(\d{2}):/)?.[1]);
+      return h >= 21 || h <= 7;
+    });
+    expect(daySlots.length).toBeGreaterThanOrEqual(4);
+    expect(nightSlots.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('returns error when a feed fails to load', async () => {
+    mockLoadAll.mockResolvedValue({
+      posts: new Map([
+        ['policestationrepuk', makePosts('policestationrepuk', 8)],
+        ['custodynote', []],
+      ]),
+      errors: [{ feedId: 'custodynote', url: 'https://custodynote.com/feed', message: 'HTTP 503' }],
+    });
+
+    const result = await runBufferBlogScheduler(new Date('2026-06-08T05:00:00Z'));
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/custodynote/);
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 
   it('respects cooldown per feed and slug', async () => {

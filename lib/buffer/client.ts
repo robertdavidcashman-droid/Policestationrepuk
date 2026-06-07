@@ -1,4 +1,5 @@
 import type { BufferChannelService } from './config';
+import { buildBufferImageAssets } from './assets';
 
 const BUFFER_API_URL = 'https://api.buffer.com';
 
@@ -59,6 +60,16 @@ export interface CreatedBufferPost {
   channelService: string;
 }
 
+export interface BufferScheduledPostSummary {
+  id: string;
+  dueAt: string | null;
+  channelId: string;
+  channelService: string;
+  text: string;
+  allowedActions: string[];
+  hasImage: boolean;
+}
+
 function postMetadataForService(
   service: BufferChannelService,
   url: string,
@@ -85,9 +96,16 @@ export async function createScheduledBufferPost(
     text: string;
     dueAt: string;
     url: string;
+    imageUrl?: string;
+    imageAlt?: string;
   },
 ): Promise<CreatedBufferPost> {
   const metadata = postMetadataForService(input.channelService, input.url);
+  const assets = buildBufferImageAssets({
+    imageUrl: input.imageUrl,
+    imageAlt: input.imageAlt,
+    title: input.text.split('\n')[0] ?? input.text,
+  });
 
   const data = await bufferGraphql<{
     createPost:
@@ -133,7 +151,7 @@ export async function createScheduledBufferPost(
         mode: 'customScheduled',
         dueAt: input.dueAt,
         text: input.text,
-        assets: [],
+        assets,
         ...(metadata ? { metadata } : {}),
       },
     },
@@ -146,4 +164,115 @@ export async function createScheduledBufferPost(
   }
 
   return result.post;
+}
+
+export async function listScheduledBufferPosts(
+  apiKey: string,
+  organizationId: string,
+  input: {
+    dueAtStart: string;
+    dueAtEnd: string;
+    channelIds?: string[];
+  },
+): Promise<BufferScheduledPostSummary[]> {
+  const posts: BufferScheduledPostSummary[] = [];
+  let after: string | undefined;
+
+  do {
+    const data = await bufferGraphql<{
+      posts: {
+        edges: Array<{
+          node: {
+            id: string;
+            dueAt: string | null;
+            channelId: string;
+            channelService: string;
+            text: string;
+            allowedActions: string[];
+            assets: Array<{ __typename?: string }>;
+          };
+        }>;
+        pageInfo: { hasNextPage: boolean; endCursor: string | null };
+      };
+    }>(
+      apiKey,
+      `query ListScheduledPosts($organizationId: OrganizationId!, $input: PostsInput!, $first: Int!, $after: String) {
+        posts(organizationId: $organizationId, input: $input, first: $first, after: $after) {
+          edges {
+            node {
+              id
+              dueAt
+              channelId
+              channelService
+              text
+              allowedActions
+              assets {
+                __typename
+              }
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }`,
+      {
+        organizationId,
+        first: 100,
+        after,
+        input: {
+          status: ['scheduled'],
+          dueAt: { start: input.dueAtStart, end: input.dueAtEnd },
+          ...(input.channelIds?.length ? { channelIds: input.channelIds } : {}),
+        },
+      },
+    );
+
+    for (const edge of data.posts.edges) {
+      const node = edge.node;
+      posts.push({
+        id: node.id,
+        dueAt: node.dueAt,
+        channelId: node.channelId,
+        channelService: node.channelService,
+        text: node.text,
+        allowedActions: node.allowedActions ?? [],
+        hasImage: (node.assets?.length ?? 0) > 0,
+      });
+    }
+
+    after = data.posts.pageInfo.hasNextPage ? (data.posts.pageInfo.endCursor ?? undefined) : undefined;
+  } while (after);
+
+  return posts;
+}
+
+export async function deleteBufferPost(apiKey: string, postId: string): Promise<void> {
+  const data = await bufferGraphql<{
+    deletePost:
+      | { __typename: 'PostActionSuccess'; post: { id: string } }
+      | BufferMutationError;
+  }>(
+    apiKey,
+    `mutation DeletePost($input: DeletePostInput!) {
+      deletePost(input: $input) {
+        __typename
+        ... on PostActionSuccess {
+          post { id }
+        }
+        ... on InvalidInputError { message }
+        ... on UnauthorizedError { message }
+        ... on UnexpectedError { message }
+        ... on NotFoundError { message }
+      }
+    }`,
+    { input: { postId } },
+  );
+
+  const result = data.deletePost;
+  if (result.__typename !== 'PostActionSuccess') {
+    const message = 'message' in result ? result.message : result.__typename;
+    throw new BufferApiError(`deletePost failed: ${message}`, result);
+  }
 }

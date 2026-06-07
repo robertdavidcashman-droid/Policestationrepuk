@@ -111,3 +111,42 @@ export function getSchedulerEarlyMorningWindow(): SchedulerTimeWindow {
     minGapMinutes: Number.isFinite(minGapMinutes) ? minGapMinutes : 60,
   };
 }
+
+export interface FeedSchedule {
+  postsPerFeed: number;
+  dayPosts: number;
+  nightPosts: number;
+}
+
+function clampPostsPerFeed(n: number): number {
+  return Number.isFinite(n) && n > 0 ? Math.min(Math.floor(n), 15) : 5;
+}
+
+/** Per-feed schedule — scales default day/night ratio when only postsPerDay is set. */
+export function resolveFeedSchedule(feed: {
+  postsPerDay?: number;
+  dayPosts?: number;
+  nightPosts?: number;
+}): FeedSchedule {
+  const defaultPosts = getSchedulerPostsPerFeed();
+  const defaultDay = getSchedulerDayPosts();
+  const defaultNight = getSchedulerNightPosts();
+  const postsPerFeed = clampPostsPerFeed(feed.postsPerDay ?? defaultPosts);
+
+  if (feed.dayPosts != null && feed.nightPosts != null) {
+    return {
+      postsPerFeed,
+      dayPosts: feed.dayPosts,
+      nightPosts: feed.nightPosts,
+    };
+  }
+
+  const totalDefault = defaultDay + defaultNight;
+  const dayPosts =
+    totalDefault > 0
+      ? Math.round((postsPerFeed * defaultDay) / totalDefault)
+      : postsPerFeed;
+  const nightPosts = postsPerFeed - dayPosts;
+
+  return { postsPerFeed, dayPosts, nightPosts };
+}

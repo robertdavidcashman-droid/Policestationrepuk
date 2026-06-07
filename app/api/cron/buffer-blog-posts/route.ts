@@ -9,8 +9,9 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 /**
- * Daily Buffer blog scheduler — picks 3 random policestationrepuk.org blog posts
- * and schedules them at random times today (Europe/London by default).
+ * Daily Buffer blog scheduler — schedules posts from all configured content feeds
+ * (policestationrepuk, custodynote, policestationagent, psrtrain by default) with
+ * hero images at random day/night times (Europe/London by default).
  *
  * Auth: Bearer ${CRON_SECRET} (Vercel Cron) or x-cron-secret in development.
  */

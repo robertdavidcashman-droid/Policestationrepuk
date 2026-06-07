@@ -2,25 +2,74 @@ import { getAllBlogArticles } from '@/lib/blog/registry';
 import { CUSTODYNOTE_SITE } from '@/lib/custodynote-promo';
 import { POLICESTATIONAGENT_SITE } from '@/lib/policestationagent-promo';
 import { SITE_URL } from '@/lib/seo-layer/config';
+import { resolveAbsoluteImageUrl } from './assets';
 import type { ContentFeedSource, SchedulablePost } from './content-types';
 import { parseRssItems, slugFromUrl } from './rss';
 
 export type FeedFetcher = (url: string) => Promise<string>;
 
+export interface FeedLoadError {
+  feedId: string;
+  url?: string;
+  message: string;
+}
+
+export interface LoadAllFeedPostsResult {
+  posts: Map<string, SchedulablePost[]>;
+  errors: FeedLoadError[];
+}
+
+const EXPECTED_FEED_IDS = ['policestationrepuk', 'custodynote', 'policestationagent', 'psrtrain'] as const;
+
 const DEFAULT_FEEDS: ContentFeedSource[] = [
   { id: 'policestationrepuk', type: 'local' },
   { id: 'custodynote', type: 'rss', url: `${CUSTODYNOTE_SITE}/feed` },
   { id: 'policestationagent', type: 'rss', url: `${POLICESTATIONAGENT_SITE}/feed.xml` },
+  {
+    id: 'psrtrain',
+    type: 'rss',
+    url: 'https://psrtrain.com/feed',
+    postsPerDay: 6,
+    dayPosts: 4,
+    nightPosts: 2,
+  },
 ];
+
+function isContentFeedSource(value: unknown): value is ContentFeedSource {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  if (typeof v.id !== 'string' || !v.id.trim()) return false;
+  if (v.type === 'local') return true;
+  if (v.type === 'rss' && typeof v.url === 'string' && v.url.trim()) return true;
+  return false;
+}
+
+/** Validate parsed feed config — logs warnings when override drops expected feeds. */
+export function validateContentFeeds(feeds: ContentFeedSource[]): ContentFeedSource[] {
+  const valid = feeds.filter(isContentFeedSource);
+  if (valid.length === 0) return DEFAULT_FEEDS;
+
+  const ids = new Set(valid.map((f) => f.id));
+  const missing = EXPECTED_FEED_IDS.filter((id) => !ids.has(id));
+  if (missing.length > 0) {
+    console.warn(
+      `[buffer:feeds] BUFFER_CONTENT_FEEDS is missing expected feed IDs: ${missing.join(', ')}`,
+    );
+  }
+
+  return valid;
+}
 
 export function getContentFeeds(): ContentFeedSource[] {
   const raw = process.env.BUFFER_CONTENT_FEEDS?.trim();
   if (!raw) return DEFAULT_FEEDS;
   try {
-    const parsed = JSON.parse(raw) as ContentFeedSource[];
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return validateContentFeeds(parsed as ContentFeedSource[]);
+    }
   } catch {
-    /* fall through */
+    console.warn('[buffer:feeds] BUFFER_CONTENT_FEEDS is invalid JSON — using defaults');
   }
   return DEFAULT_FEEDS;
 }
@@ -33,6 +82,8 @@ function localPosts(feedId: string): SchedulablePost[] {
     title: article.title,
     excerpt: article.excerpt.trim(),
     url: `${base}/Blog/${article.slug}`,
+    imageUrl: resolveAbsoluteImageUrl(base, article.image.src),
+    imageAlt: article.image.alt,
   }));
 }
 
@@ -48,6 +99,8 @@ async function rssPosts(
     title: item.title,
     excerpt: item.description.replace(/<[^>]+>/g, '').trim().slice(0, 400),
     url: item.link,
+    imageUrl: item.imageUrl,
+    imageAlt: item.title,
   }));
 }
 
@@ -63,14 +116,34 @@ export async function loadFeedPosts(
 
 export async function loadAllFeedPosts(
   fetchFn?: FeedFetcher,
-): Promise<Map<string, SchedulablePost[]>> {
+): Promise<LoadAllFeedPostsResult> {
   const fn = fetchFn ?? defaultFetch;
   const feeds = getContentFeeds();
-  const out = new Map<string, SchedulablePost[]>();
+  const posts = new Map<string, SchedulablePost[]>();
+  const errors: FeedLoadError[] = [];
+
   for (const feed of feeds) {
-    out.set(feed.id, await loadFeedPosts(feed, fn));
+    try {
+      const loaded = await loadFeedPosts(feed, fn);
+      posts.set(feed.id, loaded);
+      if (loaded.length === 0) {
+        errors.push({
+          feedId: feed.id,
+          url: feed.type === 'rss' ? feed.url : undefined,
+          message: 'Feed returned zero posts',
+        });
+      }
+    } catch (err) {
+      errors.push({
+        feedId: feed.id,
+        url: feed.type === 'rss' ? feed.url : undefined,
+        message: err instanceof Error ? err.message : 'Feed load failed',
+      });
+      posts.set(feed.id, []);
+    }
   }
-  return out;
+
+  return { posts, errors };
 }
 
 async function defaultFetch(url: string): Promise<string> {

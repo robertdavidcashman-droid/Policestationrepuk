@@ -7,6 +7,7 @@ import {
   getSchedulerNightPosts,
   getSchedulerPostsPerFeed,
   getSchedulerTimeWindow,
+  resolveFeedSchedule,
 } from '@/lib/buffer/config';
 import { getContentFeeds } from '@/lib/buffer/feeds';
 
@@ -58,14 +59,37 @@ describe('buffer config', () => {
     expect(getSchedulerTimeWindow().startHour).toBe(8);
   });
 
-  it('defaults to three content feeds', () => {
+  it('defaults to four content feeds including psrtrain', () => {
     delete process.env.BUFFER_CONTENT_FEEDS;
     const feeds = getContentFeeds();
-    expect(feeds.length).toBe(3);
+    expect(feeds.length).toBe(4);
     expect(feeds.map((f) => f.id)).toEqual([
       'policestationrepuk',
       'custodynote',
       'policestationagent',
+      'psrtrain',
     ]);
+    const psrtrain = feeds.find((f) => f.id === 'psrtrain');
+    expect(psrtrain).toMatchObject({
+      type: 'rss',
+      url: 'https://psrtrain.com/feed',
+      postsPerDay: 6,
+      dayPosts: 4,
+      nightPosts: 2,
+    });
+  });
+
+  it('resolveFeedSchedule scales day/night for per-feed post counts', () => {
+    process.env.BUFFER_SCHEDULER_POSTS_PER_FEED = '5';
+    process.env.BUFFER_SCHEDULER_DAY_POSTS = '3';
+    process.env.BUFFER_SCHEDULER_NIGHT_POSTS = '2';
+
+    expect(resolveFeedSchedule({})).toEqual({ postsPerFeed: 5, dayPosts: 3, nightPosts: 2 });
+    expect(resolveFeedSchedule({ postsPerDay: 4 })).toEqual({ postsPerFeed: 4, dayPosts: 2, nightPosts: 2 });
+    expect(resolveFeedSchedule({ postsPerDay: 4, dayPosts: 3, nightPosts: 1 })).toEqual({
+      postsPerFeed: 4,
+      dayPosts: 3,
+      nightPosts: 1,
+    });
   });
 });

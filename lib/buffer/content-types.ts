@@ -5,8 +5,19 @@ export interface SchedulablePost {
   title: string;
   excerpt: string;
   url: string;
+  imageUrl?: string;
+  imageAlt?: string;
 }
 
+type FeedScheduleOverrides = {
+  /** Posts per day for this feed (default: BUFFER_SCHEDULER_POSTS_PER_FEED). */
+  postsPerDay?: number;
+  /** Daytime slots; must sum with nightPosts to postsPerDay when both are set. */
+  dayPosts?: number;
+  /** Nighttime slots; must sum with dayPosts to postsPerDay when both are set. */
+  nightPosts?: number;
+};
+
 export type ContentFeedSource =
-  | { id: string; type: 'local' }
-  | { id: string; type: 'rss'; url: string };
+  | ({ id: string; type: 'local' } & FeedScheduleOverrides)
+  | ({ id: string; type: 'rss'; url: string } & FeedScheduleOverrides);

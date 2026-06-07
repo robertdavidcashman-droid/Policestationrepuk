@@ -3,18 +3,16 @@ import {
   getBufferApiKey,
   getBufferChannels,
   getSchedulerCooldownDays,
-  getSchedulerDayPosts,
   getSchedulerDayWindow,
   getSchedulerEarlyMorningWindow,
-  getSchedulerNightPosts,
   getSchedulerNightWindow,
-  getSchedulerPostsPerFeed,
   getSchedulerTimezone,
+  resolveFeedSchedule,
 } from './config';
 import { getContentFeeds, loadAllFeedPosts } from './feeds';
 import {
   appendRecentSlugs,
-  buildSchedulablePostText,
+  buildSchedulablePostTextForService,
   generateDayNightPostTimes,
   hashSeed,
   localDateInTimezone,
@@ -45,7 +43,14 @@ export interface BufferSchedulerResult {
     channelService: string;
     dueAt: string | null;
     title: string;
+    imageUrl?: string;
   }>;
+}
+
+function formatFeedLoadErrors(
+  errors: Array<{ feedId: string; url?: string; message: string }>,
+): string {
+  return errors.map((e) => `${e.feedId}${e.url ? ` (${e.url})` : ''}: ${e.message}`).join('; ');
 }
 
 export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSchedulerResult> {
@@ -75,39 +80,67 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
     };
   }
 
-  const postsPerFeed = getSchedulerPostsPerFeed();
-  const dayPosts = getSchedulerDayPosts();
-  const nightPosts = getSchedulerNightPosts();
-  if (dayPosts + nightPosts !== postsPerFeed) {
-    return {
-      ok: false,
-      reason: `BUFFER_SCHEDULER_DAY_POSTS (${dayPosts}) + BUFFER_SCHEDULER_NIGHT_POSTS (${nightPosts}) must equal BUFFER_SCHEDULER_POSTS_PER_FEED (${postsPerFeed})`,
-    };
-  }
-
   const cooldownDays = getSchedulerCooldownDays();
   const channels = getBufferChannels();
   const feeds = getContentFeeds();
+  console.info(`[buffer:scheduler] Active feeds: ${feeds.map((f) => f.id).join(', ')}`);
+  const feedSchedules = feeds.map((feed) => ({ feed, schedule: resolveFeedSchedule(feed) }));
+
+  for (const { feed, schedule } of feedSchedules) {
+    if (schedule.dayPosts + schedule.nightPosts !== schedule.postsPerFeed) {
+      return {
+        ok: false,
+        reason: `Feed "${feed.id}": dayPosts (${schedule.dayPosts}) + nightPosts (${schedule.nightPosts}) must equal postsPerDay (${schedule.postsPerFeed})`,
+      };
+    }
+  }
+
+  const totalPosts = feedSchedules.reduce((sum, { schedule }) => sum + schedule.postsPerFeed, 0);
 
   const recentEntries = await getRecentSlugEntries();
   const excludeKeys = slugsInCooldown(recentEntries, cooldownDays, now);
 
-  const feedPosts = await loadAllFeedPosts();
+  const { posts: feedPosts, errors: feedErrors } = await loadAllFeedPosts();
+  if (feedErrors.length > 0) {
+    return {
+      ok: false,
+      reason: `Feed load failed: ${formatFeedLoadErrors(feedErrors)}`,
+      date: localDate,
+    };
+  }
+
   const rng = mulberry32(hashSeed(`buffer-scheduler:${localDate}`));
-  const channelOrder = shuffleChannelsRepeated(channels, feeds.length * postsPerFeed, rng);
+  const channelOrder = shuffleChannelsRepeated(channels, totalPosts, rng);
 
   const toSchedule: Array<{ post: SchedulablePost; dueAt: string; channelIndex: number }> = [];
   let channelIndex = 0;
+  const pickedByFeed = new Map<string, SchedulablePost[]>();
 
-  for (const feed of feeds) {
+  for (const { feed, schedule } of feedSchedules) {
     const pool = feedPosts.get(feed.id) ?? [];
     const feedRng = mulberry32(hashSeed(`buffer-scheduler:${localDate}:${feed.id}`));
-    const picked = pickRandomSchedulablePosts(pool, postsPerFeed, excludeKeys, feedRng);
+    const picked = pickRandomSchedulablePosts(pool, schedule.postsPerFeed, excludeKeys, feedRng);
+    pickedByFeed.set(feed.id, picked);
+
+    if (picked.length === 0) {
+      return {
+        ok: false,
+        reason: `Feed "${feed.id}" has no posts available after cooldown exclusions`,
+        date: localDate,
+      };
+    }
+
+    if (picked.length < schedule.postsPerFeed) {
+      console.warn(
+        `[buffer:scheduler] Feed "${feed.id}" picked ${picked.length}/${schedule.postsPerFeed} posts (pool size ${pool.length})`,
+      );
+    }
+
     const dueAts = generateDayNightPostTimes(
       localDate,
       {
-        dayCount: dayPosts,
-        nightCount: nightPosts,
+        dayCount: schedule.dayPosts,
+        nightCount: schedule.nightPosts,
         dayWindow: getSchedulerDayWindow(),
         nightWindow: getSchedulerNightWindow(),
         earlyMorningWindow: getSchedulerEarlyMorningWindow(),
@@ -125,13 +158,29 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
     }
   }
 
+  for (const { feed, schedule } of feedSchedules) {
+    const picked = pickedByFeed.get(feed.id) ?? [];
+    if (picked.length === 0) {
+      return {
+        ok: false,
+        reason: `Feed "${feed.id}" contributed zero posts — aborting before createPost`,
+        date: localDate,
+      };
+    }
+    if (picked.length < schedule.postsPerFeed && poolTooSmall(feedPosts.get(feed.id) ?? [], schedule.postsPerFeed)) {
+      console.warn(
+        `[buffer:scheduler] Feed "${feed.id}" under quota due to small pool (${picked.length}/${schedule.postsPerFeed})`,
+      );
+    }
+  }
+
   const created: BufferSchedulerResult['posts'] = [];
   const newRecent: RecentSlugEntry[] = [];
 
   try {
     for (const item of toSchedule) {
       const channel = channelOrder[item.channelIndex % channelOrder.length]!;
-      const text = buildSchedulablePostText(item.post);
+      const text = buildSchedulablePostTextForService(item.post, channel.service);
 
       const post = await createScheduledBufferPost(apiKey, {
         channelId: channel.id,
@@ -139,6 +188,8 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
         text,
         dueAt: item.dueAt,
         url: item.post.url,
+        imageUrl: item.post.imageUrl,
+        imageAlt: item.post.imageAlt,
       });
 
       created.push({
@@ -149,6 +200,7 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
         channelService: post.channelService,
         dueAt: post.dueAt,
         title: item.post.title,
+        imageUrl: item.post.imageUrl,
       });
 
       newRecent.push({
@@ -188,6 +240,10 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
     date: localDate,
     posts: created,
   };
+}
+
+function poolTooSmall(pool: SchedulablePost[], required: number): boolean {
+  return pool.length < required;
 }
 
 function shuffleChannelsRepeated<T>(items: T[], count: number, random: () => number): T[] {
