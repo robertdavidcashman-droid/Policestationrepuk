@@ -9,6 +9,7 @@ export interface SchedulerRunRecord {
   scheduledAt: string;
   postIds: string[];
   slugs: string[];
+  feedIds?: string[];
   channels: string[];
   dueAts: string[];
 }

@@ -1,4 +1,5 @@
 import type { BlogArticle } from '@/lib/blog/types';
+import type { SchedulablePost } from './content-types';
 
 export type RandomFn = () => number;
 
@@ -37,6 +38,18 @@ export function buildPostText(article: BlogArticle, siteUrl: string): string {
   return `${article.title}\n\n${url}`;
 }
 
+export function buildSchedulablePostText(post: SchedulablePost): string {
+  const excerpt = post.excerpt.trim();
+  if (excerpt) {
+    return `${post.title}\n\n${excerpt}\n\n${post.url}`;
+  }
+  return `${post.title}\n\n${post.url}`;
+}
+
+export function postCooldownKey(feedId: string, slug: string): string {
+  return `${feedId}:${slug}`;
+}
+
 export function pickRandomBlogPosts(
   articles: BlogArticle[],
   count: number,
@@ -56,6 +69,26 @@ export function pickRandomBlogPosts(
 
   const take = Math.min(count, shuffled.length);
   return shuffled.slice(0, take);
+}
+
+export function pickRandomSchedulablePosts(
+  posts: SchedulablePost[],
+  count: number,
+  excludeKeys: Set<string>,
+  random: RandomFn,
+): SchedulablePost[] {
+  const pool = posts.filter((p) => !excludeKeys.has(postCooldownKey(p.feedId, p.slug)));
+  if (pool.length === 0) {
+    throw new Error('No posts available after applying cooldown exclusions');
+  }
+
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled.slice(0, Math.min(count, shuffled.length));
 }
 
 function formatOffsetIso(localDate: string, hour: number, minute: number, offset: string): string {
@@ -142,6 +175,76 @@ export function generateRandomPostTimes(
   });
 }
 
+export function addDaysToLocalDate(localDate: string, days: number): string {
+  const [y, m, d] = localDate.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + days));
+  const yy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getUTCDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+}
+
+/**
+ * Schedule day + night slots: e.g. 3 between 08:00–21:00 and 2 in the evening
+ * (21:00–23:59). If two night slots are needed, the second uses early morning
+ * (00:00–07:00) on the following calendar day.
+ */
+export function generateDayNightPostTimes(
+  localDate: string,
+  options: {
+    dayCount: number;
+    nightCount: number;
+    dayWindow: { startHour: number; endHour: number; minGapMinutes: number };
+    nightWindow: { startHour: number; endHour: number; minGapMinutes: number };
+    earlyMorningWindow: { startHour: number; endHour: number; minGapMinutes: number };
+  },
+  random: RandomFn,
+  timeZone = 'Europe/London',
+): string[] {
+  const dayTimes = generateRandomPostTimes(
+    localDate,
+    options.dayCount,
+    options.dayWindow,
+    random,
+    timeZone,
+  );
+
+  const nightTimes: string[] = [];
+  if (options.nightCount <= 0) {
+    return [...dayTimes].sort();
+  }
+
+  const eveningCount = options.nightCount >= 2 ? 1 : options.nightCount;
+  const earlyCount = options.nightCount - eveningCount;
+
+  if (eveningCount > 0) {
+    nightTimes.push(
+      ...generateRandomPostTimes(
+        localDate,
+        eveningCount,
+        options.nightWindow,
+        random,
+        timeZone,
+      ),
+    );
+  }
+
+  if (earlyCount > 0) {
+    const nextDate = addDaysToLocalDate(localDate, 1);
+    nightTimes.push(
+      ...generateRandomPostTimes(
+        nextDate,
+        earlyCount,
+        options.earlyMorningWindow,
+        random,
+        timeZone,
+      ),
+    );
+  }
+
+  return [...dayTimes, ...nightTimes].sort();
+}
+
 export function localDateInTimezone(date: Date, timeZone: string): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone,
@@ -166,6 +269,7 @@ export function shuffleChannels<T>(items: T[], random: RandomFn): T[] {
 
 export interface RecentSlugEntry {
   slug: string;
+  feedId?: string;
   scheduledAt: string;
 }
 
@@ -178,7 +282,8 @@ export function slugsInCooldown(
   const excluded = new Set<string>();
   for (const entry of entries) {
     if (new Date(entry.scheduledAt).getTime() >= cutoff) {
-      excluded.add(entry.slug);
+      const feedId = entry.feedId ?? 'policestationrepuk';
+      excluded.add(postCooldownKey(feedId, entry.slug));
     }
   }
   return excluded;

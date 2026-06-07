@@ -3,9 +3,12 @@ import {
   getBufferApiKey,
   getBufferChannels,
   getSchedulerCooldownDays,
-  getSchedulerPostsPerDay,
+  getSchedulerDayPosts,
+  getSchedulerNightPosts,
+  getSchedulerPostsPerFeed,
   getSchedulerTimeWindow,
 } from '@/lib/buffer/config';
+import { getContentFeeds } from '@/lib/buffer/feeds';
 
 const ENV = process.env;
 
@@ -45,11 +48,24 @@ describe('buffer config', () => {
   });
 
   it('clamps scheduler numeric settings to safe defaults', () => {
-    process.env.BUFFER_SCHEDULER_POSTS_PER_DAY = '99';
+    process.env.BUFFER_SCHEDULER_POSTS_PER_FEED = '99';
     process.env.BUFFER_SCHEDULER_COOLDOWN_DAYS = '-1';
-    process.env.BUFFER_SCHEDULER_START_HOUR = 'not-a-number';
-    expect(getSchedulerPostsPerDay()).toBe(10);
+    process.env.BUFFER_SCHEDULER_DAY_START_HOUR = 'not-a-number';
+    expect(getSchedulerPostsPerFeed()).toBe(15);
+    expect(getSchedulerDayPosts()).toBe(3);
+    expect(getSchedulerNightPosts()).toBe(2);
     expect(getSchedulerCooldownDays()).toBe(14);
     expect(getSchedulerTimeWindow().startHour).toBe(8);
+  });
+
+  it('defaults to three content feeds', () => {
+    delete process.env.BUFFER_CONTENT_FEEDS;
+    const feeds = getContentFeeds();
+    expect(feeds.length).toBe(3);
+    expect(feeds.map((f) => f.id)).toEqual([
+      'policestationrepuk',
+      'custodynote',
+      'policestationagent',
+    ]);
   });
 });

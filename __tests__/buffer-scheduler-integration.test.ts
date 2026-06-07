@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runBufferBlogScheduler } from '@/lib/buffer/scheduler';
+import type { SchedulablePost } from '@/lib/buffer/content-types';
 
 const mockCreate = vi.fn();
 const mockGetRun = vi.fn();
 const mockSaveRun = vi.fn();
 const mockGetRecent = vi.fn();
 const mockSaveRecent = vi.fn();
+const mockLoadAll = vi.fn();
 
 vi.mock('@/lib/buffer/client', () => ({
   createScheduledBufferPost: (...args: unknown[]) => mockCreate(...args),
@@ -18,7 +20,25 @@ vi.mock('@/lib/buffer/scheduler-storage', () => ({
   saveRecentSlugEntries: (...args: unknown[]) => mockSaveRecent(...args),
 }));
 
+vi.mock('@/lib/buffer/feeds', () => ({
+  getContentFeeds: () => [
+    { id: 'policestationrepuk', type: 'local' },
+    { id: 'custodynote', type: 'rss', url: 'https://custodynote.com/feed' },
+  ],
+  loadAllFeedPosts: (...args: unknown[]) => mockLoadAll(...args),
+}));
+
 const ENV = process.env;
+
+function makePosts(feedId: string, count: number): SchedulablePost[] {
+  return Array.from({ length: count }, (_, i) => ({
+    feedId,
+    slug: `${feedId}-post-${i + 1}`,
+    title: `${feedId} title ${i + 1}`,
+    excerpt: 'Excerpt',
+    url: `https://example.com/${feedId}/${i + 1}`,
+  }));
+}
 
 describe('runBufferBlogScheduler integration', () => {
   beforeEach(() => {
@@ -26,13 +46,21 @@ describe('runBufferBlogScheduler integration', () => {
     process.env = {
       ...ENV,
       BUFFER_API_KEY: 'test-buffer-key',
-      BUFFER_SCHEDULER_POSTS_PER_DAY: '3',
+      BUFFER_SCHEDULER_POSTS_PER_FEED: '5',
+      BUFFER_SCHEDULER_DAY_POSTS: '3',
+      BUFFER_SCHEDULER_NIGHT_POSTS: '2',
       BUFFER_SCHEDULER_COOLDOWN_DAYS: '14',
     };
     mockGetRun.mockResolvedValue(null);
     mockGetRecent.mockResolvedValue([]);
+    mockLoadAll.mockResolvedValue(
+      new Map([
+        ['policestationrepuk', makePosts('policestationrepuk', 8)],
+        ['custodynote', makePosts('custodynote', 8)],
+      ]),
+    );
     mockCreate.mockImplementation(async (_key, input) => ({
-      id: `post-${input.channelService}`,
+      id: `post-${input.channelService}-${input.dueAt}`,
       dueAt: input.dueAt,
       channelId: input.channelId,
       channelService: input.channelService,
@@ -54,57 +82,54 @@ describe('runBufferBlogScheduler integration', () => {
     mockGetRun.mockResolvedValue({
       date: '2026-06-08',
       scheduledAt: '2026-06-08T05:00:00.000Z',
-      postIds: ['a', 'b', 'c'],
-      slugs: ['slug-a', 'slug-b', 'slug-c'],
-      channels: ['ch1', 'ch2', 'ch3'],
-      dueAts: ['t1', 't2', 't3'],
+      postIds: ['a'],
+      slugs: ['slug-a'],
+      feedIds: ['policestationrepuk'],
+      channels: ['ch1'],
+      dueAts: ['t1'],
     });
 
     const result = await runBufferBlogScheduler(new Date('2026-06-08T05:00:00Z'));
     expect(result.ok).toBe(true);
     expect(result.skipped).toBe(true);
     expect(mockCreate).not.toHaveBeenCalled();
-    expect(result.posts).toHaveLength(3);
   });
 
-  it('schedules three posts with distinct channels and policestationrepuk Blog URLs', async () => {
+  it('schedules 5 posts per feed with day and night times', async () => {
     const result = await runBufferBlogScheduler(new Date('2026-06-08T05:00:00Z'));
 
     expect(result.ok).toBe(true);
-    expect(result.skipped).toBeUndefined();
-    expect(result.posts).toHaveLength(3);
-    expect(mockCreate).toHaveBeenCalledTimes(3);
+    expect(result.posts).toHaveLength(10);
+    expect(mockCreate).toHaveBeenCalledTimes(10);
 
-    const channelIds = result.posts!.map((p) => p.channelId);
-    expect(new Set(channelIds).size).toBe(3);
+    const feedIds = result.posts!.map((p) => p.feedId);
+    expect(feedIds.filter((id) => id === 'policestationrepuk')).toHaveLength(5);
+    expect(feedIds.filter((id) => id === 'custodynote')).toHaveLength(5);
 
     for (const call of mockCreate.mock.calls) {
       const input = call[1] as { text: string; dueAt: string };
-      expect(input.text).toMatch(/https:\/\/policestationrepuk\.org\/Blog\//);
-      expect(input.dueAt).toMatch(/^2026-06-08T\d{2}:\d{2}:00[+-]\d{2}:\d{2}$/);
+      expect(input.dueAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00[+-]\d{2}:\d{2}$/);
+      expect(input.text).toContain('https://example.com/');
     }
 
     expect(mockSaveRun).toHaveBeenCalledOnce();
-    expect(mockSaveRecent).toHaveBeenCalledOnce();
     const savedRun = mockSaveRun.mock.calls[0]?.[0];
-    expect(savedRun.date).toBe('2026-06-08');
-    expect(savedRun.slugs).toHaveLength(3);
+    expect(savedRun.feedIds).toHaveLength(10);
   });
 
-  it('respects cooldown exclusions from recent slug history', async () => {
-    const { getAllBlogArticles } = await import('@/lib/blog/registry');
-    const excluded = getAllBlogArticles().slice(0, 2).map((a) => a.slug);
-    mockGetRecent.mockResolvedValue(
-      excluded.map((slug) => ({
-        slug,
+  it('respects cooldown per feed and slug', async () => {
+    mockGetRecent.mockResolvedValue([
+      {
+        slug: 'policestationrepuk-post-1',
+        feedId: 'policestationrepuk',
         scheduledAt: new Date('2026-06-07T00:00:00Z').toISOString(),
-      })),
-    );
+      },
+    ]);
 
     const result = await runBufferBlogScheduler(new Date('2026-06-08T05:00:00Z'));
     expect(result.ok).toBe(true);
     for (const post of result.posts ?? []) {
-      expect(excluded).not.toContain(post.slug);
+      expect(post.slug).not.toBe('policestationrepuk-post-1');
     }
   });
 });

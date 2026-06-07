@@ -9,6 +9,7 @@ import {
   mulberry32,
   pickRandomBlogPosts,
   shuffleChannels,
+  postCooldownKey,
   slugsInCooldown,
 } from '@/lib/buffer/scheduler-core';
 import type { BlogArticle } from '@/lib/blog/types';
@@ -86,14 +87,14 @@ describe('buffer blog scheduler core', () => {
     expect(times1[0]!).toMatch(/^2026-06-07T\d{2}:\d{2}:00\+01:00$/);
   });
 
-  it('excludes slugs inside cooldown window', () => {
+  it('excludes slugs inside cooldown window per feed', () => {
     const now = new Date('2026-06-07T12:00:00Z');
     const excluded = slugsInCooldown(
-      [{ slug: 'alpha-post', scheduledAt: '2026-06-01T10:00:00Z' }],
+      [{ slug: 'alpha-post', feedId: 'policestationrepuk', scheduledAt: '2026-06-01T10:00:00Z' }],
       14,
       now,
     );
-    expect(excluded.has('alpha-post')).toBe(true);
+    expect(excluded.has(postCooldownKey('policestationrepuk', 'alpha-post'))).toBe(true);
   });
 
   it('formats local date in Europe/London', () => {

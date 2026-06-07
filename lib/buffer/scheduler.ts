@@ -1,26 +1,29 @@
-import { getAllBlogArticles } from '@/lib/blog/registry';
-import { SITE_URL } from '@/lib/seo-layer/config';
 import { createScheduledBufferPost } from './client';
 import {
   getBufferApiKey,
   getBufferChannels,
   getSchedulerCooldownDays,
-  getSchedulerPostsPerDay,
-  getSchedulerTimeWindow,
+  getSchedulerDayPosts,
+  getSchedulerDayWindow,
+  getSchedulerEarlyMorningWindow,
+  getSchedulerNightPosts,
+  getSchedulerNightWindow,
+  getSchedulerPostsPerFeed,
   getSchedulerTimezone,
 } from './config';
+import { getContentFeeds, loadAllFeedPosts } from './feeds';
 import {
   appendRecentSlugs,
-  buildPostText,
-  generateRandomPostTimes,
+  buildSchedulablePostText,
+  generateDayNightPostTimes,
   hashSeed,
   localDateInTimezone,
   mulberry32,
-  pickRandomBlogPosts,
-  shuffleChannels,
+  pickRandomSchedulablePosts,
   slugsInCooldown,
   type RecentSlugEntry,
 } from './scheduler-core';
+import type { SchedulablePost } from './content-types';
 import {
   getRecentSlugEntries,
   getSchedulerRunForDate,
@@ -37,6 +40,7 @@ export interface BufferSchedulerResult {
   posts?: Array<{
     postId: string;
     slug: string;
+    feedId: string;
     channelId: string;
     channelService: string;
     dueAt: string | null;
@@ -62,6 +66,7 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
       posts: existingRun.slugs.map((slug, i) => ({
         postId: existingRun.postIds[i] ?? '',
         slug,
+        feedId: existingRun.feedIds?.[i] ?? 'policestationrepuk',
         channelId: existingRun.channels[i] ?? '',
         channelService: '',
         dueAt: existingRun.dueAts[i] ?? null,
@@ -70,52 +75,92 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
     };
   }
 
-  const postsPerDay = getSchedulerPostsPerDay();
+  const postsPerFeed = getSchedulerPostsPerFeed();
+  const dayPosts = getSchedulerDayPosts();
+  const nightPosts = getSchedulerNightPosts();
+  if (dayPosts + nightPosts !== postsPerFeed) {
+    return {
+      ok: false,
+      reason: `BUFFER_SCHEDULER_DAY_POSTS (${dayPosts}) + BUFFER_SCHEDULER_NIGHT_POSTS (${nightPosts}) must equal BUFFER_SCHEDULER_POSTS_PER_FEED (${postsPerFeed})`,
+    };
+  }
+
   const cooldownDays = getSchedulerCooldownDays();
-  const timeWindow = getSchedulerTimeWindow();
   const channels = getBufferChannels();
+  const feeds = getContentFeeds();
 
   const recentEntries = await getRecentSlugEntries();
-  const excludeSlugs = slugsInCooldown(recentEntries, cooldownDays, now);
+  const excludeKeys = slugsInCooldown(recentEntries, cooldownDays, now);
 
+  const feedPosts = await loadAllFeedPosts();
   const rng = mulberry32(hashSeed(`buffer-scheduler:${localDate}`));
-  const articles = pickRandomBlogPosts(getAllBlogArticles(), postsPerDay, excludeSlugs, rng);
-  const dueAts = generateRandomPostTimes(localDate, articles.length, timeWindow, rng, timezone);
-  const channelOrder = shuffleChannels(channels, rng).slice(0, articles.length);
+  const channelOrder = shuffleChannelsRepeated(channels, feeds.length * postsPerFeed, rng);
+
+  const toSchedule: Array<{ post: SchedulablePost; dueAt: string; channelIndex: number }> = [];
+  let channelIndex = 0;
+
+  for (const feed of feeds) {
+    const pool = feedPosts.get(feed.id) ?? [];
+    const feedRng = mulberry32(hashSeed(`buffer-scheduler:${localDate}:${feed.id}`));
+    const picked = pickRandomSchedulablePosts(pool, postsPerFeed, excludeKeys, feedRng);
+    const dueAts = generateDayNightPostTimes(
+      localDate,
+      {
+        dayCount: dayPosts,
+        nightCount: nightPosts,
+        dayWindow: getSchedulerDayWindow(),
+        nightWindow: getSchedulerNightWindow(),
+        earlyMorningWindow: getSchedulerEarlyMorningWindow(),
+      },
+      feedRng,
+      timezone,
+    );
+
+    for (let i = 0; i < picked.length; i++) {
+      toSchedule.push({
+        post: picked[i]!,
+        dueAt: dueAts[i]!,
+        channelIndex: channelIndex++,
+      });
+    }
+  }
 
   const created: BufferSchedulerResult['posts'] = [];
   const newRecent: RecentSlugEntry[] = [];
 
   try {
-    for (let i = 0; i < articles.length; i++) {
-      const article = articles[i]!;
-      const channel = channelOrder[i]!;
-      const dueAt = dueAts[i]!;
-      const url = `${SITE_URL.replace(/\/$/, '')}/Blog/${article.slug}`;
-      const text = buildPostText(article, SITE_URL);
+    for (const item of toSchedule) {
+      const channel = channelOrder[item.channelIndex % channelOrder.length]!;
+      const text = buildSchedulablePostText(item.post);
 
       const post = await createScheduledBufferPost(apiKey, {
         channelId: channel.id,
         channelService: channel.service,
         text,
-        dueAt,
-        url,
+        dueAt: item.dueAt,
+        url: item.post.url,
       });
 
       created.push({
         postId: post.id,
-        slug: article.slug,
+        slug: item.post.slug,
+        feedId: item.post.feedId,
         channelId: channel.id,
         channelService: post.channelService,
         dueAt: post.dueAt,
-        title: article.title,
+        title: item.post.title,
       });
 
-      newRecent.push({ slug: article.slug, scheduledAt: now.toISOString() });
+      newRecent.push({
+        slug: item.post.slug,
+        feedId: item.post.feedId,
+        scheduledAt: now.toISOString(),
+      });
     }
   } catch (err) {
     const partial = created.map((p) => ({
       slug: p.slug,
+      feedId: p.feedId,
       channelService: p.channelService,
       dueAt: p.dueAt,
     }));
@@ -130,16 +175,30 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
     scheduledAt: now.toISOString(),
     postIds: created.map((p) => p.postId),
     slugs: created.map((p) => p.slug),
+    feedIds: created.map((p) => p.feedId),
     channels: created.map((p) => p.channelId),
     dueAts: created.map((p) => p.dueAt ?? ''),
   };
 
   await saveSchedulerRun(record);
-  await saveRecentSlugEntries(appendRecentSlugs(recentEntries, newRecent));
+  await saveRecentSlugEntries(appendRecentSlugs(recentEntries, newRecent, 500));
 
   return {
     ok: true,
     date: localDate,
     posts: created,
   };
+}
+
+function shuffleChannelsRepeated<T>(items: T[], count: number, random: () => number): T[] {
+  const shuffled = [...items];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]!];
+  }
+  const out: T[] = [];
+  for (let i = 0; i < count; i++) {
+    out.push(shuffled[i % shuffled.length]!);
+  }
+  return out;
 }

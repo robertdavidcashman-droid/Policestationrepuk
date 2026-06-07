@@ -60,7 +60,7 @@
     "psa:coverage": "npx tsx scripts/build-psa-coverage.ts",
     "buffer:schedule": "npx tsx scripts/run-buffer-blog-scheduler.ts",
     "buffer:smoke": "npx tsx scripts/smoke-buffer-api.ts",
-    "test:buffer": "vitest run __tests__/buffer-config.test.ts __tests__/buffer-client.test.ts __tests__/buffer-blog-scheduler.test.ts __tests__/buffer-scheduler-integration.test.ts __tests__/buffer-cron-route.test.ts __tests__/buffer-blog-catalog.test.ts __tests__/buffer-email.test.ts __tests__/cron-auth.test.ts",
+    "test:buffer": "vitest run __tests__/buffer-config.test.ts __tests__/buffer-client.test.ts __tests__/buffer-blog-scheduler.test.ts __tests__/buffer-day-night.test.ts __tests__/buffer-rss.test.ts __tests__/buffer-scheduler-integration.test.ts __tests__/buffer-cron-route.test.ts __tests__/buffer-blog-catalog.test.ts __tests__/buffer-email.test.ts __tests__/cron-auth.test.ts",
     "test:assistant": "vitest run __tests__/assistant-match.test.ts __tests__/assistant-llm.test.ts __tests__/assistant-query-route.test.ts __tests__/assistant-content-accuracy.test.ts __tests__/assistant-guardrails-extended.test.ts __tests__/assistant-output-validator.test.ts __tests__/assistant-eval.test.ts __tests__/assistant-logging.test.ts",
     "test:assistant:e2e": "npx playwright install chromium && playwright test --config=playwright.assistant.config.ts",
     "verify": "npm run lint && npx tsc --noEmit && npm test && npm run test:assistant && npm run test:directory-search && npm run validate:schema && npm run audit:blog-seo",
