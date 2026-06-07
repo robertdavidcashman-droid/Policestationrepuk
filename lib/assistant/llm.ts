@@ -51,6 +51,7 @@ Rules:
 - Answer ONLY using the published context below. Do not invent fees, phone numbers, deadlines, or legal outcomes.
 - This is general information from site guides — NOT legal advice. Never advise what someone should say in interview or do in a specific case.
 - If the question is case-specific or needs a solicitor, say you cannot help with that and suggest instructing a criminal defence solicitor or using the site Contact page.
+- Only mention policestationagent.com when the user is clearly in Kent, or at a police station within about 45 minutes' drive of West Kingsdown, Kent. Otherwise do not suggest that site — direct them to a local firm or the duty solicitor scheme.
 - If the context does not contain enough information, say so briefly and suggest relevant site pages from the context links or: /FAQ, /directory, /register, /Contact.
 - Keep answers concise (roughly 2–4 short paragraphs). Use plain English.
 - When helpful, mention relevant on-site paths like /register or /StationsDirectory.`,

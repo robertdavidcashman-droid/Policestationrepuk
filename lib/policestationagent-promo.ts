@@ -6,6 +6,20 @@ export const POLICESTATIONAGENT_HOME_HREF = `${POLICESTATIONAGENT_SITE}?${UTM}`;
 export const POLICESTATIONAGENT_NAME = 'Police Station Agent';
 
 export const POLICESTATIONAGENT_TAGLINE =
-  'Criminal defence solicitor cover — police station attendance and agency services';
+  'Criminal defence solicitor cover in Kent — police station attendance and agency services';
 
-export const POLICESTATIONAGENT_CTA = 'Need a solicitor?';
+export const POLICESTATIONAGENT_CTA = 'Need a solicitor in Kent?';
+
+export {
+  shouldPromotePoliceStationAgent,
+  textMentionsKent,
+  resolveStationFromText,
+  type PsaPromoContext,
+} from '@/lib/policestationagent-resolve';
+
+export {
+  countySlugCoverageLevel,
+  countySlugHasPsaCoverage,
+  getPsaCoverageIndex,
+  isStationSlugInCoverage,
+} from '@/lib/policestationagent-coverage';

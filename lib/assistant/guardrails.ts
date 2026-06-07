@@ -1,3 +1,8 @@
+import {
+  POLICESTATIONAGENT_HOME_HREF,
+  shouldPromotePoliceStationAgent,
+} from '@/lib/policestationagent-promo';
+
 /** Guardrails for the guided assistant — refuse case-specific advice; always disclaim. */
 
 export const ASSISTANT_DISCLAIMER =
@@ -82,12 +87,22 @@ export function checkAssistantGuardrails(message: string): GuardrailResult {
 
   for (const pattern of CASE_SPECIFIC_PATTERNS) {
     if (pattern.test(trimmed)) {
+      const kentLinks = shouldPromotePoliceStationAgent({ text: trimmed })
+        ? [
+            {
+              href: POLICESTATIONAGENT_HOME_HREF,
+              label: 'Need a solicitor in Kent? — policestationagent.com',
+            },
+          ]
+        : [];
+
       return {
         refused: true,
         code: 'CASE_SPECIFIC',
         message: ASSISTANT_REFUSAL_MESSAGE,
         suggestedLinks: [
           { href: '/free-legal-advice-police-station', label: 'Free legal advice (police station)' },
+          ...kentLinks,
           { href: '/Contact', label: 'Contact us' },
           { href: '/directory', label: 'Find a rep' },
         ],

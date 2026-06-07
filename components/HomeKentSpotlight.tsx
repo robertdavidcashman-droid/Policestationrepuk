@@ -21,12 +21,12 @@ export function HomeKentSpotlight() {
           <p className="mt-2 text-xs text-[var(--muted)]">
             This is a separate service from the PoliceStationRepUK directory.{' '}
             <a
-              href="https://www.policestationagent.com"
+              href="https://www.policestationagent.com?utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory"
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-[var(--navy)] underline"
             >
-              Visit policestationagent.com
+              Need a solicitor in Kent? Visit policestationagent.com
             </a>
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">

@@ -77,9 +77,13 @@ export default function FreeLegalAdvicePoliceStationPage() {
       </p>
       <div className="my-6 rounded-[var(--radius-lg)] bg-[var(--navy)] p-6 text-center">
         <p className="text-sm font-semibold text-white">
-          Need a solicitor at the police station?{' '}
-          <a href="https://www.policestationagent.com" target="_blank" rel="noopener noreferrer" className="text-[var(--gold)] underline">
-            Visit policestationagent.com
+          Need a solicitor at the police station? Ask for the duty solicitor or contact a criminal defence firm where the
+          station is — not via this directory.
+        </p>
+        <p className="mt-3 text-sm text-slate-300">
+          Kent or nearby only:{' '}
+          <a href="https://www.policestationagent.com?utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory" target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--gold)] underline">
+            Need a solicitor in Kent? Visit policestationagent.com
           </a>
         </p>
       </div>

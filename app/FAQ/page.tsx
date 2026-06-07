@@ -111,9 +111,13 @@ export default function FAQPage() {
           and we&apos;ll respond within 24 hours.
         </p>
         <p className="mt-3 text-sm text-[var(--muted)]">
-          Need a solicitor at the police station?{' '}
-          <a href="https://www.policestationagent.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--gold-link)] underline">
-            Visit policestationagent.com
+          Need a solicitor at the police station? Ask for the duty solicitor or contact a criminal defence firm in your
+          area — this directory does not provide regulated legal advice.
+        </p>
+        <p className="mt-2 text-sm text-[var(--muted)]">
+          In Kent or nearby?{' '}
+          <a href="https://www.policestationagent.com?utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory" target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--gold-link)] underline">
+            Need a solicitor in Kent? Visit policestationagent.com
           </a>
         </p>
       </div>

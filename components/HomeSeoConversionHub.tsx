@@ -203,16 +203,25 @@ export function HomeSeoConversionHub() {
                 substitute for your own lawyer. If you or someone you know is at a police station, ask for the duty
                 solicitor or contact a criminal defence firm immediately.
               </p>
-              <p className="mt-3 text-sm text-white">
-                <a
-                  href="https://www.policestationagent.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-[var(--gold)] underline"
-                >
-                  Need a solicitor? Visit policestationagent.com
-                </a>
-              </p>
+              <div className="mt-4 rounded-lg border border-[var(--gold)]/40 bg-white/10 p-4">
+                <p className="text-sm font-semibold text-[var(--gold)]">Kent &amp; nearby</p>
+                <p className="mt-2 text-sm text-white">
+                  Need a solicitor in Kent?{' '}
+                  <a
+                    href="https://www.policestationagent.com?utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-[var(--gold)] underline"
+                  >
+                    Visit policestationagent.com
+                  </a>{' '}
+                  — solicitor-led police station cover for Kent firms (separate from this directory).
+                </p>
+                <p className="mt-2 text-xs text-slate-300">
+                  Outside Kent or nearby areas, contact a criminal defence firm local to your police station or use the
+                  duty solicitor scheme.
+                </p>
+              </div>
               <p className="mt-3 text-sm text-white">
                 General information only:{' '}
                 <Link href="/free-legal-advice-police-station" className="font-semibold text-[var(--gold)] underline">

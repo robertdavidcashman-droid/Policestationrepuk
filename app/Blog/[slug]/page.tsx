@@ -14,7 +14,6 @@ import { BlogDiscoveryLinks } from '@/components/BlogDiscoveryLinks';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { BlogAuthorBio } from '@/components/BlogAuthorBio';
-import { BlogBottomAd } from '@/components/BlogBottomAd';
 import { BlogCustodyNotePromo } from '@/components/BlogCustodyNotePromo';
 import { PsrTrainPromo } from '@/components/PsrTrainPromo';
 import { prefersPsrTrainBlogPromo } from '@/lib/blog-partner-promo';
@@ -270,8 +269,6 @@ export default async function BlogArticlePage({ params }: PageProps) {
             </div>
           </aside>
 
-          <BlogBottomAd />
-
           <p className="mt-10">
             <Link href="/Blog" className="font-medium text-[var(--gold-link)] no-underline hover:text-[var(--gold)]">
               ← Back to blog
@@ -285,16 +282,16 @@ export default async function BlogArticlePage({ params }: PageProps) {
               PoliceStationRepUK is a directory — it does not provide regulated legal services.
             </p>
             <p className="mt-4">
-              Need a solicitor or police station agent cover? See{' '}
+              Need a solicitor? Ask for the duty solicitor or a criminal defence firm local to the police station. Kent
+              or nearby:{' '}
               <a
-                href="https://www.policestationagent.com"
+                href="https://www.policestationagent.com?utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-[var(--gold-link)] underline underline-offset-2 hover:text-[var(--gold)]"
               >
-                policestationagent.com
-              </a>{' '}
-              (separate from this directory).
+                Need a solicitor in Kent? Visit policestationagent.com
+              </a>
             </p>
           </footer>
         </div>
