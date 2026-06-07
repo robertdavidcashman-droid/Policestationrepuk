@@ -52,6 +52,8 @@ async function main() {
   loadEnvFile('.env.local');
   loadEnvFile('.env.vercel.production');
 
+  const scheduleOnly = process.argv.includes('--schedule-only');
+
   const apiKey = getBufferApiKey();
   if (!apiKey) {
     console.error('BUFFER_API_KEY is not set');
@@ -67,19 +69,20 @@ async function main() {
 
   console.log(`Replacing Buffer schedule for ${localDate} (${timezone})...`);
 
-  const scheduled = await listScheduledBufferPosts(apiKey, organizationId, {
-    dueAtStart: start,
-    dueAtEnd: end,
-    channelIds: channels.map((c) => c.id),
-  });
-
-  console.log(`Found ${scheduled.length} scheduled posts for today.`);
-
   const deleted: string[] = [];
   const skipped: Array<{ id: string; reason: string }> = [];
   const extraExcludeKeys = new Set<string>();
 
-  for (const post of scheduled) {
+  if (!scheduleOnly) {
+    const scheduled = await listScheduledBufferPosts(apiKey, organizationId, {
+      dueAtStart: start,
+      dueAtEnd: end,
+      channelIds: channels.map((c) => c.id),
+    });
+
+    console.log(`Found ${scheduled.length} scheduled posts for today.`);
+
+    for (const post of scheduled) {
     if (!post.allowedActions.includes('deletePost')) {
       skipped.push({ id: post.id, reason: `deletePost not allowed (${post.allowedActions.join(', ')})` });
       continue;
@@ -109,14 +112,20 @@ async function main() {
     }
   }
 
-  console.log(`Deleted ${deleted.length} posts; ${skipped.length} skipped.`);
+    console.log(`Deleted ${deleted.length} posts; ${skipped.length} skipped.`);
 
-  await deleteSchedulerRunForDate(localDate);
-  console.log(`Cleared KV run record for ${localDate}.`);
-  console.log(`Excluded ${extraExcludeKeys.size} recently deleted slug(s) from re-pick.`);
+    if (deleted.length > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+  } else {
+    await deleteSchedulerRunForDate(localDate);
+    console.log(`Schedule-only mode: cleared KV run record for ${localDate}.`);
+  }
 
-  if (deleted.length > 0) {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+  if (!scheduleOnly) {
+    await deleteSchedulerRunForDate(localDate);
+    console.log(`Cleared KV run record for ${localDate}.`);
+    console.log(`Excluded ${extraExcludeKeys.size} recently deleted slug(s) from re-pick.`);
   }
 
   const result = await runBufferBlogScheduler(now, {
