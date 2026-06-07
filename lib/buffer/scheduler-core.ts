@@ -1,0 +1,193 @@
+import type { BlogArticle } from '@/lib/blog/types';
+
+export type RandomFn = () => number;
+
+export function hashSeed(input: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/** Deterministic PRNG — same seed yields same sequence (stable if cron retries before lock). */
+export function mulberry32(seed: number): RandomFn {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function blogPostUrl(siteUrl: string, slug: string): string {
+  const base = siteUrl.replace(/\/$/, '');
+  return `${base}/Blog/${slug}`;
+}
+
+export function buildPostText(article: BlogArticle, siteUrl: string): string {
+  const url = blogPostUrl(siteUrl, article.slug);
+  const excerpt = article.excerpt.trim();
+  if (excerpt) {
+    return `${article.title}\n\n${excerpt}\n\n${url}`;
+  }
+  return `${article.title}\n\n${url}`;
+}
+
+export function pickRandomBlogPosts(
+  articles: BlogArticle[],
+  count: number,
+  excludeSlugs: Set<string>,
+  random: RandomFn,
+): BlogArticle[] {
+  const pool = articles.filter((a) => !excludeSlugs.has(a.slug));
+  if (pool.length === 0) {
+    throw new Error('No blog articles available after applying cooldown exclusions');
+  }
+
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  const take = Math.min(count, shuffled.length);
+  return shuffled.slice(0, take);
+}
+
+function formatOffsetIso(localDate: string, hour: number, minute: number, offset: string): string {
+  const hh = String(hour).padStart(2, '0');
+  const mm = String(minute).padStart(2, '0');
+  return `${localDate}T${hh}:${mm}:00${offset}`;
+}
+
+/** London/BST offset for scheduling — Europe/London only for now. */
+export function londonOffsetForDate(localDate: string): string {
+  const [y, m, d] = localDate.split('-').map(Number);
+  const month = m - 1;
+  const lastSunday = (year: number, mon: number) => {
+    const last = new Date(Date.UTC(year, mon + 1, 0));
+    return last.getUTCDate() - last.getUTCDay();
+  };
+  const bstStartDay = lastSunday(y, 2) + 1; // last Sunday in March
+  const bstEndDay = lastSunday(y, 9); // last Sunday in October
+  const isBst =
+    (month > 2 && month < 9) ||
+    (month === 2 && d >= bstStartDay) ||
+    (month === 9 && d < bstEndDay);
+  return isBst ? '+01:00' : '+00:00';
+}
+
+export function timezoneOffsetForDate(localDate: string, timeZone: string): string {
+  if (timeZone === 'Europe/London') {
+    return londonOffsetForDate(localDate);
+  }
+  return '+00:00';
+}
+
+export function generateRandomPostTimes(
+  localDate: string,
+  count: number,
+  window: { startHour: number; endHour: number; minGapMinutes: number },
+  random: RandomFn,
+  timeZone = 'Europe/London',
+): string[] {
+  if (count <= 0) return [];
+
+  const offset = timezoneOffsetForDate(localDate, timeZone);
+  const startMinutes = window.startHour * 60;
+  const endMinutes = window.endHour * 60;
+  const span = endMinutes - startMinutes;
+
+  if (span <= 0) {
+    throw new Error('Invalid scheduler time window');
+  }
+
+  const slots: number[] = [];
+  const maxAttempts = 200;
+
+  for (let attempt = 0; attempt < maxAttempts && slots.length < count; attempt++) {
+    const candidate = startMinutes + Math.floor(random() * span);
+    const rounded = Math.round(candidate / 5) * 5;
+    if (rounded < startMinutes || rounded > endMinutes) continue;
+    if (slots.every((s) => Math.abs(s - rounded) >= window.minGapMinutes)) {
+      slots.push(rounded);
+    }
+  }
+
+  while (slots.length < count) {
+    const evenlySpaced =
+      startMinutes +
+      Math.floor((slots.length * span) / Math.max(count, 1)) +
+      Math.floor(random() * 15);
+    const rounded = Math.min(endMinutes, Math.max(startMinutes, Math.round(evenlySpaced / 5) * 5));
+    if (slots.every((s) => Math.abs(s - rounded) >= Math.min(window.minGapMinutes, 45))) {
+      slots.push(rounded);
+    } else if (slots.length === 0) {
+      slots.push(rounded);
+    } else {
+      break;
+    }
+  }
+
+  slots.sort((a, b) => a - b);
+
+  return slots.map((mins) => {
+    const hour = Math.floor(mins / 60);
+    const minute = mins % 60;
+    return formatOffsetIso(localDate, hour, minute, offset);
+  });
+}
+
+export function localDateInTimezone(date: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const y = parts.find((p) => p.type === 'year')?.value ?? '1970';
+  const m = parts.find((p) => p.type === 'month')?.value ?? '01';
+  const d = parts.find((p) => p.type === 'day')?.value ?? '01';
+  return `${y}-${m}-${d}`;
+}
+
+export function shuffleChannels<T>(items: T[], random: RandomFn): T[] {
+  const out = [...items];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+export interface RecentSlugEntry {
+  slug: string;
+  scheduledAt: string;
+}
+
+export function slugsInCooldown(
+  entries: RecentSlugEntry[],
+  cooldownDays: number,
+  now = new Date(),
+): Set<string> {
+  const cutoff = now.getTime() - cooldownDays * 24 * 60 * 60 * 1000;
+  const excluded = new Set<string>();
+  for (const entry of entries) {
+    if (new Date(entry.scheduledAt).getTime() >= cutoff) {
+      excluded.add(entry.slug);
+    }
+  }
+  return excluded;
+}
+
+export function appendRecentSlugs(
+  entries: RecentSlugEntry[],
+  added: RecentSlugEntry[],
+  maxEntries = 120,
+): RecentSlugEntry[] {
+  return [...added, ...entries].slice(0, maxEntries);
+}
