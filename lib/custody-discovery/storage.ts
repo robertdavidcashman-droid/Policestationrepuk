@@ -83,16 +83,30 @@ export async function getAllCustodySuites(): Promise<CustodySuite[]> {
 export async function bootstrapCustodySuites(suites: CustodySuite[]): Promise<number> {
   const kv = getKV();
   if (!kv) return 0;
-  let saved = 0;
-  for (const suite of suites) {
-    const existing = await getCustodySuite(suite.id);
-    const merged: CustodySuite = existing
-      ? { ...existing, ...suite, createdAt: existing.createdAt, updatedAt: new Date().toISOString() }
-      : suite;
-    await saveCustodySuite(merged);
-    saved++;
+
+  const existingIds = new Set(await readStringList(SUITE_INDEX));
+  const missing = suites.filter((s) => !existingIds.has(s.id));
+
+  // Fast path — full directory already in KV (skip ~900 round-trips per cron run).
+  if (missing.length === 0 && existingIds.size >= suites.length) {
+    return suites.length;
   }
-  return saved;
+
+  const now = new Date().toISOString();
+  const pipeline = kv.pipeline();
+  const indexIds = [...existingIds];
+
+  for (const suite of missing) {
+    pipeline.set(suiteKey(suite.id), suite);
+    if (!indexIds.includes(suite.id)) indexIds.push(suite.id);
+  }
+
+  if (missing.length > 0) {
+    pipeline.set(SUITE_INDEX, indexIds);
+    await pipeline.exec();
+  }
+
+  return suites.length;
 }
 
 /* ------------------------------------------------------------------ */

@@ -3,7 +3,7 @@ import { runCustodyDiscoveryCrawler } from '@/lib/custody-discovery/crawler';
 import { notifyIfNewFindings } from '@/lib/custody-discovery/notify';
 import { seedFindingsFromOfficialJson } from '@/lib/custody-discovery/seed-json';
 import { buildCustodySuitesFromStations } from '@/lib/custody-discovery/suites';
-import { bootstrapCustodySuites, getAllCustodySuites } from '@/lib/custody-discovery/storage';
+import { bootstrapCustodySuites } from '@/lib/custody-discovery/storage';
 import { getAllStations } from '@/lib/data';
 
 export const dynamic = 'force-dynamic';
@@ -30,10 +30,8 @@ export async function GET(request: Request) {
   const limit = Number(url.searchParams.get('limit') || process.env.CUSTODY_DISCOVERY_BATCH_LIMIT || 25);
 
   const stations = await getAllStations();
-  const built = buildCustodySuitesFromStations(stations);
-  await bootstrapCustodySuites(built);
-
-  const suites = await getAllCustodySuites();
+  const suites = buildCustodySuitesFromStations(stations);
+  await bootstrapCustodySuites(suites);
   const seeded = await seedFindingsFromOfficialJson(suites);
   const { stats, newFindingIds: crawledIds } = await runCustodyDiscoveryCrawler(suites, { limit });
   const allNewIds = [...seeded.newFindingIds, ...crawledIds];

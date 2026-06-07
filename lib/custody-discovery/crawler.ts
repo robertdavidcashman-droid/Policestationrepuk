@@ -285,16 +285,20 @@ export async function runCustodyDiscoveryCrawler(
   const newFindingIds: string[] = [];
 
   for (const suite of target) {
-    const row = await crawlCustodySuite(suite, options);
+    try {
+      const row = await crawlCustodySuite(suite, options);
+      stats.searchesRun += row.searchesRun;
+      stats.numbersExtracted += row.numbersExtracted;
+      stats.findingsCreated += row.created;
+      stats.findingsUpdated += row.updated;
+      stats.findingsRejected += row.rejected;
+      stats.conflictsFlagged += row.conflicts;
+      stats.officialPagesFetched += row.officialPagesFetched;
+      newFindingIds.push(...row.newFindingIds);
+    } catch (err) {
+      console.error(`custody discovery: crawl failed for ${suite.id}`, err);
+    }
     stats.suitesScanned++;
-    stats.searchesRun += row.searchesRun;
-    stats.numbersExtracted += row.numbersExtracted;
-    stats.findingsCreated += row.created;
-    stats.findingsUpdated += row.updated;
-    stats.findingsRejected += row.rejected;
-    stats.conflictsFlagged += row.conflicts;
-    stats.officialPagesFetched += row.officialPagesFetched;
-    newFindingIds.push(...row.newFindingIds);
   }
 
   stats.elapsedMs = Date.now() - started;
