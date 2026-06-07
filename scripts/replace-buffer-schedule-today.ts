@@ -18,7 +18,7 @@ import {
   postCooldownKey,
   timezoneOffsetForDate,
 } from '../lib/buffer/scheduler-core';
-import { deleteSchedulerRunForDate } from '../lib/buffer/scheduler-storage';
+import { deleteSchedulerRunForDate, getRecentSlugEntries, saveRecentSlugEntries } from '../lib/buffer/scheduler-storage';
 
 function loadEnvFile(filename: string) {
   const path = resolve(process.cwd(), filename);
@@ -48,6 +48,26 @@ function dueAtRangeForLocalDate(localDate: string, timezone: string): { start: s
   };
 }
 
+async function releaseCooldownForReplace(
+  localDate: string,
+  timezone: string,
+  deletedKeys: Set<string>,
+): Promise<number> {
+  const entries = await getRecentSlugEntries();
+  const before = entries.length;
+  const kept = entries.filter((entry) => {
+    const key = postCooldownKey(entry.feedId ?? 'policestationrepuk', entry.slug);
+    if (deletedKeys.has(key)) return false;
+    const entryDate = localDateInTimezone(new Date(entry.scheduledAt), timezone);
+    if (entryDate === localDate) return false;
+    return true;
+  });
+  if (kept.length !== before) {
+    await saveRecentSlugEntries(kept);
+  }
+  return before - kept.length;
+}
+
 async function main() {
   loadEnvFile('.env.local');
   loadEnvFile('.env.vercel.production');
@@ -71,7 +91,7 @@ async function main() {
 
   const deleted: string[] = [];
   const skipped: Array<{ id: string; reason: string }> = [];
-  const extraExcludeKeys = new Set<string>();
+  const releasedCooldownKeys = new Set<string>();
 
   if (!scheduleOnly) {
     const scheduled = await listScheduledBufferPosts(apiKey, organizationId, {
@@ -95,10 +115,10 @@ async function main() {
         try {
           const slug = new URL(urlMatch[0]).pathname.split('/').filter(Boolean).pop();
           if (slug) {
-            if (urlMatch[0].includes('policestationrepuk.org')) extraExcludeKeys.add(postCooldownKey('policestationrepuk', slug));
-            else if (urlMatch[0].includes('custodynote.com')) extraExcludeKeys.add(postCooldownKey('custodynote', slug));
-            else if (urlMatch[0].includes('policestationagent.com')) extraExcludeKeys.add(postCooldownKey('policestationagent', slug));
-            else if (urlMatch[0].includes('psrtrain.com')) extraExcludeKeys.add(postCooldownKey('psrtrain', slug));
+            if (urlMatch[0].includes('policestationrepuk.org')) releasedCooldownKeys.add(postCooldownKey('policestationrepuk', slug));
+            else if (urlMatch[0].includes('custodynote.com')) releasedCooldownKeys.add(postCooldownKey('custodynote', slug));
+            else if (urlMatch[0].includes('policestationagent.com')) releasedCooldownKeys.add(postCooldownKey('policestationagent', slug));
+            else if (urlMatch[0].includes('psrtrain.com')) releasedCooldownKeys.add(postCooldownKey('psrtrain', slug));
           }
         } catch {
           /* ignore URL parse errors */
@@ -120,17 +140,19 @@ async function main() {
   } else {
     await deleteSchedulerRunForDate(localDate);
     console.log(`Schedule-only mode: cleared KV run record for ${localDate}.`);
+    const released = await releaseCooldownForReplace(localDate, timezone, releasedCooldownKeys);
+    console.log(`Released ${released} recent-slug cooldown entry(ies) for re-pick.`);
   }
 
   if (!scheduleOnly) {
     await deleteSchedulerRunForDate(localDate);
     console.log(`Cleared KV run record for ${localDate}.`);
-    console.log(`Excluded ${extraExcludeKeys.size} recently deleted slug(s) from re-pick.`);
+    const released = await releaseCooldownForReplace(localDate, timezone, releasedCooldownKeys);
+    console.log(`Released ${released} recent-slug cooldown entry(ies) for re-pick.`);
   }
 
   const result = await runBufferBlogScheduler(now, {
     respectCurrentTime: true,
-    extraExcludeKeys,
   });
 
   const postsWithImages = result.posts?.filter((p) => p.imageUrl).length ?? 0;

@@ -46,6 +46,9 @@ describe('buffer feed health', () => {
     for (const post of posts.get('custodynote') ?? []) {
       expect(post.imageUrl).toBeTruthy();
     }
+    for (const post of posts.get('psrtrain') ?? []) {
+      expect(post.imageUrl).toBe('https://psrtrain.com/opengraph-image');
+    }
   });
 
   it('records per-feed errors without aborting other feeds', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseRssItems, slugFromUrl } from '@/lib/buffer/rss';
+import { parseRssChannelImageUrl, parseRssItems, slugFromUrl } from '@/lib/buffer/rss';
 
 const SAMPLE_RSS = `<?xml version="1.0"?>
 <rss version="2.0">
@@ -53,5 +53,23 @@ describe('buffer rss parser', () => {
 
   it('derives slug from post URL', () => {
     expect(slugFromUrl('https://custodynote.com/blog/my-slug')).toBe('my-slug');
+  });
+
+  it('ignores SVG channel icons for Buffer compatibility', () => {
+    const xml = `<?xml version="1.0"?><rss><channel>
+      <image><url>https://psrtrain.com/icon.svg</url><title>PSR</title></image>
+      <item><title>Guide</title><link>https://psrtrain.com/guides/a</link><description>x</description></item>
+    </channel></rss>`;
+    expect(parseRssChannelImageUrl(xml, 'https://psrtrain.com/feed')).toBeUndefined();
+    expect(parseRssItems(xml)[0]?.imageUrl).toBeUndefined();
+  });
+
+  it('extracts image from description HTML', () => {
+    const xml = `<?xml version="1.0"?><rss><channel><item>
+      <title>HTML image</title>
+      <link>https://example.com/post</link>
+      <description><![CDATA[<p>See <img src="/images/hero.webp" alt="Hero" /></p>]]></description>
+    </item></channel></rss>`;
+    expect(parseRssItems(xml)[0]?.imageUrl).toBe('https://example.com/images/hero.webp');
   });
 });

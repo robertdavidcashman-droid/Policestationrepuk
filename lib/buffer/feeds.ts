@@ -4,9 +4,14 @@ import { POLICESTATIONAGENT_SITE } from '@/lib/policestationagent-promo';
 import { SITE_URL } from '@/lib/seo-layer/config';
 import { resolveAbsoluteImageUrl } from './assets';
 import type { ContentFeedSource, SchedulablePost } from './content-types';
-import { parseRssItems, slugFromUrl } from './rss';
+import { parseRssItems, parseRssChannelImageUrl, slugFromUrl } from './rss';
 
 export type FeedFetcher = (url: string) => Promise<string>;
+
+/** Raster fallbacks when RSS items omit image enclosures (Buffer rejects SVG). */
+const FEED_DEFAULT_IMAGES: Record<string, string> = {
+  psrtrain: 'https://psrtrain.com/opengraph-image',
+};
 
 export interface FeedLoadError {
   feedId: string;
@@ -93,13 +98,15 @@ async function rssPosts(
   fetchFn: FeedFetcher,
 ): Promise<SchedulablePost[]> {
   const xml = await fetchFn(url);
+  const channelImage = parseRssChannelImageUrl(xml, url);
+  const defaultImage = FEED_DEFAULT_IMAGES[feedId];
   return parseRssItems(xml).map((item) => ({
     feedId,
     slug: slugFromUrl(item.link),
     title: item.title,
     excerpt: item.description.replace(/<[^>]+>/g, '').trim().slice(0, 400),
     url: item.link,
-    imageUrl: item.imageUrl,
+    imageUrl: item.imageUrl ?? channelImage ?? defaultImage,
     imageAlt: item.title,
   }));
 }

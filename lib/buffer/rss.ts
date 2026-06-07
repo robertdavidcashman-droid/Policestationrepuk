@@ -53,7 +53,8 @@ function extractImageUrl(block: string, linkBase: string): string | undefined {
     const type = attrValue(tag, 'type');
     const url = attrValue(tag, 'url');
     if (url && (!type || type.startsWith('image/'))) {
-      return resolveAbsoluteUrl(linkBase, url);
+      const resolved = resolveAbsoluteUrl(linkBase, url);
+      if (isRasterImageUrl(resolved)) return resolved;
     }
   }
 
@@ -64,17 +65,47 @@ function extractImageUrl(block: string, linkBase: string): string | undefined {
     const type = attrValue(tag, 'type');
     const url = attrValue(tag, 'url');
     if (url && (medium === 'image' || type.startsWith('image/'))) {
-      return resolveAbsoluteUrl(linkBase, url);
+      const resolved = resolveAbsoluteUrl(linkBase, url);
+      if (isRasterImageUrl(resolved)) return resolved;
     }
   }
 
   const mediaThumbMatch = block.match(/<media:thumbnail\b[^>]*\/?>/i);
   if (mediaThumbMatch) {
     const url = attrValue(mediaThumbMatch[0] ?? '', 'url');
-    if (url) return resolveAbsoluteUrl(linkBase, url);
+    if (url) {
+      const resolved = resolveAbsoluteUrl(linkBase, url);
+      if (isRasterImageUrl(resolved)) return resolved;
+    }
   }
 
+  const description = tagValue(block, 'description');
+  const fromDescription = extractImageFromHtml(description, linkBase);
+  if (fromDescription) return fromDescription;
+
   return undefined;
+}
+
+function isRasterImageUrl(url: string | undefined): boolean {
+  if (!url) return false;
+  return /\.(png|jpe?g|webp|gif)(\?|$)/i.test(url) || /opengraph-image/i.test(url);
+}
+
+function extractImageFromHtml(html: string, linkBase: string): string | undefined {
+  const imgMatch = html.match(/<img\b[^>]*\ssrc=["']([^"']+)["']/i);
+  if (!imgMatch?.[1]) return undefined;
+  const resolved = resolveAbsoluteUrl(linkBase, imgMatch[1]);
+  return isRasterImageUrl(resolved) ? resolved : undefined;
+}
+
+/** Channel-level RSS image URL (fallback when items omit enclosures). */
+export function parseRssChannelImageUrl(xml: string, feedUrl: string): string | undefined {
+  const imageBlock = xml.match(/<image\b[^>]*>([\s\S]*?)<\/image>/i)?.[1];
+  if (!imageBlock) return undefined;
+  const imageUrl = tagValue(imageBlock, 'url');
+  if (!imageUrl) return undefined;
+  const resolved = resolveAbsoluteUrl(feedUrl, imageUrl);
+  return isRasterImageUrl(resolved) ? resolved : undefined;
 }
 
 /** Extract <item> entries from RSS/XML feed text. */

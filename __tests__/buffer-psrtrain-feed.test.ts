@@ -66,5 +66,6 @@ describe('psrtrain buffer feed', () => {
     });
     expect(posts[0]!.excerpt).toContain('accreditation framework');
     expect(posts.every((p) => p.url.includes('/guides/'))).toBe(true);
+    expect(posts.every((p) => p.imageUrl === 'https://psrtrain.com/opengraph-image')).toBe(true);
   });
 });

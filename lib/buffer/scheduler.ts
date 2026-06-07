@@ -171,6 +171,16 @@ export async function runBufferBlogScheduler(
       );
     }
 
+    for (const post of picked) {
+      if (!post.imageUrl?.trim()) {
+        return {
+          ok: false,
+          reason: `Feed "${feed.id}" post "${post.slug}" has no raster imageUrl`,
+          date: localDate,
+        };
+      }
+    }
+
     let dueAts = generateDayNightPostTimes(
       localDate,
       {
@@ -263,9 +273,7 @@ export async function runBufferBlogScheduler(
           usedPostKeys.add(postCooldownKey(post.feedId, post.slug));
           const pool = feedPosts.get(post.feedId) ?? [];
           const alternate = pool.find(
-            (candidate) =>
-              !usedPostKeys.has(postCooldownKey(candidate.feedId, candidate.slug)) &&
-              !excludeKeys.has(postCooldownKey(candidate.feedId, candidate.slug)),
+            (candidate) => !usedPostKeys.has(postCooldownKey(candidate.feedId, candidate.slug)),
           );
           if (!alternate) throw err;
           post = alternate;
@@ -335,14 +343,14 @@ function poolTooSmall(pool: SchedulablePost[], required: number): boolean {
 async function createScheduledBufferPostWithRetry(
   apiKey: string,
   input: Parameters<typeof createScheduledBufferPost>[1],
-  maxAttempts = 5,
+  maxAttempts = 8,
 ): Promise<Awaited<ReturnType<typeof createScheduledBufferPost>>> {
   let lastError: unknown;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       if (attempt > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
-      } else if (attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 5000 * attempt));
+      } else {
         await new Promise((resolve) => setTimeout(resolve, 400));
       }
       return await createScheduledBufferPost(apiKey, input);

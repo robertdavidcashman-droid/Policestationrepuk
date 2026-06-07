@@ -107,7 +107,7 @@ export function pickRandomSchedulablePosts(
 ): SchedulablePost[] {
   const pool = posts.filter((p) => !excludeKeys.has(postCooldownKey(p.feedId, p.slug)));
   if (pool.length === 0) {
-    throw new Error('No posts available after applying cooldown exclusions');
+    return [];
   }
 
   const shuffled = [...pool];

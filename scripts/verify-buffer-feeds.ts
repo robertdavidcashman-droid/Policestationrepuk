@@ -9,7 +9,6 @@ import { getContentFeeds, loadAllFeedPosts } from '../lib/buffer/feeds';
 
 const MIN_ITEMS = 3;
 const MIN_IMAGE_RATIO = 0.8;
-const FEEDS_WITHOUT_IMAGE_REQUIREMENT = new Set(['psrtrain']);
 
 function loadEnvFile(filename: string) {
   const path = resolve(process.cwd(), filename);
@@ -65,7 +64,7 @@ async function main() {
     const withImage = items.filter((p) => p.imageUrl).length;
     const imageRatio = items.length > 0 ? withImage / items.length : 0;
 
-    if (!FEEDS_WITHOUT_IMAGE_REQUIREMENT.has(feed.id) && imageRatio < MIN_IMAGE_RATIO) {
+    if (imageRatio < MIN_IMAGE_RATIO) {
       issues.push(
         `Image ratio ${(imageRatio * 100).toFixed(0)}% (need ≥ ${MIN_IMAGE_RATIO * 100}%)`,
       );

@@ -34,6 +34,19 @@ describe('buffer feed loaders', () => {
     expect(posts[0]?.imageAlt).toBe('With image');
   });
 
+  it('loadFeedPosts applies psrtrain default opengraph image', async () => {
+    const xml = `<?xml version="1.0"?><rss><channel><item>
+      <title>Guide</title>
+      <link>https://psrtrain.com/guides/what-is-psras</link>
+      <description>Excerpt</description>
+    </item></channel></rss>`;
+    const posts = await loadFeedPosts(
+      { id: 'psrtrain', type: 'rss', url: 'https://psrtrain.com/feed' },
+      async () => xml,
+    );
+    expect(posts[0]?.imageUrl).toBe('https://psrtrain.com/opengraph-image');
+  });
+
   it('resolveAbsoluteImageUrl prefixes relative paths', () => {
     const base = SITE_URL.replace(/\/$/, '');
     expect(resolveAbsoluteImageUrl(base, '/images/foo.webp')).toBe(`${base}/images/foo.webp`);
