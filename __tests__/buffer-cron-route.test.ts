@@ -2,9 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GET } from '@/app/api/cron/buffer-blog-posts/route';
 
 const mockRun = vi.fn();
+const mockEmail = vi.fn();
 
 vi.mock('@/lib/buffer/scheduler', () => ({
   runBufferBlogScheduler: () => mockRun(),
+}));
+
+vi.mock('@/lib/buffer/email', () => ({
+  sendBufferSchedulerFailureEmail: (...args: unknown[]) => mockEmail(...args),
 }));
 
 const ENV = process.env;
@@ -60,5 +65,21 @@ describe('buffer-blog-posts cron route', () => {
       }),
     );
     expect(res.status).toBe(500);
+    expect(mockEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ error: 'BUFFER_API_KEY is not configured' }),
+    );
+  });
+
+  it('sends failure email when scheduler throws', async () => {
+    mockRun.mockRejectedValue(new Error('createPost failed: dueAt is in the past'));
+    const res = await GET(
+      new Request('http://localhost/api/cron/buffer-blog-posts', {
+        headers: { 'x-cron-secret': 'cron-test-secret' },
+      }),
+    );
+    expect(res.status).toBe(500);
+    expect(mockEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ error: 'createPost failed: dueAt is in the past' }),
+    );
   });
 });

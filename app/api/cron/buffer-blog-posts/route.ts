@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
+import { sendBufferSchedulerFailureEmail } from '@/lib/buffer/email';
 import { runBufferBlogScheduler } from '@/lib/buffer/scheduler';
 import { isCronAuthorized } from '@/lib/cron-auth';
+import { localDateInTimezone } from '@/lib/buffer/scheduler-core';
+import { getSchedulerTimezone } from '@/lib/buffer/config';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -16,17 +19,25 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const scheduleDate = localDateInTimezone(new Date(), getSchedulerTimezone());
+
   try {
     const result = await runBufferBlogScheduler();
     if (!result.ok) {
-      return NextResponse.json({ ok: false, error: result.reason }, { status: 500 });
+      const error = result.reason ?? 'Buffer scheduler failed';
+      await sendBufferSchedulerFailureEmail({ error, date: result.date ?? scheduleDate });
+      return NextResponse.json({ ok: false, error }, { status: 500 });
     }
     return NextResponse.json(result);
   } catch (err) {
     console.error('[cron:buffer-blog-posts]', err);
-    return NextResponse.json(
-      { ok: false, error: err instanceof Error ? err.message : 'Buffer scheduler failed' },
-      { status: 500 },
-    );
+    const error = err instanceof Error ? err.message : 'Buffer scheduler failed';
+    const partialPosts =
+      err instanceof Error && 'partialPosts' in err
+        ? (err as Error & { partialPosts?: Array<{ slug: string; channelService: string; dueAt: string | null }> })
+            .partialPosts
+        : undefined;
+    await sendBufferSchedulerFailureEmail({ error, date: scheduleDate, partialPosts });
+    return NextResponse.json({ ok: false, error }, { status: 500 });
   }
 }

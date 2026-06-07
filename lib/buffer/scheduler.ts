@@ -86,31 +86,43 @@ export async function runBufferBlogScheduler(now = new Date()): Promise<BufferSc
   const created: BufferSchedulerResult['posts'] = [];
   const newRecent: RecentSlugEntry[] = [];
 
-  for (let i = 0; i < articles.length; i++) {
-    const article = articles[i]!;
-    const channel = channelOrder[i]!;
-    const dueAt = dueAts[i]!;
-    const url = `${SITE_URL.replace(/\/$/, '')}/Blog/${article.slug}`;
-    const text = buildPostText(article, SITE_URL);
+  try {
+    for (let i = 0; i < articles.length; i++) {
+      const article = articles[i]!;
+      const channel = channelOrder[i]!;
+      const dueAt = dueAts[i]!;
+      const url = `${SITE_URL.replace(/\/$/, '')}/Blog/${article.slug}`;
+      const text = buildPostText(article, SITE_URL);
 
-    const post = await createScheduledBufferPost(apiKey, {
-      channelId: channel.id,
-      channelService: channel.service,
-      text,
-      dueAt,
-      url,
-    });
+      const post = await createScheduledBufferPost(apiKey, {
+        channelId: channel.id,
+        channelService: channel.service,
+        text,
+        dueAt,
+        url,
+      });
 
-    created.push({
-      postId: post.id,
-      slug: article.slug,
-      channelId: channel.id,
-      channelService: post.channelService,
-      dueAt: post.dueAt,
-      title: article.title,
-    });
+      created.push({
+        postId: post.id,
+        slug: article.slug,
+        channelId: channel.id,
+        channelService: post.channelService,
+        dueAt: post.dueAt,
+        title: article.title,
+      });
 
-    newRecent.push({ slug: article.slug, scheduledAt: now.toISOString() });
+      newRecent.push({ slug: article.slug, scheduledAt: now.toISOString() });
+    }
+  } catch (err) {
+    const partial = created.map((p) => ({
+      slug: p.slug,
+      channelService: p.channelService,
+      dueAt: p.dueAt,
+    }));
+    const message = err instanceof Error ? err.message : 'Buffer scheduler failed';
+    const wrapped = new Error(message) as Error & { partialPosts?: typeof partial };
+    wrapped.partialPosts = partial;
+    throw wrapped;
   }
 
   const record: SchedulerRunRecord = {
