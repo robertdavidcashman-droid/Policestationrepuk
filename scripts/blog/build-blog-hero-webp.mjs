@@ -28,6 +28,20 @@ async function toWebpUnderSize(inputPath, width, height, maxBytes) {
   return buf;
 }
 
+async function toJpegUnderSize(inputPath, width, height, maxBytes) {
+  let quality = 88;
+  let buf;
+  for (let i = 0; i < 8; i++) {
+    buf = await sharp(inputPath)
+      .resize(width, height, { fit: 'cover', position: 'centre' })
+      .jpeg({ quality, mozjpeg: true })
+      .toBuffer();
+    if (buf.length <= maxBytes || quality <= 65) break;
+    quality -= 4;
+  }
+  return buf;
+}
+
 async function main() {
   await fs.mkdir(OUT_DIR, { recursive: true });
   const names = await fs.readdir(BLOG_DIR);
@@ -41,9 +55,15 @@ async function main() {
     const inputPath = path.join(BLOG_DIR, file);
     const wideBuf = await toWebpUnderSize(inputPath, WIDE.w, WIDE.h, 150 * 1024);
     const narrowBuf = await toWebpUnderSize(inputPath, NARROW.w, NARROW.h, 90 * 1024);
+    const wideJpg = await toJpegUnderSize(inputPath, WIDE.w, WIDE.h, 200 * 1024);
+    const narrowJpg = await toJpegUnderSize(inputPath, NARROW.w, NARROW.h, 120 * 1024);
     await fs.writeFile(path.join(OUT_DIR, `${slug}.webp`), wideBuf);
     await fs.writeFile(path.join(OUT_DIR, `${slug}-768.webp`), narrowBuf);
-    console.log(`${slug}.webp (${(wideBuf.length / 1024).toFixed(1)} KB), ${slug}-768.webp (${(narrowBuf.length / 1024).toFixed(1)} KB)`);
+    await fs.writeFile(path.join(OUT_DIR, `${slug}.jpg`), wideJpg);
+    await fs.writeFile(path.join(OUT_DIR, `${slug}-768.jpg`), narrowJpg);
+    console.log(
+      `${slug}.webp (${(wideBuf.length / 1024).toFixed(1)} KB), ${slug}.jpg (${(wideJpg.length / 1024).toFixed(1)} KB)`,
+    );
   }
   console.log('Done —', svgs.length, 'heroes →', OUT_DIR);
 }

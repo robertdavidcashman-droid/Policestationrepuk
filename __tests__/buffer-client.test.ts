@@ -174,17 +174,35 @@ describe('buffer client', () => {
     ]);
   });
 
-  it('adds google business whats_new metadata', async () => {
-    const imageUrl = 'https://policestationrepuk.org/images/blog/hero.webp';
-    const fetchMock = stubFetchWithImageProbe(
-      mockBufferCreateSuccess({
-        id: 'post-gb',
-        dueAt: '2026-06-08T12:00:00.000Z',
-        channelId: 'gb-id',
-        channelService: 'googlebusiness',
-      }),
-      imageUrl,
-    );
+  it('adds google business whats_new metadata and uses jpeg not webp', async () => {
+    const imageUrl = 'https://policestationrepuk.org/images/blog/raster/hero.webp';
+    const jpegUrl = 'https://policestationrepuk.org/images/blog/raster/hero.jpg';
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (String(url).includes('api.buffer.com')) {
+        return mockBufferCreateSuccess({
+          id: 'post-gb',
+          dueAt: '2026-06-08T12:00:00.000Z',
+          channelId: 'gb-id',
+          channelService: 'googlebusiness',
+        });
+      }
+      if (String(url) === jpegUrl) {
+        return {
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'image/jpeg', 'content-length': '12000' }),
+        };
+      }
+      if (String(url) === imageUrl) {
+        return {
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'image/webp', 'content-length': '5000' }),
+        };
+      }
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    });
+    vi.stubGlobal('fetch', fetchMock);
 
     await createScheduledBufferPost('api-key', {
       channelId: 'gb-id',
@@ -197,6 +215,7 @@ describe('buffer client', () => {
 
     const bufferCall = fetchMock.mock.calls.find((c) => String(c[0]).includes('api.buffer.com'));
     const body = JSON.parse(String(bufferCall?.[1]?.body));
+    expect(body.variables.input.assets[0].image.url).toBe(jpegUrl);
     expect(body.variables.input.metadata.google).toEqual({
       type: 'whats_new',
       detailsWhatsNew: {

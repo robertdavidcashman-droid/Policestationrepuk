@@ -101,7 +101,9 @@ export async function createScheduledBufferPost(
     imageAlt?: string;
   },
 ): Promise<CreatedBufferPost> {
-  const validatedImageUrl = await assertBufferPostImageReady(input.imageUrl);
+  const validatedImageUrl = await assertBufferPostImageReady(input.imageUrl, fetch, {
+    channelService: input.channelService,
+  });
 
   const metadata = postMetadataForService(input.channelService, input.url);
   const assets = buildBufferImageAssets({
