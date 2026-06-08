@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { buildBufferImageAssets, resolveAbsoluteImageUrl } from '@/lib/buffer/assets';
-import { loadFeedPosts } from '@/lib/buffer/feeds';
+import { FEED_DEFAULT_IMAGES, hydratePostImagesForBuffer, loadFeedPosts } from '@/lib/buffer/feeds';
 import { SITE_URL } from '@/lib/seo-layer/config';
 
 describe('buffer feed loaders', () => {
@@ -72,5 +72,47 @@ describe('buffer feed loaders', () => {
         },
       },
     ]);
+  });
+
+  it('hydratePostImagesForBuffer falls back when RSS image exceeds 5MB', async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      const u = String(url);
+      if (u.includes('huge.jpg')) {
+        return {
+          ok: true,
+          status: 200,
+          headers: new Headers({
+            'content-type': 'image/jpeg',
+            'content-length': String(6 * 1024 * 1024),
+          }),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({
+          'content-type': 'image/jpeg',
+          'content-length': '12000',
+        }),
+      };
+    });
+
+    const hydrated = await hydratePostImagesForBuffer(
+      [
+        {
+          feedId: 'policestationagent',
+          slug: 'test',
+          title: 'Test',
+          excerpt: 'Excerpt',
+          url: 'https://www.policestationagent.com/blog/test',
+          imageUrl: 'https://www.policestationagent.com/huge.jpg',
+          imageAlt: 'Test',
+        },
+      ],
+      'policestationagent',
+      fetchMock as unknown as typeof fetch,
+    );
+
+    expect(hydrated[0]?.imageUrl).toBe(FEED_DEFAULT_IMAGES.policestationagent);
   });
 });

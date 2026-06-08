@@ -4,13 +4,15 @@ import { POLICESTATIONAGENT_SITE } from '@/lib/policestationagent-promo';
 import { SITE_URL } from '@/lib/seo-layer/config';
 import { resolveAbsoluteImageUrl } from './assets';
 import type { ContentFeedSource, SchedulablePost } from './content-types';
+import { resolveBufferImageUrl } from './image-url';
 import { parseRssItems, parseRssChannelImageUrl, slugFromUrl } from './rss';
 
 export type FeedFetcher = (url: string) => Promise<string>;
 
-/** Raster fallbacks when RSS items omit image enclosures (Buffer rejects SVG). */
-const FEED_DEFAULT_IMAGES: Record<string, string> = {
+/** Raster fallbacks when item images are missing or fail Buffer validation (SVG, >5MB, etc.). */
+export const FEED_DEFAULT_IMAGES: Record<string, string> = {
   psrtrain: 'https://psrtrain.com/opengraph-image',
+  policestationagent: 'https://www.policestationagent.com/blog-images/blog-listing-0.jpg',
 };
 
 export interface FeedLoadError {
@@ -121,10 +123,32 @@ export async function loadFeedPosts(
   return rssPosts(source.id, source.url, fetchFn);
 }
 
+/** Ensure each post imageUrl is reachable, raster, and ≤ Buffer 5MB limit. */
+export async function hydratePostImagesForBuffer(
+  posts: SchedulablePost[],
+  feedId: string,
+  httpFetch: typeof fetch = fetch,
+): Promise<SchedulablePost[]> {
+  const fallback = FEED_DEFAULT_IMAGES[feedId];
+  const out: SchedulablePost[] = [];
+
+  for (const post of posts) {
+    const resolved = await resolveBufferImageUrl(
+      [post.imageUrl, fallback],
+      httpFetch,
+    );
+    out.push(resolved ? { ...post, imageUrl: resolved } : { ...post, imageUrl: undefined });
+  }
+
+  return out;
+}
+
 export async function loadAllFeedPosts(
   fetchFn?: FeedFetcher,
+  options?: { imageFetch?: typeof fetch },
 ): Promise<LoadAllFeedPostsResult> {
   const fn = fetchFn ?? defaultFetch;
+  const imageFetch = options?.imageFetch ?? fetch;
   const feeds = getContentFeeds();
   const posts = new Map<string, SchedulablePost[]>();
   const errors: FeedLoadError[] = [];
@@ -132,12 +156,21 @@ export async function loadAllFeedPosts(
   for (const feed of feeds) {
     try {
       const loaded = await loadFeedPosts(feed, fn);
-      posts.set(feed.id, loaded);
-      if (loaded.length === 0) {
+      const hydrated = await hydratePostImagesForBuffer(loaded, feed.id, imageFetch);
+      posts.set(feed.id, hydrated);
+      if (hydrated.length === 0) {
         errors.push({
           feedId: feed.id,
           url: feed.type === 'rss' ? feed.url : undefined,
           message: 'Feed returned zero posts',
+        });
+      }
+      const missingImages = hydrated.filter((p) => !p.imageUrl).length;
+      if (missingImages > 0) {
+        errors.push({
+          feedId: feed.id,
+          url: feed.type === 'rss' ? feed.url : undefined,
+          message: `${missingImages} post(s) have no Buffer-compatible image after validation`,
         });
       }
     } catch (err) {

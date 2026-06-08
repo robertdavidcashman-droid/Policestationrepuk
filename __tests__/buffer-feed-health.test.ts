@@ -1,5 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { loadAllFeedPosts } from '@/lib/buffer/feeds';
+
+function mockBufferImageFetch(): typeof fetch {
+  return vi.fn().mockResolvedValue({
+    ok: true,
+    status: 200,
+    headers: new Headers({
+      'content-type': 'image/jpeg',
+      'content-length': '50000',
+    }),
+  }) as unknown as typeof fetch;
+}
 
 const FIXTURES: Record<string, string> = {
   custodynote: `<?xml version="1.0"?><rss><channel>
@@ -32,7 +43,7 @@ describe('buffer feed health', () => {
       if (url.includes('policestationagent.com')) return FIXTURES.policestationagent!;
       if (url.includes('psrtrain.com')) return FIXTURES.psrtrain!;
       throw new Error(`Unexpected URL ${url}`);
-    });
+    }, { imageFetch: mockBufferImageFetch() });
 
     expect(errors).toEqual([]);
     expect((posts.get('policestationrepuk') ?? []).length).toBeGreaterThanOrEqual(3);
@@ -57,7 +68,7 @@ describe('buffer feed health', () => {
       if (url.includes('policestationagent.com')) return FIXTURES.policestationagent!;
       if (url.includes('psrtrain.com')) return FIXTURES.psrtrain!;
       throw new Error(`Unexpected URL ${url}`);
-    });
+    }, { imageFetch: mockBufferImageFetch() });
 
     expect(errors.some((e) => e.feedId === 'custodynote')).toBe(true);
     expect((posts.get('custodynote') ?? []).length).toBe(0);

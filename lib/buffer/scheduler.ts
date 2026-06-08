@@ -267,7 +267,9 @@ export async function runBufferBlogScheduler(
           break;
         } catch (err) {
           const message = err instanceof Error ? err.message : '';
-          if (!/posted that one recently/i.test(message) || attempt >= 11) {
+          const duplicate = /posted that one recently/i.test(message);
+          const imageRejected = /file size limit|unsupported content-type|image exceeds/i.test(message);
+          if ((!duplicate && !imageRejected) || attempt >= 11) {
             throw err;
           }
           usedPostKeys.add(postCooldownKey(post.feedId, post.slug));
