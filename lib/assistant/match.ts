@@ -1,4 +1,5 @@
 import { ASSISTANT_CORPUS, ASSISTANT_LOW_CONFIDENCE_LINKS } from '@/lib/assistant/corpus';
+import { enrichCoverRouting, isNoteSoftwareIntent } from '@/lib/assistant/cover-routing';
 import { matchFaqOnlyTopic } from '@/lib/assistant/faq-only-topics';
 import { ASSISTANT_DISCLAIMER, checkAssistantGuardrails } from '@/lib/assistant/guardrails';
 import { generateAssistantLlmAnswer, isAssistantLlmEnabled } from '@/lib/assistant/llm';
@@ -117,7 +118,11 @@ function overlapScore(queryTokens: string[], targetTokens: string[]): number {
   return hits / Math.max(queryTokens.length, 1);
 }
 
-function scoreEntry(queryTokens: string[], entry: AssistantEntry): number {
+function scoreEntry(queryTokens: string[], entry: AssistantEntry, message: string): number {
+  if (isNoteSoftwareIntent(message)) {
+    if (entry.id === 'site-station-numbers') return 0;
+  }
+
   const questionTokens = tokenize(entry.question);
   const answerTokens = tokenize(entry.answer.slice(0, 240));
   const keywordTokens = (entry.keywords ?? []).flatMap((k) => tokenize(k));
@@ -134,6 +139,14 @@ function scoreEntry(queryTokens: string[], entry: AssistantEntry): number {
     score += 0.35;
   }
 
+  if (isNoteSoftwareIntent(message) && entry.id === 'site-custody-note') {
+    score += 0.5;
+  }
+
+  if (normalizeText(message).includes('custody note') && entry.id === 'site-custody-note') {
+    score += 0.35;
+  }
+
   return Math.min(1, score);
 }
 
@@ -144,7 +157,7 @@ export function retrieveAssistantContext(message: string, limit = ASSISTANT_RAG_
 
   return ASSISTANT_CORPUS.map((entry) => ({
     entry,
-    score: scoreEntry(queryTokens, entry),
+    score: scoreEntry(queryTokens, entry, message),
   }))
     .filter((m) => m.score > 0)
     .sort((a, b) => b.score - a.score)
@@ -157,7 +170,7 @@ export function matchAssistantCorpus(message: string): AssistantMatch[] {
 
   const scored = ASSISTANT_CORPUS.map((entry) => ({
     entry,
-    score: scoreEntry(queryTokens, entry),
+    score: scoreEntry(queryTokens, entry, message),
   }))
     .filter((m) => m.score >= ASSISTANT_MATCH_THRESHOLD)
     .sort((a, b) => b.score - a.score);
@@ -171,6 +184,11 @@ export function matchAssistantCorpus(message: string): AssistantMatch[] {
     if (out.length >= ASSISTANT_MAX_MATCHES) break;
   }
   return out;
+}
+
+function finalizeResult(message: string, result: AssistantQueryResult): AssistantQueryResult {
+  if (result.refused) return result;
+  return enrichAssistantResult(enrichCoverRouting(message, result));
 }
 
 function buildFallbackResult(matches: AssistantMatch[], refusalMessage?: string): AssistantQueryResult {
@@ -216,6 +234,16 @@ export function queryAssistant(message: string): AssistantQueryResult {
   return result;
 }
 
+function applyFaqResult(
+  message: string,
+  result: AssistantQueryResult,
+  extras?: { faqOnlyTopic?: string; validationCode?: string },
+) {
+  const finalized = finalizeResult(message, result);
+  logResult(message, finalized, extras);
+  return finalized;
+}
+
 function queryAssistantCore(message: string): AssistantQueryResult {
   const guard = checkAssistantGuardrails(message);
   if (guard.refused) {
@@ -229,7 +257,7 @@ function queryAssistantCore(message: string): AssistantQueryResult {
   }
 
   const matches = matchAssistantCorpus(message);
-  return buildFallbackResult(matches);
+  return finalizeResult(message, buildFallbackResult(matches));
 }
 
 export async function queryAssistantWithLlm(message: string): Promise<AssistantQueryResult> {
@@ -252,36 +280,30 @@ export async function queryAssistantWithLlm(message: string): Promise<AssistantQ
               ...ASSISTANT_LOW_CONFIDENCE_LINKS,
             ],
     });
-    logResult(message, faqResult, { faqOnlyTopic: faqOnlyTopic.id });
-    return faqResult;
+    return applyFaqResult(message, faqResult, { faqOnlyTopic: faqOnlyTopic.id });
   }
 
   const topScore = base.matches[0]?.score ?? 0;
   if (topScore >= ASSISTANT_HIGH_CONFIDENCE_THRESHOLD) {
-    const faqResult = enrichAssistantResult({ ...base, mode: 'faq' as const });
-    logResult(message, faqResult);
-    return faqResult;
+    return applyFaqResult(message, enrichAssistantResult({ ...base, mode: 'faq' as const }));
   }
 
   if (!isAssistantLlmEnabled()) {
-    logResult(message, base);
-    return base;
+    return applyFaqResult(message, base);
   }
 
   try {
     const context = retrieveAssistantContext(message);
     const llmAnswer = await generateAssistantLlmAnswer(message, context);
     if (!llmAnswer) {
-      logResult(message, base);
-      return base;
+      return applyFaqResult(message, base);
     }
 
     const validation = validateAssistantLlmOutput(llmAnswer, context);
     if (!validation.valid) {
       console.warn('[assistant] LLM output rejected:', validation.code, validation.reason);
       const rejected: AssistantQueryResult = buildFallbackResult(base.matches, VALIDATION_FALLBACK_MESSAGE);
-      logResult(message, rejected, { validationCode: validation.code });
-      return rejected;
+      return applyFaqResult(message, rejected, { validationCode: validation.code });
     }
 
     const result: AssistantQueryResult = enrichAssistantResult({
@@ -293,16 +315,14 @@ export async function queryAssistantWithLlm(message: string): Promise<AssistantQ
       suggestedLinks: base.matches.length === 0 ? base.suggestedLinks : [],
       refusalMessage: undefined,
     });
-    logResult(message, result);
-    return result;
+    return applyFaqResult(message, result);
   } catch (error) {
     console.error('[assistant] LLM fallback failed:', error);
-    logResult(message, base);
-    return base;
+    return applyFaqResult(message, base);
   }
 }
 
 /** Exported for tests — score a single entry. */
 export function scoreAssistantEntryForTest(message: string, entry: AssistantEntry): number {
-  return scoreEntry(tokenize(message), entry);
+  return scoreEntry(tokenize(message), entry, message);
 }

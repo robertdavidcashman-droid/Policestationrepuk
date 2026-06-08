@@ -60,6 +60,24 @@ const SITE_INTENT_ENTRIES: AssistantEntry[] = [
     keywords: ['whatsapp', 'group chat', 'cover requests', 'community'],
   },
   {
+    id: 'site-custody-note',
+    question: 'What is Custody Note attendance note software?',
+    answer:
+      'Custody Note is desktop software for structured police station attendance notes on Windows and Mac. See our Custody Note page for features, pricing, and a free trial.',
+    category: 'Tools',
+    href: '/CustodyNote',
+    keywords: ['custody note', 'custodynote', 'attendance note', 'note software', 'digital notes', 'pace notes'],
+  },
+  {
+    id: 'site-kent-cover',
+    question: 'How do I get police station cover in Kent?',
+    answer:
+      'For cover at Kent custody suites or within about 45 minutes of West Kingsdown, contact Police Station Agent via WhatsApp or policestationagent.com. For cover elsewhere in England and Wales, search the directory and contact a rep via their listing.',
+    category: 'Directory',
+    href: '/KentAgentCover',
+    keywords: ['kent cover', 'maidstone cover', 'medway cover', 'police station agent', 'urgent cover kent'],
+  },
+  {
     id: 'site-station-numbers',
     question: 'Where can I find police station phone numbers?',
     answer:
@@ -96,12 +114,12 @@ const SITE_INTENT_ENTRIES: AssistantEntry[] = [
     keywords: ['email', 'support', 'enquiry', 'help'],
   },
   {
-    id: 'site-guided-assistant',
+    id: 'site-ai-assistant',
     question: 'What is the AI assistant?',
     answer:
       'The AI assistant answers questions about the directory, registration, PSRAS career routes, and general police station practice topics on this site, using our published FAQs and guides.',
     category: 'Site help',
-    href: '/guided-assistant',
+    href: '/ai-assistant',
     keywords: ['assistant', 'chat', 'help bot', 'faq search'],
   },
 ];

@@ -8,17 +8,17 @@ import { buildMetadata, breadcrumbSchema } from '@/lib/seo';
 export const metadata = buildMetadata({
   title: 'AI Assistant — Site & Career Help',
   description:
-    'Ask the PoliceStationRepUK AI assistant about directory registration, station numbers, WhatsApp, PSRAS guides, and published FAQs. General information only, not legal advice.',
-  path: '/guided-assistant',
+    'Ask the PoliceStationRepUK AI assistant about directory registration, station numbers, PSRAS guides, Custody Note, and published FAQs. General information only, not legal advice.',
+  path: '/ai-assistant',
 });
 
-export default function GuidedAssistantPage() {
+export default function AiAssistantPage() {
   return (
     <>
       <JsonLd
         data={breadcrumbSchema([
           { name: 'Home', url: '/' },
-          { name: 'AI Assistant', url: '/guided-assistant' },
+          { name: 'AI Assistant', url: '/ai-assistant' },
         ])}
       />
       <section className="bg-[var(--navy)] py-10 sm:py-14">
@@ -32,9 +32,10 @@ export default function GuidedAssistantPage() {
           />
           <h1 className="mt-3 text-h1 text-white">AI assistant</h1>
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-slate-300">
-            Chat with our hybrid AI assistant for help with the directory, registration, station numbers,
-            WhatsApp, and PSRAS career topics. Answers draw on published site guides — not legal advice. For
-            custody emergencies, instruct a criminal defence solicitor.
+            Chat with our hybrid AI assistant for help with the directory, registration, station phone
+            numbers, PSRAS career routes, Custody Note software, and how this site works. Answers draw on
+            published guides — not legal advice. For custody emergencies, instruct a criminal defence
+            solicitor.
           </p>
         </div>
       </section>
@@ -45,7 +46,8 @@ export default function GuidedAssistantPage() {
           <AssistantChat className="min-h-[24rem] flex-1" />
         </div>
         <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-[var(--muted)]">
-          Prefer the floating bubble? Use <strong>Ask AI</strong> at the bottom right on any page. Still stuck?{' '}
+          Prefer the floating bubble? Use <strong>Ask AI</strong> in the header or at the bottom right on
+          any page. Still stuck?{' '}
           <Link href="/Contact" className="font-semibold text-[var(--gold-link)] hover:underline">
             Contact us
           </Link>{' '}

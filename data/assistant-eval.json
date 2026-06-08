@@ -187,5 +187,28 @@
     "mustRefuse": false,
     "allowedModes": ["faq", "llm", "fallback"],
     "mustContainAny": ["disclosure", "Disclosure"]
+  },
+  {
+    "id": "custody-note",
+    "question": "tell me about custody note",
+    "mustRefuse": false,
+    "allowedModes": ["faq"],
+    "mustContainAny": ["Custody Note", "custody note"],
+    "mustNotContainAny": ["StationsDirectory", "station phone numbers"]
+  },
+  {
+    "id": "kent-cover-maidenstone",
+    "question": "I need cover at Maidstone police station",
+    "mustRefuse": false,
+    "allowedModes": ["faq"],
+    "mustContainAny": ["Kent", "WhatsApp", "West Kingsdown", "Police Station Agent"]
+  },
+  {
+    "id": "cover-manchester-directory",
+    "question": "I need a rep for Manchester police station",
+    "mustRefuse": false,
+    "allowedModes": ["faq"],
+    "mustContainAny": ["directory", "listing"],
+    "mustNotContainAny": ["wa.me"]
   }
 ]

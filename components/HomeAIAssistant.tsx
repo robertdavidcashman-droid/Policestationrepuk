@@ -25,8 +25,8 @@ export function HomeAIAssistant() {
           </p>
 
           <p className="mt-4 text-sm text-slate-300">
-            <Link href="/guided-assistant" className="font-semibold text-[var(--gold)] hover:underline">
-              Open full AI assistant page →
+            <Link href="/ai-assistant" className="font-semibold text-[var(--gold)] hover:underline">
+              Open full-page AI assistant →
             </Link>
           </p>
         </div>

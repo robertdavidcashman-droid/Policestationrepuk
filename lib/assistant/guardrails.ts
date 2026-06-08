@@ -68,7 +68,7 @@ export function checkAssistantGuardrails(message: string): GuardrailResult {
       code: 'EMPTY',
       message: 'Please enter a question about the directory, registration, or our published guides.',
       suggestedLinks: [
-        { href: '/guided-assistant', label: 'AI assistant' },
+        { href: '/ai-assistant', label: 'AI assistant' },
         { href: '/FAQ', label: 'Help & FAQ' },
       ],
     };

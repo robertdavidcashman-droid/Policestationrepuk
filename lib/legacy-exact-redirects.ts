@@ -69,4 +69,5 @@ export const LEGACY_EXACT_REDIRECTS: Record<string, string> = {
   '/login': '/Account',
   '/sign-in': '/Account',
   '/rep/joanna-wayne': '/rep/joanne-wayne',
+  '/guided-assistant': '/ai-assistant',
 };

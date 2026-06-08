@@ -93,9 +93,9 @@ test.describe('POST /api/assistant/query — live API', () => {
   });
 });
 
-test.describe('/guided-assistant page', () => {
+test.describe('/ai-assistant page', () => {
   test('loads with chat input, disclaimer, and starter prompts', async ({ page }) => {
-    const response = await page.goto('/guided-assistant');
+    const response = await page.goto('/ai-assistant');
     expect(response?.status()).toBe(200);
     await expect(page.getByRole('heading', { name: /AI assistant/i })).toBeVisible();
     await expect(page.getByLabel('Ask a question')).toBeVisible();
@@ -104,15 +104,20 @@ test.describe('/guided-assistant page', () => {
     await expect(page.getByRole('button', { name: 'How do I register on the directory?' })).toBeVisible();
   });
 
+  test('redirects /guided-assistant to /ai-assistant', async ({ page }) => {
+    await page.goto('/ai-assistant');
+    await expect(page).toHaveURL(/\/ai-assistant$/);
+  });
+
   test('FAQ question shows assistant chat reply', async ({ page }) => {
-    await page.goto('/guided-assistant');
+    await page.goto('/ai-assistant');
     await askAssistant(page, 'Do I need a DSCC PIN number?');
     const liveRegion = await waitForAssistantResult(page);
     await expect(liveRegion).toContainText(/dscc/i);
   });
 
   test('case-specific question shows refusal message', async ({ page }) => {
-    await page.goto('/guided-assistant');
+    await page.goto('/ai-assistant');
     await askAssistant(page, 'I was arrested — what should I say in interview?');
     const liveRegion = await waitForAssistantResult(page);
     await expect(liveRegion).toContainText(/cannot give advice/i);
@@ -120,14 +125,14 @@ test.describe('/guided-assistant page', () => {
   });
 
   test('starter prompt chip submits without typing', async ({ page }) => {
-    await page.goto('/guided-assistant');
+    await page.goto('/ai-assistant');
     await page.getByRole('button', { name: 'Join WhatsApp group' }).click();
     const liveRegion = await waitForAssistantResult(page);
     await expect(liveRegion).toContainText(/whatsapp/i);
   });
 
   test('keyboard submit works from the input', async ({ page }) => {
-    await page.goto('/guided-assistant');
+    await page.goto('/ai-assistant');
     const input = page.getByLabel('Ask a question');
     await input.fill('How do I register on the directory?');
     await input.press('Enter');
@@ -137,7 +142,7 @@ test.describe('/guided-assistant page', () => {
 
   test('mobile viewport remains usable', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/guided-assistant');
+    await page.goto('/ai-assistant');
     await expect(page.getByLabel('Ask a question')).toBeVisible();
     await askAssistant(page, 'Find station phone numbers');
     const liveRegion = await waitForAssistantResult(page);
@@ -187,6 +192,34 @@ test.describe('header and homepage Ask AI entry points', () => {
   });
 });
 
+test.describe('assistant cover and custody note routing', () => {
+  test('custody note question returns Custody Note in chat', async ({ page }) => {
+    await page.goto('/FAQ');
+    await page.getByRole('button', { name: 'Open AI assistant' }).click();
+    await askAssistant(page, 'tell me about custody note');
+    const liveRegion = await waitForAssistantResult(page);
+    await expect(liveRegion).toContainText(/Custody Note/i);
+    await expect(liveRegion.getByRole('link', { name: /Custody Note/i })).toBeVisible();
+  });
+
+  test('Contact tab on FAQ has no Kent cover WhatsApp but has join group', async ({ page }) => {
+    await page.goto('/FAQ');
+    await page.getByRole('button', { name: 'Open AI assistant' }).click();
+    const dialog = page.getByRole('dialog', { name: 'AI assistant' });
+    await dialog.getByRole('button', { name: 'Contact', exact: true }).click();
+    await expect(dialog.getByRole('link', { name: 'Join WhatsApp group' })).toBeVisible();
+    await expect(dialog.getByRole('link', { name: 'Kent cover (WhatsApp)' })).toHaveCount(0);
+  });
+
+  test('Contact tab on homepage shows Kent cover WhatsApp', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Open AI assistant' }).click();
+    const dialog = page.getByRole('dialog', { name: 'AI assistant' });
+    await dialog.getByRole('button', { name: 'Contact', exact: true }).click();
+    await expect(dialog.getByRole('link', { name: 'Kent cover (WhatsApp)' })).toBeVisible();
+  });
+});
+
 test.describe('LLM answers (requires OPENAI_API_KEY on server)', () => {
   test.skip(!LLM_E2E_ENABLED, 'Set PW_ASSISTANT_LLM_E2E=1 with OPENAI_API_KEY on the target server');
 
@@ -202,7 +235,7 @@ test.describe('LLM answers (requires OPENAI_API_KEY on server)', () => {
   });
 
   test('low-confidence career question shows AI answer in UI', async ({ page }) => {
-    await page.goto('/guided-assistant');
+    await page.goto('/ai-assistant');
     await askAssistant(page, 'tell me about becoming a rep after working in another field');
     const liveRegion = await waitForAssistantResult(page);
     await expect(liveRegion.getByText('AI answer')).toBeVisible({ timeout: 30_000 });

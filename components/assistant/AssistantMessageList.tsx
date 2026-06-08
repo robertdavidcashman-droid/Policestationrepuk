@@ -13,6 +13,29 @@ type Props = {
   compact?: boolean;
 };
 
+function SuggestedLink({
+  href,
+  label,
+  className,
+}: {
+  href: string;
+  label: string;
+  className: string;
+}) {
+  if (href.startsWith('http://') || href.startsWith('https://')) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+        {label}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} className={className}>
+      {label}
+    </Link>
+  );
+}
+
 function UserBubble({ text, compact }: { text: string; compact?: boolean }) {
   return (
     <div className="flex justify-end">
@@ -72,12 +95,11 @@ function FaqAssistantContent({
           <ul className={`mt-2 flex flex-wrap gap-2 ${compact ? 'text-xs' : 'text-sm'}`}>
             {result.suggestedLinks.map((link) => (
               <li key={link.href}>
-                <Link
+                <SuggestedLink
                   href={link.href}
+                  label={link.label}
                   className="inline-flex rounded-full border border-[var(--border)] bg-white px-2.5 py-1 font-semibold text-[var(--navy)] no-underline hover:border-[var(--gold)]"
-                >
-                  {link.label}
-                </Link>
+                />
               </li>
             ))}
           </ul>
@@ -113,15 +135,32 @@ function FaqAssistantContent({
             {related.map(({ entry }) => (
               <li key={entry.id}>
                 {entry.href ? (
-                  <Link
+                  <SuggestedLink
                     href={entry.href}
+                    label={entry.question}
                     className="inline-flex rounded-full border border-[var(--border)] bg-white px-2.5 py-0.5 text-xs font-medium text-[var(--navy)] no-underline hover:border-[var(--gold)]"
-                  >
-                    {entry.question}
-                  </Link>
+                  />
                 ) : (
                   <span className="text-xs text-[var(--muted)]">{entry.question}</span>
                 )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {result.suggestedLinks.length > 0 && (
+        <div className="mt-3 border-t border-[var(--border)] pt-2">
+          <p className={`font-semibold text-[var(--navy)] ${compact ? 'text-[10px]' : 'text-xs'}`}>
+            Quick links
+          </p>
+          <ul className={`mt-1.5 flex flex-wrap gap-2 ${compact ? 'text-xs' : 'text-sm'}`}>
+            {result.suggestedLinks.map((link) => (
+              <li key={link.href}>
+                <SuggestedLink
+                  href={link.href}
+                  label={link.label}
+                  className="inline-flex rounded-full border border-[var(--border)] bg-white px-2.5 py-1 font-semibold text-[var(--navy)] no-underline hover:border-[var(--gold)]"
+                />
               </li>
             ))}
           </ul>
@@ -192,12 +231,11 @@ function AssistantTurnBubble({
           <ul className="mt-2 flex flex-wrap gap-2">
             {result.suggestedLinks.map((link) => (
               <li key={link.href}>
-                <Link
+                <SuggestedLink
                   href={link.href}
+                  label={link.label}
                   className="font-semibold text-[var(--navy)] underline-offset-2 hover:underline"
-                >
-                  {link.label} →
-                </Link>
+                />
               </li>
             ))}
           </ul>

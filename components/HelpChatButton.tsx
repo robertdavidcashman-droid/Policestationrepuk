@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AssistantChat } from '@/components/AssistantChat';
 import { useAssistantUi } from '@/components/assistant/AssistantUiProvider';
+import { isPsaCoverPageContext } from '@/lib/assistant/cover-routing';
 import { CONTACT_WHATSAPP_HREF } from '@/lib/contact-constants';
 import { SUPPORT_MAILTO_HREF } from '@/lib/site-contact';
 
@@ -26,7 +27,7 @@ function SparkleIcon() {
 export function HelpChatButton() {
   const { open, setOpen, tab, setTab, showHint } = useAssistantUi();
   const pathname = usePathname();
-  const isHome = pathname === '/';
+  const showKentCoverWhatsApp = isPsaCoverPageContext(pathname);
   const panelRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -110,21 +111,14 @@ export function HelpChatButton() {
             className={`min-h-0 flex-1 overflow-hidden ${tab === 'ask' ? 'flex flex-col p-4 pt-3' : 'overflow-y-auto p-4'}`}
           >
             {tab === 'ask' ? (
-              <>
-                <AssistantChat compact className="min-h-0 flex-1" />
-                <p className="mt-2 shrink-0 text-center text-[11px] text-[var(--muted)]">
-                  <Link href="/guided-assistant" className="font-semibold text-[var(--navy)] hover:underline">
-                    Open full AI assistant page →
-                  </Link>
-                </p>
-              </>
+              <AssistantChat compact className="min-h-0 flex-1" />
             ) : (
               <>
                 <h4 className="text-sm font-bold text-[var(--navy)]">Need help?</h4>
                 <p className="mt-2 text-xs text-[var(--muted)]">
-                  {isHome
-                    ? 'Use the directory to find reps nationwide. Kent agency phone and WhatsApp are in the Kent section on this page.'
-                    : 'Email or contact us for directory enquiries. For urgent cover, use rep listings or WhatsApp.'}
+                  {showKentCoverWhatsApp
+                    ? 'For Kent police station cover (Kent or within ~45 minutes of West Kingsdown), use Kent cover WhatsApp below. For cover elsewhere, search the directory and contact a rep via their listing.'
+                    : 'For police station cover, search the directory and contact a rep directly via their listing. For cover in Kent or within ~45 minutes of West Kingsdown, see our Kent pages or Ask AI.'}
                 </p>
                 <div className="mt-4 flex flex-col gap-2">
                   <a
@@ -139,14 +133,26 @@ export function HelpChatButton() {
                   >
                     Contact Us
                   </Link>
-                  {!isHome && (
+                  <Link
+                    href="/directory"
+                    className="rounded-lg border border-[var(--border)] px-4 py-2.5 text-center text-sm font-medium text-[var(--navy)] no-underline transition-colors hover:border-[var(--gold)] hover:bg-slate-50"
+                  >
+                    Find a rep (directory)
+                  </Link>
+                  <Link
+                    href="/WhatsApp"
+                    className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-center text-sm font-medium text-emerald-800 no-underline transition-colors hover:bg-emerald-100"
+                  >
+                    Join WhatsApp group
+                  </Link>
+                  {showKentCoverWhatsApp && (
                     <a
                       href={CONTACT_WHATSAPP_HREF}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-center text-sm font-medium text-emerald-800 no-underline transition-colors hover:bg-emerald-100"
                     >
-                      WhatsApp
+                      Kent cover (WhatsApp)
                     </a>
                   )}
                   <Link

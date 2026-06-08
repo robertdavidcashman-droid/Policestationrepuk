@@ -41,6 +41,12 @@ export const FAQ_ONLY_TOPICS: FaqOnlyTopic[] = [
     guideHref: '/PrepareForCIT',
     guideLabel: 'CIT guide',
   },
+  {
+    id: 'custody-note',
+    pattern: /\b(custody\s*note|custodynote|attendance note software|digital custody notes?)\b/i,
+    guideHref: '/CustodyNote',
+    guideLabel: 'Custody Note',
+  },
 ];
 
 export function matchFaqOnlyTopic(message: string): FaqOnlyTopic | null {
