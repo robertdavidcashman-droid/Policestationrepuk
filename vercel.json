@@ -17,6 +17,18 @@
       "has": [{ "type": "host", "value": "www.policestationrepuk.org" }],
       "destination": "https://policestationrepuk.org/$1",
       "statusCode": 301
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "policestationrepukdirectory.com" }],
+      "destination": "https://policestationrepuk.org/$1",
+      "statusCode": 301
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.policestationrepukdirectory.com" }],
+      "destination": "https://policestationrepuk.org/$1",
+      "statusCode": 301
     }
   ],
   "crons": [

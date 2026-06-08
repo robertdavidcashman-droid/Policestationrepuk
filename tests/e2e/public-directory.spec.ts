@@ -88,6 +88,11 @@ test.describe('Cross-domain redirects', () => {
     expect(page.url()).toContain('/register');
   });
 
+  test('policestationrepukdirectory.com redirects to .org', async ({ page }) => {
+    await page.goto('https://policestationrepukdirectory.com/');
+    expect(page.url()).toContain('policestationrepuk.org');
+  });
+
   test('/Register (capital R) redirects to /register', async ({ page }) => {
     await page.goto('/Register');
     expect(page.url()).toContain('/register');

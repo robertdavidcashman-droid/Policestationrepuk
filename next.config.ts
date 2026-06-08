@@ -109,6 +109,18 @@ const nextConfig: NextConfig = {
         destination: "https://policestationrepuk.org/:path*",
         permanent: true,
       },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "policestationrepukdirectory.com" }],
+        destination: "https://policestationrepuk.org/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.policestationrepukdirectory.com" }],
+        destination: "https://policestationrepuk.org/:path*",
+        permanent: true,
+      },
       { source: "/PoliceStationRepsKent", destination: "/directory/kent", permanent: true },
       { source: "/PoliceStationRepsLondon", destination: "/directory/london", permanent: true },
       { source: "/PoliceStationRepsEssex", destination: "/directory/essex", permanent: true },

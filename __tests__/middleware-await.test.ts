@@ -20,5 +20,6 @@ describe('Middleware — no Supabase session refresh', () => {
 
   it('still handles canonical host redirects', () => {
     expect(source).toContain('canonicalHostRedirect');
+    expect(source).toContain('policestationrepukdirectory.com');
   });
 });

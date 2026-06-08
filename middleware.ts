@@ -47,7 +47,9 @@ function canonicalHostRedirect(request: NextRequest): NextResponse | null {
   if (
     host === 'policestationrepuk.com' ||
     host === 'www.policestationrepuk.com' ||
-    host === 'new.policestationrepuk.com'
+    host === 'new.policestationrepuk.com' ||
+    host === 'policestationrepukdirectory.com' ||
+    host === 'www.policestationrepukdirectory.com'
   ) {
     const url = request.nextUrl.clone();
     url.hostname = apex;
