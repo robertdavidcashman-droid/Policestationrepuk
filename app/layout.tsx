@@ -100,19 +100,19 @@ export default function RootLayout({
         <link rel="alternate" type="text/plain" title="LLM discovery" href="/llms.txt" />
       </head>
       <body className="flex min-h-screen min-h-[100dvh] flex-col overflow-x-clip bg-[var(--background)] font-sans text-[var(--foreground)] antialiased">
-        <JsonLd data={platformLegalServiceSchema()} />
-        <JsonLd data={webSiteSchema()} />
-        <a href="#main-content" className="skip-link">
-          Skip to content
-        </a>
-        <div className="sticky top-0 z-40 overflow-visible shadow-md">
-          <PromoBannerStack />
-          <Header />
-        </div>
-        <main id="main-content" className="site-shell-main flex-1 w-full min-w-0">{children}</main>
-        <SiteWidePromoStrip />
-        <Footer />
         <AssistantUiProvider>
+          <JsonLd data={platformLegalServiceSchema()} />
+          <JsonLd data={webSiteSchema()} />
+          <a href="#main-content" className="skip-link">
+            Skip to content
+          </a>
+          <div className="sticky top-0 z-40 overflow-visible shadow-md">
+            <PromoBannerStack />
+            <Header />
+          </div>
+          <main id="main-content" className="site-shell-main flex-1 w-full min-w-0">{children}</main>
+          <SiteWidePromoStrip />
+          <Footer />
           <DeferredGlobalWidgets />
         </AssistantUiProvider>
       </body>

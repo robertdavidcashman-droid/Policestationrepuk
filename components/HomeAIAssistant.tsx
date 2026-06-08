@@ -20,9 +20,8 @@ export function HomeAIAssistant() {
           </OpenAiAssistantButton>
 
           <p className="mt-4 text-sm text-slate-300">
-            Or use the{' '}
-            <span className="font-semibold text-[var(--gold)]">Ask AI</span> bubble at the bottom
-            right on any page.
+            Or use <strong className="text-[var(--gold)]">Ask AI</strong> in the header or the
+            floating button at the bottom right on any page.
           </p>
 
           <p className="mt-4 text-sm text-slate-300">

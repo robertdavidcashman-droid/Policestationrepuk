@@ -154,6 +154,37 @@ test.describe('floating AI chat widget', () => {
     const liveRegion = await waitForAssistantResult(page);
     await expect(liveRegion).toContainText(/register|directory/i);
   });
+
+  test('FAB is viewport-fixed without scrolling on a long page', async ({ page }) => {
+    await page.goto('/FAQ');
+    const fab = page.getByRole('button', { name: 'Open AI assistant' });
+    await expect(fab).toBeVisible();
+    const beforeScroll = await fab.boundingBox();
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    const afterScroll = await fab.boundingBox();
+    expect(beforeScroll).toBeTruthy();
+    expect(afterScroll).toBeTruthy();
+    expect(afterScroll!.y).toBeCloseTo(beforeScroll!.y, 0);
+  });
+});
+
+test.describe('header and homepage Ask AI entry points', () => {
+  test('header Ask AI opens the floating panel', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/');
+    await page.locator('header').getByRole('button', { name: 'Ask AI' }).click();
+    await expect(page.getByRole('dialog', { name: 'AI assistant' })).toBeVisible();
+    await expect(page.getByLabel('Ask a question')).toBeFocused();
+  });
+
+  test('homepage Open AI chat opens the same panel', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Open AI chat' }).click();
+    await expect(page.getByRole('dialog', { name: 'AI assistant' })).toBeVisible();
+    await askAssistant(page, 'How do I register on the directory?');
+    const liveRegion = await waitForAssistantResult(page);
+    await expect(liveRegion).toContainText(/register|directory/i);
+  });
 });
 
 test.describe('LLM answers (requires OPENAI_API_KEY on server)', () => {

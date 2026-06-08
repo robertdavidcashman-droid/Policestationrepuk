@@ -106,15 +106,19 @@ body {
 
 /* Fixed FABs / cookie bar — respect iPhone home indicator and notched edges */
 .fixed-ui-bottom {
+  position: fixed;
   bottom: var(--fixed-bottom-base);
 }
 .fixed-ui-bottom-raised {
+  position: fixed;
   bottom: var(--fixed-bottom-raised);
 }
 .fixed-ui-left {
+  position: fixed;
   left: calc(0.75rem + var(--safe-area-left));
 }
 .fixed-ui-right {
+  position: fixed;
   right: calc(0.75rem + var(--safe-area-right));
 }
 @media (min-width: 640px) {

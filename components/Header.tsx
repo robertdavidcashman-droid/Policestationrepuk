@@ -18,6 +18,7 @@ import {
   HEADER_LOGIN_HREF,
   type HeaderNavLink,
 } from '@/lib/site-navigation';
+import { HeaderAskAiButton } from '@/components/assistant/HeaderAskAiButton';
 
 function ShareIcon({ className }: { className?: string }) {
   return (
@@ -212,6 +213,7 @@ export function Header() {
           {shareOpen ? 'Copied!' : 'Share'}
         </span>
       </button>
+      <HeaderAskAiButton className="hidden min-h-[var(--header-touch-compact)] shrink-0 items-center rounded-lg border border-white/25 bg-white/10 px-2.5 text-xs font-semibold !text-white no-underline transition-colors hover:border-[var(--gold)] hover:bg-white/15 xl:inline-flex xl:text-sm" />
       <Link
         href={HEADER_HELP_HREF}
         className="hidden min-h-[var(--header-touch-compact)] shrink-0 items-center px-2 text-xs font-medium !text-white/80 no-underline transition-colors hover:!text-[var(--gold)] xl:inline-flex xl:text-sm"
@@ -355,6 +357,10 @@ export function Header() {
             ))}
 
             <div className="mt-3 grid gap-2 border-t border-[var(--navy-light)] pt-3">
+              <HeaderAskAiButton
+                onNavigate={() => setOpen(false)}
+                className="btn-gold block w-full text-center !text-sm"
+              />
               <Link href={HEADER_HELP_HREF} onClick={() => setOpen(false)} className={drawerLinkClass}>
                 Help
               </Link>

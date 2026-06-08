@@ -15,7 +15,6 @@ export function OpenAiAssistantButton({ className, children }: Props) {
       type="button"
       onClick={() => ui?.openAssistant()}
       className={className}
-      disabled={!ui}
     >
       {children}
     </button>
