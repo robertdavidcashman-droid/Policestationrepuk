@@ -6,15 +6,19 @@ export function findingFingerprint(unitId: string, code: string): string {
   return `${unitId}:${code}`;
 }
 
+function isNotifySeverity(severity: string): severity is AuditFinding['severity'] {
+  return severity === 'PROBLEM' || severity === 'REVIEW';
+}
+
 export function scanUnit(unit: AuditUnit): AuditFinding[] {
-  const flags = scanText(unit.text).filter((f) => f.severity === 'PROBLEM' || f.severity === 'REVIEW');
+  const flags = scanText(unit.text).filter((f) => isNotifySeverity(f.severity));
   return flags.map((flag) => ({
     fingerprint: findingFingerprint(unit.id, flag.code),
     unitId: unit.id,
     url: unit.url,
     sectionTitle: unit.sectionTitle,
     sourceFile: unit.sourceFile,
-    severity: flag.severity,
+    severity: flag.severity as AuditFinding['severity'],
     code: flag.code,
     reason: flag.message,
     proposedFix: proposedFixForCode(flag.code),
