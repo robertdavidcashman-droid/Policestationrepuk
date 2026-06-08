@@ -8,6 +8,7 @@ import {
 import { detectSourceType, extractDomain, isOfficialSourceType } from '@/lib/custody-discovery/source-type';
 import {
   confidenceLevelFromScore,
+  meetsNotifyConfidenceThreshold,
   scoreConfidence,
   shouldAutoRejectFinding,
 } from '@/lib/custody-discovery/confidence';
@@ -122,6 +123,12 @@ describe('confidence scoring', () => {
       hasConflictingNumbers: false,
     });
     expect(confidenceLevelFromScore(highConfidence)).toBe('high');
+  });
+
+  it('only notifies when confidence is strictly above 50%', () => {
+    expect(meetsNotifyConfidenceThreshold(50)).toBe(false);
+    expect(meetsNotifyConfidenceThreshold(51)).toBe(true);
+    expect(meetsNotifyConfidenceThreshold(80)).toBe(true);
   });
 
   it('rejects findings without source URL or very low score', () => {

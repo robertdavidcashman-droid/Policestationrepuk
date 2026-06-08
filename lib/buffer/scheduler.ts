@@ -268,7 +268,10 @@ export async function runBufferBlogScheduler(
         } catch (err) {
           const message = err instanceof Error ? err.message : '';
           const duplicate = /posted that one recently/i.test(message);
-          const imageRejected = /file size limit|unsupported content-type|image exceeds/i.test(message);
+          const imageRejected =
+            /file size limit|unsupported content-type|image exceeds|image validation failed|image too large|non-raster image path|requires a blog image url/i.test(
+              message,
+            );
           if ((!duplicate && !imageRejected) || attempt >= 11) {
             throw err;
           }

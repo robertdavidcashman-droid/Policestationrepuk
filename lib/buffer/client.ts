@@ -1,5 +1,6 @@
 import type { BufferChannelService } from './config';
 import { buildBufferImageAssets } from './assets';
+import { assertBufferPostImageReady } from './image-url';
 
 const BUFFER_API_URL = 'https://api.buffer.com';
 
@@ -100,9 +101,11 @@ export async function createScheduledBufferPost(
     imageAlt?: string;
   },
 ): Promise<CreatedBufferPost> {
+  const validatedImageUrl = await assertBufferPostImageReady(input.imageUrl);
+
   const metadata = postMetadataForService(input.channelService, input.url);
   const assets = buildBufferImageAssets({
-    imageUrl: input.imageUrl,
+    imageUrl: validatedImageUrl,
     imageAlt: input.imageAlt,
     title: input.text.split('\n')[0] ?? input.text,
   });

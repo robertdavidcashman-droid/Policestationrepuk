@@ -18,6 +18,35 @@ export interface BufferImageProbeResult {
   reason?: string;
 }
 
+/** Thrown when a post image fails pre-flight validation (before Buffer API createPost). */
+export class BufferPostImageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'BufferPostImageError';
+  }
+}
+
+/** Validate image URL every time before scheduling — raster type, reachable, ≤ 5MB. */
+export async function assertBufferPostImageReady(
+  imageUrl: string | undefined | null,
+  fetchFn: typeof fetch = fetch,
+): Promise<string> {
+  const trimmed = imageUrl?.trim();
+  if (!trimmed) {
+    throw new BufferPostImageError('Buffer post requires a blog image URL');
+  }
+  if (!isRasterImagePath(trimmed)) {
+    throw new BufferPostImageError('non-raster image path');
+  }
+
+  const probe = await probeBufferImageUrl(trimmed, fetchFn);
+  if (!probe.ok) {
+    throw new BufferPostImageError(probe.reason ?? 'image validation failed');
+  }
+
+  return trimmed;
+}
+
 export function isBufferCompatibleContentType(contentType: string | null | undefined): boolean {
   if (!contentType) return false;
   const base = contentType.split(';')[0]?.trim().toLowerCase();

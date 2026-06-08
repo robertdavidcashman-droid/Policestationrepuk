@@ -53,6 +53,13 @@ export function confidenceLevelFromScore(score: number): ConfidenceLevel {
   return 'reject';
 }
 
+/** Minimum score (0–100) to include a finding in daily notify emails. */
+export const NOTIFY_MIN_CONFIDENCE_SCORE = 50;
+
+export function meetsNotifyConfidenceThreshold(score: number): boolean {
+  return score > NOTIFY_MIN_CONFIDENCE_SCORE;
+}
+
 export function shouldAutoRejectFinding(score: number, sourceUrl: string): boolean {
   if (!sourceUrl?.trim().startsWith('http')) return true;
   return score < 20;

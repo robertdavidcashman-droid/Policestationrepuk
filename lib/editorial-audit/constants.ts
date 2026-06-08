@@ -1,0 +1,57 @@
+export const EDITORIAL_PAGE_PATHS = [
+  '/PACE',
+  '/FAQ',
+  '/BeginnersGuide',
+  '/HowToBecomePoliceStationRep',
+  '/DSCCRegistrationGuide',
+  '/GetWork',
+  '/FindSupervisingSolicitor',
+  '/PoliceStationRates',
+  '/PoliceStationRepPay',
+  '/EscapeFeeCalculator',
+  '/MagistratesCourtFees',
+  '/CrownCourtFees',
+  '/RepFAQMaster',
+  '/free-legal-advice-police-station',
+  '/police-station-rights-uk',
+  '/CommonOffencesGuide',
+  '/Resources',
+  '/InterviewUnderCaution',
+  '/PoliceDisclosureGuide',
+  '/WhatDoesRepDo',
+  '/DutySolicitorVsRep',
+  '/PrepareForCIT',
+  '/BuildPortfolioGuide',
+  '/PrepareForWrittenExam',
+  '/GettingStarted',
+  '/AccreditedRepresentativeGuide',
+  '/HowToBecome',
+  '/CriminalLawCareerGuide',
+] as const;
+
+export const GUIDE_LIB_BY_PATH: Record<string, string> = {
+  '/InterviewUnderCaution': 'lib/guide-interview-under-caution.ts',
+  '/PoliceDisclosureGuide': 'lib/guide-police-disclosure.ts',
+  '/WhatDoesRepDo': 'lib/guide-what-does-rep-do.ts',
+  '/DutySolicitorVsRep': 'lib/guide-duty-solicitor-vs-rep.ts',
+  '/PrepareForCIT': 'lib/guide-prepare-for-cit.ts',
+  '/BuildPortfolioGuide': 'lib/guide-build-portfolio.ts',
+  '/PrepareForWrittenExam': 'lib/guide-prepare-for-written-exam.ts',
+  '/GettingStarted': 'lib/guide-getting-started.ts',
+  '/AccreditedRepresentativeGuide': 'lib/guide-accredited-representative.ts',
+  '/HowToBecome': 'lib/guide-how-to-become-short.ts',
+  '/CriminalLawCareerGuide': 'lib/guide-criminal-law-career.ts',
+};
+
+export const FEE_RIGHTS_PATHS = new Set([
+  '/PoliceStationRates',
+  '/PoliceStationRepPay',
+  '/EscapeFeeCalculator',
+  '/MagistratesCourtFees',
+  '/CrownCourtFees',
+  '/free-legal-advice-police-station',
+  '/police-station-rights-uk',
+  '/PACE',
+]);
+
+export const AUDIT_LOG_PATH = 'audit/CONTENT-ACCURACY-REVIEW.md';

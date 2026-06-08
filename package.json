@@ -64,6 +64,8 @@
     "buffer:replace-today": "npx tsx scripts/replace-buffer-schedule-today.ts",
     "buffer:verify-feeds": "npx tsx scripts/verify-buffer-feeds.ts",
     "buffer:probe-images": "npx tsx scripts/probe-feed-images.ts",
+    "buffer:schedule-gaps": "npx tsx scripts/schedule-buffer-gap-posts.ts",
+    "buffer:verify-scheduled-images": "npx tsx scripts/verify-buffer-scheduled-images.ts",
     "buffer:smoke": "npx tsx scripts/smoke-buffer-api.ts",
     "test:buffer": "vitest run __tests__/buffer-config.test.ts __tests__/buffer-client.test.ts __tests__/buffer-blog-scheduler.test.ts __tests__/buffer-day-night.test.ts __tests__/buffer-rss.test.ts __tests__/buffer-feeds.test.ts __tests__/buffer-feed-health.test.ts __tests__/buffer-image-url.test.ts __tests__/buffer-psrtrain-feed.test.ts __tests__/buffer-scheduler-integration.test.ts __tests__/buffer-cron-route.test.ts __tests__/buffer-blog-catalog.test.ts __tests__/buffer-email.test.ts __tests__/cron-auth.test.ts && npm run buffer:verify-feeds",
     "test:assistant": "vitest run __tests__/assistant-match.test.ts __tests__/assistant-llm.test.ts __tests__/assistant-query-route.test.ts __tests__/assistant-content-accuracy.test.ts __tests__/assistant-guardrails-extended.test.ts __tests__/assistant-output-validator.test.ts __tests__/assistant-eval.test.ts __tests__/assistant-logging.test.ts",

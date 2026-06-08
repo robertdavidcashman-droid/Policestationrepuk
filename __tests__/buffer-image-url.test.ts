@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   BUFFER_MAX_IMAGE_BYTES,
+  assertBufferPostImageReady,
   bufferImageRejectReason,
   isBufferCompatibleContentType,
   isRasterImagePath,
@@ -41,6 +42,23 @@ describe('buffer image-url validation', () => {
     });
     const result = await probeBufferImageUrl('https://example.com/a.jpg', fetchMock as unknown as typeof fetch);
     expect(result.ok).toBe(true);
+  });
+
+  it('assertBufferPostImageReady rejects missing and oversized URLs', async () => {
+    await expect(assertBufferPostImageReady(undefined)).rejects.toThrow(/requires a blog image URL/i);
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers({
+        'content-type': 'image/jpeg',
+        'content-length': String(6 * 1024 * 1024),
+      }),
+    });
+
+    await expect(
+      assertBufferPostImageReady('https://example.com/huge.jpg', fetchMock as unknown as typeof fetch),
+    ).rejects.toThrow(/too large/i);
   });
 
   it('resolveBufferImageUrl falls back when primary URL is too large', async () => {
