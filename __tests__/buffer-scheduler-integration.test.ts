@@ -69,6 +69,10 @@ describe('runBufferBlogScheduler integration', () => {
       dueAt: input.dueAt,
       channelId: input.channelId,
       channelService: input.channelService,
+      imageUrl:
+        input.channelService === 'googlebusiness' && input.imageUrl?.includes('.webp')
+          ? input.imageUrl.replace(/\.webp(\?.*)?$/i, '.jpg$1')
+          : input.imageUrl,
     }));
   });
 
@@ -98,6 +102,23 @@ describe('runBufferBlogScheduler integration', () => {
     expect(result.ok).toBe(true);
     expect(result.skipped).toBe(true);
     expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('re-runs when force is true even if a run exists for the local date', async () => {
+    mockGetRun.mockResolvedValue({
+      date: '2026-06-08',
+      scheduledAt: '2026-06-08T05:00:00.000Z',
+      postIds: ['a'],
+      slugs: ['slug-a'],
+      feedIds: ['policestationrepuk'],
+      channels: ['ch1'],
+      dueAts: ['t1'],
+    });
+
+    const result = await runBufferBlogScheduler(new Date('2026-06-08T05:00:00Z'), { force: true });
+    expect(result.ok).toBe(true);
+    expect(result.skipped).toBeUndefined();
+    expect(mockCreate).toHaveBeenCalled();
   });
 
   it('schedules posts per feed with day and night times', async () => {

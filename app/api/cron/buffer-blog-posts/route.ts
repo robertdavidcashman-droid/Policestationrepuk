@@ -21,13 +21,19 @@ export async function GET(request: Request) {
   }
 
   const scheduleDate = localDateInTimezone(new Date(), getSchedulerTimezone());
+  const force = new URL(request.url).searchParams.get('force') === '1';
 
   try {
-    const result = await runBufferBlogScheduler();
+    const result = await runBufferBlogScheduler(new Date(), { force });
     if (!result.ok) {
       const error = result.reason ?? 'Buffer scheduler failed';
       await sendBufferSchedulerFailureEmail({ error, date: result.date ?? scheduleDate });
       return NextResponse.json({ ok: false, error }, { status: 500 });
+    }
+    if (result.skipped) {
+      console.warn(
+        `[cron:buffer-blog-posts] Skipped for ${result.date ?? scheduleDate}: ${result.reason ?? 'already scheduled'}`,
+      );
     }
     return NextResponse.json(result);
   } catch (err) {

@@ -58,7 +58,7 @@ function formatFeedLoadErrors(
 
 export async function runBufferBlogScheduler(
   now = new Date(),
-  options?: { respectCurrentTime?: boolean; extraExcludeKeys?: Set<string> },
+  options?: { respectCurrentTime?: boolean; extraExcludeKeys?: Set<string>; force?: boolean },
 ): Promise<BufferSchedulerResult> {
   const apiKey = getBufferApiKey();
   if (!apiKey) {
@@ -67,8 +67,9 @@ export async function runBufferBlogScheduler(
 
   const timezone = getSchedulerTimezone();
   const localDate = localDateInTimezone(now, timezone);
-  const existingRun = await getSchedulerRunForDate(localDate);
+  const existingRun = options?.force ? null : await getSchedulerRunForDate(localDate);
   if (existingRun) {
+    console.warn(`[buffer:scheduler] Already scheduled for ${localDate} — skipping (use force to re-run)`);
     return {
       ok: true,
       skipped: true,
@@ -267,7 +268,10 @@ export async function runBufferBlogScheduler(
           break;
         } catch (err) {
           const message = err instanceof Error ? err.message : '';
-          const duplicate = /posted that one recently/i.test(message);
+          const duplicate =
+            /posted that one recently|already got this one scheduled|not able to post the same thing twice/i.test(
+              message,
+            );
           const imageRejected =
             /file size limit|unsupported content-type|image exceeds|image validation failed|image too large|non-raster image path|requires a blog image url|google business requires|no google business compatible/i.test(
               message,
@@ -299,7 +303,7 @@ export async function runBufferBlogScheduler(
         channelService: createdPost.channelService,
         dueAt: createdPost.dueAt,
         title: post.title,
-        imageUrl: post.imageUrl,
+        imageUrl: createdPost.imageUrl ?? post.imageUrl,
       });
 
       newRecent.push({

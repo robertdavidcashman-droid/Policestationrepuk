@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { getAllBlogArticles } from '@/lib/blog/registry';
 import { buildPostText } from '@/lib/buffer/scheduler-core';
+import { googleBusinessImageCandidates } from '@/lib/buffer/image-url';
 import { SITE_URL } from '@/lib/seo-layer/config';
 
 describe('buffer blog catalog readiness', () => {
@@ -27,5 +28,14 @@ describe('buffer blog catalog readiness', () => {
     const entry = vercel.crons.find((c) => c.path === '/api/cron/buffer-blog-posts');
     expect(entry).toBeDefined();
     expect(entry?.schedule).toBe('5 5 * * *');
+  });
+
+  it('every blog hero has a Google Business JPEG candidate', () => {
+    const base = SITE_URL.replace(/\/$/, '');
+    for (const article of getAllBlogArticles()) {
+      const webpUrl = `${base}${article.image.src}`;
+      const candidates = googleBusinessImageCandidates(webpUrl, base);
+      expect(candidates.some((u) => /\.jpe?g(\?|$)/i.test(u))).toBe(true);
+    }
   });
 });

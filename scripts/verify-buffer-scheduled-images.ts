@@ -16,8 +16,10 @@ import { FEED_DEFAULT_IMAGES, loadAllFeedPosts } from '../lib/buffer/feeds';
 import {
   BUFFER_MAX_IMAGE_BYTES,
   isBufferCompatibleContentType,
+  isGoogleBusinessImageContentType,
   isRasterImagePath,
   probeBufferImageUrl,
+  probeGoogleBusinessImageUrl,
 } from '../lib/buffer/image-url';
 import { localDateInTimezone, timezoneOffsetForDate } from '../lib/buffer/scheduler-core';
 import type { SchedulablePost } from '../lib/buffer/content-types';
@@ -119,15 +121,40 @@ async function main() {
       slug: slug ?? '(unknown)',
       channel: item.channelService,
       bufferHasImage: item.hasImage,
-      imageUrl,
+      bufferAssetUrl: item.imageUrl,
+      feedImageUrl: imageUrl,
     };
+
+    const isGoogleBusiness = item.channelService === 'googlebusiness';
 
     if (!item.hasImage) {
       issues.push({ ...row, issue: 'Buffer post has no image asset attached' });
     }
 
+    if (isGoogleBusiness) {
+      if (!item.imageUrl?.trim()) {
+        issues.push({ ...row, issue: 'Google Business post missing Buffer asset image URL' });
+      } else if (/\.webp(\?|$)/i.test(item.imageUrl)) {
+        issues.push({ ...row, issue: 'Google Business Buffer asset URL is WebP (requires JPEG/PNG)' });
+      } else {
+        const gbpProbe = await probeGoogleBusinessImageUrl(item.imageUrl);
+        row.gbpContentType = gbpProbe.contentType;
+        row.gbpProbeOk = gbpProbe.ok;
+        if (!gbpProbe.ok) {
+          issues.push({ ...row, issue: gbpProbe.reason ?? 'Google Business image probe failed' });
+        } else if (gbpProbe.contentType && !isGoogleBusinessImageContentType(gbpProbe.contentType)) {
+          issues.push({
+            ...row,
+            issue: `Google Business requires JPEG/PNG (got ${gbpProbe.contentType})`,
+          });
+        }
+      }
+    }
+
     if (!imageUrl?.trim()) {
-      issues.push({ ...row, issue: 'No hydrated imageUrl for this article in feed loader' });
+      if (!isGoogleBusiness) {
+        issues.push({ ...row, issue: 'No hydrated imageUrl for this article in feed loader' });
+      }
       checked.push(row);
       continue;
     }
@@ -174,7 +201,8 @@ async function main() {
     timezone,
     scheduledCount: scheduled.length,
     withBufferImage: scheduled.filter((p) => p.hasImage).length,
-    withValidProbe: checked.filter((r) => r.probeOk === true).length,
+    withValidProbe: checked.filter((r) => r.probeOk === true || r.gbpProbeOk === true).length,
+    googleBusinessPosts: scheduled.filter((p) => p.channelService === 'googlebusiness').length,
     usingFallbackImage: fallbacks.length,
     issueCount: issues.length,
     maxBytes: BUFFER_MAX_IMAGE_BYTES,

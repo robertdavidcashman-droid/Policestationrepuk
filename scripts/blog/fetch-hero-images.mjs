@@ -4,7 +4,8 @@
  * Default behaviour: download a curated Unsplash photo per slug
  *   (Unsplash License — free, commercial use OK, attribution appreciated)
  *   from images.unsplash.com, then write a 16:9 1200x675 hero plus a
- *   768x432 narrow companion to public/images/blog/raster/{slug}.webp.
+ *   768x432 narrow companion to public/images/blog/raster/{slug}.webp, plus
+ *   matching {slug}.jpg and {slug}-768.jpg for Google Business (JPEG/PNG only).
  *
  * Optional Pexels fallback: if PEXELS_API_KEY is set and a slug query is
  *   listed in PEXELS_QUERIES, the script will try Pexels first and fall back
@@ -228,6 +229,43 @@ async function toWebpFromBuffer(buf, width, height, maxBytes) {
   return out;
 }
 
+async function toJpegFromBuffer(buf, width, height, maxBytes) {
+  let quality = 88;
+  let out;
+  for (let i = 0; i < 8; i++) {
+    out = await sharp(buf)
+      .resize(width, height, { fit: 'cover', position: 'attention' })
+      .jpeg({ quality, mozjpeg: true })
+      .toBuffer();
+    if (out.length <= maxBytes || quality <= 65) break;
+    quality -= 4;
+  }
+  return out;
+}
+
+async function toJpegFromWebpFile(webpPath, width, height, maxBytes) {
+  return toJpegFromBuffer(await fs.readFile(webpPath), width, height, maxBytes);
+}
+
+/** True when JPEG companions are missing or older than the wide webp source. */
+async function jpegNeedsBackfill(wideWebpPath, wideJpgPath, narrowJpgPath) {
+  if (!(await exists(wideJpgPath)) || !(await exists(narrowJpgPath))) return true;
+  const webpMtime = (await fs.stat(wideWebpPath)).mtimeMs;
+  const wideJpgMtime = (await fs.stat(wideJpgPath)).mtimeMs;
+  const narrowJpgMtime = (await fs.stat(narrowJpgPath)).mtimeMs;
+  return wideJpgMtime < webpMtime || narrowJpgMtime < webpMtime;
+}
+
+async function writeJpegCompanions(slug, wideWebpPath, narrowWebpPath) {
+  const wideJpgPath = path.join(OUT_DIR, `${slug}.jpg`);
+  const narrowJpgPath = path.join(OUT_DIR, `${slug}-768.jpg`);
+  const wideJpg = await toJpegFromWebpFile(wideWebpPath, WIDE.w, WIDE.h, 200 * 1024);
+  const narrowJpg = await toJpegFromWebpFile(narrowWebpPath, NARROW.w, NARROW.h, 120 * 1024);
+  await fs.writeFile(wideJpgPath, wideJpg);
+  await fs.writeFile(narrowJpgPath, narrowJpg);
+  return { wideJpgPath, narrowJpgPath, wideJpg, narrowJpg };
+}
+
 async function fromSvgFile(svgPath, width, height, maxBytes) {
   let quality = 88;
   let buf;
@@ -269,12 +307,27 @@ async function main() {
   for (const slug of slugs) {
     const widePath = path.join(OUT_DIR, `${slug}.webp`);
     const narrowPath = path.join(OUT_DIR, `${slug}-768.webp`);
+    const wideJpgPath = path.join(OUT_DIR, `${slug}.jpg`);
+    const narrowJpgPath = path.join(OUT_DIR, `${slug}-768.jpg`);
     if (!FORCE && (await exists(widePath)) && (await exists(narrowPath))) {
-      // marker: already done; rerun with --force to refresh
       const wsz = (await fs.stat(widePath)).size;
       if (wsz > 60_000) {
-        // Photographic webp — keep.
-        results.push({ slug, source: 'cached', size: wsz });
+        if (await jpegNeedsBackfill(widePath, wideJpgPath, narrowJpgPath)) {
+          const jpgs = await writeJpegCompanions(slug, widePath, narrowPath);
+          results.push({
+            slug,
+            source: 'jpg-regenerated',
+            wideJpg: jpgs.wideJpg.length,
+            narrowJpg: jpgs.narrowJpg.length,
+          });
+          console.log(
+            `${slug}: jpg-regenerated ${(jpgs.wideJpg.length / 1024).toFixed(1)}KB / ${(
+              jpgs.narrowJpg.length / 1024
+            ).toFixed(1)}KB`,
+          );
+        } else {
+          results.push({ slug, source: 'cached', size: wsz });
+        }
         continue;
       }
       // smaller than ~60KB → almost certainly an SVG-banner rasterisation;
@@ -307,9 +360,13 @@ async function main() {
 
     let wideBuf;
     let narrowBuf;
+    let wideJpgBuf;
+    let narrowJpgBuf;
     if (buffer) {
       wideBuf = await toWebpFromBuffer(buffer, WIDE.w, WIDE.h, 150 * 1024);
       narrowBuf = await toWebpFromBuffer(buffer, NARROW.w, NARROW.h, 90 * 1024);
+      wideJpgBuf = await toJpegFromBuffer(buffer, WIDE.w, WIDE.h, 200 * 1024);
+      narrowJpgBuf = await toJpegFromBuffer(buffer, NARROW.w, NARROW.h, 120 * 1024);
     } else {
       const svgPath = path.join(BLOG_DIR, `${slug}.svg`);
       if (!(await exists(svgPath))) {
@@ -319,23 +376,40 @@ async function main() {
       credit = '(local SVG fallback)';
       wideBuf = await fromSvgFile(svgPath, WIDE.w, WIDE.h, 150 * 1024);
       narrowBuf = await fromSvgFile(svgPath, NARROW.w, NARROW.h, 90 * 1024);
+      wideJpgBuf = await toJpegFromBuffer(await fs.readFile(svgPath), WIDE.w, WIDE.h, 200 * 1024);
+      narrowJpgBuf = await toJpegFromBuffer(await fs.readFile(svgPath), NARROW.w, NARROW.h, 120 * 1024);
     }
 
     await fs.writeFile(widePath, wideBuf);
     await fs.writeFile(narrowPath, narrowBuf);
-    results.push({ slug, source, credit, wide: wideBuf.length, narrow: narrowBuf.length });
+    await fs.writeFile(wideJpgPath, wideJpgBuf);
+    await fs.writeFile(narrowJpgPath, narrowJpgBuf);
+    results.push({
+      slug,
+      source,
+      credit,
+      wide: wideBuf.length,
+      narrow: narrowBuf.length,
+      wideJpg: wideJpgBuf.length,
+      narrowJpg: narrowJpgBuf.length,
+    });
     console.log(
-      `${slug}: ${source} ${(wideBuf.length / 1024).toFixed(1)}KB / ${(
+      `${slug}: ${source} webp ${(wideBuf.length / 1024).toFixed(1)}KB / ${(
         narrowBuf.length / 1024
-      ).toFixed(1)}KB — ${credit}`
+      ).toFixed(1)}KB, jpg ${(wideJpgBuf.length / 1024).toFixed(1)}KB / ${(
+        narrowJpgBuf.length / 1024
+      ).toFixed(1)}KB — ${credit}`,
     );
   }
 
   console.log(`\nDone — ${slugs.length} hero images in ${OUT_DIR}`);
   const cached = results.filter((r) => r.source === 'cached').length;
+  const jpgRegenerated = results.filter((r) => r.source === 'jpg-regenerated').length;
   const fetched = results.filter((r) => r.source === 'unsplash' || r.source === 'pexels').length;
   const svg = results.filter((r) => r.source === 'svg-fallback').length;
-  console.log(`Summary: ${fetched} fetched, ${cached} cached, ${svg} SVG fallback`);
+  console.log(
+    `Summary: ${fetched} fetched, ${cached} cached, ${jpgRegenerated} jpg-regenerated, ${svg} SVG fallback`,
+  );
 }
 
 main().catch((e) => {

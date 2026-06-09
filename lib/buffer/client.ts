@@ -59,6 +59,8 @@ export interface CreatedBufferPost {
   dueAt: string | null;
   channelId: string;
   channelService: string;
+  /** Validated image URL sent to Buffer (JPEG for Google Business). */
+  imageUrl?: string;
 }
 
 export interface BufferScheduledPostSummary {
@@ -69,6 +71,8 @@ export interface BufferScheduledPostSummary {
   text: string;
   allowedActions: string[];
   hasImage: boolean;
+  /** First image asset URL attached to the post, when exposed by Buffer. */
+  imageUrl?: string;
 }
 
 function postMetadataForService(
@@ -168,7 +172,7 @@ export async function createScheduledBufferPost(
     throw new BufferApiError(`createPost failed: ${message}`, result);
   }
 
-  return result.post;
+  return { ...result.post, imageUrl: validatedImageUrl };
 }
 
 export async function listScheduledBufferPosts(
@@ -194,7 +198,7 @@ export async function listScheduledBufferPosts(
             channelService: string;
             text: string;
             allowedActions: string[];
-            assets: Array<{ __typename?: string }>;
+            assets: Array<{ __typename?: string; source?: string; mimeType?: string | null }>;
           };
         }>;
         pageInfo: { hasNextPage: boolean; endCursor: string | null };
@@ -212,8 +216,12 @@ export async function listScheduledBufferPosts(
               text
               allowedActions
               assets {
-                __typename
+              __typename
+              ... on ImageAsset {
+                source
+                mimeType
               }
+            }
             }
           }
           pageInfo {
@@ -238,6 +246,7 @@ export async function listScheduledBufferPosts(
 
     for (const edge of data.posts.edges) {
       const node = edge.node;
+      const assetImageUrl = node.assets?.find((a) => a.source)?.source;
       posts.push({
         id: node.id,
         dueAt: node.dueAt,
@@ -246,6 +255,7 @@ export async function listScheduledBufferPosts(
         text: node.text,
         allowedActions: node.allowedActions ?? [],
         hasImage: (node.assets?.length ?? 0) > 0,
+        imageUrl: assetImageUrl,
       });
     }
 

@@ -5,7 +5,9 @@ import { loadAllFeedPosts } from '../lib/buffer/feeds';
 import {
   BUFFER_MAX_IMAGE_BYTES,
   probeBufferImageUrl,
+  resolveGoogleBusinessImageUrl,
 } from '../lib/buffer/image-url';
+import { SITE_URL } from '../lib/seo-layer/config';
 
 function loadEnvFile(filename: string) {
   const path = resolve(process.cwd(), filename);
@@ -29,6 +31,9 @@ function loadEnvFile(filename: string) {
 
 async function main() {
   loadEnvFile('.env.local');
+  loadEnvFile('.env.vercel.production');
+
+  const googleBusinessOnly = process.argv.includes('--google-business');
   const { posts } = await loadAllFeedPosts();
   const bad: Array<Record<string, unknown>> = [];
 
@@ -38,6 +43,28 @@ async function main() {
         bad.push({ feedId, slug: item.slug, reason: 'missing imageUrl' });
         continue;
       }
+
+      if (googleBusinessOnly) {
+        if (feedId !== 'policestationrepuk') continue;
+        const resolved = await resolveGoogleBusinessImageUrl(item.imageUrl, fetch, SITE_URL);
+        if (!resolved) {
+          bad.push({
+            feedId,
+            slug: item.slug,
+            url: item.imageUrl,
+            reason: 'no Google Business compatible JPEG/PNG image',
+          });
+        } else if (/\.webp(\?|$)/i.test(resolved)) {
+          bad.push({
+            feedId,
+            slug: item.slug,
+            url: resolved,
+            reason: 'resolved URL is still WebP',
+          });
+        }
+        continue;
+      }
+
       const probe = await probeBufferImageUrl(item.imageUrl);
       if (!probe.ok) {
         bad.push({
@@ -56,7 +83,19 @@ async function main() {
     }
   }
 
-  console.log(JSON.stringify({ ok: bad.length === 0, maxBytes: BUFFER_MAX_IMAGE_BYTES, totalBad: bad.length, bad }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        ok: bad.length === 0,
+        mode: googleBusinessOnly ? 'google-business' : 'buffer',
+        maxBytes: BUFFER_MAX_IMAGE_BYTES,
+        totalBad: bad.length,
+        bad,
+      },
+      null,
+      2,
+    ),
+  );
   if (bad.length) process.exit(1);
 }
 
