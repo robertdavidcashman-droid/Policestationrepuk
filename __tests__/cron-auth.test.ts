@@ -4,7 +4,8 @@ import { isCronAuthorized } from '@/lib/cron-auth';
 describe('isCronAuthorized', () => {
   it('allows any request when secret is unset', () => {
     const req = new Request('http://localhost/api/cron/test');
-    expect(isCronAuthorized(req, undefined)).toBe(true);
+    // Explicit empty string — `undefined` would fall through to process.env.CRON_SECRET via default param.
+    expect(isCronAuthorized(req, '')).toBe(true);
   });
 
   it('rejects missing credentials when secret is set', () => {
