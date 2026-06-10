@@ -1,4 +1,7 @@
 import type { BlogArticle } from './types';
+import { POLICESTATIONAGENT_FREE_ADVICE_HREF } from '@/lib/policestationagent-promo';
+
+const PSA_PUBLIC_HREF = POLICESTATIONAGENT_FREE_ADVICE_HREF;
 
 const IMG = (slug: string, alt: string) => ({
   src: `/images/blog/raster/${slug}.webp`,
@@ -80,7 +83,7 @@ A directory is **not** a substitute for:
 - Your firm’s panel rules
 - Supervision decisions where a solicitor must attend
 
-It *is* a legitimate way to **discover names** you then vet like any new professional relationship. For regulated legal representation beyond accredited rep work, see [Need a solicitor?](https://www.policestationagent.com).
+It *is* a legitimate way to **discover names** you then vet like any new professional relationship. For regulated legal representation beyond accredited rep work, see [Need a solicitor?](${PSA_PUBLIC_HREF}).
 
 ## Build the habit before the crisis
 
@@ -166,7 +169,7 @@ Link onward to [what to include in a brief](/Blog/what-to-include-in-a-police-st
 
 Capture what worked: note quality, communication style, fee discussion. Emergency **police station rep cover** gets cheaper when you stop treating every job like the first.
 
-If the client needs a solicitor rather than rep-only attendance, [Need a solicitor?](https://www.policestationagent.com).
+If the client needs a solicitor rather than rep-only attendance, [Need a solicitor?](${PSA_PUBLIC_HREF}).
 
 ---
 
@@ -315,7 +318,7 @@ Do not rely on general articles for your decision — use professional advice.
 
 PoliceStationRepUK lists professionals for discovery; it does not replace **police station rep insurance** checks. Pair visibility with clean documentation so when a firm shortlists you from the [directory](/directory), you can respond same day. For more on sustainable freelance practice, see [building a rep career](/Blog/freelance-police-station-rep-career), and for accreditation context read [accreditation and standards](/Blog/accreditation-and-standards-in-freelance-police-station-work).
 
-If a matter requires a solicitor’s retainer, direct clients appropriately — [Need a solicitor?](https://www.policestationagent.com).
+If a matter requires a solicitor’s retainer, direct clients appropriately — [Need a solicitor?](${PSA_PUBLIC_HREF}).
 
 ---
 
@@ -462,7 +465,7 @@ Skim the [attendance checklist](/Blog/police-station-attendance-checklist). Conf
 
 Produce structured notes quickly. Firms building regional panels should know reps can be found via [search](/search) and [county hubs](/directory/kent) — but your immediate duty is a safe, ethical consultation.
 
-Members of the public needing a solicitor should be directed to [Need a solicitor?](https://www.policestationagent.com).
+Members of the public needing a solicitor should be directed to [Need a solicitor?](${PSA_PUBLIC_HREF}).
 
 ---
 
@@ -610,7 +613,7 @@ For broader firm-facing context, our [Police Disclosure Guide](/PoliceDisclosure
 
 ## Afterward
 
-Tie disclosure notes into [custody record review](/Blog/how-to-review-custody-record) observations where relevant. Firms needing cover can [find a rep](/directory); members of the public needing solicitors should see [Need a solicitor?](https://www.policestationagent.com).
+Tie disclosure notes into [custody record review](/Blog/how-to-review-custody-record) observations where relevant. Firms needing cover can [find a rep](/directory); members of the public needing solicitors should see [Need a solicitor?](${PSA_PUBLIC_HREF}).
 
 ---
 
@@ -639,6 +642,7 @@ Tie disclosure notes into [custody record review](/Blog/how-to-review-custody-re
       'freelance-police-station-representative-vs-duty-solicitor',
       'pre-interview-consultation-rep-guide',
       'handling-disclosure-police-station',
+      'sentencing-act-2026-key-changes',
     ],
     faqs: [
       {
@@ -683,11 +687,11 @@ Record:
 - The client’s **informed position** without unsafe speculation
 - Any **change of plan** mid-interview and who authorised it
 
-Link to [pre-interview consultation](/Blog/pre-interview-consultation-rep-guide) for structure.
+Link to [pre-interview consultation](/Blog/pre-interview-consultation-rep-guide) for structure. For how post-interview outcomes interact with new sentencing rules, see [Sentencing Act 2026 key changes](/Blog/sentencing-act-2026-key-changes).
 
 ## Public readers
 
-If someone landed here as a member of the public, they need a solicitor — [Need a solicitor?](https://www.policestationagent.com). Professionals can continue to [search the directory](/directory) for accredited reps.
+If someone landed here as a member of the public, they need a solicitor — [Need a solicitor?](${PSA_PUBLIC_HREF}). Professionals can continue to [search the directory](/directory) for accredited reps.
 
 ---
 

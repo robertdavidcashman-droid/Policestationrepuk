@@ -36,9 +36,12 @@ jobs:
         run: npm run audit:blog-seo
       - name: Blog orphan link check
         run: npm run audit:blog-orphans
-        continue-on-error: true
+      - name: Cross-domain partner link check
+        run: npm run audit:cross-domain-links
       - name: Partner UTM guard
         run: node scripts/audit/partner-utm-guard.mjs
+      - name: Blog partner UTM guard
+        run: node scripts/audit/blog-partner-utm.mjs
       - name: Blog JSON-LD shape check
         run: npm run validate:schema
       - name: Live sitemap crawl (sample)

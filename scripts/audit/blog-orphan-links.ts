@@ -1,22 +1,14 @@
 #!/usr/bin/env npx tsx
 /**
  * Find blog posts with no inbound internal links from other blog articles.
+ * Counts body markdown /Blog/ links, relatedSlugs, and topic-cluster sidebar links.
  * Usage: npm run audit:blog-orphans
  */
-import { getAllBlogArticles } from '../lib/blog/registry';
-import { readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { getAllBlogArticles } from '../../lib/blog/registry';
+import { getTopicClusterForSlug } from '../../lib/blog/topic-clusters';
 
-const BLOG_DIR = join(process.cwd(), 'content/blog');
-
-function slugFromFilename(name: string): string {
-  return name.replace(/\.mdx?$/, '');
-}
-
-function internalBlogLinksInFile(path: string): string[] {
-  const text = readFileSync(path, 'utf8');
-  const matches = text.matchAll(/\[([^\]]*)\]\(\/Blog\/([^)]+)\)/g);
-  return [...matches].map((m) => m[2]!.trim());
+function blogLinksInMarkdown(md: string): string[] {
+  return [...md.matchAll(/\[([^\]]*)\]\(\/Blog\/([^)]+)\)/g)].map((m) => m[2]!.trim());
 }
 
 function main() {
@@ -28,12 +20,25 @@ function main() {
     inbound.set(slug, new Set());
   }
 
-  const files = readdirSync(BLOG_DIR).filter((f) => f.endsWith('.md') || f.endsWith('.mdx'));
-  for (const file of files) {
-    const source = slugFromFilename(file);
-    for (const target of internalBlogLinksInFile(join(BLOG_DIR, file))) {
-      if (!slugs.has(target)) continue;
+  for (const article of articles) {
+    const source = article.slug;
+
+    for (const target of blogLinksInMarkdown(article.bodyMarkdown)) {
+      if (!slugs.has(target) || target === source) continue;
       inbound.get(target)?.add(source);
+    }
+
+    for (const target of article.relatedSlugs ?? []) {
+      if (!slugs.has(target) || target === source) continue;
+      inbound.get(target)?.add(`${source}:related`);
+    }
+
+    const cluster = getTopicClusterForSlug(source);
+    if (cluster) {
+      for (const target of cluster.relatedSlugs) {
+        if (!slugs.has(target) || target === source) continue;
+        inbound.get(target)?.add(`${source}:cluster`);
+      }
     }
   }
 

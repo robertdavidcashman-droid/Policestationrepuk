@@ -49,6 +49,7 @@
     "audit:blog-orphans": "npx tsx scripts/audit/blog-orphan-links.ts",
     "audit:cross-domain-links": "npx tsx scripts/audit/cross-domain-links.ts",
     "audit:partner-utm": "node scripts/audit/partner-utm-guard.mjs",
+    "audit:blog-partner-utm": "node scripts/audit/blog-partner-utm.mjs",
     "audit:content-accuracy": "npx tsx scripts/audit/content-accuracy-scan.ts",
     "validate:schema": "npx tsx scripts/audit/validate-blog-schema.ts",
     "test:directory-search": "npx tsx scripts/directory-search-selftest.ts",
