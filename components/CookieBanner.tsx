@@ -26,6 +26,10 @@ export function CookieBanner() {
     localStorage.setItem(COOKIE_ACCEPTED_KEY, 'true');
     setVisible(false);
     document.body.classList.remove('cookie-bar-visible');
+    const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
+    if (gaId && typeof window.gtag === 'function') {
+      window.gtag('config', gaId, { anonymize_ip: true });
+    }
   };
 
   if (!visible) return null;

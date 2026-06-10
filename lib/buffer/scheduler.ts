@@ -110,8 +110,6 @@ export async function runBufferBlogScheduler(
     }
   }
 
-  const totalPosts = feedSchedules.reduce((sum, { schedule }) => sum + schedule.postsPerFeed, 0);
-
   const recentEntries = await getRecentSlugEntries();
   const excludeKeys = slugsInCooldown(recentEntries, cooldownDays, now);
   if (options?.extraExcludeKeys) {
@@ -122,15 +120,34 @@ export async function runBufferBlogScheduler(
 
   const { posts: feedPosts, errors: feedErrors } = await loadAllFeedPosts();
   if (feedErrors.length > 0) {
+    console.warn(`[buffer:scheduler] Feed load issues: ${formatFeedLoadErrors(feedErrors)}`);
+  }
+
+  const activeFeedSchedules = feedSchedules.filter(
+    ({ feed }) => (feedPosts.get(feed.id) ?? []).length > 0,
+  );
+  if (activeFeedSchedules.length === 0) {
     return {
       ok: false,
-      reason: `Feed load failed: ${formatFeedLoadErrors(feedErrors)}`,
+      reason: `All feeds failed to load: ${formatFeedLoadErrors(feedErrors)}`,
       date: localDate,
     };
   }
+  if (activeFeedSchedules.length < feedSchedules.length) {
+    const skipped = feedSchedules
+      .filter(({ feed }) => (feedPosts.get(feed.id) ?? []).length === 0)
+      .map(({ feed }) => feed.id);
+    console.warn(
+      `[buffer:scheduler] Skipping feeds with no posts this run: ${skipped.join(', ')}`,
+    );
+  }
 
+  const activeTotalPosts = activeFeedSchedules.reduce(
+    (sum, { schedule }) => sum + schedule.postsPerFeed,
+    0,
+  );
   const rng = mulberry32(hashSeed(`buffer-scheduler:${localDate}`));
-  const channelOrder = shuffleChannelsRepeated(channels, totalPosts, rng);
+  const channelOrder = shuffleChannelsRepeated(channels, activeTotalPosts, rng);
 
   let dayWindow = getSchedulerDayWindow();
   let nightWindow = getSchedulerNightWindow();
@@ -160,7 +177,7 @@ export async function runBufferBlogScheduler(
   let channelIndex = 0;
   const pickedByFeed = new Map<string, SchedulablePost[]>();
 
-  for (const { feed, schedule } of feedSchedules) {
+  for (const { feed, schedule } of activeFeedSchedules) {
     const pool = feedPosts.get(feed.id) ?? [];
     const feedRng = mulberry32(hashSeed(`buffer-scheduler:${localDate}:${feed.id}`));
     const picked = pickRandomSchedulablePosts(pool, schedule.postsPerFeed, excludeKeys, feedRng);
@@ -235,7 +252,7 @@ export async function runBufferBlogScheduler(
     }
   }
 
-  for (const { feed, schedule } of feedSchedules) {
+  for (const { feed, schedule } of activeFeedSchedules) {
     const picked = pickedByFeed.get(feed.id) ?? [];
     if (picked.length === 0) {
       return {

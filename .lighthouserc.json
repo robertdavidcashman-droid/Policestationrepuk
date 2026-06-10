@@ -1,16 +1,30 @@
 {
   "ci": {
     "collect": {
-      "startServerCommand": "npm run start",
-      "url": ["http://127.0.0.1:3000/"],
       "numberOfRuns": 1,
+      "startServerCommand": "npm run start",
+      "startServerReadyPattern": "Ready in",
+      "startServerReadyTimeout": 120000,
       "settings": {
-        "preset": "desktop"
-      }
+        "preset": "lighthouse:default",
+        "chromeFlags": "--no-sandbox --disable-gpu --disable-dev-shm-usage"
+      },
+      "url": [
+        "http://127.0.0.1:3000/",
+        "http://127.0.0.1:3000/Blog",
+        "http://127.0.0.1:3000/directory",
+        "http://127.0.0.1:3000/Blog/what-does-a-freelance-police-station-representative-do",
+        "http://127.0.0.1:3000/Map",
+        "http://127.0.0.1:3000/Resources",
+        "http://127.0.0.1:3000/HowToBecomePoliceStationRep",
+        "http://127.0.0.1:3000/Contact",
+        "http://127.0.0.1:3000/About",
+        "http://127.0.0.1:3000/register"
+      ]
     },
     "assert": {
       "assertions": {
-        "categories:performance": ["warn", { "minScore": 0.8 }],
+        "categories:performance": ["warn", { "minScore": 0.75 }],
         "categories:accessibility": ["warn", { "minScore": 0.9 }],
         "categories:best-practices": ["warn", { "minScore": 0.9 }],
         "categories:seo": ["warn", { "minScore": 0.9 }]

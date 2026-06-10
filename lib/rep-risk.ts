@@ -491,7 +491,7 @@ export function scoreRepresentativeRisk(
   });
 }
 
-export type DuplicateKind = 'email' | 'phone' | 'pin' | 'sra' | 'ip' | 'name';
+export type DuplicateKind = 'email' | 'phone' | 'pin' | 'sra' | 'ip' | 'name' | 'namePostcode';
 
 export interface DuplicateInput {
   email: string;
@@ -500,6 +500,18 @@ export interface DuplicateInput {
   sraNumber?: string;
   ipAddress?: string;
   name?: string;
+  postcode?: string;
+}
+
+function normalizePostcode(postcode: string | undefined): string {
+  return (postcode ?? '').replace(/\s+/g, '').toLowerCase();
+}
+
+function namePostcodeKey(name: string | undefined, postcode: string | undefined): string | undefined {
+  const n = (name ?? '').trim().toLowerCase();
+  const p = normalizePostcode(postcode);
+  if (!n || !p) return undefined;
+  return `${n}|${p}`;
 }
 
 /** Build duplicate lookup indexes from a population of audited rows. */
@@ -511,6 +523,7 @@ export function buildDuplicateIndex(rows: Iterable<DuplicateInput>): Record<Dupl
     sra: new Map(),
     ip: new Map(),
     name: new Map(),
+    namePostcode: new Map(),
   };
   for (const r of rows) {
     const id = r.email.toLowerCase();
@@ -528,6 +541,7 @@ export function buildDuplicateIndex(rows: Iterable<DuplicateInput>): Record<Dupl
     push('sra', r.sraNumber);
     push('ip', r.ipAddress);
     push('name', r.name);
+    push('namePostcode', namePostcodeKey(r.name, r.postcode));
   }
   return idx;
 }
@@ -554,5 +568,6 @@ export function duplicateReasons(
   check('sra', input.sraNumber, 'SRA number');
   check('ip', input.ipAddress, 'IP address');
   check('name', input.name, 'full name');
+  check('namePostcode', namePostcodeKey(input.name, input.postcode), 'name and postcode combination');
   return reasons;
 }

@@ -5,6 +5,7 @@ import { SITE_URL } from '@/lib/seo-layer/config';
 import { resolveAbsoluteImageUrl } from './assets';
 import type { ContentFeedSource, SchedulablePost } from './content-types';
 import { resolveBufferImageUrl, resolveGoogleBusinessImageUrlForPost, googleBusinessFeedFallbackUrl } from './image-url';
+import { fetchRssWithFallback } from './rss-fetch';
 import { parseRssItems, parseRssChannelImageUrl, slugFromUrl } from './rss';
 
 export type FeedFetcher = (url: string) => Promise<string>;
@@ -216,12 +217,5 @@ export async function loadAllFeedPosts(
 }
 
 async function defaultFetch(url: string): Promise<string> {
-  const res = await fetch(url, {
-    headers: { Accept: 'application/rss+xml, application/xml, text/xml, */*' },
-    signal: AbortSignal.timeout(20_000),
-  });
-  if (!res.ok) {
-    throw new Error(`Feed fetch failed ${url}: HTTP ${res.status}`);
-  }
-  return res.text();
+  return fetchRssWithFallback(url);
 }

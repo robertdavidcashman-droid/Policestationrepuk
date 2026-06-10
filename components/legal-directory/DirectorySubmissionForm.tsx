@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { AnalyticsEvents } from '@/lib/analytics';
 import Link from 'next/link';
+import { useState } from 'react';
 import { LEGAL_DIRECTORY_CATEGORIES } from '@/lib/legal-directory/categories';
 import { ENGLISH_COUNTIES } from '@/lib/english-counties';
 import { UK_REGIONS, LEGAL_DIRECTORY_BASE, PSR_LEGAL_DIRECTORY_CATEGORY_SLUG, REP_DIRECTORY_LINKS } from '@/lib/legal-directory/constants';
@@ -13,7 +14,31 @@ export function DirectorySubmissionForm() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [categorySlug, setCategorySlug] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [logoUploading, setLogoUploading] = useState(false);
   const [startedAt] = useState(() => Date.now());
+
+  async function onLogoSelected(file: File | null) {
+    if (!file) return;
+    setLogoUploading(true);
+    try {
+      const fd = new FormData();
+      fd.set('file', file);
+      const res = await fetch('/api/legal-directory/logo', { method: 'POST', body: fd });
+      const data = (await res.json()) as { ok?: boolean; url?: string; error?: string };
+      if (!res.ok || !data.url) {
+        setMessage(data.error ?? 'Logo upload failed.');
+        setStatus('error');
+        return;
+      }
+      setLogoUrl(data.url);
+    } catch {
+      setMessage('Logo upload failed.');
+      setStatus('error');
+    } finally {
+      setLogoUploading(false);
+    }
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -29,6 +54,7 @@ export function DirectorySubmissionForm() {
       }
     });
     body._startedAt = startedAt;
+    if (logoUrl) body.logoUrl = logoUrl;
 
     try {
       const res = await fetch('/api/legal-directory/submit', {
@@ -43,6 +69,7 @@ export function DirectorySubmissionForm() {
         return;
       }
       setStatus('done');
+      AnalyticsEvents.legalDirectorySubmit();
       setMessage(
         data.message ??
           'Thank you. Your listing is now live on the Legal Services Directory.',
@@ -122,6 +149,20 @@ export function DirectorySubmissionForm() {
         <label className="block">
           <span className="text-sm font-semibold text-[var(--navy)]">Emergency contact number</span>
           <input name="emergencyPhone" type="tel" className={inputClass} />
+        </label>
+        <label className="block sm:col-span-2">
+          <span className="text-sm font-semibold text-[var(--navy)]">Firm logo (optional)</span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="mt-1 block w-full text-sm text-[var(--muted)]"
+            disabled={logoUploading}
+            onChange={(e) => void onLogoSelected(e.target.files?.[0] ?? null)}
+          />
+          {logoUploading && <p className="mt-1 text-xs text-[var(--muted)]">Uploading…</p>}
+          {logoUrl && (
+            <p className="mt-1 text-xs text-emerald-700">Logo uploaded successfully.</p>
+          )}
         </label>
         <label className="block sm:col-span-2">
           <span className="text-sm font-semibold text-[var(--navy)]">Website URL</span>

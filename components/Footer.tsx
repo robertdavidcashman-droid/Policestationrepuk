@@ -135,7 +135,7 @@ export function Footer() {
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div className="rounded-lg border border-white/15 bg-black/20 p-4">
               <p className="text-sm font-bold text-white">{CUSTODYNOTE_BRAND_NAME} — at the station</p>
-              <p className="mt-1 text-xs text-slate-300">
+              <p className="mt-1 text-xs text-slate-200">
                 Structured custody notes, offline-first, PDF + LAA billing. 30-day free trial · £
                 {CUSTODYNOTE_PRICE_GBP}/mo · PSR UK readers £{CUSTODYNOTE_MEMBER_PRICE_GBP}/mo with code{' '}
                 <span className="rounded bg-[var(--gold)]/20 px-1.5 py-0.5 font-mono font-bold text-[var(--gold)]">
@@ -159,7 +159,7 @@ export function Footer() {
                   About {CUSTODYNOTE_BRAND_NAME}
                 </Link>
               </div>
-              <p className="mt-3 border-t border-white/10 pt-3 text-[11px] text-slate-300">
+              <p className="mt-3 border-t border-white/10 pt-3 text-[11px] text-slate-200">
                 {CUSTODYNOTE_APPS_LINE}.{' '}
                 <a
                   href={CUSTODYNOTE_DOWNLOAD_HREF}
@@ -173,7 +173,7 @@ export function Footer() {
             </div>
             <div className="rounded-lg border border-white/15 bg-black/20 p-4">
               <p className="text-sm font-bold text-white">{PSRTRAIN_NAME} — before accreditation</p>
-              <p className="mt-1 text-xs text-slate-300">
+              <p className="mt-1 text-xs text-slate-200">
                 Timed MCQs, PACE modules, and CIT-style scenarios. {PSRTRAIN_FREE_TESTING_NOTE}.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">

@@ -29,6 +29,12 @@ export function LegalDirectoryCard({ listing }: { listing: PublicLegalDirectoryL
     <article className="group flex flex-col rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-white shadow-[var(--card-shadow)] transition-all duration-200 hover:border-[var(--gold)]/40 hover:shadow-[var(--card-shadow-hover)]">
       <div className="h-1 rounded-t-[var(--radius-lg)] bg-[var(--navy)]" />
       <div className="flex flex-1 flex-col p-5 sm:p-6">
+        {listing.logoUrl && (
+          <div className="mb-4 flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-[var(--card-border)] bg-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={listing.logoUrl} alt="" className="max-h-full max-w-full object-contain" />
+          </div>
+        )}
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-[var(--navy)]/20 bg-[var(--navy)]/5 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-[var(--navy)]">
             {listing.category}

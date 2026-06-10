@@ -1,6 +1,7 @@
 import { listApprovedListings } from '@/lib/legal-directory/storage';
 import { toPublicListing } from '@/lib/legal-directory/storage';
 import { LegalDirectoryCard } from './LegalDirectoryCard';
+import Link from 'next/link';
 
 /**
  * Featured providers block — monetisation: replace with paid featured API later.
@@ -14,8 +15,11 @@ export async function FeaturedListings() {
       <section className="rounded-[var(--radius)] border border-dashed border-[var(--card-border)] bg-slate-50 p-8 text-center">
         <h2 className="text-h3 text-[var(--navy)]">Featured providers</h2>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Featured and promoted placements will appear here.{' '}
-          {/* TODO: paid featured listing checkout — see GoFeatured pattern */}
+          Featured and promoted placements appear here.{' '}
+          <Link href="/Contact" className="font-semibold text-[var(--navy)] no-underline hover:text-[var(--gold-link)]">
+            Contact us
+          </Link>{' '}
+          to enquire about featured placement.
         </p>
       </section>
     );

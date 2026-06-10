@@ -177,8 +177,10 @@ export function statusFromRisk(
   risk: LegalDirectoryRiskResult,
   honeypot: boolean,
 ): LegalDirectoryListingStatus {
-  if (honeypot) return 'rejected_spam';
-  // Listings publish immediately; risk score is informational for admin emails only.
-  void risk;
+  if (honeypot || risk.reviewFlags.includes('honeypot_completed')) return 'rejected_spam';
+  if (risk.riskScore >= 51 || risk.reviewFlags.includes('script_or_injection_attempt')) {
+    return 'flagged_for_review';
+  }
+  if (risk.riskScore >= 21) return 'pending_review';
   return 'approved';
 }

@@ -107,6 +107,7 @@ export async function POST(request: Request) {
       honeypotFilled: false,
       scriptAttempt,
       submitterIp: ip,
+      logoUrl: sanitizeText(raw.logoUrl, 500),
     });
 
     if (!result.ok) {
@@ -129,11 +130,18 @@ export async function POST(request: Request) {
       ]);
     }
 
+    const statusMessage =
+      result.status === 'approved'
+        ? 'Thank you. Your listing is now live on the Legal Services Directory. A confirmation has been sent to your email.'
+        : result.status === 'pending_review'
+          ? 'Thank you. Your listing has been received and is pending a brief review before publication. We will email you when it is live.'
+          : 'Thank you. Your listing has been flagged for manual review. Our team will contact you shortly.';
+
     return NextResponse.json({
       ok: true,
-      message:
-        'Thank you. Your listing is now live on the Legal Services Directory. A confirmation has been sent to your email.',
+      message: statusMessage,
       slug: result.slug,
+      status: result.status,
     });
   } catch (e) {
     console.error('[legal-directory/submit]', e);

@@ -42,6 +42,13 @@ export interface BufferSchedulerSkippedEmailInput {
   adminEmail?: string;
 }
 
+export interface BufferHealthEmailInput {
+  date?: string;
+  issueCount: number;
+  issues: Array<Record<string, unknown>>;
+  adminEmail?: string;
+}
+
 export async function sendBufferSchedulerSkippedEmail(
   input: BufferSchedulerSkippedEmailInput,
 ): Promise<boolean> {
@@ -134,6 +141,57 @@ export async function sendBufferSchedulerFailureEmail(
     return true;
   } catch (err) {
     console.error('[buffer-scheduler email]', err);
+    return false;
+  }
+}
+
+export async function sendBufferHealthFailureEmail(
+  input: BufferHealthEmailInput,
+): Promise<boolean> {
+  const to = input.adminEmail?.trim() || NOTIFY_EMAIL;
+  const dateLabel = input.date ?? 'unknown date';
+  const subject = `[Buffer health] GBP image check failed — ${dateLabel}`;
+
+  const issueList =
+    input.issues.length > 0
+      ? `<ul style="margin:0 0 16px;padding-left:20px;line-height:1.6;font-size:13px;">
+           ${input.issues
+             .slice(0, 10)
+             .map(
+               (issue) =>
+                 `<li>${escapeHtml(String(issue.slug ?? issue.postId))}: ${escapeHtml(String(issue.issue ?? 'unknown'))}</li>`,
+             )
+             .join('')}
+         </ul>`
+      : '';
+
+  const html = `
+    <div style="font-family:system-ui,sans-serif;color:#0f172a;max-width:640px;">
+      <h2 style="margin:0 0 12px;">Buffer GBP health check failed</h2>
+      <p style="margin:0 0 16px;line-height:1.5;">
+        Weekly Google Business scheduled-image verification found
+        <strong>${escapeHtml(String(input.issueCount))}</strong> issue(s) for
+        <strong>${escapeHtml(dateLabel)}</strong>.
+      </p>
+      ${issueList}
+      <p style="margin:0;color:#64748b;font-size:12px;line-height:1.5;">
+        Run <code>npm run buffer:verify-scheduled-gbp</code> and
+        <code>npm run buffer:repair-gbp</code>. See <code>docs/buffer-ops.md</code>.
+      </p>
+    </div>
+  `;
+
+  const client = getResend();
+  if (!client) {
+    console.error('[buffer-health email]', subject, input.issueCount);
+    return false;
+  }
+
+  try {
+    await client.emails.send({ from: FROM_EMAIL, to, subject, html });
+    return true;
+  } catch (err) {
+    console.error('[buffer-health email]', err);
     return false;
   }
 }

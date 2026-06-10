@@ -12,8 +12,6 @@ test.describe('Accessibility (axe — serious/critical only)', () => {
         .withTags(['wcag2a', 'wcag2aa'])
         .options({
           rules: {
-            // The mirror catch-all + some legacy components have minor styling we won't redesign.
-            'color-contrast': { enabled: false },
             region: { enabled: false },
           },
         })

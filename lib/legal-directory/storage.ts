@@ -10,7 +10,7 @@
  *   legaldir:req-ids          — string[] of request ids
  *   legaldir:mgmt:{tokenHash} — { listingId, email, exp }
  *
- * TODO: Logo uploads — wire to Vercel Blob / S3 when available; logoUrl field ready.
+ * Logo uploads: POST /api/legal-directory/logo → Vercel Blob; logoUrl on listings.
  */
 
 import crypto from 'crypto';
@@ -196,6 +196,7 @@ export interface CreateListingInput {
   /** Raw input contained script/injection markup (detected before sanitisation). */
   scriptAttempt?: boolean;
   submitterIp?: string;
+  logoUrl?: string;
 }
 
 export type CreateListingResult =
@@ -291,7 +292,7 @@ export async function createListing(
     regulatoryBody: sanitizeText(input.regulatoryBody, 120),
     regulatoryNumber: sanitizeText(input.regulatoryNumber, 80),
     accreditationDetails: sanitizeMultiline(input.accreditationDetails, 1000),
-    logoUrl: '',
+    logoUrl: sanitizeUrl(input.logoUrl ?? '') ?? '',
     status,
     featured: false,
     promoted: false,

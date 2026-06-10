@@ -187,18 +187,40 @@ describe('runBufferBlogScheduler integration', () => {
     expect(nightSlots.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('returns error when a feed fails to load', async () => {
+  it('continues scheduling when one feed fails but others have posts', async () => {
     mockLoadAll.mockResolvedValue({
       posts: new Map([
         ['policestationrepuk', makePosts('policestationrepuk', 8)],
         ['custodynote', []],
+        ['policestationagent', makePosts('policestationagent', 8)],
+        ['psrtrain', makePosts('psrtrain', 8)],
       ]),
       errors: [{ feedId: 'custodynote', url: 'https://custodynote.com/feed', message: 'HTTP 503' }],
     });
 
     const result = await runBufferBlogScheduler(new Date('2026-06-08T05:00:00Z'));
+    expect(result.ok).toBe(true);
+    expect(result.posts!.every((p) => p.feedId !== 'custodynote')).toBe(true);
+    expect(mockCreate).toHaveBeenCalled();
+  });
+
+  it('returns error when all feeds fail to load', async () => {
+    mockLoadAll.mockResolvedValue({
+      posts: new Map([
+        ['policestationrepuk', []],
+        ['custodynote', []],
+        ['policestationagent', []],
+        ['psrtrain', []],
+      ]),
+      errors: [
+        { feedId: 'custodynote', url: 'https://custodynote.com/feed', message: 'HTTP 503' },
+        { feedId: 'psrtrain', url: 'https://psrtrain.com/feed', message: 'HTTP 503' },
+      ],
+    });
+
+    const result = await runBufferBlogScheduler(new Date('2026-06-08T05:00:00Z'));
     expect(result.ok).toBe(false);
-    expect(result.reason).toMatch(/custodynote/);
+    expect(result.reason).toMatch(/All feeds failed/);
     expect(mockCreate).not.toHaveBeenCalled();
   });
 

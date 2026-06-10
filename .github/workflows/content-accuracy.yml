@@ -1,0 +1,42 @@
+# Quarterly content accuracy scan — advisory until baseline is stable.
+name: Content accuracy audit
+
+on:
+  schedule:
+    - cron: '0 8 1 */3 *'
+  workflow_dispatch:
+
+concurrency:
+  group: content-accuracy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Content accuracy scan
+        run: npm run audit:content-accuracy
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-accuracy-report
+          path: |
+            audit/content-accuracy-register.json
+            audit/content-accuracy-problems.md
+          if-no-files-found: ignore

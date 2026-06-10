@@ -4,7 +4,9 @@ import { Header } from '@/components/Header';
 import { PromoBannerStack } from '@/components/PromoBannerStack';
 import { Footer } from '@/components/Footer';
 import { SiteWidePromoStrip } from '@/components/SiteWidePromoStrip';
+import { GoogleAnalytics } from '@/components/GoogleAnalytics';
 import { DeferredGlobalWidgets } from '@/components/DeferredGlobalWidgets';
+import { Suspense } from 'react';
 import { AssistantUiProvider } from '@/components/assistant/AssistantUiProvider';
 import { JsonLd } from '@/components/JsonLd';
 import './globals.css';
@@ -40,7 +42,6 @@ export const metadata: Metadata = {
   keywords: [...SITE_KEYWORDS],
   metadataBase: new URL(SITE_URL),
   manifest: '/manifest.json',
-  alternates: { canonical: SITE_URL },
   openGraph: {
     siteName: SITE_NAME,
     locale: 'en_GB',
@@ -113,6 +114,9 @@ export default function RootLayout({
           <main id="main-content" className="site-shell-main flex-1 w-full min-w-0">{children}</main>
           <SiteWidePromoStrip />
           <Footer />
+          <Suspense fallback={null}>
+            <GoogleAnalytics />
+          </Suspense>
           <DeferredGlobalWidgets />
         </AssistantUiProvider>
       </body>

@@ -28,6 +28,11 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'webkit-smoke',
+      testMatch: /cross-browser\.spec\.ts/,
+      use: { ...devices['Desktop Safari'] },
+    },
   ],
   ...(START_LOCAL_SERVER
     ? {
