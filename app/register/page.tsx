@@ -141,11 +141,11 @@ export default function RegisterPage() {
 
               <section className="mt-8 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--navy)] p-6 text-white">
                 <h3 className="text-lg font-bold">Privacy</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                <p className="mt-2 text-sm leading-relaxed text-slate-200">
                   We never display your full postal address, PIN number, SRA number, proof
                   document or any other private field in the public directory. Those details are
                   used only for verification by the PoliceStationRepUK admin team. See our{' '}
-                  <Link href="/Privacy" className="text-[var(--gold)] no-underline hover:underline">
+                  <Link href="/Privacy" className="text-white underline underline-offset-2 hover:text-[var(--gold)]">
                     privacy policy
                   </Link>{' '}
                   for full details.

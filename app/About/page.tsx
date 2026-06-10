@@ -114,12 +114,12 @@ export default function AboutPage() {
                 <div className="absolute left-[1.1875rem] top-10 h-full w-px bg-[var(--border)]" />
               )}
               {/* Year bubble */}
-              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-[var(--gold)] bg-[var(--card-bg)] text-xs font-bold text-[var(--gold)]">
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-[var(--gold)] bg-[var(--card-bg)] text-xs font-bold text-[var(--navy)]">
                 {i + 1}
               </div>
               <div className="pt-1.5">
                 <div className="flex flex-wrap items-baseline gap-2">
-                  <span className="text-sm font-bold text-[var(--gold)]">{item.year}</span>
+                  <span className="text-sm font-bold text-[var(--navy)]">{item.year}</span>
                   <span className="font-semibold text-[var(--navy)]">{item.milestone}</span>
                 </div>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">{item.desc}</p>

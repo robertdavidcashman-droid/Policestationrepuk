@@ -79,7 +79,7 @@ export default function LinksHubPage() {
           ))}
 
           <p className="text-sm text-slate-500">
-            Short county URLs use <code className="rounded bg-slate-100 px-1">/go/kent</code> style paths.
+            Short county URLs use <code className="rounded bg-slate-200 px-1.5 py-0.5 text-sm text-slate-800">/go/kent</code> style paths.
             Main directory shortcut:{' '}
             <Link href="/find" className="font-medium text-[var(--gold-link)]">
               {SITE_URL}/find
