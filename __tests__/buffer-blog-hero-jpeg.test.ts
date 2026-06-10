@@ -7,6 +7,7 @@ import {
   googleBusinessImageCandidates,
   resolveGoogleBusinessImageUrl,
 } from '@/lib/buffer/image-url';
+import { mockGbpImageFetch } from './helpers/mock-gbp-fetch';
 
 describe('buffer blog hero JPEG parity', () => {
   it('has a matching .jpg for every blog hero .webp', () => {
@@ -36,29 +37,13 @@ describe('buffer blog hero JPEG parity', () => {
     const webpUrl = `${base}${article!.image.src}`;
     const jpgUrl = webpUrl.replace(/\.webp(\?.*)?$/i, '.jpg$1');
 
-    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
-      const u = String(url);
-      if (u === jpgUrl) {
-        return {
-          ok: true,
-          status: 200,
-          headers: new Headers({ 'content-type': 'image/jpeg', 'content-length': '12000' }),
-        };
-      }
-      if (u === webpUrl) {
-        return {
-          ok: true,
-          status: 200,
-          headers: new Headers({ 'content-type': 'image/webp', 'content-length': '5000' }),
-        };
-      }
-      return { ok: false, status: 404, headers: new Headers() };
-    });
+    const fetchMock = mockGbpImageFetch({ jpegUrls: [jpgUrl], webpUrls: [webpUrl] });
 
     const resolved = await resolveGoogleBusinessImageUrl(
       webpUrl,
       fetchMock as unknown as typeof fetch,
       base,
+      'policestationrepuk',
     );
     expect(resolved).toBe(jpgUrl);
   });

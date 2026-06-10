@@ -5,8 +5,9 @@ import { loadAllFeedPosts } from '../lib/buffer/feeds';
 import {
   BUFFER_MAX_IMAGE_BYTES,
   probeBufferImageUrl,
-  resolveGoogleBusinessImageUrl,
+  resolveGoogleBusinessImageUrlForPost,
 } from '../lib/buffer/image-url';
+import { isAllowedGbpAssetUrl } from '../lib/buffer/gbp-preflight';
 import { SITE_URL } from '../lib/seo-layer/config';
 
 function loadEnvFile(filename: string) {
@@ -45,8 +46,9 @@ async function main() {
       }
 
       if (googleBusinessOnly) {
-        if (feedId !== 'policestationrepuk') continue;
-        const resolved = await resolveGoogleBusinessImageUrl(item.imageUrl, fetch, SITE_URL);
+        const resolved =
+          item.googleBusinessImageUrl ??
+          (await resolveGoogleBusinessImageUrlForPost(item, fetch, SITE_URL));
         if (!resolved) {
           bad.push({
             feedId,
@@ -58,8 +60,17 @@ async function main() {
           bad.push({
             feedId,
             slug: item.slug,
-            url: resolved,
+            rawImageUrl: item.imageUrl,
+            resolvedGbpUrl: resolved,
             reason: 'resolved URL is still WebP',
+          });
+        } else if (!isAllowedGbpAssetUrl(resolved, SITE_URL)) {
+          bad.push({
+            feedId,
+            slug: item.slug,
+            rawImageUrl: item.imageUrl,
+            resolvedGbpUrl: resolved,
+            reason: 'resolved GBP URL is not self-hosted on policestationrepuk.org',
           });
         }
         continue;

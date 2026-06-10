@@ -1,16 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { loadAllFeedPosts } from '@/lib/buffer/feeds';
-
-function mockBufferImageFetch(): typeof fetch {
-  return vi.fn().mockResolvedValue({
-    ok: true,
-    status: 200,
-    headers: new Headers({
-      'content-type': 'image/jpeg',
-      'content-length': '50000',
-    }),
-  }) as unknown as typeof fetch;
-}
+import { mockGbpImageFetch } from './helpers/mock-gbp-fetch';
 
 const FIXTURES: Record<string, string> = {
   custodynote: `<?xml version="1.0"?><rss><channel>
@@ -38,12 +28,13 @@ const FIXTURES: Record<string, string> = {
 
 describe('buffer feed health', () => {
   it('loads all default feeds without errors using fixtures', async () => {
+    const imageFetch = mockGbpImageFetch() as unknown as typeof fetch;
     const { posts, errors } = await loadAllFeedPosts(async (url) => {
       if (url.includes('custodynote.com')) return FIXTURES.custodynote!;
       if (url.includes('policestationagent.com')) return FIXTURES.policestationagent!;
       if (url.includes('psrtrain.com')) return FIXTURES.psrtrain!;
       throw new Error(`Unexpected URL ${url}`);
-    }, { imageFetch: mockBufferImageFetch() });
+    }, { imageFetch });
 
     expect(errors).toEqual([]);
     expect((posts.get('policestationrepuk') ?? []).length).toBeGreaterThanOrEqual(3);
@@ -53,22 +44,26 @@ describe('buffer feed health', () => {
 
     for (const post of posts.get('policestationrepuk') ?? []) {
       expect(post.imageUrl).toBeTruthy();
+      expect(post.googleBusinessImageUrl).toBeTruthy();
     }
     for (const post of posts.get('custodynote') ?? []) {
       expect(post.imageUrl).toBeTruthy();
+      expect(post.googleBusinessImageUrl).toMatch(/\/images\/buffer\/gbp\/custodynote-default\.jpg$/);
     }
     for (const post of posts.get('psrtrain') ?? []) {
-      expect(post.imageUrl).toBe('https://psrtrain.com/opengraph-image');
+      expect(post.imageUrl).toContain('/images/buffer/gbp/psrtrain-default.jpg');
+      expect(post.googleBusinessImageUrl).toContain('/images/buffer/gbp/psrtrain-default.jpg');
     }
   });
 
   it('records per-feed errors without aborting other feeds', async () => {
+    const imageFetch = mockGbpImageFetch() as unknown as typeof fetch;
     const { posts, errors } = await loadAllFeedPosts(async (url) => {
       if (url.includes('custodynote.com')) throw new Error('HTTP 503');
       if (url.includes('policestationagent.com')) return FIXTURES.policestationagent!;
       if (url.includes('psrtrain.com')) return FIXTURES.psrtrain!;
       throw new Error(`Unexpected URL ${url}`);
-    }, { imageFetch: mockBufferImageFetch() });
+    }, { imageFetch });
 
     expect(errors.some((e) => e.feedId === 'custodynote')).toBe(true);
     expect((posts.get('custodynote') ?? []).length).toBe(0);

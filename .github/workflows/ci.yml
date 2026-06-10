@@ -24,6 +24,8 @@ jobs:
       # Matches Vercel's install behaviour.
       - run: npm install --no-audit --no-fund --prefer-offline
       - run: npm run build
+      - name: Buffer scheduler unit tests and GBP image probe
+        run: npm run test:buffer:ci
       - name: Directory search engine self-test
         run: npm run test:directory-search
       - name: Lighthouse CI (tier-1 URLs, warn-only thresholds)

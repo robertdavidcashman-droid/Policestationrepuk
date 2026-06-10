@@ -177,7 +177,7 @@ describe('buffer client', () => {
   it('adds google business whats_new metadata and uses jpeg not webp', async () => {
     const imageUrl = 'https://policestationrepuk.org/images/blog/raster/hero.webp';
     const jpegUrl = 'https://policestationrepuk.org/images/blog/raster/hero.jpg';
-    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
       if (String(url).includes('api.buffer.com')) {
         return mockBufferCreateSuccess({
           id: 'post-gb',
@@ -185,6 +185,18 @@ describe('buffer client', () => {
           channelId: 'gb-id',
           channelService: 'googlebusiness',
         });
+      }
+      const range =
+        init?.headers instanceof Headers
+          ? init.headers.get('Range')
+          : (init?.headers as Record<string, string> | undefined)?.Range;
+      if (range) {
+        return {
+          ok: true,
+          status: 206,
+          headers: new Headers({ 'content-type': 'image/jpeg' }),
+          arrayBuffer: async () => new Uint8Array([0xff, 0xd8, 0xff, 0xe0]).buffer.slice(0),
+        };
       }
       if (String(url) === jpegUrl) {
         return {
@@ -211,6 +223,7 @@ describe('buffer client', () => {
       dueAt: '2026-06-08T13:00:00+01:00',
       url: 'https://policestationrepuk.org/Blog/example',
       imageUrl,
+      feedId: 'policestationrepuk',
     });
 
     const bufferCall = fetchMock.mock.calls.find((c) => String(c[0]).includes('api.buffer.com'));

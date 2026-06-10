@@ -34,7 +34,7 @@ describe('buffer feed loaders', () => {
     expect(posts[0]?.imageAlt).toBe('With image');
   });
 
-  it('loadFeedPosts applies psrtrain default opengraph image', async () => {
+  it('loadFeedPosts applies psrtrain hosted GBP default image', async () => {
     const xml = `<?xml version="1.0"?><rss><channel><item>
       <title>Guide</title>
       <link>https://psrtrain.com/guides/what-is-psras</link>
@@ -44,7 +44,8 @@ describe('buffer feed loaders', () => {
       { id: 'psrtrain', type: 'rss', url: 'https://psrtrain.com/feed' },
       async () => xml,
     );
-    expect(posts[0]?.imageUrl).toBe('https://psrtrain.com/opengraph-image');
+    expect(posts[0]?.imageUrl).toBe(FEED_DEFAULT_IMAGES.psrtrain);
+    expect(posts[0]?.imageUrl).toContain('/images/buffer/gbp/psrtrain-default.jpg');
   });
 
   it('resolveAbsoluteImageUrl prefixes relative paths', () => {

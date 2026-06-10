@@ -3,6 +3,7 @@ import { GET } from '@/app/api/cron/buffer-blog-posts/route';
 
 const mockRun = vi.fn();
 const mockEmail = vi.fn();
+const mockSkippedEmail = vi.fn();
 
 vi.mock('@/lib/buffer/scheduler', () => ({
   runBufferBlogScheduler: (...args: unknown[]) => mockRun(...args),
@@ -10,6 +11,7 @@ vi.mock('@/lib/buffer/scheduler', () => ({
 
 vi.mock('@/lib/buffer/email', () => ({
   sendBufferSchedulerFailureEmail: (...args: unknown[]) => mockEmail(...args),
+  sendBufferSchedulerSkippedEmail: (...args: unknown[]) => mockSkippedEmail(...args),
 }));
 
 const ENV = process.env;
@@ -93,13 +95,32 @@ describe('buffer-blog-posts cron route', () => {
     expect(mockRun).toHaveBeenCalledWith(expect.any(Date), { force: true });
   });
 
+  it('returns 500 with gbpIssues when GBP preflight fails', async () => {
+    mockRun.mockResolvedValue({
+      ok: false,
+      reason: 'GBP preflight failed',
+      gbpIssues: [{ feedId: 'custodynote', slug: 'example', reason: 'WebP asset URL' }],
+    });
+    const res = await GET(
+      new Request('http://localhost/api/cron/buffer-blog-posts', {
+        headers: { authorization: 'Bearer cron-test-secret' },
+      }),
+    );
+    expect(res.status).toBe(500);
+    const json = await res.json();
+    expect(json.gbpIssues).toHaveLength(1);
+    expect(mockEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ error: 'GBP preflight failed' }),
+    );
+  });
+
   it('returns skipped response with ok true when already scheduled', async () => {
     mockRun.mockResolvedValue({
       ok: true,
       skipped: true,
       reason: 'Already scheduled for this date',
       date: '2026-06-08',
-      posts: [],
+      posts: [{ slug: 'a', feedId: 'policestationrepuk' }],
     });
     const res = await GET(
       new Request('http://localhost/api/cron/buffer-blog-posts', {
@@ -111,5 +132,8 @@ describe('buffer-blog-posts cron route', () => {
     expect(json.ok).toBe(true);
     expect(json.skipped).toBe(true);
     expect(json.reason).toMatch(/already scheduled/i);
+    expect(mockSkippedEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: 'Already scheduled for this date', postCount: 1 }),
+    );
   });
 });

@@ -6,6 +6,8 @@ export interface SchedulablePost {
   excerpt: string;
   url: string;
   imageUrl?: string;
+  /** Resolved self-hosted JPEG/PNG for Google Business scheduling. */
+  googleBusinessImageUrl?: string;
   imageAlt?: string;
 }
 

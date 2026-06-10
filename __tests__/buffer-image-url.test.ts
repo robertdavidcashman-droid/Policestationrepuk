@@ -6,11 +6,13 @@ import {
   googleBusinessImageCandidates,
   isBufferCompatibleContentType,
   isGoogleBusinessImageContentType,
+  isJpegOrPngMagicBytes,
   isRasterImagePath,
   probeBufferImageUrl,
   resolveBufferImageUrl,
   resolveGoogleBusinessImageUrl,
 } from '@/lib/buffer/image-url';
+import { mockGbpImageFetch } from './helpers/mock-gbp-fetch';
 
 describe('buffer image-url validation', () => {
   it('accepts standard raster content types', () => {
@@ -64,36 +66,33 @@ describe('buffer image-url validation', () => {
     ).rejects.toThrow(/too large/i);
   });
 
+  it('isJpegOrPngMagicBytes detects JPEG and PNG signatures', () => {
+    expect(isJpegOrPngMagicBytes(new Uint8Array([0xff, 0xd8, 0xff, 0xe0]))).toBe(true);
+    expect(isJpegOrPngMagicBytes(new Uint8Array([0x89, 0x50, 0x4e, 0x47]))).toBe(true);
+    expect(isJpegOrPngMagicBytes(new Uint8Array([0x52, 0x49, 0x46, 0x46]))).toBe(false);
+  });
+
   it('googleBusinessImageCandidates rewrites webp to jpg paths', () => {
     const candidates = googleBusinessImageCandidates(
       'https://policestationrepuk.org/images/blog/raster/example.webp',
       'https://policestationrepuk.org',
+      'policestationrepuk',
     );
     expect(candidates).toContain('https://policestationrepuk.org/images/blog/raster/example.jpg');
     expect(candidates).toContain('https://policestationrepuk.org/social-preview.jpg');
   });
 
   it('resolveGoogleBusinessImageUrl prefers jpeg over webp', async () => {
-    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
-      const u = String(url);
-      if (u.endsWith('.webp')) {
-        return {
-          ok: true,
-          status: 200,
-          headers: new Headers({ 'content-type': 'image/webp', 'content-length': '5000' }),
-        };
-      }
-      return {
-        ok: true,
-        status: 200,
-        headers: new Headers({ 'content-type': 'image/jpeg', 'content-length': '12000' }),
-      };
+    const fetchMock = mockGbpImageFetch({
+      jpegUrls: ['https://policestationrepuk.org/images/blog/raster/example.jpg'],
+      webpUrls: ['https://policestationrepuk.org/images/blog/raster/example.webp'],
     });
 
     const resolved = await resolveGoogleBusinessImageUrl(
       'https://policestationrepuk.org/images/blog/raster/example.webp',
       fetchMock as unknown as typeof fetch,
       'https://policestationrepuk.org',
+      'policestationrepuk',
     );
     expect(resolved).toBe('https://policestationrepuk.org/images/blog/raster/example.jpg');
     expect(isGoogleBusinessImageContentType('image/jpeg')).toBe(true);
@@ -101,26 +100,15 @@ describe('buffer image-url validation', () => {
   });
 
   it('assertBufferPostImageReady uses jpeg for googlebusiness channel', async () => {
-    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
-      const u = String(url);
-      if (u.endsWith('.jpg')) {
-        return {
-          ok: true,
-          status: 200,
-          headers: new Headers({ 'content-type': 'image/jpeg', 'content-length': '12000' }),
-        };
-      }
-      return {
-        ok: true,
-        status: 200,
-        headers: new Headers({ 'content-type': 'image/webp', 'content-length': '5000' }),
-      };
+    const fetchMock = mockGbpImageFetch({
+      jpegUrls: ['https://policestationrepuk.org/images/blog/raster/example.jpg'],
+      webpUrls: ['https://policestationrepuk.org/images/blog/raster/example.webp'],
     });
 
     const ready = await assertBufferPostImageReady(
       'https://policestationrepuk.org/images/blog/raster/example.webp',
       fetchMock as unknown as typeof fetch,
-      { channelService: 'googlebusiness' },
+      { channelService: 'googlebusiness', feedId: 'policestationrepuk' },
     );
     expect(ready).toBe('https://policestationrepuk.org/images/blog/raster/example.jpg');
   });

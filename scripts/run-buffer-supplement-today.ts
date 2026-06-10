@@ -6,6 +6,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createScheduledBufferPost } from '../lib/buffer/client';
+import { assertGoogleBusinessScheduleReady } from '../lib/buffer/gbp-preflight';
 import {
   getBufferApiKey,
   getBufferChannels,
@@ -194,14 +195,28 @@ async function main() {
       const text = buildSchedulablePostTextForService(post, channel.service);
       const dueAt = dueAts[i]!;
 
+      if (channel.service === 'googlebusiness') {
+        const gbpIssues = await assertGoogleBusinessScheduleReady([post]);
+        if (gbpIssues.length > 0) {
+          console.error('[buffer:supplement-today] GBP preflight failed:', gbpIssues);
+          throw new Error('GBP preflight failed');
+        }
+      }
+
+      const imageUrlForChannel =
+        channel.service === 'googlebusiness'
+          ? (post.googleBusinessImageUrl ?? post.imageUrl)
+          : post.imageUrl;
+
       const createdPost = await createScheduledBufferPost(apiKey, {
         channelId: channel.id,
         channelService: channel.service,
         text,
         dueAt,
         url: post.url,
-        imageUrl: post.imageUrl,
+        imageUrl: imageUrlForChannel,
         imageAlt: post.imageAlt,
+        feedId: post.feedId,
       });
 
       created.push({

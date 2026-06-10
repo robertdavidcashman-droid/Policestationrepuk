@@ -73,6 +73,8 @@ export interface BufferScheduledPostSummary {
   hasImage: boolean;
   /** First image asset URL attached to the post, when exposed by Buffer. */
   imageUrl?: string;
+  /** MIME type reported by Buffer for the first image asset. */
+  mimeType?: string | null;
 }
 
 function postMetadataForService(
@@ -103,10 +105,12 @@ export async function createScheduledBufferPost(
     url: string;
     imageUrl?: string;
     imageAlt?: string;
+    feedId?: string;
   },
 ): Promise<CreatedBufferPost> {
   const validatedImageUrl = await assertBufferPostImageReady(input.imageUrl, fetch, {
     channelService: input.channelService,
+    feedId: input.feedId,
   });
 
   const metadata = postMetadataForService(input.channelService, input.url);
@@ -246,7 +250,7 @@ export async function listScheduledBufferPosts(
 
     for (const edge of data.posts.edges) {
       const node = edge.node;
-      const assetImageUrl = node.assets?.find((a) => a.source)?.source;
+      const imageAsset = node.assets?.find((a) => a.source);
       posts.push({
         id: node.id,
         dueAt: node.dueAt,
@@ -255,7 +259,8 @@ export async function listScheduledBufferPosts(
         text: node.text,
         allowedActions: node.allowedActions ?? [],
         hasImage: (node.assets?.length ?? 0) > 0,
-        imageUrl: assetImageUrl,
+        imageUrl: imageAsset?.source,
+        mimeType: imageAsset?.mimeType ?? null,
       });
     }
 

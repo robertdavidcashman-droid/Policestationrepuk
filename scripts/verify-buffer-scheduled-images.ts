@@ -21,6 +21,7 @@ import {
   probeBufferImageUrl,
   probeGoogleBusinessImageUrl,
 } from '../lib/buffer/image-url';
+import { isDisallowedGbpAssetUrl } from '../lib/buffer/gbp-preflight';
 import { localDateInTimezone, timezoneOffsetForDate } from '../lib/buffer/scheduler-core';
 import type { SchedulablePost } from '../lib/buffer/content-types';
 
@@ -122,7 +123,9 @@ async function main() {
       channel: item.channelService,
       bufferHasImage: item.hasImage,
       bufferAssetUrl: item.imageUrl,
+      bufferMimeType: item.mimeType,
       feedImageUrl: imageUrl,
+      expectedGbpImageUrl: feedPost?.googleBusinessImageUrl,
     };
 
     const isGoogleBusiness = item.channelService === 'googlebusiness';
@@ -136,6 +139,10 @@ async function main() {
         issues.push({ ...row, issue: 'Google Business post missing Buffer asset image URL' });
       } else if (/\.webp(\?|$)/i.test(item.imageUrl)) {
         issues.push({ ...row, issue: 'Google Business Buffer asset URL is WebP (requires JPEG/PNG)' });
+      } else if (item.mimeType && /webp/i.test(item.mimeType)) {
+        issues.push({ ...row, issue: `Google Business Buffer mimeType is WebP (${item.mimeType})` });
+      } else if (isDisallowedGbpAssetUrl(item.imageUrl)) {
+        issues.push({ ...row, issue: 'Google Business Buffer asset URL is disallowed (WebP or opengraph-image)' });
       } else {
         const gbpProbe = await probeGoogleBusinessImageUrl(item.imageUrl);
         row.gbpContentType = gbpProbe.contentType;
@@ -146,6 +153,17 @@ async function main() {
           issues.push({
             ...row,
             issue: `Google Business requires JPEG/PNG (got ${gbpProbe.contentType})`,
+          });
+        }
+      }
+
+      if (feedPost && feedPost.googleBusinessImageUrl && item.imageUrl?.trim()) {
+        const expected = feedPost.googleBusinessImageUrl.trim();
+        if (item.imageUrl.trim() !== expected) {
+          issues.push({
+            ...row,
+            issue: 'Google Business Buffer asset URL does not match expected resolved GBP URL',
+            expectedGbpImageUrl: expected,
           });
         }
       }

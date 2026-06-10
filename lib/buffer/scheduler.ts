@@ -1,4 +1,5 @@
 import { createScheduledBufferPost } from './client';
+import { assertGoogleBusinessScheduleReady } from './gbp-preflight';
 import {
   getBufferApiKey,
   getBufferChannels,
@@ -38,6 +39,13 @@ export interface BufferSchedulerResult {
   skipped?: boolean;
   reason?: string;
   date?: string;
+  gbpIssues?: Array<{
+    feedId: string;
+    slug: string;
+    rawImageUrl?: string;
+    gbpImageUrl?: string;
+    reason: string;
+  }>;
   posts?: Array<{
     postId: string;
     slug: string;
@@ -247,6 +255,20 @@ export async function runBufferBlogScheduler(
   const newRecent: RecentSlugEntry[] = [];
   const usedPostKeys = new Set<string>();
 
+  const gbpPosts = toSchedule
+    .filter((item) => channelOrder[item.channelIndex % channelOrder.length]!.service === 'googlebusiness')
+    .map((item) => item.post);
+  const gbpIssues = await assertGoogleBusinessScheduleReady(gbpPosts);
+  if (gbpIssues.length > 0) {
+    console.error('[buffer:scheduler] GBP preflight failed:', JSON.stringify(gbpIssues));
+    return {
+      ok: false,
+      reason: 'GBP preflight failed',
+      gbpIssues,
+      date: localDate,
+    };
+  }
+
   try {
     for (const item of toSchedule) {
       const channel = channelOrder[item.channelIndex % channelOrder.length]!;
@@ -255,6 +277,10 @@ export async function runBufferBlogScheduler(
 
       for (let attempt = 0; attempt < 12; attempt++) {
         const text = buildSchedulablePostTextForService(post, channel.service);
+        const imageUrlForChannel =
+          channel.service === 'googlebusiness'
+            ? (post.googleBusinessImageUrl ?? post.imageUrl)
+            : post.imageUrl;
         try {
           createdPost = await createScheduledBufferPostWithRetry(apiKey, {
             channelId: channel.id,
@@ -262,8 +288,9 @@ export async function runBufferBlogScheduler(
             text,
             dueAt: item.dueAt,
             url: post.url,
-            imageUrl: post.imageUrl,
+            imageUrl: imageUrlForChannel,
             imageAlt: post.imageAlt,
+            feedId: post.feedId,
           });
           break;
         } catch (err) {
@@ -273,7 +300,7 @@ export async function runBufferBlogScheduler(
               message,
             );
           const imageRejected =
-            /file size limit|unsupported content-type|image exceeds|image validation failed|image too large|non-raster image path|requires a blog image url|google business requires|no google business compatible/i.test(
+            /file size limit|unsupported content-type|image exceeds|image validation failed|image too large|non-raster image path|requires a blog image url|google business requires|no google business compatible|magic-byte check failed|gbp preflight failed/i.test(
               message,
             );
           if ((!duplicate && !imageRejected) || attempt >= 11) {
@@ -291,6 +318,12 @@ export async function runBufferBlogScheduler(
 
       if (!createdPost) {
         throw new Error('Failed to schedule post after alternate attempts');
+      }
+
+      if (channel.service === 'googlebusiness') {
+        console.info(
+          `[buffer:scheduler] GBP ${post.feedId}/${post.slug}: raw=${post.imageUrl ?? 'none'} resolved=${createdPost.imageUrl ?? post.googleBusinessImageUrl ?? 'none'}`,
+        );
       }
 
       usedPostKeys.add(postCooldownKey(post.feedId, post.slug));

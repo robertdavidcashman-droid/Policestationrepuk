@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sendBufferSchedulerFailureEmail } from '@/lib/buffer/email';
+import { sendBufferSchedulerFailureEmail, sendBufferSchedulerSkippedEmail } from '@/lib/buffer/email';
 import { runBufferBlogScheduler } from '@/lib/buffer/scheduler';
 import { isCronAuthorized } from '@/lib/cron-auth';
 import { localDateInTimezone } from '@/lib/buffer/scheduler-core';
@@ -28,12 +28,20 @@ export async function GET(request: Request) {
     if (!result.ok) {
       const error = result.reason ?? 'Buffer scheduler failed';
       await sendBufferSchedulerFailureEmail({ error, date: result.date ?? scheduleDate });
-      return NextResponse.json({ ok: false, error }, { status: 500 });
+      return NextResponse.json(
+        { ok: false, error, gbpIssues: result.gbpIssues },
+        { status: 500 },
+      );
     }
     if (result.skipped) {
       console.warn(
         `[cron:buffer-blog-posts] Skipped for ${result.date ?? scheduleDate}: ${result.reason ?? 'already scheduled'}`,
       );
+      await sendBufferSchedulerSkippedEmail({
+        reason: result.reason ?? 'Already scheduled for this date',
+        date: result.date ?? scheduleDate,
+        postCount: result.posts?.length ?? 0,
+      });
     }
     return NextResponse.json(result);
   } catch (err) {

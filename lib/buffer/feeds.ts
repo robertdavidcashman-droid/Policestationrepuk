@@ -4,16 +4,23 @@ import { POLICESTATIONAGENT_SITE } from '@/lib/policestationagent-promo';
 import { SITE_URL } from '@/lib/seo-layer/config';
 import { resolveAbsoluteImageUrl } from './assets';
 import type { ContentFeedSource, SchedulablePost } from './content-types';
-import { resolveBufferImageUrl } from './image-url';
+import { resolveBufferImageUrl, resolveGoogleBusinessImageUrlForPost, googleBusinessFeedFallbackUrl } from './image-url';
 import { parseRssItems, parseRssChannelImageUrl, slugFromUrl } from './rss';
 
 export type FeedFetcher = (url: string) => Promise<string>;
 
 /** Raster fallbacks when item images are missing or fail Buffer validation (SVG, >5MB, etc.). */
-export const FEED_DEFAULT_IMAGES: Record<string, string> = {
-  psrtrain: 'https://psrtrain.com/opengraph-image',
-  policestationagent: 'https://www.policestationagent.com/blog-images/blog-listing-0.jpg',
-};
+export function buildFeedDefaultImages(siteUrl: string = SITE_URL): Record<string, string> {
+  const base = siteUrl.replace(/\/$/, '');
+  return {
+    custodynote: googleBusinessFeedFallbackUrl('custodynote', siteUrl),
+    psrtrain: googleBusinessFeedFallbackUrl('psrtrain', siteUrl),
+    policestationagent: googleBusinessFeedFallbackUrl('policestationagent', siteUrl),
+    policestationrepuk: `${base}/social-preview.jpg`,
+  };
+}
+
+export const FEED_DEFAULT_IMAGES: Record<string, string> = buildFeedDefaultImages();
 
 export interface FeedLoadError {
   feedId: string;
@@ -143,6 +150,19 @@ export async function hydratePostImagesForBuffer(
   return out;
 }
 
+/** Resolve self-hosted JPEG/PNG URL for Google Business per post. */
+export async function hydrateGoogleBusinessImages(
+  posts: SchedulablePost[],
+  httpFetch: typeof fetch = fetch,
+): Promise<SchedulablePost[]> {
+  const out: SchedulablePost[] = [];
+  for (const post of posts) {
+    const gbpUrl = await resolveGoogleBusinessImageUrlForPost(post, httpFetch);
+    out.push(gbpUrl ? { ...post, googleBusinessImageUrl: gbpUrl } : { ...post, googleBusinessImageUrl: undefined });
+  }
+  return out;
+}
+
 export async function loadAllFeedPosts(
   fetchFn?: FeedFetcher,
   options?: { imageFetch?: typeof fetch },
@@ -157,20 +177,29 @@ export async function loadAllFeedPosts(
     try {
       const loaded = await loadFeedPosts(feed, fn);
       const hydrated = await hydratePostImagesForBuffer(loaded, feed.id, imageFetch);
-      posts.set(feed.id, hydrated);
-      if (hydrated.length === 0) {
+      const withGbp = await hydrateGoogleBusinessImages(hydrated, imageFetch);
+      posts.set(feed.id, withGbp);
+      if (withGbp.length === 0) {
         errors.push({
           feedId: feed.id,
           url: feed.type === 'rss' ? feed.url : undefined,
           message: 'Feed returned zero posts',
         });
       }
-      const missingImages = hydrated.filter((p) => !p.imageUrl).length;
+      const missingImages = withGbp.filter((p) => !p.imageUrl).length;
       if (missingImages > 0) {
         errors.push({
           feedId: feed.id,
           url: feed.type === 'rss' ? feed.url : undefined,
           message: `${missingImages} post(s) have no Buffer-compatible image after validation`,
+        });
+      }
+      const missingGbp = withGbp.filter((p) => !p.googleBusinessImageUrl).length;
+      if (missingGbp > 0) {
+        errors.push({
+          feedId: feed.id,
+          url: feed.type === 'rss' ? feed.url : undefined,
+          message: `${missingGbp} post(s) have no Google Business compatible image after validation`,
         });
       }
     } catch (err) {

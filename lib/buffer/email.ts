@@ -35,6 +35,56 @@ export interface BufferSchedulerFailureEmailInput {
   adminEmail?: string;
 }
 
+export interface BufferSchedulerSkippedEmailInput {
+  reason: string;
+  date?: string;
+  postCount?: number;
+  adminEmail?: string;
+}
+
+export async function sendBufferSchedulerSkippedEmail(
+  input: BufferSchedulerSkippedEmailInput,
+): Promise<boolean> {
+  const to = input.adminEmail?.trim() || NOTIFY_EMAIL;
+  const dateLabel = input.date ?? 'unknown date';
+  const subject = `[Buffer scheduler] Skipped — ${dateLabel}`;
+
+  const html = `
+    <div style="font-family:system-ui,sans-serif;color:#0f172a;max-width:640px;">
+      <h2 style="margin:0 0 12px;">Buffer blog scheduler skipped</h2>
+      <p style="margin:0 0 16px;line-height:1.5;">
+        The daily cron for <strong>${escapeHtml(dateLabel)}</strong> did not schedule new posts because a run
+        is already recorded for today.
+      </p>
+      <p style="margin:0 0 16px;padding:12px;border:1px solid #fde68a;border-radius:8px;background:#fffbeb;font-size:14px;line-height:1.5;">
+        ${escapeHtml(input.reason)}
+      </p>
+      <p style="margin:0 0 16px;line-height:1.5;">
+        Existing run had <strong>${escapeHtml(String(input.postCount ?? 0))}</strong> post(s) in KV.
+        To re-run manually, call the cron with <code>?force=1</code> or run
+        <code>npm run buffer:replace-today</code>.
+      </p>
+      <p style="margin:0;color:#64748b;font-size:12px;line-height:1.5;">
+        This is informational — not a failure. No action is required unless you expected new posts today.
+      </p>
+    </div>
+  `;
+
+  const client = getResend();
+  if (!client) {
+    console.warn('[buffer-scheduler email]', subject, input.reason);
+    return false;
+  }
+
+  try {
+    await client.emails.send({ from: FROM_EMAIL, to, subject, html });
+    return true;
+  } catch (err) {
+    console.error('[buffer-scheduler email]', err);
+    return false;
+  }
+}
+
 export async function sendBufferSchedulerFailureEmail(
   input: BufferSchedulerFailureEmailInput,
 ): Promise<boolean> {

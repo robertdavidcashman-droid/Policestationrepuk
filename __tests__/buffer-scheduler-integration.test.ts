@@ -10,6 +10,10 @@ const mockSaveRecent = vi.fn();
 const mockLoadAll = vi.fn();
 const mockGetContentFeeds = vi.fn();
 
+vi.mock('@/lib/buffer/gbp-preflight', () => ({
+  assertGoogleBusinessScheduleReady: vi.fn().mockResolvedValue([]),
+}));
+
 vi.mock('@/lib/buffer/client', () => ({
   createScheduledBufferPost: (...args: unknown[]) => mockCreate(...args),
 }));
@@ -29,6 +33,7 @@ vi.mock('@/lib/buffer/feeds', () => ({
 const ENV = process.env;
 
 function makePosts(feedId: string, count: number): SchedulablePost[] {
+  const gbpUrl = `https://policestationrepuk.org/images/buffer/gbp/${feedId}-default.jpg`;
   return Array.from({ length: count }, (_, i) => ({
     feedId,
     slug: `${feedId}-post-${i + 1}`,
@@ -36,6 +41,7 @@ function makePosts(feedId: string, count: number): SchedulablePost[] {
     excerpt: 'Excerpt',
     url: `https://example.com/${feedId}/${i + 1}`,
     imageUrl: `https://example.com/${feedId}/${i + 1}.webp`,
+    googleBusinessImageUrl: gbpUrl,
     imageAlt: `${feedId} title ${i + 1}`,
   }));
 }
@@ -133,10 +139,14 @@ describe('runBufferBlogScheduler integration', () => {
     expect(feedIds.filter((id) => id === 'custodynote')).toHaveLength(5);
 
     for (const call of mockCreate.mock.calls) {
-      const input = call[1] as { text: string; dueAt: string; imageUrl?: string };
+      const input = call[1] as { text: string; dueAt: string; imageUrl?: string; channelService: string };
       expect(input.dueAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00[+-]\d{2}:\d{2}$/);
       expect(input.text).toContain('https://example.com/');
-      expect(input.imageUrl).toMatch(/^https:\/\/example.com\//);
+      if (input.channelService === 'googlebusiness') {
+        expect(input.imageUrl).toMatch(/\/images\/buffer\/gbp\/.*-default\.jpg$/);
+      } else {
+        expect(input.imageUrl).toMatch(/^https:\/\/example.com\//);
+      }
     }
 
     expect(mockSaveRun).toHaveBeenCalledOnce();

@@ -36,6 +36,7 @@ import {
   type SchedulerRunRecord,
 } from '../lib/buffer/scheduler-storage';
 import type { SchedulablePost } from '../lib/buffer/content-types';
+import { assertGoogleBusinessScheduleReady } from '../lib/buffer/gbp-preflight';
 
 function loadEnvFile(filename: string) {
   const path = resolve(process.cwd(), filename);
@@ -116,6 +117,10 @@ async function createWithAlternates(
 
   for (const current of candidates) {
     const text = buildSchedulablePostTextForService(current, channel.service);
+    const imageUrlForChannel =
+      channel.service === 'googlebusiness'
+        ? (current.googleBusinessImageUrl ?? current.imageUrl)
+        : current.imageUrl;
     try {
       const created = await createScheduledBufferPost(apiKey, {
         channelId: channel.id,
@@ -123,15 +128,16 @@ async function createWithAlternates(
         text,
         dueAt,
         url: current.url,
-        imageUrl: current.imageUrl,
+        imageUrl: imageUrlForChannel,
         imageAlt: current.imageAlt,
+        feedId: current.feedId,
       });
       return { post: current, created };
     } catch (err) {
       const message = err instanceof Error ? err.message : '';
       const retryable =
-        /posted that one recently/i.test(message) ||
-        /file size limit|unsupported content-type|image exceeds|image validation failed|image too large|non-raster image path|requires a blog image url/i.test(
+        /posted that one recently|already got this one scheduled/i.test(message) ||
+        /file size limit|unsupported content-type|image exceeds|image validation failed|image too large|non-raster image path|requires a blog image url|google business requires|no google business compatible|magic-byte check failed|gbp preflight failed/i.test(
           message,
         );
       if (!retryable) throw err;
@@ -257,6 +263,15 @@ async function main() {
     for (const post of picked) {
       const channel = channelOrder[channelIndex++]!;
       const dueAt = dueTimes[timeIndex++]!;
+
+      if (channel.service === 'googlebusiness') {
+        const gbpIssues = await assertGoogleBusinessScheduleReady([post]);
+        if (gbpIssues.length > 0) {
+          console.warn(`[buffer:gaps] GBP preflight failed for ${post.feedId}/${post.slug}:`, gbpIssues);
+          continue;
+        }
+      }
+
       const result = await createWithAlternates(
         apiKey,
         pool,
