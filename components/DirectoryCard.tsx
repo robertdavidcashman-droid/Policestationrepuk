@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { Representative } from '@/lib/types';
 import { phoneToTelHref } from '@/lib/phone';
+import { withSisterSiteUtm } from '@/lib/partner-website-href';
 import { RepTrustBadges } from '@/components/RepTrustBadges';
 
 function getAvailabilityBadge(raw: string): { label: string; color: string; live?: boolean } {
@@ -219,7 +220,7 @@ export function DirectoryCard({ rep, matchHighlight, compact }: DirectoryCardPro
               )}
               {rep.websiteUrl && (
                 <a
-                  href={rep.websiteUrl}
+                  href={withSisterSiteUtm(rep.websiteUrl, 'directory_card')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 font-semibold text-[var(--navy)] no-underline transition-colors hover:border-[var(--gold)]/40 hover:bg-[var(--gold-pale)]"

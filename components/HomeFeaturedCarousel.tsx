@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { Representative } from '@/lib/types';
 import { phoneToTelHref } from '@/lib/phone';
+import { withSisterSiteUtm } from '@/lib/partner-website-href';
 import { AdvertisementLabel } from './AdvertisementLabel';
 
 export function HomeFeaturedCarousel({ featuredReps }: { featuredReps: Representative[] }) {
@@ -14,7 +15,7 @@ export function HomeFeaturedCarousel({ featuredReps }: { featuredReps: Represent
 
   const rep = featuredReps[current];
   const quote = rep.bio || rep.notes || '';
-  const website = rep.websiteUrl || '';
+  const website = rep.websiteUrl ? withSisterSiteUtm(rep.websiteUrl, 'featured_carousel') : '';
 
   const toggleContact = (idx: number) => {
     setShowContact((prev) => ({ ...prev, [idx]: !prev[idx] }));

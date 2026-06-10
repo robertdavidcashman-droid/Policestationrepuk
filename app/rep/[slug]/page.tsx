@@ -16,6 +16,7 @@ import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { RepLinkKit } from '@/components/RepLinkKit';
 import { repProfileUrl } from '@/lib/rep-link-kit';
 import { SITE_URL } from '@/lib/seo-layer/config';
+import { withSisterSiteUtm } from '@/lib/partner-website-href';
 
 // Render every rep slug on demand. The previous setup combined
 // `revalidate = 60` with `generateStaticParams()` returning ~180 known
@@ -318,7 +319,10 @@ export default async function RepPage({ params }: PageProps) {
 
               {rep.websiteUrl && (
                 <a
-                  href={rep.websiteUrl}
+                  href={withSisterSiteUtm(
+                    rep.websiteUrl,
+                    rep.slug === 'robert-cashman' ? 'rep_profile_kent' : 'rep_profile',
+                  )}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`block w-full rounded-xl border py-3 text-center text-sm font-semibold no-underline hover:bg-slate-50 ${
