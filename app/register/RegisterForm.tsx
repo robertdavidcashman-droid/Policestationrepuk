@@ -497,9 +497,11 @@ function GateForm({
             {APPLICANT_CATEGORY_VALUES.map((value) => (
               <label
                 key={value}
+                htmlFor={`gate-category-${value}`}
                 className="flex cursor-pointer items-start gap-3 rounded-lg border border-[var(--border)] bg-white px-4 py-3 text-sm transition-colors hover:border-[var(--gold)]/40"
               >
                 <input
+                  id={`gate-category-${value}`}
                   type="radio"
                   name="gate-category"
                   value={value}

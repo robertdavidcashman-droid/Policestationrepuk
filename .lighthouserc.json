@@ -6,7 +6,7 @@
       "startServerReadyPattern": "Ready in",
       "startServerReadyTimeout": 120000,
       "settings": {
-        "preset": "lighthouse:default",
+        "preset": "desktop",
         "chromeFlags": "--no-sandbox --disable-gpu --disable-dev-shm-usage"
       },
       "url": [

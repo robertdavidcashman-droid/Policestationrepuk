@@ -151,7 +151,7 @@ const MYTHS = [
   },
   {
     myth: '&quot;The duty solicitor is on the police side.&quot;',
-    truth: 'Duty solicitors and accredited reps are independent of the police. They are paid by Legal Aid, not by the force. Their professional duty is to the suspect alone. If you **name a solicitor**, the police will try to contact that firm; if they cannot reach them promptly, the DSCC may allocate another firm from the duty scheme. Naming a firm you trust is fine — what matters is that the firm can attend without undue delay.',
+    truth: 'Duty solicitors and accredited reps are independent of the police. They are paid by Legal Aid, not by the force. Their professional duty is to the suspect alone. If you name a solicitor, the police will try to contact that firm; if they cannot reach them promptly, the DSCC may allocate another firm from the duty scheme. Naming a firm you trust is fine — what matters is that the firm can attend without undue delay.',
   },
   {
     myth: '&quot;Going no comment automatically gets the case dropped.&quot;',
@@ -190,7 +190,7 @@ const FAQS = [
   },
   {
     q: 'Can I have a solicitor at a voluntary interview?',
-    a: 'Yes. Even if you have not been arrested, any interview under caution (including a &quot;voluntary&quot; one at the police station or at home) can trigger the right to legal aid advice. You should **take legal advice before deciding** whether and how to attend — the consequences of a caution-warned admission are the same whether you were arrested or not.',
+    a: 'Yes. Even if you have not been arrested, any interview under caution (including a &quot;voluntary&quot; one at the police station or at home) can trigger the right to legal aid advice. You should <strong>take legal advice before deciding</strong> whether and how to attend — the consequences of a caution-warned admission are the same whether you were arrested or not.',
   },
 ];
 

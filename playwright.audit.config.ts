@@ -47,6 +47,7 @@ export default defineConfig({
             NODE_ENV: 'production',
             PORT: '3100',
             NEXT_PUBLIC_SITE_URL: BASE_URL,
+            LEGACY_REPS_PUBLIC: '1',
           },
         },
       }

@@ -4,7 +4,7 @@ import { SITE_BUILD_DATE, SITE_VERSION, formatSiteBuildDateUk } from '@/lib/site
 export function SiteVersionStamp({ className = '' }: { className?: string }) {
   return (
     <p
-      className={`font-mono text-[10px] leading-relaxed tracking-wide text-white/45 ${className}`.trim()}
+      className={`font-mono text-[10px] leading-relaxed tracking-wide text-slate-300 ${className}`.trim()}
       aria-label={`Site version ${SITE_VERSION}, built ${formatSiteBuildDateUk(SITE_BUILD_DATE)}`}
     >
       v{SITE_VERSION} · {formatSiteBuildDateUk(SITE_BUILD_DATE)}

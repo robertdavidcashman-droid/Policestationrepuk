@@ -1,6 +1,4 @@
 import { test, expect } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
 
 const PAGE = '/HowToBecomePoliceStationRep';
 
@@ -24,14 +22,23 @@ test.describe('HowToBecomePoliceStationRep regression', () => {
 
   test('every real heading from the crawled JSON appears as a real heading in the DOM', async ({ page }) => {
     await page.goto(PAGE);
-    const jsonPath = path.join(process.cwd(), 'content', 'crawl', 'HowToBecomePoliceStationRep.json');
-    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8')) as {
-      headings: { level: number; text: string }[];
-    };
-    const noiseRe = /^(directories|community|tools? & resources?|need a police station rep|training guides? & resources?|for representatives|regulatory notice)$/i;
-    const wantedHeadings = data.headings
-      .filter((h) => h.level === 2 && !noiseRe.test(h.text.trim()))
-      .map((h) => h.text.trim());
+    // Curated H2s from the 2026 rewrite — crawl JSON still holds legacy Wix headings.
+    const wantedHeadings = [
+      'What a police station rep does',
+      'The legal framework',
+      'Reality check — is this for you?',
+      'Eligibility and prerequisites',
+      'The route map at a glance',
+      'Stage 1 — Enrol with an assessment organisation',
+      'Stage 2 — Pass the Written Test',
+      'Stage 3 — Portfolio (Part A and Part B)',
+      'Stage 4 — Pass the Critical Incidents Test (CIT)',
+      'Stage 5 — Get added to the Police Station Register',
+      'The supervision problem',
+      'Costs and timeline',
+      'Life after accreditation',
+      'Frequently asked questions',
+    ];
     const renderedHeadings = (await page.locator('h2').allInnerTexts()).map((s) => s.trim());
 
     for (const wanted of wantedHeadings) {

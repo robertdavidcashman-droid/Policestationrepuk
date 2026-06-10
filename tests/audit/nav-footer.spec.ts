@@ -8,6 +8,7 @@ test.describe('Header and footer link integrity', () => {
     const forReps = page.getByRole('button', { name: 'For Reps' });
     await expect(forReps).toBeVisible();
     await forReps.click();
+    await expect(forReps).toHaveAttribute('aria-expanded', 'true');
     const overflowLink = page.getByRole('link', { name: /Find a Supervising Solicitor/i });
     await expect(overflowLink).toBeVisible();
     await overflowLink.click();

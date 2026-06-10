@@ -12,6 +12,7 @@ jobs:
     env:
       # Large SSG (1600+ routes) + Next build can OOM on default Node heap in CI
       NODE_OPTIONS: --max-old-space-size=8192
+      LEGACY_REPS_PUBLIC: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
