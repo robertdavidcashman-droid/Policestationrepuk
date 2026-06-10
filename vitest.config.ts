@@ -6,6 +6,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['__tests__/**/*.ts'],
+    exclude: ['__tests__/helpers/**'],
     // Mirror the production environment posture: `LEGACY_REPS_PUBLIC=1` is
     // currently set on Vercel so the static-seed directory remains visible
     // while the new strict publication gate is being rolled out. Without it,

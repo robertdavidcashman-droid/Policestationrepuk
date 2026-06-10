@@ -27,14 +27,30 @@ const FIXTURES: Record<string, string> = {
 };
 
 describe('buffer feed health', () => {
+  const feedFetcher =
+    (overrides?: Partial<Record<'custodynote' | 'policestationagent' | 'psrtrain', string | Error>>) =>
+    async (url: string) => {
+      if (url.includes('custodynote.com')) {
+        const v = overrides?.custodynote ?? FIXTURES.custodynote!;
+        if (v instanceof Error) throw v;
+        return v;
+      }
+      if (url.includes('policestationagent.com') || url.includes('/api/feeds/policestationagent')) {
+        const v = overrides?.policestationagent ?? FIXTURES.policestationagent!;
+        if (v instanceof Error) throw v;
+        return v;
+      }
+      if (url.includes('psrtrain.com')) {
+        const v = overrides?.psrtrain ?? FIXTURES.psrtrain!;
+        if (v instanceof Error) throw v;
+        return v;
+      }
+      throw new Error(`Unexpected URL ${url}`);
+    };
+
   it('loads all default feeds without errors using fixtures', async () => {
     const imageFetch = mockGbpImageFetch() as unknown as typeof fetch;
-    const { posts, errors } = await loadAllFeedPosts(async (url) => {
-      if (url.includes('custodynote.com')) return FIXTURES.custodynote!;
-      if (url.includes('policestationagent.com')) return FIXTURES.policestationagent!;
-      if (url.includes('psrtrain.com')) return FIXTURES.psrtrain!;
-      throw new Error(`Unexpected URL ${url}`);
-    }, { imageFetch });
+    const { posts, errors } = await loadAllFeedPosts(feedFetcher(), { imageFetch });
 
     expect(errors).toEqual([]);
     expect((posts.get('policestationrepuk') ?? []).length).toBeGreaterThanOrEqual(3);
@@ -58,12 +74,10 @@ describe('buffer feed health', () => {
 
   it('records per-feed errors without aborting other feeds', async () => {
     const imageFetch = mockGbpImageFetch() as unknown as typeof fetch;
-    const { posts, errors } = await loadAllFeedPosts(async (url) => {
-      if (url.includes('custodynote.com')) throw new Error('HTTP 503');
-      if (url.includes('policestationagent.com')) return FIXTURES.policestationagent!;
-      if (url.includes('psrtrain.com')) return FIXTURES.psrtrain!;
-      throw new Error(`Unexpected URL ${url}`);
-    }, { imageFetch });
+    const { posts, errors } = await loadAllFeedPosts(
+      feedFetcher({ custodynote: new Error('HTTP 503') }),
+      { imageFetch },
+    );
 
     expect(errors.some((e) => e.feedId === 'custodynote')).toBe(true);
     expect((posts.get('custodynote') ?? []).length).toBe(0);
