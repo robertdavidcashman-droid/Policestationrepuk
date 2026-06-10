@@ -30,8 +30,15 @@ interface StationPin {
   lng?: number;
 }
 
+interface RepCoverage {
+  totalReps: number;
+  countiesWithReps: number;
+  byCounty: Array<{ slug: string; name: string; repCount: number }>;
+}
+
 export default function MapPage() {
   const [stations, setStations] = useState<StationPin[]>([]);
+  const [repCoverage, setRepCoverage] = useState<RepCoverage | null>(null);
   const [selectedStation, setSelectedStation] = useState<StationPin | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -57,6 +64,10 @@ export default function MapPage() {
 
   useEffect(() => {
     loadStations();
+    fetch('/api/reps/map')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setRepCoverage(data))
+      .catch(() => setRepCoverage(null));
   }, [loadStations]);
 
   const handleSelect = useCallback((station: StationPin) => {
@@ -114,6 +125,29 @@ export default function MapPage() {
               {geoCount} mapped &middot; {filtered.length} total
             </p>
           </div>
+
+          {repCoverage && repCoverage.totalReps > 0 && (
+            <div className="mb-6 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-white p-4 shadow-[var(--card-shadow)] sm:p-5">
+              <h2 className="text-sm font-bold text-[var(--navy)]">Rep coverage on the directory</h2>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                {repCoverage.totalReps} accredited reps across {repCoverage.countiesWithReps} counties — find cover near mapped stations.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {repCoverage.byCounty.slice(0, 12).map((c) => (
+                  <Link
+                    key={c.slug}
+                    href={`/directory/${c.slug}`}
+                    className="rounded-full border border-[var(--navy)]/15 bg-[var(--navy)]/5 px-2.5 py-1 text-[11px] font-semibold text-[var(--navy)] no-underline hover:border-[var(--gold)]"
+                  >
+                    {c.name} ({c.repCount})
+                  </Link>
+                ))}
+                <Link href="/directory" className="rounded-full bg-[var(--gold)] px-2.5 py-1 text-[11px] font-bold text-[var(--navy)] no-underline">
+                  Full directory →
+                </Link>
+              </div>
+            </div>
+          )}
 
           <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
             <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--card-border)] shadow-[var(--card-shadow)]" style={{ minHeight: 500 }}>

@@ -10,6 +10,7 @@ import { StationCard } from '@/components/StationCard';
 import { DirectoryComplianceNotice } from '@/components/DirectoryComplianceNotice';
 import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCredentialVerificationNotice';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
+import { POLICESTATIONAGENT_KENT_RESOURCES_HREF } from '@/lib/policestationagent-promo';
 
 export const dynamic = 'force-static';
 /** ISR so rep/station counts refresh without a full redeploy. */
@@ -115,7 +116,7 @@ export default async function DirectoryCountyPage({ params }: PageProps) {
               Free, sourced guide to police station rights in Kent — separate from this directory.
             </p>
             <a
-              href="https://www.policestationagent.com/kent-police-custody-resources?utm_source=repukkent"
+              href={POLICESTATIONAGENT_KENT_RESOURCES_HREF}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 inline-block text-sm font-bold text-[var(--navy)] underline"

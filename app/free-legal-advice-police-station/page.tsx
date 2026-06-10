@@ -3,6 +3,7 @@ import { buildMetadata } from '@/lib/seo';
 import { PillarSeoLayout } from '@/components/PillarSeoLayout';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
+import { PoliceStationAgentKentCta } from '@/components/PoliceStationAgentKentCta';
 
 export const metadata = buildMetadata({
   title: 'Legal Advice at the Police Station (UK) | Legal Aid Guide',
@@ -80,12 +81,11 @@ export default function FreeLegalAdvicePoliceStationPage() {
           Need a solicitor at the police station? Ask for the duty solicitor or contact a criminal defence firm where the
           station is — not via this directory.
         </p>
-        <p className="mt-3 text-sm text-slate-300">
-          Kent or nearby only:{' '}
-          <a href="https://www.policestationagent.com?utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory" target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--gold)] underline">
-            Need a solicitor in Kent? Visit policestationagent.com
-          </a>
-        </p>
+        <PoliceStationAgentKentCta
+          className="mt-3 text-sm text-slate-300"
+          linkClassName="font-semibold text-[var(--gold)] underline"
+          placement="free_advice_page"
+        />
       </div>
       <h2 className="text-xl font-bold text-[var(--navy)]">For firms reading this page</h2>
       <p>

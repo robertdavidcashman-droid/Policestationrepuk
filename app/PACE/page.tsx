@@ -4,6 +4,7 @@ import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { buildMetadata } from '@/lib/seo';
+import { PoliceStationAgentKentCta } from '@/components/PoliceStationAgentKentCta';
 
 export const metadata = buildMetadata({
   title: 'PACE Codes of Practice — Quick Reference Guide',
@@ -282,12 +283,11 @@ export default function PACEPage() {
         <p className="mt-5 text-sm text-slate-300">
           Need a solicitor at the police station? Ask for the duty solicitor or a local criminal defence firm.
         </p>
-        <p className="mt-2 text-sm text-slate-400">
-          Kent or nearby:{' '}
-          <a href="https://www.policestationagent.com?utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory" target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--gold)] underline">
-            Need a solicitor in Kent? Visit policestationagent.com
-          </a>
-        </p>
+        <PoliceStationAgentKentCta
+          className="mt-2 text-sm text-slate-400"
+          linkClassName="font-semibold text-[var(--gold)] underline"
+          placement="pace_page"
+        />
       </section>
 
       <ResolvedContentSources className="mt-10" context={{ kind: 'page', path: '/PACE' }} />

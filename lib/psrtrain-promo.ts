@@ -1,9 +1,11 @@
 /** Central PSR Train conversion URLs (UTM for funnel attribution). */
-const UTM_BASE = 'utm_source=policestationrepuk&utm_medium=web';
+import { partnerHref } from '@/lib/utm';
 
 export function psrTrainHref(campaign: string, path = ''): string {
-  const base = path ? `https://www.psrtrain.com${path.startsWith('/') ? path : `/${path}`}` : 'https://www.psrtrain.com';
-  return `${base}?${UTM_BASE}&utm_campaign=${campaign}`;
+  const base = path
+    ? `https://www.psrtrain.com${path.startsWith('/') ? path : `/${path}`}`
+    : 'https://www.psrtrain.com';
+  return partnerHref(base, campaign);
 }
 
 export const PSRTRAIN_SITE = 'https://www.psrtrain.com';

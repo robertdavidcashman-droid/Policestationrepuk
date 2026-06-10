@@ -49,6 +49,16 @@ export interface BufferHealthEmailInput {
   adminEmail?: string;
 }
 
+export interface TrafficDigestEmailInput {
+  date?: string;
+  gbpOk: boolean;
+  gbpIssueCount: number;
+  crossDomainOk: boolean;
+  crossDomainIssues: string[];
+  scheduledCount?: number;
+  adminEmail?: string;
+}
+
 export async function sendBufferSchedulerSkippedEmail(
   input: BufferSchedulerSkippedEmailInput,
 ): Promise<boolean> {
@@ -192,6 +202,46 @@ export async function sendBufferHealthFailureEmail(
     return true;
   } catch (err) {
     console.error('[buffer-health email]', err);
+    return false;
+  }
+}
+
+export async function sendTrafficDigestEmail(input: TrafficDigestEmailInput): Promise<boolean> {
+  const to = input.adminEmail?.trim() || NOTIFY_EMAIL;
+  const dateLabel = input.date ?? new Date().toISOString().slice(0, 10);
+  const subject = `[Traffic digest] Network health — ${dateLabel}`;
+
+  const crossDomainHtml =
+    input.crossDomainIssues.length > 0
+      ? `<ul style="margin:0 0 16px;padding-left:20px;font-size:13px;line-height:1.6;">
+           ${input.crossDomainIssues.slice(0, 8).map((i) => `<li>${escapeHtml(i)}</li>`).join('')}
+         </ul>`
+      : '<p style="margin:0 0 16px;color:#059669;">Cross-domain link check passed.</p>';
+
+  const html = `
+    <div style="font-family:system-ui,sans-serif;color:#0f172a;max-width:640px;">
+      <h2 style="margin:0 0 12px;">Weekly network traffic digest</h2>
+      <p style="margin:0 0 16px;line-height:1.5;">Summary for <strong>${escapeHtml(dateLabel)}</strong>.</p>
+      <p style="margin:0 0 8px;"><strong>Buffer GBP:</strong> ${input.gbpOk ? 'OK' : `${input.gbpIssueCount} issue(s)`}${input.scheduledCount != null ? ` · ${input.scheduledCount} posts scheduled today` : ''}</p>
+      <p style="margin:0 0 8px;"><strong>Cross-domain links:</strong> ${input.crossDomainOk ? 'OK' : `${input.crossDomainIssues.length} issue(s)`}</p>
+      ${crossDomainHtml}
+      <p style="margin:0;color:#64748b;font-size:12px;line-height:1.5;">
+        Run <code>npm run audit:cross-domain-links</code> and <code>npm run buffer:verify-scheduled-gbp</code>.
+      </p>
+    </div>
+  `;
+
+  const client = getResend();
+  if (!client) {
+    console.warn('[traffic-digest email]', subject);
+    return false;
+  }
+
+  try {
+    await client.emails.send({ from: FROM_EMAIL, to, subject, html });
+    return true;
+  } catch (err) {
+    console.error('[traffic-digest email]', err);
     return false;
   }
 }

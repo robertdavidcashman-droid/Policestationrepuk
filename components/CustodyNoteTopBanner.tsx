@@ -9,6 +9,7 @@ import {
   TOP_BANNER_TEXT,
   TOP_BANNER_TEXT_MOBILE,
 } from '@/lib/custodynote-promo';
+import { PartnerOutboundLink } from '@/components/PartnerOutboundLink';
 
 export const CUSTODYNOTE_BANNER_DISMISSED_KEY = 'cn-top-banner-dismissed';
 
@@ -38,15 +39,17 @@ export function CustodyNoteTopBanner({ onDismissChange }: CustodyNoteTopBannerPr
       className={`relative z-[100] border-b border-[#0a1633] bg-gradient-to-r from-[#0f1d45] via-[#152e6e] to-[#0f1d45] px-3 text-center transition-all duration-200 sm:px-4 ${hidden ? 'invisible h-0 overflow-hidden py-0' : 'visible py-1.5 sm:py-2.5'}`}
     >
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-2 gap-y-1.5 pr-9 sm:gap-4 sm:pr-10">
-        <a
+        <PartnerOutboundLink
           href={CUSTODYNOTE_TRIAL_HREF}
+          partner="custodynote"
+          placement="top_banner"
           target="_blank"
           rel="noopener noreferrer"
           className="max-w-full text-center text-sm font-semibold text-white no-underline transition-colors hover:text-[var(--gold)] sm:text-[15px]"
         >
           <span className="sm:hidden">{TOP_BANNER_TEXT_MOBILE}</span>
           <span className="hidden sm:inline">{TOP_BANNER_TEXT}</span>
-        </a>
+        </PartnerOutboundLink>
         <span className="hidden h-4 w-px bg-white/30 sm:inline-block" aria-hidden />
         <span className="hidden text-[11px] font-medium text-white/85 md:inline">
           {CUSTODYNOTE_APPS_LINE}
@@ -58,15 +61,17 @@ export function CustodyNoteTopBanner({ onDismissChange }: CustodyNoteTopBannerPr
             {CUSTODYNOTE_DISCOUNT_CODE}
           </span>
         </span>
-        <a
+        <PartnerOutboundLink
           href={CUSTODYNOTE_TRIAL_HREF}
+          partner="custodynote"
+          placement="top_banner_cta"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex shrink-0 items-center rounded-full bg-[var(--gold)] px-3 py-1.5 text-xs font-bold text-[var(--navy)] no-underline shadow-sm transition-colors hover:bg-[var(--gold-hover)] sm:px-4"
         >
           <span className="sm:hidden">Free trial →</span>
           <span className="hidden sm:inline">Start free trial →</span>
-        </a>
+        </PartnerOutboundLink>
         <button
           type="button"
           onClick={() => {

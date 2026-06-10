@@ -1,6 +1,7 @@
 import { getAllBlogArticles } from '@/lib/blog/registry';
 import { CUSTODYNOTE_SITE } from '@/lib/custodynote-promo';
 import { POLICESTATIONAGENT_SITE } from '@/lib/policestationagent-promo';
+import { POLICESTATIONAGENT_FEED_PROXY } from './rss-fetch';
 import { SITE_URL } from '@/lib/seo-layer/config';
 import { resolveAbsoluteImageUrl } from './assets';
 import type { ContentFeedSource, SchedulablePost } from './content-types';
@@ -39,7 +40,7 @@ const EXPECTED_FEED_IDS = ['policestationrepuk', 'custodynote', 'policestationag
 const DEFAULT_FEEDS: ContentFeedSource[] = [
   { id: 'policestationrepuk', type: 'local' },
   { id: 'custodynote', type: 'rss', url: `${CUSTODYNOTE_SITE}/feed` },
-  { id: 'policestationagent', type: 'rss', url: `${POLICESTATIONAGENT_SITE}/feed.xml` },
+  { id: 'policestationagent', type: 'rss', url: POLICESTATIONAGENT_FEED_PROXY },
   {
     id: 'psrtrain',
     type: 'rss',

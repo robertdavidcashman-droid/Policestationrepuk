@@ -7,8 +7,9 @@ import {
   CUSTODYNOTE_MEMBER_PRICE_GBP,
   CUSTODYNOTE_PLATFORM_LINE,
   CUSTODYNOTE_PRICE_GBP,
-  CUSTODYNOTE_SITE,
+  CUSTODYNOTE_DOWNLOAD_HREF,
 } from '@/lib/custodynote-promo';
+import { POLICESTATIONAGENT_HOME_HREF } from '@/lib/policestationagent-promo';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -71,7 +72,7 @@ export default function AdvertisingPage() {
                 </p>
                 <p className="mt-2 text-xs text-[var(--muted)]">
                   Website:{' '}
-                  <a href={CUSTODYNOTE_SITE} target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--navy)] underline">
+                  <a href={CUSTODYNOTE_DOWNLOAD_HREF} target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--navy)] underline">
                     custodynote.com
                   </a>
                 </p>
@@ -85,7 +86,7 @@ export default function AdvertisingPage() {
                 </p>
                 <p className="mt-2 text-xs text-[var(--muted)]">
                   Website:{' '}
-                  <a href="https://www.policestationagent.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--navy)] underline">
+                  <a href={POLICESTATIONAGENT_HOME_HREF} target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--navy)] underline">
                     policestationagent.com
                   </a>
                 </p>

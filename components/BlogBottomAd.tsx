@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { AdvertisementLabel } from './AdvertisementLabel';
+import { PartnerOutboundLink } from './PartnerOutboundLink';
+import { POLICESTATIONAGENT_HOME_HREF } from '@/lib/policestationagent-promo';
 
 export function BlogBottomAd() {
   return (
@@ -24,14 +26,16 @@ export function BlogBottomAd() {
           </p>
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-          <Link
-            href="https://www.policestationagent.com"
+          <PartnerOutboundLink
+            href={POLICESTATIONAGENT_HOME_HREF}
+            partner="policestationagent"
+            placement="blog_bottom_ad"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-gold inline-flex justify-center !text-sm !no-underline"
           >
             Visit policestationagent.com
-          </Link>
+          </PartnerOutboundLink>
           <Link
             href="tel:01732247427"
             className="inline-flex justify-center rounded-lg border-2 border-[var(--navy)]/15 px-4 py-2.5 text-sm font-semibold text-[var(--navy)] no-underline hover:border-[var(--gold-hover)]"

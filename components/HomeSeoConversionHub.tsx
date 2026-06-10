@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { PartnerOutboundLink } from '@/components/PartnerOutboundLink';
+import { POLICESTATIONAGENT_HOME_HREF } from '@/lib/policestationagent-promo';
 
 const COVERAGE_LINKS = [
   { href: '/police-station-rep-kent', label: 'Kent' },
@@ -207,14 +209,16 @@ export function HomeSeoConversionHub() {
                 <p className="text-sm font-semibold text-[var(--gold)]">Kent &amp; nearby</p>
                 <p className="mt-2 text-sm text-white">
                   Need a solicitor in Kent?{' '}
-                  <a
-                    href="https://www.policestationagent.com?utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory"
+                  <PartnerOutboundLink
+                    href={POLICESTATIONAGENT_HOME_HREF}
+                    partner="policestationagent"
+                    placement="homepage_hub"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-semibold text-[var(--gold)] underline"
                   >
                     Visit policestationagent.com
-                  </a>{' '}
+                  </PartnerOutboundLink>{' '}
                   — solicitor-led police station cover for Kent firms (separate from this directory).
                 </p>
                 <p className="mt-2 text-xs text-slate-300">

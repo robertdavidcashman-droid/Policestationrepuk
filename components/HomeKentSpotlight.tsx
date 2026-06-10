@@ -4,6 +4,8 @@ import {
   CONTACT_WHATSAPP_HREF,
 } from '@/lib/contact-constants';
 import { AdvertisementLabel } from './AdvertisementLabel';
+import { PartnerOutboundLink } from './PartnerOutboundLink';
+import { POLICESTATIONAGENT_HOME_HREF } from '@/lib/policestationagent-promo';
 export function HomeKentSpotlight() {
   return (
     <section className="section-pad relative border-y-2 border-[var(--gold)]/30 bg-gradient-to-br from-[var(--gold-pale)] via-white to-[var(--gold-pale)]" aria-labelledby="kent-agency-heading">
@@ -20,14 +22,16 @@ export function HomeKentSpotlight() {
           </p>
           <p className="mt-2 text-xs text-[var(--muted)]">
             This is a separate service from the PoliceStationRepUK directory.{' '}
-            <a
-              href="https://www.policestationagent.com?utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory"
+            <PartnerOutboundLink
+              href={POLICESTATIONAGENT_HOME_HREF}
+              partner="policestationagent"
+              placement="homepage_kent"
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-[var(--navy)] underline"
             >
               Need a solicitor in Kent? Visit policestationagent.com
-            </a>
+            </PartnerOutboundLink>
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <a href={CONTACT_PHONE_TEL} className="btn-gold !text-sm">

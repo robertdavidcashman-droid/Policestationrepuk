@@ -1,17 +1,24 @@
 /** Central Custody Note conversion URLs, pricing and copy (UTM for funnel attribution). */
-const UTM = 'utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory';
+import { partnerHref } from '@/lib/utm';
+
+function cnHref(campaign: string, path = ''): string {
+  const base = path
+    ? `https://custodynote.com${path.startsWith('/') ? path : `/${path}`}`
+    : 'https://custodynote.com';
+  return partnerHref(base, campaign);
+}
 
 /** User-facing product name — matches custodynote.com. */
 export const CUSTODYNOTE_BRAND_NAME = 'Custody Note';
 
 export const CUSTODYNOTE_SITE = 'https://custodynote.com';
-export const CUSTODYNOTE_DOWNLOAD_HREF = `${CUSTODYNOTE_SITE}/download?${UTM}`;
+export const CUSTODYNOTE_DOWNLOAD_HREF = cnHref('directory', '/download');
 /** Primary trial CTA — custodynote.com/download is the canonical install path. */
 export const CUSTODYNOTE_TRIAL_HREF = CUSTODYNOTE_DOWNLOAD_HREF;
-export const CUSTODYNOTE_PRICING_HREF = `${CUSTODYNOTE_SITE}/pricing?${UTM}`;
+export const CUSTODYNOTE_PRICING_HREF = cnHref('directory', '/pricing');
 /** Free practitioner resources — linkable checklists and templates. */
-export const CUSTODYNOTE_TOOLS_HREF = `${CUSTODYNOTE_SITE}/tools?${UTM}`;
-export const CUSTODYNOTE_CHECKLIST_HREF = `${CUSTODYNOTE_SITE}/police-station-attendance-checklist?${UTM}`;
+export const CUSTODYNOTE_TOOLS_HREF = cnHref('directory', '/tools');
+export const CUSTODYNOTE_CHECKLIST_HREF = cnHref('directory', '/police-station-attendance-checklist');
 /** Mac section on the custodynote.com download page (Apple Silicon + Intel pickers). */
 export const CUSTODYNOTE_MAC_DOWNLOAD_HREF = `${CUSTODYNOTE_DOWNLOAD_HREF}#mac`;
 

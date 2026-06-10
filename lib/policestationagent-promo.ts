@@ -1,8 +1,19 @@
 /** Central Police Station Agent conversion URLs (UTM for funnel attribution). */
-const UTM = 'utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory';
+import { partnerHref } from '@/lib/utm';
 
 export const POLICESTATIONAGENT_SITE = 'https://www.policestationagent.com';
-export const POLICESTATIONAGENT_HOME_HREF = `${POLICESTATIONAGENT_SITE}?${UTM}`;
+
+export function psaHref(campaign: string, path = ''): string {
+  const base = path
+    ? `${POLICESTATIONAGENT_SITE}${path.startsWith('/') ? path : `/${path}`}`
+    : POLICESTATIONAGENT_SITE;
+  return partnerHref(base, campaign);
+}
+
+export const POLICESTATIONAGENT_HOME_HREF = psaHref('directory');
+export const POLICESTATIONAGENT_KENT_RESOURCES_HREF = psaHref('kent_resources', '/kent-police-custody-resources');
+export const POLICESTATIONAGENT_FREE_ADVICE_HREF = psaHref('free_advice', '/free-police-station-advice-kent');
+export const POLICESTATIONAGENT_SOLICITOR_HREF = psaHref('solicitor_seo', '/police-station-solicitor');
 export const POLICESTATIONAGENT_NAME = 'Police Station Agent';
 
 export const POLICESTATIONAGENT_TAGLINE =

@@ -1,9 +1,11 @@
 import Link from 'next/link';
+import { PartnerOutboundLink } from '@/components/PartnerOutboundLink';
 import {
   CONTACT_PHONE_TEL,
   CONTACT_PHONE_DISPLAY,
   CONTACT_WHATSAPP_HREF,
 } from '@/lib/contact-constants';
+import { POLICESTATIONAGENT_KENT_RESOURCES_HREF } from '@/lib/policestationagent-promo';
 import { WHATSAPP_JOIN_URL, WHATSAPP_JOIN_PHONE } from '@/lib/site-navigation';
 
 /** Kent police station agent cover — sidebar companion to directory listings. */
@@ -15,14 +17,16 @@ export function SidebarKentAgentPromo() {
       <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
         Solicitor-led cover for Kent firms — separate from this directory.
       </p>
-      <a
-        href="https://www.policestationagent.com/kent-police-custody-resources?utm_source=repuksidebar"
+      <PartnerOutboundLink
+        href={POLICESTATIONAGENT_KENT_RESOURCES_HREF}
+        partner="policestationagent"
+        placement="directory_sidebar_kent_resources"
         target="_blank"
         rel="noopener noreferrer"
         className="mt-2 inline-block text-xs font-semibold text-[var(--navy)] underline"
       >
         Kent custody resources (free guide)
-      </a>
+      </PartnerOutboundLink>
       <div className="mt-3 flex flex-wrap gap-2">
         <a
           href={CONTACT_PHONE_TEL}

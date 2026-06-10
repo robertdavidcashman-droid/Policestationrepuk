@@ -13,6 +13,8 @@ import {
   CUSTODYNOTE_TRIAL_HREF,
 } from '@/lib/custodynote-promo';
 import { PSRTRAIN_CTA, PSRTRAIN_FREE_TESTING_NOTE, PSRTRAIN_NAME, PSRTRAIN_TRAINING_HREF } from '@/lib/psrtrain-promo';
+import { POLICESTATIONAGENT_HOME_HREF } from '@/lib/policestationagent-promo';
+import { PartnerOutboundLink } from '@/components/PartnerOutboundLink';
 import { SUPPORT_EMAIL, SUPPORT_MAILTO_HREF } from '@/lib/site-contact';
 import { SiteVersionStamp } from '@/components/SiteVersionStamp';
 import {
@@ -222,14 +224,16 @@ export function Footer() {
               Kent reps hub →
             </Link>
             <span className="mx-1 text-xs text-slate-500">·</span>
-            <a
-              href="https://www.policestationagent.com"
+            <PartnerOutboundLink
+              href={POLICESTATIONAGENT_HOME_HREF}
+              partner="policestationagent"
+              placement="footer_kent"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 inline-block text-xs font-semibold !text-[var(--gold)] no-underline hover:!text-white"
             >
               Police station agent (Kent) →
-            </a>
+            </PartnerOutboundLink>
           </div>
           <div>
             <h4 className="text-sm font-bold text-white">{CUSTODYNOTE_BRAND_NAME} — PACE attendance note software</h4>

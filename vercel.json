@@ -57,8 +57,8 @@
       "schedule": "5 5 * * *"
     },
     {
-      "path": "/api/cron/buffer-health",
-      "schedule": "0 6 * * 1"
+      "path": "/api/cron/traffic-digest",
+      "schedule": "0 7 * * 1"
     },
     {
       "path": "/api/cron/editorial-audit",

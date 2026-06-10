@@ -16,6 +16,8 @@ import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { BlogAuthorBio } from '@/components/BlogAuthorBio';
 import { BlogCustodyNotePromo } from '@/components/BlogCustodyNotePromo';
 import { PsrTrainPromo } from '@/components/PsrTrainPromo';
+import { PartnerOutboundLink } from '@/components/PartnerOutboundLink';
+import { POLICESTATIONAGENT_HOME_HREF } from '@/lib/policestationagent-promo';
 import { prefersPsrTrainBlogPromo } from '@/lib/blog-partner-promo';
 
 export const dynamic = 'force-static';
@@ -284,14 +286,16 @@ export default async function BlogArticlePage({ params }: PageProps) {
             <p className="mt-4">
               Need a solicitor? Ask for the duty solicitor or a criminal defence firm local to the police station. Kent
               or nearby:{' '}
-              <a
-                href="https://www.policestationagent.com?utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory"
+              <PartnerOutboundLink
+                href={POLICESTATIONAGENT_HOME_HREF}
+                partner="policestationagent"
+                placement="blog_footer"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-[var(--gold-link)] underline underline-offset-2 hover:text-[var(--gold)]"
               >
-                Need a solicitor in Kent? Visit policestationagent.com
-              </a>
+                Visit policestationagent.com
+              </PartnerOutboundLink>
             </p>
           </footer>
         </div>

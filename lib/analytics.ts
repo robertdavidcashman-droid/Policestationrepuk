@@ -34,5 +34,12 @@ export const AnalyticsEvents = {
   registerCtaClick: (source: string) => trackEvent('register_cta_click', { source }),
   blogToDirectoryClick: (slug: string) => trackEvent('blog_directory_click', { blog_slug: slug }),
   legalDirectorySubmit: () => trackEvent('legal_directory_submit'),
-  custodynotePromoClick: (placement: string) => trackEvent('custodynote_promo_click', { placement }),
+  custodynotePromoClick: (placement: string) =>
+    trackEvent('outbound_partner_click', { partner: 'custodynote', placement }),
+  psrTrainPromoClick: (placement: string) =>
+    trackEvent('outbound_partner_click', { partner: 'psrtrain', placement }),
+  psaPromoClick: (placement: string) =>
+    trackEvent('outbound_partner_click', { partner: 'policestationagent', placement }),
+  outboundPartnerClick: (partner: string, placement: string) =>
+    trackEvent('outbound_partner_click', { partner, placement }),
 } as const;

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { buildMetadata } from '@/lib/seo';
+import { POLICESTATIONAGENT_HOME_HREF } from '@/lib/policestationagent-promo';
 
 export const metadata = buildMetadata({
   title: 'About the Founder — Robert Cashman | PoliceStationRepUK',
@@ -138,7 +139,7 @@ export default function AboutFounderPage() {
               Robert&apos;s duty solicitor and police station agent work for firms and clients is separate from
               PoliceStationRepUK. For that service, visit{' '}
               <a
-                href="https://www.policestationagent.com"
+                href={POLICESTATIONAGENT_HOME_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-[var(--navy)] underline decoration-[var(--gold)] underline-offset-2 hover:text-[var(--gold-hover)]"
@@ -162,7 +163,7 @@ export default function AboutFounderPage() {
                 Contact us
               </Link>
               <a
-                href="https://www.policestationagent.com"
+                href={POLICESTATIONAGENT_HOME_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center rounded-lg border-2 border-white/40 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white no-underline transition-colors hover:border-[var(--gold)] hover:bg-white/15"

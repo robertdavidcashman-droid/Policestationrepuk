@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { buildMetadata } from '@/lib/seo';
+import { POLICESTATIONAGENT_HOME_HREF } from '@/lib/policestationagent-promo';
 
 export const metadata = buildMetadata({
   title: "About PoliceStationRepUK — Free Rep Directory Since 2016",
@@ -191,7 +192,7 @@ export default function AboutPage() {
         <p className="text-sm leading-relaxed text-[var(--muted)]">
           This site features advertisements and promoted services from related businesses, including
           Custody Note (desktop attendance note software) and Police Station Agent (Kent solicitor
-          agent cover via <a href="https://www.policestationagent.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--navy)] underline">policestationagent.com</a>).
+          agent cover via <a href={POLICESTATIONAGENT_HOME_HREF} target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--navy)] underline">policestationagent.com</a>).
           These are products and services of Defence Legal Services Ltd or affiliated businesses.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">

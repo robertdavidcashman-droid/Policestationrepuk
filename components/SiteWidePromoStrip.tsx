@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { PartnerOutboundLink } from '@/components/PartnerOutboundLink';
 import {
   CUSTODYNOTE_BRAND_NAME,
   CUSTODYNOTE_DISCOUNT_CODE,
@@ -9,6 +10,9 @@ import {
   CUSTODYNOTE_PRICE_GBP,
   CUSTODYNOTE_TRIAL_HREF,
 } from '@/lib/custodynote-promo';
+import {
+  POLICESTATIONAGENT_HOME_HREF,
+} from '@/lib/policestationagent-promo';
 import {
   CONTACT_PHONE_TEL,
   CONTACT_PHONE_DISPLAY,
@@ -57,14 +61,16 @@ export function SiteWidePromoStrip() {
               </span>
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <a
+              <PartnerOutboundLink
                 href={CUSTODYNOTE_TRIAL_HREF}
+                partner="custodynote"
+                placement="site_wide_strip_trial"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-lg bg-[var(--gold)] px-3 text-xs font-bold text-[var(--navy)] no-underline hover:bg-[var(--gold-hover)]"
               >
                 Start free trial
-              </a>
+              </PartnerOutboundLink>
               <Link
                 href="/CustodyNote"
                 className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 text-xs font-semibold text-[var(--navy)] no-underline hover:border-[var(--gold)]"
@@ -83,14 +89,16 @@ export function SiteWidePromoStrip() {
             </p>
             <p className="mt-2 text-[11px] font-medium text-emerald-700">{PSRTRAIN_FREE_TESTING_NOTE}</p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <a
+              <PartnerOutboundLink
                 href={PSRTRAIN_TRAINING_HREF}
+                partner="psrtrain"
+                placement="site_wide_strip_training"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-lg bg-[var(--navy)] px-3 text-xs font-bold text-white no-underline hover:bg-[var(--navy-light)]"
               >
                 {PSRTRAIN_CTA}
-              </a>
+              </PartnerOutboundLink>
               <Link
                 href="/PrepareForCIT"
                 className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 text-xs font-semibold text-[var(--navy)] no-underline hover:border-[var(--gold)]"
@@ -109,14 +117,16 @@ export function SiteWidePromoStrip() {
               directory.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <a
-                href="https://www.policestationagent.com"
+              <PartnerOutboundLink
+                href={POLICESTATIONAGENT_HOME_HREF}
+                partner="policestationagent"
+                placement="site_wide_strip_home"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-lg bg-[var(--navy)] px-3 text-xs font-bold text-white no-underline hover:bg-[var(--navy-light)]"
               >
                 policestationagent.com
-              </a>
+              </PartnerOutboundLink>
               <a
                 href={CONTACT_PHONE_TEL}
                 className="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-[var(--navy)]/25 bg-white px-3 text-xs font-semibold text-[var(--navy)] no-underline"

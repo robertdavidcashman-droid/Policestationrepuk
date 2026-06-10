@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { LEGACY_EXACT_REDIRECTS } from '@/lib/legacy-exact-redirects';
+import { EXTERNAL_SEO_REDIRECTS } from '@/lib/external-seo-redirects';
 import { COUNTY_SLUG_SET } from '@/lib/county-slugs-bundled';
 import { COUNTY_SEO_SLUG_TO_DIRECTORY_SLUG } from '@/lib/county-seo-directory-slugs';
 import { resolveLegacyBlogRedirect } from '@/lib/blog/legacy-blog-slugs';
@@ -77,6 +78,11 @@ export async function middleware(request: NextRequest) {
   if (hostRedirect) return hostRedirect;
 
   const path = request.nextUrl.pathname;
+
+  const externalTarget = EXTERNAL_SEO_REDIRECTS[path] ?? EXTERNAL_SEO_REDIRECTS[path.toLowerCase()];
+  if (externalTarget) {
+    return NextResponse.redirect(externalTarget, 301);
+  }
 
   if (path.startsWith('/_next') || path.startsWith('/api') || path.includes('.')) {
     return NextResponse.next();

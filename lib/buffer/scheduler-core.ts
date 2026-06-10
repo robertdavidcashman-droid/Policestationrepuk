@@ -1,4 +1,5 @@
 import type { BlogArticle } from '@/lib/blog/types';
+import { appendUtm } from '@/lib/utm';
 import type { BufferChannelService } from './config';
 import type { SchedulablePost } from './content-types';
 
@@ -39,12 +40,31 @@ export function buildPostText(article: BlogArticle, siteUrl: string): string {
   return `${article.title}\n\n${url}`;
 }
 
-export function buildSchedulablePostText(post: SchedulablePost): string {
+export function withBufferSocialUtm(
+  url: string,
+  feedId: string,
+  service: BufferChannelService,
+): string {
+  return appendUtm(url, {
+    source: 'buffer',
+    medium: 'social',
+    campaign: `${feedId}_${service}`,
+  });
+}
+
+export function buildSchedulablePostText(
+  post: SchedulablePost,
+  options?: { feedId?: string; service?: BufferChannelService },
+): string {
+  const url =
+    options?.feedId && options?.service
+      ? withBufferSocialUtm(post.url, options.feedId, options.service)
+      : post.url;
   const excerpt = post.excerpt.trim();
   if (excerpt) {
-    return `${post.title}\n\n${excerpt}\n\n${post.url}`;
+    return `${post.title}\n\n${excerpt}\n\n${url}`;
   }
-  return `${post.title}\n\n${post.url}`;
+  return `${post.title}\n\n${url}`;
 }
 
 const TWITTER_MAX_CHARS = 280;
@@ -54,15 +74,16 @@ export function buildSchedulablePostTextForService(
   post: SchedulablePost,
   service: BufferChannelService,
 ): string {
-  const full = buildSchedulablePostText(post);
+  const trackedUrl = withBufferSocialUtm(post.url, post.feedId, service);
+  const full = buildSchedulablePostText(post, { feedId: post.feedId, service });
   if (service !== 'twitter' || full.length <= TWITTER_MAX_CHARS) {
     return full;
   }
 
-  const suffix = `\n\n${post.url}`;
+  const suffix = `\n\n${trackedUrl}`;
   const budget = TWITTER_MAX_CHARS - suffix.length;
   if (budget <= 0) {
-    return post.url.slice(0, TWITTER_MAX_CHARS);
+    return trackedUrl.slice(0, TWITTER_MAX_CHARS);
   }
 
   const title = post.title.trim();

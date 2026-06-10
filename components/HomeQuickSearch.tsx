@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { AnalyticsEvents } from '@/lib/analytics';
 
 interface QuickSearchProps {
   stations?: string[];
@@ -19,6 +20,8 @@ export function HomeQuickSearch({ counties = [] }: QuickSearchProps) {
     const params = new URLSearchParams();
     if (query.trim()) params.set('q', query.trim());
     if (county) params.set('county', county);
+    const searchLabel = [query.trim(), county].filter(Boolean).join(' ');
+    if (searchLabel) AnalyticsEvents.directorySearch(searchLabel);
     const qs = params.toString();
     router.push(qs ? `/directory?${qs}` : '/directory');
   };

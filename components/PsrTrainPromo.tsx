@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { AdvertisementLabel } from '@/components/AdvertisementLabel';
+import { PartnerOutboundLink } from '@/components/PartnerOutboundLink';
 import {
   PSRTRAIN_BULLETS,
   PSRTRAIN_CIT_HREF,
@@ -25,6 +27,31 @@ type PsrTrainPromoProps = {
   showFreeTesting?: boolean;
 };
 
+function PsrTrainOutboundLink({
+  href,
+  campaign,
+  className,
+  children,
+}: {
+  href: string;
+  campaign: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <PartnerOutboundLink
+      href={href}
+      partner="psrtrain"
+      placement={campaign}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+    >
+      {children}
+    </PartnerOutboundLink>
+  );
+}
+
 function ctaHref(campaign?: string) {
   return campaign ? psrTrainHref(campaign, '/training') : PSRTRAIN_TRAINING_HREF;
 }
@@ -47,6 +74,7 @@ export function PsrTrainPromo({
   showFreeTesting = true,
 }: PsrTrainPromoProps) {
   const href = ctaHref(campaign);
+  const placement = campaign ?? 'directory';
 
   if (variant === 'slim') {
     return (
@@ -66,14 +94,13 @@ export function PsrTrainPromo({
             </p>
           </div>
         </div>
-        <a
+        <PsrTrainOutboundLink
           href={href}
-          target="_blank"
-          rel="noopener noreferrer"
+          campaign={placement}
           className="btn-gold shrink-0 !px-4 !py-2 !text-xs no-underline"
         >
           {PSRTRAIN_CTA}
-        </a>
+        </PsrTrainOutboundLink>
       </aside>
     );
   }
@@ -100,14 +127,13 @@ export function PsrTrainPromo({
         {showFreeTesting && (
           <p className="mt-2 text-[11px] font-medium text-emerald-700">{PSRTRAIN_FREE_TESTING_NOTE}</p>
         )}
-        <a
+        <PsrTrainOutboundLink
           href={href}
-          target="_blank"
-          rel="noopener noreferrer"
+          campaign={placement}
           className="mt-3 inline-flex min-h-[40px] w-full items-center justify-center rounded-lg bg-[var(--navy)] px-3 text-xs font-bold text-white no-underline hover:bg-[var(--navy-light)]"
         >
           {PSRTRAIN_CTA}
-        </a>
+        </PsrTrainOutboundLink>
         <Disclosure className="mt-2 text-[var(--muted)]" />
       </aside>
     );
@@ -125,9 +151,9 @@ export function PsrTrainPromo({
             <h3 className="mt-2 text-lg font-bold text-[var(--navy)]">{PSRTRAIN_HEADLINE}</h3>
             <p className="mt-1 text-sm text-[var(--muted)]">{PSRTRAIN_SUBHEAD}</p>
           </div>
-          <a href={href} target="_blank" rel="noopener noreferrer" className="btn-gold shrink-0 no-underline">
+          <PsrTrainOutboundLink href={href} campaign={placement} className="btn-gold shrink-0 no-underline">
             {PSRTRAIN_CTA}
-          </a>
+          </PsrTrainOutboundLink>
         </div>
         <Disclosure className="mt-3 text-[var(--muted)]" />
       </aside>
@@ -161,14 +187,13 @@ export function PsrTrainPromo({
           )}
           <p className="mt-3 text-xs text-slate-400">{PSRTRAIN_DISCLAIMER}</p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <a
+            <PsrTrainOutboundLink
               href={campaign === 'prepare_for_cit' ? PSRTRAIN_CIT_HREF : href}
-              target="_blank"
-              rel="noopener noreferrer"
+              campaign={campaign === 'prepare_for_cit' ? 'prepare_for_cit' : placement}
               className="btn-gold no-underline"
             >
               {PSRTRAIN_CTA_START}
-            </a>
+            </PsrTrainOutboundLink>
             <Link
               href="/PrepareForCIT"
               className="btn-outline !border-slate-500 !text-white hover:!border-[var(--gold)] hover:!text-[var(--gold)] no-underline"
@@ -206,14 +231,13 @@ export function PsrTrainPromo({
         <p className="mt-3 text-xs font-medium text-emerald-700">{PSRTRAIN_FREE_TESTING_NOTE}</p>
       )}
       <p className="mt-2 text-[11px] text-[var(--muted)]">{PSRTRAIN_DISCLAIMER}</p>
-      <a
+      <PsrTrainOutboundLink
         href={href}
-        target="_blank"
-        rel="noopener noreferrer"
+        campaign={placement}
         className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[var(--navy)] px-5 py-2.5 text-sm font-bold text-white no-underline hover:bg-[var(--navy-light)]"
       >
         {PSRTRAIN_CTA} ↗
-      </a>
+      </PsrTrainOutboundLink>
       <Disclosure className="mt-3 text-[var(--muted)]" />
     </article>
   );

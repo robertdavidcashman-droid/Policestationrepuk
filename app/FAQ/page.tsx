@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
+import { PoliceStationAgentKentCta } from '@/components/PoliceStationAgentKentCta';
 import { JsonLd } from '@/components/JsonLd';
 import { FAQ_PAGE_FAQS, FAQ_PAGE_QUICK_LINKS } from '@/lib/faq-page';
 import { buildMetadata, breadcrumbSchema } from '@/lib/seo';
@@ -114,12 +115,10 @@ export default function FAQPage() {
           Need a solicitor at the police station? Ask for the duty solicitor or contact a criminal defence firm in your
           area — this directory does not provide regulated legal advice.
         </p>
-        <p className="mt-2 text-sm text-[var(--muted)]">
-          In Kent or nearby?{' '}
-          <a href="https://www.policestationagent.com?utm_source=policestationrepuk&utm_medium=web&utm_campaign=directory" target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--gold-link)] underline">
-            Need a solicitor in Kent? Visit policestationagent.com
-          </a>
-        </p>
+        <PoliceStationAgentKentCta
+          className="mt-2 text-sm text-[var(--muted)]"
+          placement="faq_page"
+        />
       </div>
 
       <ResolvedContentSources className="mt-10" context={{ kind: 'page', path: '/FAQ' }} />

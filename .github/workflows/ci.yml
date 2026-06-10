@@ -34,6 +34,11 @@ jobs:
         run: npx lhci autorun
       - name: Blog SEO content rules
         run: npm run audit:blog-seo
+      - name: Blog orphan link check
+        run: npm run audit:blog-orphans
+        continue-on-error: true
+      - name: Partner UTM guard
+        run: node scripts/audit/partner-utm-guard.mjs
       - name: Blog JSON-LD shape check
         run: npm run validate:schema
       - name: Live sitemap crawl (sample)
