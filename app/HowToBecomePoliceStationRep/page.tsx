@@ -603,7 +603,7 @@ export default function HowToBecomePage() {
                   className="grid gap-2 rounded-[var(--radius)] border border-[var(--card-border)] bg-[var(--card-bg)] p-4 sm:grid-cols-[1fr_auto_2fr] sm:items-center"
                 >
                   <p className="font-semibold text-[var(--navy)]">{t.phase}</p>
-                  <p className="text-xs font-medium uppercase tracking-wide text-[var(--gold)]">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[var(--navy)]">
                     {t.length}
                   </p>
                   <p

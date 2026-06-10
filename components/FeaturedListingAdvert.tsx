@@ -24,7 +24,7 @@ export function FeaturedListingAdvert({ className = '' }: { className?: string }
           </ul>
           <p className="mt-3 text-sm">
             <span className="font-bold text-[var(--gold)]">Early access price: £4.99 per month.</span>{' '}
-            <span className="text-white/75">Introductory rate while the directory continues to grow.</span>
+            <span className="text-slate-200">Introductory rate while the directory continues to grow.</span>
           </p>
         </div>
         <Link href="/Account" className="btn-gold shrink-0 !text-sm no-underline">

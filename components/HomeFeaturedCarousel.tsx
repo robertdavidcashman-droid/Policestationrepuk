@@ -27,7 +27,7 @@ export function HomeFeaturedCarousel({ featuredReps }: { featuredReps: Represent
         <div className="text-center">
           <AdvertisementLabel variant="dark" label="Promoted Listings" />
           <h2 className="text-h2 mt-3 text-white">Featured Police Station Representatives</h2>
-          <p className="mt-2 text-sm text-white/80">
+          <p className="mt-2 text-sm text-slate-200">
             These are promoted listings. Firms and reps should verify accreditation and credentials independently.
           </p>
         </div>
@@ -40,7 +40,7 @@ export function HomeFeaturedCarousel({ featuredReps }: { featuredReps: Represent
                   Featured
                 </span>
                 <h3 className="mt-3 text-xl font-bold text-white">{rep.name}</h3>
-                <p className="mt-1 text-sm text-white/75">{rep.county || 'England & Wales'}</p>
+                <p className="mt-1 text-sm text-slate-200">{rep.county || 'England & Wales'}</p>
               </div>
               {rep.availability && (
                 <span className="rounded-full border border-white/20 px-3 py-1 text-xs font-semibold text-white">
@@ -49,7 +49,7 @@ export function HomeFeaturedCarousel({ featuredReps }: { featuredReps: Represent
               )}
             </div>
             {(rep.stations || []).length > 0 && (
-              <p className="mt-3 text-sm text-white/75">
+              <p className="mt-3 text-sm text-slate-200">
                 <span className="font-semibold text-white">Stations covered:</span>{' '}
                 {(rep.stations || []).slice(0, 3).join(', ')}
                 {(rep.stations || []).length > 3 ? ` +${(rep.stations || []).length - 3} more` : ''}

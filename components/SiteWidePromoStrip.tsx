@@ -46,7 +46,7 @@ export function SiteWidePromoStrip() {
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {/* CustodyNote */}
           <div className="flex flex-col rounded-[var(--radius-lg)] border-2 border-[var(--gold)]/40 bg-white p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold)]">Featured product</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--navy)]">Featured product</p>
             <h2 className="mt-1 text-base font-extrabold text-[var(--navy)]">{CUSTODYNOTE_BRAND_NAME}</h2>
             <p className="mt-2 flex-1 text-xs leading-relaxed text-[var(--muted)]">
               PACE-aligned attendance notes — disclosure → advice → interview → outcome in one
