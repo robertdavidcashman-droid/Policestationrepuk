@@ -84,8 +84,8 @@ describe('custody discovery batch notification', () => {
     expect(sendCustodyDiscoveryBatchEmail).not.toHaveBeenCalled();
   });
 
-  it('skips email when confidence is 50% or below', async () => {
-    getFinding.mockImplementation(async (id: string) => mockFinding(id, 50));
+  it('skips email when confidence is below 30%', async () => {
+    getFinding.mockImplementation(async (id: string) => mockFinding(id, 29));
 
     const result = await notifyIfNewFindings({
       newFindingIds: ['f1', 'f2'],

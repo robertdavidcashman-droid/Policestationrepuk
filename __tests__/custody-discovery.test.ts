@@ -125,9 +125,9 @@ describe('confidence scoring', () => {
     expect(confidenceLevelFromScore(highConfidence)).toBe('high');
   });
 
-  it('only notifies when confidence is strictly above 50%', () => {
-    expect(meetsNotifyConfidenceThreshold(50)).toBe(false);
-    expect(meetsNotifyConfidenceThreshold(51)).toBe(true);
+  it('only notifies when confidence is at least 30%', () => {
+    expect(meetsNotifyConfidenceThreshold(29)).toBe(false);
+    expect(meetsNotifyConfidenceThreshold(30)).toBe(true);
     expect(meetsNotifyConfidenceThreshold(80)).toBe(true);
   });
 
