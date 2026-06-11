@@ -1,0 +1,58 @@
+name: Lead engine automation
+
+on:
+  schedule:
+    - cron: "0 4 * * *"   # 04:00 UTC daily
+    - cron: "30 9 * * 1-5" # 09:30 UTC weekdays (campaign dry-run / live per config)
+  workflow_dispatch:
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: lead_engine/requirements.txt
+
+      - name: Restore leads database
+        uses: actions/cache/restore@v4
+        with:
+          path: lead_engine/data/leads.db
+          key: leads-db-${{ github.run_id }}
+          restore-keys: |
+            leads-db-
+
+      - name: Install dependencies
+        run: pip install -r lead_engine/requirements.txt
+
+      - name: Run full automated pipeline
+        env:
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+          HUNTER_API_KEY: ${{ secrets.HUNTER_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          LEAD_ENGINE_DRY_RUN: ${{ vars.LEAD_ENGINE_DRY_RUN || 'true' }}
+        run: python -m src.main auto
+        working-directory: lead_engine
+
+      - name: Upload exports and logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lead-engine-${{ github.run_id }}
+          path: |
+            lead_engine/data/exports/
+            lead_engine/data/logs/
+            lead_engine/data/leads.db
+          retention-days: 30
+
+      - name: Save leads database cache
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: lead_engine/data/leads.db
+          key: leads-db-${{ github.run_id }}

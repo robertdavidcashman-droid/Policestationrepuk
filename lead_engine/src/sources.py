@@ -1,0 +1,10 @@
+"""Discovery source labels used across the pipeline."""
+
+LAA = "laa_directory"
+SEARCH = "search_engine"
+PUBLIC_WEBSITE = "public_website"
+SRA = "sra"
+LAW_SOCIETY = "law_society"
+LEGAL_DIRECTORY = "legal_directory"
+PAID_PROVIDER = "paid_provider"
+INFERRED = "inferred"

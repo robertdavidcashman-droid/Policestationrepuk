@@ -1,0 +1,122 @@
+# Copy to config.yaml and fill in credentials. dry_run MUST stay true until you review exports.
+
+dry_run: true
+daily_send_cap: 20
+crawl_delay_seconds: 3
+max_pages_per_domain: 30
+max_crawl_depth: 2
+min_score_ready_to_send: 60
+manual_review_min_score: 35
+min_contact_score_ready_to_send: 50
+manual_review_contact_min_score: 25
+allow_personal_work_emails: true
+allow_free_email_domains: false
+allow_paid_providers: true
+allow_guessed_emails_ready_to_send: false
+require_manual_approval_for_guessed_emails: true
+require_source_url_or_provider: true
+follow_up_enabled: false
+follow_up_after_days: 18
+campaign_name: policestationrepuk_whatsapp_feed
+sender_name: Robert Cashman
+sender_email: ""
+website_url: https://policestationrepuk.com
+unsubscribe_mode: reply_unsubscribe
+database_path: data/leads.db
+export_path: data/exports
+log_path: data/logs
+user_agent: PoliceStationRepUK-LeadEngine/1.0 (+https://policestationrepuk.org; compliant-b2b-research)
+
+# Optional: path to LAA crime providers JSON in parent repo (bootstrap discovery)
+laa_providers_json: ../data/laa-crime-providers.json
+archive_law_firms_json: ../data/archive/law-firms.json
+
+automation:
+  enabled: true
+  crawl_batch_size: 25
+  contact_batch_size: 25
+  enrich_batch_size: 20
+  website_resolve_batch_size: 15
+  max_crawl_per_run: 50
+  max_contacts_per_run: 50
+  max_website_resolve_per_run: 30
+  auto_broaden_on_low_yield: true
+
+search:
+  serper_api_key: ""  # or set SERPER_API_KEY env var
+
+mail:
+  provider: resend  # resend | smtp | none
+  resend_api_key: ""
+  from_email: PoliceStationRepUK <noreply@policestationrepuk.org>
+
+paid_providers:
+  hunter:
+    enabled: false
+    api_key: ""
+  apollo:
+    enabled: false
+    api_key: ""
+  snov:
+    enabled: false
+    api_key: ""
+  zerobounce:
+    enabled: false
+    api_key: ""
+  neverbounce:
+    enabled: false
+    api_key: ""
+
+regions:
+  - Kent
+  - London
+  - Essex
+  - Surrey
+  - Sussex
+  - Hampshire
+  - Thames Valley
+  - Birmingham
+  - Manchester
+  - Liverpool
+  - Leeds
+  - Sheffield
+  - Newcastle
+  - Cardiff
+  - Swansea
+  - Bristol
+  - Nottingham
+  - Leicester
+  - Norwich
+  - Cambridge
+  - Oxford
+  - Portsmouth
+  - Southampton
+  - Reading
+  - Luton
+  - Milton Keynes
+  - Northampton
+  - Coventry
+  - Wolverhampton
+  - Stoke-on-Trent
+  - Hull
+  - York
+  - Middlesbrough
+  - Durham
+  - Preston
+  - Bolton
+  - Wigan
+  - Chester
+  - Wrexham
+  - Newport
+  - Plymouth
+  - Exeter
+  - Truro
+  - Bournemouth
+  - Brighton
+  - Canterbury
+  - Maidstone
+  - Medway
+  - Dartford
+  - Sevenoaks
+  - Bromley
+  - Croydon

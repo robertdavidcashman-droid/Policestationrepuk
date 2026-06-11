@@ -1,3 +1,12 @@
 {
-  "http://127.0.0.1:3000/": "https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1775216295715-55334.report.html"
+  "http://127.0.0.1:3000/": "https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1781126397306-97470.report.html",
+  "http://127.0.0.1:3000/Blog": "https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1781126398421-27643.report.html",
+  "http://127.0.0.1:3000/directory": "https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1781126399590-39332.report.html",
+  "http://127.0.0.1:3000/Blog/what-does-a-freelance-police-station-representative-do": "https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1781126400924-10049.report.html",
+  "http://127.0.0.1:3000/Map": "https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1781126402824-54944.report.html",
+  "http://127.0.0.1:3000/Resources": "https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1781126404161-76882.report.html",
+  "http://127.0.0.1:3000/HowToBecomePoliceStationRep": "https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1781126405363-91961.report.html",
+  "http://127.0.0.1:3000/Contact": "https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1781126406561-44008.report.html",
+  "http://127.0.0.1:3000/About": "https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1781126407455-57251.report.html",
+  "http://127.0.0.1:3000/register": "https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1781126408412-67674.report.html"
 }

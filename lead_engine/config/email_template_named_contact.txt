@@ -1,0 +1,17 @@
+Dear {{contact_first_name}},
+
+I am contacting you because you appear to undertake criminal defence and/or police station work.
+
+I run PoliceStationRepUK, which helps connect criminal solicitors' firms with police station representatives and agents who may be available to provide cover.
+
+I am putting together a WhatsApp feed for firms and representatives who want to receive or share police station cover availability in England and Wales.
+
+If this would be useful for you or your firm, please reply to this email or register interest at:
+{{website_url}}
+
+If you would prefer not to receive any further emails about this, please reply "unsubscribe" and I will remove your details.
+
+Kind regards,
+{{sender_name}}
+PoliceStationRepUK
+{{website_url}}
