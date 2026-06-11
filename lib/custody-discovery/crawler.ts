@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import {
   confidenceLevelFromScore,
+  initialFindingStatus,
   scoreConfidence,
   shouldAutoRejectFinding,
 } from './confidence';
@@ -113,16 +114,9 @@ export async function processSearchHit(
   }
 
   const now = new Date().toISOString();
-  let status: CustodyNumberFinding['status'] = 'new';
-  let conflictReason: string | undefined;
-
-  if (confidenceScore < 50 || classification !== 'direct_custody') {
-    status = 'needs_review';
-  }
-  if (hasConflictingNumbers || conflictsWithApproved) {
-    status = 'needs_review';
-    conflictReason = 'possible_conflict';
-  }
+  const hasConflict = hasConflictingNumbers || Boolean(conflictsWithApproved);
+  const status = initialFindingStatus();
+  const conflictReason = hasConflict ? 'possible_conflict' : undefined;
 
   const finding: CustodyNumberFinding = {
     id: newFindingId(),

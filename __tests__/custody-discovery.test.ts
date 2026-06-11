@@ -132,9 +132,15 @@ describe('confidence scoring', () => {
   });
 
   it('rejects findings without source URL or very low score', () => {
-    expect(shouldAutoRejectFinding(10, '')).toBe(true);
-    expect(shouldAutoRejectFinding(10, 'https://example.com')).toBe(true);
+    expect(shouldAutoRejectFinding(5, '')).toBe(true);
+    expect(shouldAutoRejectFinding(5, 'https://example.com')).toBe(true);
+    expect(shouldAutoRejectFinding(10, 'https://example.com')).toBe(false);
     expect(shouldAutoRejectFinding(85, 'https://kent.police.uk')).toBe(false);
+  });
+
+  it('stores low scores from 10% upward for admin inspection', () => {
+    expect(shouldAutoRejectFinding(9, 'https://example.com')).toBe(true);
+    expect(shouldAutoRejectFinding(10, 'https://example.com')).toBe(false);
   });
 
   it('penalises missing custody wording', () => {

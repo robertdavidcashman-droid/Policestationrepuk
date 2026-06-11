@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import type { CustodyNumberFinding } from '@/lib/custody-discovery/types';
+import { NOTIFY_MIN_CONFIDENCE_SCORE } from '@/lib/custody-discovery/confidence';
 import { isOfficialSourceType } from '@/lib/custody-discovery/source-type';
 
 type FilterKey =
   | 'all'
+  | 'inspect'
   | 'new'
   | 'needs_review'
   | 'high'
@@ -33,7 +35,7 @@ export function CustodyNumberReviewAdmin({
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(accessError ? decodeURIComponent(accessError) : null);
   const [showBatchOnly, setShowBatchOnly] = useState(Boolean(batchFindingIds?.length));
-  const [filter, setFilter] = useState<FilterKey>(batchFindingIds?.length ? 'all' : 'needs_review');
+  const [filter, setFilter] = useState<FilterKey>(batchFindingIds?.length ? 'all' : 'inspect');
   const [forceFilter, setForceFilter] = useState('');
   const [countyFilter, setCountyFilter] = useState('');
   const [suiteFilter, setSuiteFilter] = useState('');
@@ -62,6 +64,15 @@ export function CustodyNumberReviewAdmin({
 
   const filtered = rows.filter((r) => {
     if (showBatchOnly && batchSet.size > 0 && !batchSet.has(r.id)) return false;
+    if (
+      filter === 'inspect' &&
+      (r.status === 'approved' ||
+        r.status === 'rejected' ||
+        r.status === 'stale' ||
+        r.confidenceScore < NOTIFY_MIN_CONFIDENCE_SCORE)
+    ) {
+      return false;
+    }
     if (filter === 'new' && r.status !== 'new') return false;
     if (filter === 'needs_review' && r.status !== 'needs_review' && r.status !== 'new') return false;
     if (filter === 'high' && r.confidenceLevel !== 'high') return false;
@@ -287,6 +298,7 @@ export function CustodyNumberReviewAdmin({
       <div className="flex flex-wrap gap-2">
         {(
           [
+            ['inspect', `Inspect queue (≥${NOTIFY_MIN_CONFIDENCE_SCORE}%)`],
             ['needs_review', 'Needs review'],
             ['new', 'New'],
             ['high', 'High confidence'],

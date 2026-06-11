@@ -53,6 +53,9 @@ export function confidenceLevelFromScore(score: number): ConfidenceLevel {
   return 'reject';
 }
 
+/** Minimum score (0–100) to save a finding for admin inspection. */
+export const CRAWLER_MIN_STORE_SCORE = 10;
+
 /** Minimum score (0–100) to include a finding in daily notify emails. */
 export const NOTIFY_MIN_CONFIDENCE_SCORE = 30;
 
@@ -62,7 +65,12 @@ export function meetsNotifyConfidenceThreshold(score: number): boolean {
 
 export function shouldAutoRejectFinding(score: number, sourceUrl: string): boolean {
   if (!sourceUrl?.trim().startsWith('http')) return true;
-  return score < 20;
+  return score < CRAWLER_MIN_STORE_SCORE;
+}
+
+/** New crawler hits always await admin review — nothing auto-publishes to the directory. */
+export function initialFindingStatus(): 'needs_review' {
+  return 'needs_review';
 }
 
 export function findingNeedsReview(finding: CustodyNumberFinding): boolean {
