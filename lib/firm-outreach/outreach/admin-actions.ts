@@ -1,8 +1,10 @@
 import { dailySendCap } from '../constants';
 import { computeProspectPriority } from '../enrichment/scorer';
+import { normalizeEmail } from '../normalize';
 import { resolveStatusWithQualification } from '../qualification';
 import {
   createSendRecord,
+  excludeProspectDuplicateEmail,
   getDailySendCount,
   getProspect,
   getSuppressionsByEmails,
@@ -177,6 +179,7 @@ export async function bulkSendProspects(
   const maxCount = opts?.limit ?? prospectIds.length;
 
   const result: BulkSendResult = { sent: 0, skipped: 0, errors: 0, results: [] };
+  const emailsSentThisRun = new Set<string>();
 
   for (const prospectId of prospectIds) {
     if (result.sent >= maxCount) break;
@@ -186,9 +189,35 @@ export async function bulkSendProspects(
       continue;
     }
 
+    const prospect = await getProspect(prospectId);
+    if (!prospect) {
+      result.errors++;
+      result.results.push({ prospectId, ok: false, error: 'not_found' });
+      continue;
+    }
+
+    const email = prospect.email?.trim();
+    const wouldBeInitial = prospect.sequenceStep === 0 && !prospect.lastEmailAt;
+    if (email && wouldBeInitial) {
+      const normalizedEmail = normalizeEmail(email);
+      if (
+        emailsSentThisRun.has(normalizedEmail) ||
+        (await isDuplicateInitialSend(email, prospect.id))
+      ) {
+        await excludeProspectDuplicateEmail(prospect);
+        result.skipped++;
+        result.results.push({ prospectId, ok: false, error: 'duplicate_email' });
+        continue;
+      }
+    }
+
     const sendResult = await manualSendProspect(prospectId, { dryRun });
     if (!sendResult.ok) {
-      if (sendResult.error === 'not_eligible' || sendResult.error === 'no_email') {
+      if (
+        sendResult.error === 'not_eligible' ||
+        sendResult.error === 'no_email' ||
+        sendResult.error === 'duplicate_email'
+      ) {
         result.skipped++;
       } else {
         result.errors++;
@@ -211,6 +240,9 @@ export async function bulkSendProspects(
       }
     } else {
       result.sent++;
+    }
+    if (email && wouldBeInitial) {
+      emailsSentThisRun.add(normalizeEmail(email));
     }
   }
 

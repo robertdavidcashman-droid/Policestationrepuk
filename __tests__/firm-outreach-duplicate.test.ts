@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { emailHasInitialOutreachFromOtherProspect } from '@/lib/firm-outreach/storage';
 import type { FirmOutreachSend } from '@/lib/firm-outreach/types';
 
 function makeSend(overrides: Partial<FirmOutreachSend>): FirmOutreachSend {
@@ -18,43 +19,60 @@ function makeSend(overrides: Partial<FirmOutreachSend>): FirmOutreachSend {
   };
 }
 
-describe('isDuplicateInitialSend logic', () => {
-  function isDuplicateInitialSend(email: string, prospectId: string, sends: FirmOutreachSend[]) {
-    return sends.some(
-      (s) =>
-        s.email === email &&
-        s.sequenceStep === 0 &&
-        s.prospectId !== prospectId &&
-        s.status !== 'bounced' &&
-        s.status !== 'queued',
-    );
-  }
-
+describe('emailHasInitialOutreachFromOtherProspect', () => {
   it('returns false when no prior sends exist for the email', () => {
-    expect(isDuplicateInitialSend('info@firm.co.uk', 'fop_a', [])).toBe(false);
+    expect(
+      emailHasInitialOutreachFromOtherProspect([], 'info@firm.co.uk', 'fop_a'),
+    ).toBe(false);
   });
 
   it('returns true when another prospect received the initial send', () => {
     expect(
-      isDuplicateInitialSend('info@firm.co.uk', 'fop_a', [
-        makeSend({ prospectId: 'fop_other', email: 'info@firm.co.uk' }),
-      ]),
+      emailHasInitialOutreachFromOtherProspect(
+        [makeSend({ prospectId: 'fop_other', email: 'info@firm.co.uk' })],
+        'info@firm.co.uk',
+        'fop_a',
+      ),
+    ).toBe(true);
+  });
+
+  it('matches email case-insensitively', () => {
+    expect(
+      emailHasInitialOutreachFromOtherProspect(
+        [makeSend({ prospectId: 'fop_other', email: 'Info@Firm.co.uk' })],
+        'info@firm.co.uk',
+        'fop_a',
+      ),
     ).toBe(true);
   });
 
   it('returns false when only follow-up sends exist', () => {
     expect(
-      isDuplicateInitialSend('info@firm.co.uk', 'fop_a', [
-        makeSend({ prospectId: 'fop_a', sequenceStep: 1, subject: 'Follow-up' }),
-      ]),
+      emailHasInitialOutreachFromOtherProspect(
+        [makeSend({ prospectId: 'fop_a', sequenceStep: 1, subject: 'Follow-up' })],
+        'info@firm.co.uk',
+        'fop_a',
+      ),
     ).toBe(false);
   });
 
   it('returns false for bounced initial sends', () => {
     expect(
-      isDuplicateInitialSend('info@firm.co.uk', 'fop_a', [
-        makeSend({ status: 'bounced' }),
-      ]),
+      emailHasInitialOutreachFromOtherProspect(
+        [makeSend({ status: 'bounced' })],
+        'info@firm.co.uk',
+        'fop_a',
+      ),
+    ).toBe(false);
+  });
+
+  it('returns false when the same prospect received the initial send', () => {
+    expect(
+      emailHasInitialOutreachFromOtherProspect(
+        [makeSend({ prospectId: 'fop_a' })],
+        'info@firm.co.uk',
+        'fop_a',
+      ),
     ).toBe(false);
   });
 });

@@ -246,14 +246,40 @@ export async function listSendsForProspect(prospectId: string): Promise<FirmOutr
 
 /** Sends recorded for a normalised email address (newest first). */
 export async function listSendsForEmail(email: string): Promise<FirmOutreachSend[]> {
-  const ids = await readStringList(SEND_EMAIL_INDEX + emailHash(normalizeEmail(email)));
+  const normalized = normalizeEmail(email);
+  const ids = await readStringList(SEND_EMAIL_INDEX + emailHash(normalized));
   const out: FirmOutreachSend[] = [];
   for (const id of ids) {
     const s = await getSend(id);
-    if (s) out.push(s);
+    if (s && normalizeEmail(s.email) === normalized) out.push(s);
   }
-  return out.sort((a, b) =>
-    (b.sentAt ?? b.createdAt).localeCompare(a.sentAt ?? a.createdAt),
+  if (out.length > 0) {
+    return out.sort((a, b) =>
+      (b.sentAt ?? b.createdAt).localeCompare(a.sentAt ?? a.createdAt),
+    );
+  }
+
+  // Fallback for sends recorded before per-email indexing.
+  const all = await listAllSends();
+  return all
+    .filter((s) => normalizeEmail(s.email) === normalized)
+    .sort((a, b) => (b.sentAt ?? b.createdAt).localeCompare(a.sentAt ?? a.createdAt));
+}
+
+/** True when another prospect already received the initial outreach at this email. */
+export function emailHasInitialOutreachFromOtherProspect(
+  sends: FirmOutreachSend[],
+  email: string,
+  prospectId: string,
+): boolean {
+  const normalized = normalizeEmail(email);
+  return sends.some(
+    (s) =>
+      normalizeEmail(s.email) === normalized &&
+      s.sequenceStep === 0 &&
+      s.prospectId !== prospectId &&
+      s.status !== 'bounced' &&
+      s.status !== 'queued',
   );
 }
 
@@ -263,13 +289,18 @@ export async function isDuplicateInitialSend(
   prospectId: string,
 ): Promise<boolean> {
   const sends = await listSendsForEmail(email);
-  return sends.some(
-    (s) =>
-      s.sequenceStep === 0 &&
-      s.prospectId !== prospectId &&
-      s.status !== 'bounced' &&
-      s.status !== 'queued',
-  );
+  return emailHasInitialOutreachFromOtherProspect(sends, email, prospectId);
+}
+
+export async function excludeProspectDuplicateEmail(
+  prospect: FirmProspect,
+): Promise<FirmProspect> {
+  const prevStatus = prospect.status;
+  prospect.status = 'excluded';
+  prospect.excludedReason = 'duplicate_email';
+  prospect.updatedAt = new Date().toISOString();
+  await saveProspect(prospect, prevStatus);
+  return prospect;
 }
 
 const SEND_STATUS_RANK: Record<FirmOutreachSendStatus, number> = {

@@ -8,6 +8,7 @@ import {
 import {
   addSuppression,
   createSendRecord,
+  excludeProspectDuplicateEmail,
   getDailySendCount,
   incrementDailySendCount,
   isDuplicateInitialSend,
@@ -18,6 +19,7 @@ import {
   saveSend,
 } from '../storage';
 import type { FirmProspect, OutreachRunStats } from '../types';
+import { normalizeEmail } from '../normalize';
 import { sendOutreachEmail } from './send';
 
 const FOLLOWUP_DAY_1 = 7;
@@ -90,6 +92,7 @@ export async function runFirmOutreach(opts?: {
   const ready = await listProspectsByStatus('ready_to_send', 2000);
   const sent = await listProspectsByStatus('sent', 2000);
   const candidates = sortProspectsForSend([...ready, ...sent]);
+  const emailsSentThisRun = new Set<string>();
 
   for (const prospect of candidates) {
     if (stats.sent >= remaining) break;
@@ -105,6 +108,8 @@ export async function runFirmOutreach(opts?: {
       stats.skipped++;
       continue;
     }
+
+    const normalizedEmail = normalizeEmail(email);
 
     const qualification = qualifyProspectForOutreach(prospect);
     if (!qualification.qualified) {
@@ -124,8 +129,15 @@ export async function runFirmOutreach(opts?: {
       continue;
     }
 
-    if (step === 0 && (await isDuplicateInitialSend(email, prospect.id))) {
+    if (
+      step === 0 &&
+      (emailsSentThisRun.has(normalizedEmail) ||
+        (await isDuplicateInitialSend(email, prospect.id)))
+    ) {
       stats.skipped++;
+      if (prospect.status === 'ready_to_send') {
+        await excludeProspectDuplicateEmail(prospect);
+      }
       continue;
     }
 
@@ -181,6 +193,7 @@ export async function runFirmOutreach(opts?: {
     if (!opts?.dryRun && process.env.FIRM_OUTREACH_DRY_RUN !== 'true') {
       await incrementDailySendCount(date);
     }
+    emailsSentThisRun.add(normalizedEmail);
     stats.sent++;
   }
 

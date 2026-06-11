@@ -3,6 +3,7 @@ import { lookupSraOrganisationByName } from '../sra-org-lookup';
 import {
   CURSOR_ENRICH,
   getCursor,
+  isDuplicateInitialSend,
   listAllProspectIds,
   getProspect,
   saveProspect,
@@ -73,6 +74,13 @@ async function enrichOne(prospect: FirmProspect): Promise<FirmProspect> {
 
   if (prospect.email) {
     prospect.status = resolveStatusWithQualification(prospect, 'ready_to_send');
+    if (
+      prospect.status === 'ready_to_send' &&
+      (await isDuplicateInitialSend(prospect.email, prospect.id))
+    ) {
+      prospect.status = 'excluded';
+      prospect.excludedReason = 'duplicate_email';
+    }
   } else if (prospect.enrichAttempts >= 3) {
     prospect.status = 'no_email';
   } else {
