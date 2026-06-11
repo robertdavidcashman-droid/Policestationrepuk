@@ -120,7 +120,7 @@ export function outreachPaused(): boolean {
 }
 
 export function dailySendCap(): number {
-  return Number(process.env.FIRM_OUTREACH_DAILY_CAP ?? 30) || 30;
+  return Number(process.env.FIRM_OUTREACH_DAILY_CAP ?? 50) || 50;
 }
 
 export function enrichBatchSize(): number {

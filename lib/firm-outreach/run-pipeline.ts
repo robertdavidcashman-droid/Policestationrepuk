@@ -3,7 +3,7 @@ import { ensureDsccRegisterCache } from '@/lib/dscc-register-lookup';
 import { outreachEnabled, outreachSendEnabled } from './constants';
 import { runFirmDiscovery } from './discovery/run-discovery';
 import { runFirmEnrichment } from './enrichment/run-enrich';
-import { sendOutreachDigestEmail } from './outreach/digest-email';
+import { sendDailyOutreachDigest } from './outreach/digest-email';
 import { runFirmOutreach } from './outreach/run-outreach';
 import { requalifyAllProspects } from './requalify-prospects';
 import { countProspectsByStatus } from './storage';
@@ -75,13 +75,15 @@ export async function runFirmOutreachPipeline(opts?: {
 
   const counts = await countProspectsByStatus();
 
-  if (!opts?.skipDigest && (send.sent > 0 || enrich.emailsFound > 0)) {
-    await sendOutreachDigestEmail({
-      discovery,
-      enrich,
-      send,
-      counts,
-      laaRefreshed: laaResult.refreshed,
+  if (!opts?.skipDigest) {
+    await sendDailyOutreachDigest({
+      pipeline: {
+        discovery,
+        enrich,
+        send,
+        counts,
+        laaRefreshed: laaResult.refreshed,
+      },
     });
   }
 

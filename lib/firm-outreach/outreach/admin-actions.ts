@@ -7,6 +7,7 @@ import {
   getProspect,
   getSuppressionsByEmails,
   incrementDailySendCount,
+  isDuplicateInitialSend,
   isSuppressed,
   saveProspect,
   saveSend,
@@ -38,10 +39,12 @@ export type AdminActionResult<T> =
 export function canManualSendProspect(
   prospect: FirmProspect,
   suppressed: boolean,
+  duplicateInitial?: boolean,
 ): { ok: boolean; reason?: string } {
   const email = prospect.email?.trim();
   if (!email) return { ok: false, reason: 'no_email' };
   if (suppressed) return { ok: false, reason: 'suppressed' };
+  if (duplicateInitial) return { ok: false, reason: 'duplicate_email' };
   if (prospect.status === 'unsubscribed' || prospect.status === 'joined_whatsapp') {
     return { ok: false, reason: prospect.status };
   }
@@ -90,11 +93,13 @@ export async function manualSendProspect(
   const email = prospect.email?.trim();
   if (!email) return { ok: false, error: 'no_email' };
 
+  const step = opts?.step ?? (prospect.sequenceStep === 0 && !prospect.lastEmailAt ? 0 : prospect.sequenceStep);
   const suppressed = await isSuppressed(email);
-  const eligibility = canManualSendProspect(prospect, suppressed);
+  const duplicateInitial =
+    step === 0 ? await isDuplicateInitialSend(email, prospect.id) : false;
+  const eligibility = canManualSendProspect(prospect, suppressed, duplicateInitial);
   if (!eligibility.ok) return { ok: false, error: eligibility.reason ?? 'not_eligible' };
 
-  const step = opts?.step ?? (prospect.sequenceStep === 0 && !prospect.lastEmailAt ? 0 : prospect.sequenceStep);
   const dryRun = opts?.dryRun ?? false;
 
   const result = await sendOutreachEmail({ prospect, step, dryRun });

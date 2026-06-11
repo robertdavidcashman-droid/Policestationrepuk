@@ -18,6 +18,7 @@ const PROSPECT_FIRM_INDEX = 'firmprospect:firm:';
 const SEND_PREFIX = 'firmoutreach:send:';
 const SEND_INDEX = 'firmoutreach:send:index';
 const SEND_RESEND_INDEX = 'firmoutreach:send:resend:';
+const SEND_EMAIL_INDEX = 'firmoutreach:send:email:';
 const SUPPRESSION_INDEX = 'firmoutreach:suppression:index';
 const SEND_DAILY_PREFIX = 'firmoutreach:daily:';
 const SUPPRESSION_PREFIX = 'firmoutreach:suppression:';
@@ -199,6 +200,7 @@ export async function saveSend(send: FirmOutreachSend): Promise<void> {
   if (!kv) throw new Error('KV not configured');
   await kv.set(sendKey(send.id), send);
   await appendIndex(SEND_INDEX, send.id);
+  await appendIndex(SEND_EMAIL_INDEX + emailHash(send.email), send.id);
   if (send.resendMessageId) {
     await kv.set(SEND_RESEND_INDEX + send.resendMessageId, send.id);
   }
@@ -240,6 +242,34 @@ export async function findSendByResendMessageId(
 export async function listSendsForProspect(prospectId: string): Promise<FirmOutreachSend[]> {
   const all = await listAllSends();
   return all.filter((s) => s.prospectId === prospectId);
+}
+
+/** Sends recorded for a normalised email address (newest first). */
+export async function listSendsForEmail(email: string): Promise<FirmOutreachSend[]> {
+  const ids = await readStringList(SEND_EMAIL_INDEX + emailHash(normalizeEmail(email)));
+  const out: FirmOutreachSend[] = [];
+  for (const id of ids) {
+    const s = await getSend(id);
+    if (s) out.push(s);
+  }
+  return out.sort((a, b) =>
+    (b.sentAt ?? b.createdAt).localeCompare(a.sentAt ?? a.createdAt),
+  );
+}
+
+/** True when another prospect already received the initial outreach at this email. */
+export async function isDuplicateInitialSend(
+  email: string,
+  prospectId: string,
+): Promise<boolean> {
+  const sends = await listSendsForEmail(email);
+  return sends.some(
+    (s) =>
+      s.sequenceStep === 0 &&
+      s.prospectId !== prospectId &&
+      s.status !== 'bounced' &&
+      s.status !== 'queued',
+  );
 }
 
 const SEND_STATUS_RANK: Record<FirmOutreachSendStatus, number> = {

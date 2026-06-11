@@ -10,6 +10,7 @@ import {
   createSendRecord,
   getDailySendCount,
   incrementDailySendCount,
+  isDuplicateInitialSend,
   isSuppressed,
   listProspectsByStatus,
   listProspectsForFirmKey,
@@ -120,6 +121,11 @@ export async function runFirmOutreach(opts?: {
       stats.suppressed++;
       prospect.status = 'unsubscribed';
       await saveProspect(prospect);
+      continue;
+    }
+
+    if (step === 0 && (await isDuplicateInitialSend(email, prospect.id))) {
+      stats.skipped++;
       continue;
     }
 

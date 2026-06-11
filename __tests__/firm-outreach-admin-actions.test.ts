@@ -9,11 +9,13 @@ const mockSendOutreachEmail = vi.fn();
 const mockGetSuppressionsByEmails = vi.fn();
 const mockGetDailySendCount = vi.fn();
 const mockIncrementDailySendCount = vi.fn();
+const mockIsDuplicateInitialSend = vi.fn();
 
 vi.mock('@/lib/firm-outreach/storage', () => ({
   getProspect: (...args: unknown[]) => mockGetProspect(...args),
   saveProspect: (...args: unknown[]) => mockSaveProspect(...args),
   isSuppressed: (...args: unknown[]) => mockIsSuppressed(...args),
+  isDuplicateInitialSend: (...args: unknown[]) => mockIsDuplicateInitialSend(...args),
   saveSend: (...args: unknown[]) => mockSaveSend(...args),
   getSuppressionsByEmails: (...args: unknown[]) => mockGetSuppressionsByEmails(...args),
   getDailySendCount: (...args: unknown[]) => mockGetDailySendCount(...args),
@@ -74,6 +76,13 @@ describe('canManualSendProspect', () => {
     expect(result.ok).toBe(false);
     expect(result.reason).toBe('no_email');
   });
+
+  it('blocks duplicate initial sends to the same email', async () => {
+    const { canManualSendProspect } = await import('@/lib/firm-outreach/outreach/admin-actions');
+    const result = canManualSendProspect(excludedProspect(), false, true);
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe('duplicate_email');
+  });
 });
 
 describe('restoreExcludedProspect', () => {
@@ -126,6 +135,7 @@ describe('manualSendProspect', () => {
     mockSaveProspect.mockResolvedValue(undefined);
     mockSaveSend.mockResolvedValue(undefined);
     mockIsSuppressed.mockResolvedValue(false);
+    mockIsDuplicateInitialSend.mockResolvedValue(false);
     mockSendOutreachEmail.mockResolvedValue({
       ok: true,
       subject: 'Police station cover',
@@ -172,6 +182,18 @@ describe('manualSendProspect', () => {
     expect(result.error).toBe('suppressed');
     expect(mockSendOutreachEmail).not.toHaveBeenCalled();
   });
+
+  it('blocks duplicate initial sends to the same email address', async () => {
+    mockGetProspect.mockResolvedValue(excludedProspect());
+    mockIsDuplicateInitialSend.mockResolvedValue(true);
+
+    const { manualSendProspect } = await import('@/lib/firm-outreach/outreach/admin-actions');
+    const result = await manualSendProspect('fop_ex1');
+
+    expect(result.ok).toBe(false);
+    expect(result.error).toBe('duplicate_email');
+    expect(mockSendOutreachEmail).not.toHaveBeenCalled();
+  });
 });
 
 describe('excludeProspect', () => {
@@ -205,6 +227,7 @@ describe('bulkSendProspects', () => {
     mockSaveProspect.mockResolvedValue(undefined);
     mockSaveSend.mockResolvedValue(undefined);
     mockIsSuppressed.mockResolvedValue(false);
+    mockIsDuplicateInitialSend.mockResolvedValue(false);
     mockGetDailySendCount.mockResolvedValue(0);
     mockIncrementDailySendCount.mockResolvedValue(1);
     mockSendOutreachEmail.mockResolvedValue({

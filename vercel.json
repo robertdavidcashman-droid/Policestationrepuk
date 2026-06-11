@@ -70,7 +70,11 @@
     },
     {
       "path": "/api/cron/firm-outreach-pipeline/full",
-      "schedule": "30 9 * * 1-5"
+      "schedule": "30 9 * * *"
+    },
+    {
+      "path": "/api/cron/firm-outreach-digest",
+      "schedule": "0 17 * * *"
     }
   ]
 }
