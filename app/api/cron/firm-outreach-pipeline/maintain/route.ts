@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { isCronAuthorized } from '@/lib/cron-auth';
-import { enrichBatchSize } from '@/lib/firm-outreach/constants';
+import {
+  cronEnrichBatchSize,
+  enrichMaxElapsedMs,
+} from '@/lib/firm-outreach/constants';
 import { runFirmOutreachPipeline } from '@/lib/firm-outreach/run-pipeline';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +18,9 @@ export async function GET(request: Request) {
 
   const result = await runFirmOutreachPipeline({
     skipSend: true,
-    enrichLimit: enrichBatchSize(),
+    skipDigest: true,
+    enrichLimit: cronEnrichBatchSize(),
+    enrichMaxElapsedMs: enrichMaxElapsedMs(),
   });
 
   return NextResponse.json({ ok: true, mode: 'maintain', ...result });

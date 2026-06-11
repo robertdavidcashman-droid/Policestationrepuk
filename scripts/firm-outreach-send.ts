@@ -14,7 +14,13 @@ const apply = process.argv.includes('--apply');
 const limitArg = process.argv.find((a) => a.startsWith('--limit='));
 const limit = limitArg ? Number(limitArg.split('=')[1]) : undefined;
 
-const { runFirmOutreach } = await import('../lib/firm-outreach/outreach/run-outreach');
+async function main() {
+  const { runFirmOutreach } = await import('../lib/firm-outreach/outreach/run-outreach');
+  const stats = await runFirmOutreach({ dryRun: !apply, limit });
+  console.log('[firm-outreach send]', apply ? 'APPLY' : 'DRY-RUN', JSON.stringify(stats, null, 2));
+}
 
-const stats = await runFirmOutreach({ dryRun: !apply, limit });
-console.log('[firm-outreach send]', apply ? 'APPLY' : 'DRY-RUN', JSON.stringify(stats, null, 2));
+main().catch((err) => {
+  console.error('[firm-outreach send] failed:', err);
+  process.exit(1);
+});

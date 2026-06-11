@@ -82,8 +82,31 @@ async function enrichOne(prospect: FirmProspect): Promise<FirmProspect> {
   return prospect;
 }
 
+export async function advanceEnrichCursor(
+  cursor: number,
+  processedCount: number,
+  needEnrichLength: number,
+): Promise<number> {
+  if (needEnrichLength === 0) {
+    await setCursor(CURSOR_ENRICH, 0);
+    return 0;
+  }
+  if (processedCount <= 0) {
+    if (cursor >= needEnrichLength) {
+      await setCursor(CURSOR_ENRICH, 0);
+      return 0;
+    }
+    return cursor;
+  }
+  const next = cursor + processedCount;
+  const wrapped = next >= needEnrichLength ? 0 : next;
+  await setCursor(CURSOR_ENRICH, wrapped);
+  return wrapped;
+}
+
 export async function runFirmEnrichment(opts?: {
   limit?: number;
+  maxElapsedMs?: number;
 }): Promise<EnrichmentRunStats> {
   const started = Date.now();
   const limit = opts?.limit ?? enrichBatchSize();
@@ -105,22 +128,33 @@ export async function runFirmEnrichment(opts?: {
   candidates.sort((a, b) => b.score - a.score);
   const needEnrich = candidates.map((c) => c.id);
 
-  const cursor = await getCursor(CURSOR_ENRICH);
+  let cursor = await getCursor(CURSOR_ENRICH);
+  if (cursor >= needEnrich.length && needEnrich.length > 0) {
+    cursor = 0;
+    await setCursor(CURSOR_ENRICH, 0);
+  }
+
   const batch = needEnrich.slice(cursor, cursor + limit);
-  const nextCursor = batch.length < limit ? 0 : cursor + batch.length;
-  await setCursor(CURSOR_ENRICH, nextCursor);
 
   let emailsFound = 0;
   let readyToSend = 0;
   let noEmail = 0;
   let errors = 0;
+  let processedCount = 0;
+  let stoppedEarly = false;
 
   for (const id of batch) {
+    if (opts?.maxElapsedMs != null && Date.now() - started >= opts.maxElapsedMs) {
+      stoppedEarly = true;
+      break;
+    }
+
     try {
       const p = await getProspect(id);
       if (!p) continue;
       const enriched = await enrichOne(p);
       await saveProspect(enriched, p.status);
+      processedCount++;
       if (enriched.email) emailsFound++;
       if (enriched.status === 'ready_to_send') readyToSend++;
       if (enriched.status === 'no_email') noEmail++;
@@ -130,12 +164,15 @@ export async function runFirmEnrichment(opts?: {
     }
   }
 
+  await advanceEnrichCursor(cursor, processedCount, needEnrich.length);
+
   return {
-    processed: batch.length,
+    processed: processedCount,
     emailsFound,
     readyToSend,
     noEmail,
     errors,
     elapsedMs: Date.now() - started,
+    stoppedEarly: stoppedEarly || undefined,
   };
 }

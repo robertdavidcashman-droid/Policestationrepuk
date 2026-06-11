@@ -13,7 +13,13 @@ config();
 const limitArg = process.argv.find((a) => a.startsWith('--limit='));
 const limit = limitArg ? Number(limitArg.split('=')[1]) : undefined;
 
-const { runFirmEnrichment } = await import('../lib/firm-outreach/enrichment/run-enrich');
+async function main() {
+  const { runFirmEnrichment } = await import('../lib/firm-outreach/enrichment/run-enrich');
+  const stats = await runFirmEnrichment({ limit });
+  console.log('[firm-outreach enrich]', JSON.stringify(stats, null, 2));
+}
 
-const stats = await runFirmEnrichment({ limit });
-console.log('[firm-outreach enrich]', JSON.stringify(stats, null, 2));
+main().catch((err) => {
+  console.error('[firm-outreach enrich] failed:', err);
+  process.exit(1);
+});

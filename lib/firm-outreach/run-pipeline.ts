@@ -34,8 +34,13 @@ export async function runFirmOutreachPipeline(opts?: {
   /** Force re-download LAA spreadsheet from gov.uk */
   forceLaaRefresh?: boolean;
   enrichLimit?: number;
+  /** Max wall time for enrichment (cron safety). */
+  enrichMaxElapsedMs?: number;
   sendLimit?: number;
   skipSend?: boolean;
+  skipEnrich?: boolean;
+  /** Skip LAA/DSCC refresh, discovery, and requalify (enrich-only or send-only crons). */
+  skipDiscovery?: boolean;
   skipDigest?: boolean;
 }): Promise<FirmOutreachPipelineResult> {
   const started = Date.now();
@@ -55,18 +60,34 @@ export async function runFirmOutreachPipeline(opts?: {
     };
   }
 
-  const forceLaa = opts?.forceLaaRefresh ?? isSundayUtc();
-  const laaResult = await fetchLaaCrimeProviders({ force: forceLaa }).catch((err) => {
-    console.warn('[firm-outreach pipeline] LAA fetch failed, using cache:', err);
-    return fetchLaaCrimeProviders({ force: false });
-  });
+  let laaResult = { refreshed: false, source: 'none' as string, records: [] as unknown[] };
+  let dsccCount = 0;
+  let dsccSyncedAt: string | null = null;
+  let discovery = emptyDiscovery();
+  let requalify: Awaited<ReturnType<typeof requalifyAllProspects>> = emptyRequalify();
+  let enrich = emptyEnrich();
 
-  const dscc = await ensureDsccRegisterCache();
-  const discovery = await runFirmDiscovery();
-  const requalify = await requalifyAllProspects();
+  if (!opts?.skipDiscovery) {
+    const forceLaa = opts?.forceLaaRefresh ?? isSundayUtc();
+    laaResult = await fetchLaaCrimeProviders({ force: forceLaa }).catch((err) => {
+      console.warn('[firm-outreach pipeline] LAA fetch failed, using cache:', err);
+      return fetchLaaCrimeProviders({ force: false });
+    });
 
-  const enrichLimit = opts?.enrichLimit ?? (opts?.skipSend ? 120 : 60);
-  const enrich = await runFirmEnrichment({ limit: enrichLimit });
+    const dscc = await ensureDsccRegisterCache();
+    dsccCount = dscc?.count ?? 0;
+    dsccSyncedAt = dscc?.syncedAt ?? null;
+    discovery = await runFirmDiscovery();
+    requalify = await requalifyAllProspects();
+  }
+
+  if (!opts?.skipEnrich) {
+    const enrichLimit = opts?.enrichLimit ?? (opts?.skipSend ? 120 : 60);
+    enrich = await runFirmEnrichment({
+      limit: enrichLimit,
+      maxElapsedMs: opts?.enrichMaxElapsedMs,
+    });
+  }
 
   const send =
     opts?.skipSend || !outreachSendEnabled()
@@ -95,8 +116,8 @@ export async function runFirmOutreachPipeline(opts?: {
       count: laaResult.records.length,
     },
     dscc: {
-      count: dscc?.count ?? 0,
-      syncedAt: dscc?.syncedAt ?? null,
+      count: dsccCount,
+      syncedAt: dsccSyncedAt,
     },
     discovery,
     requalify,

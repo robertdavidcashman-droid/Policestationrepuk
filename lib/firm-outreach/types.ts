@@ -211,6 +211,8 @@ export interface EnrichmentRunStats {
   noEmail: number;
   errors: number;
   elapsedMs: number;
+  /** True when stopped early due to maxElapsedMs budget. */
+  stoppedEarly?: boolean;
 }
 
 export interface OutreachRunStats {

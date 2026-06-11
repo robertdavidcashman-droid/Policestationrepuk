@@ -127,6 +127,16 @@ export function enrichBatchSize(): number {
   return Number(process.env.FIRM_OUTREACH_ENRICH_BATCH ?? 150) || 150;
 }
 
+/** Smaller batch for Vercel cron invocations (default 25). */
+export function cronEnrichBatchSize(): number {
+  return Number(process.env.FIRM_OUTREACH_CRON_ENRICH_BATCH ?? 25) || 25;
+}
+
+/** Stop enrichment before serverless timeout (default 240s). */
+export function enrichMaxElapsedMs(): number {
+  return Number(process.env.FIRM_OUTREACH_ENRICH_MAX_MS ?? 240_000) || 240_000;
+}
+
 export function paidDailyCap(): number {
   return Number(process.env.FIRM_OUTREACH_PAID_DAILY_CAP ?? 50) || 50;
 }
