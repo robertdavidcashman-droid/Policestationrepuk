@@ -367,6 +367,34 @@ export function slugsInCooldown(
   return excluded;
 }
 
+/** Per-feed cooldown capped by pool size so small RSS feeds can rotate without exhausting slugs. */
+export function effectiveCooldownDays(
+  poolSize: number,
+  postsPerFeed: number,
+  globalCooldown: number,
+): number {
+  if (poolSize <= 0 || postsPerFeed <= 0) return globalCooldown;
+  return Math.max(1, Math.min(globalCooldown, Math.floor(poolSize / postsPerFeed)));
+}
+
+export function slugsInCooldownForFeed(
+  entries: RecentSlugEntry[],
+  feedId: string,
+  cooldownDays: number,
+  now = new Date(),
+): Set<string> {
+  const cutoff = now.getTime() - cooldownDays * 24 * 60 * 60 * 1000;
+  const excluded = new Set<string>();
+  for (const entry of entries) {
+    const entryFeedId = entry.feedId ?? 'policestationrepuk';
+    if (entryFeedId !== feedId) continue;
+    if (new Date(entry.scheduledAt).getTime() >= cutoff) {
+      excluded.add(postCooldownKey(entryFeedId, entry.slug));
+    }
+  }
+  return excluded;
+}
+
 export function appendRecentSlugs(
   entries: RecentSlugEntry[],
   added: RecentSlugEntry[],

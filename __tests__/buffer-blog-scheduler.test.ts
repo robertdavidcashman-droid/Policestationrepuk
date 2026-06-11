@@ -11,6 +11,8 @@ import {
   shuffleChannels,
   postCooldownKey,
   slugsInCooldown,
+  effectiveCooldownDays,
+  slugsInCooldownForFeed,
 } from '@/lib/buffer/scheduler-core';
 import type { BlogArticle } from '@/lib/blog/types';
 
@@ -95,6 +97,27 @@ describe('buffer blog scheduler core', () => {
       now,
     );
     expect(excluded.has(postCooldownKey('policestationrepuk', 'alpha-post'))).toBe(true);
+  });
+
+  it('caps cooldown days for small RSS pools', () => {
+    expect(effectiveCooldownDays(8, 2, 14)).toBe(4);
+    expect(effectiveCooldownDays(20, 5, 14)).toBe(4);
+    expect(effectiveCooldownDays(100, 5, 14)).toBe(14);
+  });
+
+  it('slugsInCooldownForFeed only excludes matching feedId', () => {
+    const now = new Date('2026-06-08T12:00:00Z');
+    const excluded = slugsInCooldownForFeed(
+      [
+        { slug: 'a', feedId: 'psrtrain', scheduledAt: '2026-06-07T10:00:00Z' },
+        { slug: 'b', feedId: 'policestationrepuk', scheduledAt: '2026-06-07T10:00:00Z' },
+      ],
+      'psrtrain',
+      14,
+      now,
+    );
+    expect(excluded.has(postCooldownKey('psrtrain', 'a'))).toBe(true);
+    expect(excluded.has(postCooldownKey('policestationrepuk', 'b'))).toBe(false);
   });
 
   it('formats local date in Europe/London', () => {

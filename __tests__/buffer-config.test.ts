@@ -73,9 +73,9 @@ describe('buffer config', () => {
     expect(psrtrain).toMatchObject({
       type: 'rss',
       url: 'https://psrtrain.com/feed',
-      postsPerDay: 6,
-      dayPosts: 4,
-      nightPosts: 2,
+      postsPerDay: 2,
+      dayPosts: 1,
+      nightPosts: 1,
     });
   });
 

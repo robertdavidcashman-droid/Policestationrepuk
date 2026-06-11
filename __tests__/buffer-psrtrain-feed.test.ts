@@ -16,6 +16,7 @@ const SAMPLE_PSRTRAIN_RSS = `<?xml version="1.0" encoding="UTF-8"?>
       <description>PSRAS is the accreditation framework for people who provide legally aided police station advice.</description>
       <guid isPermaLink="true">https://psrtrain.com/guides/what-is-psras</guid>
       <category>PSRAS</category>
+      <enclosure url="https://psrtrain.com/images/guides/what-is-psras.jpg" type="image/jpeg" length="50000" />
     </item>
     <item>
       <title>PACE Code C: detention and interview basics</title>
@@ -23,25 +24,26 @@ const SAMPLE_PSRTRAIN_RSS = `<?xml version="1.0" encoding="UTF-8"?>
       <description>Core PACE Code C points for custody visits and interview advice.</description>
       <guid isPermaLink="true">https://psrtrain.com/guides/pace-code-c-basics</guid>
       <category>PACE</category>
+      <enclosure url="https://psrtrain.com/images/guides/pace-code-c-basics.jpg" type="image/jpeg" length="50000" />
     </item>
   </channel>
 </rss>`;
 
 describe('psrtrain buffer feed', () => {
-  it('default feeds include psrtrain RSS at 6 posts per day (4 day + 2 night)', () => {
+  it('default feeds include psrtrain RSS at 2 posts per day (1 day + 1 night)', () => {
     const feeds = getContentFeeds();
     const psrtrain = feeds.find((f) => f.id === 'psrtrain');
     expect(psrtrain).toMatchObject({
       type: 'rss',
       url: 'https://psrtrain.com/feed',
-      postsPerDay: 6,
-      dayPosts: 4,
-      nightPosts: 2,
+      postsPerDay: 2,
+      dayPosts: 1,
+      nightPosts: 1,
     });
     expect(resolveFeedSchedule(psrtrain!)).toEqual({
-      postsPerFeed: 6,
-      dayPosts: 4,
-      nightPosts: 2,
+      postsPerFeed: 2,
+      dayPosts: 1,
+      nightPosts: 1,
     });
   });
 
@@ -66,6 +68,7 @@ describe('psrtrain buffer feed', () => {
     });
     expect(posts[0]!.excerpt).toContain('accreditation framework');
     expect(posts.every((p) => p.url.includes('/guides/'))).toBe(true);
-    expect(posts.every((p) => p.imageUrl?.includes('/images/buffer/gbp/psrtrain-default.jpg'))).toBe(true);
+    expect(posts[0]!.imageUrl).toBe('https://psrtrain.com/images/guides/what-is-psras.jpg');
+    expect(posts[1]!.imageUrl).toBe('https://psrtrain.com/images/guides/pace-code-c-basics.jpg');
   });
 });

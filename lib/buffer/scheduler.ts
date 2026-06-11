@@ -20,7 +20,8 @@ import {
   mulberry32,
   pickRandomSchedulablePosts,
   postCooldownKey,
-  slugsInCooldown,
+  effectiveCooldownDays,
+  slugsInCooldownForFeed,
   ensurePostTimeCount,
   addDaysToLocalDate,
   type RecentSlugEntry,
@@ -111,12 +112,6 @@ export async function runBufferBlogScheduler(
   }
 
   const recentEntries = await getRecentSlugEntries();
-  const excludeKeys = slugsInCooldown(recentEntries, cooldownDays, now);
-  if (options?.extraExcludeKeys) {
-    for (const key of options.extraExcludeKeys) {
-      excludeKeys.add(key);
-    }
-  }
 
   const { posts: feedPosts, errors: feedErrors } = await loadAllFeedPosts();
   if (feedErrors.length > 0) {
@@ -180,15 +175,25 @@ export async function runBufferBlogScheduler(
   for (const { feed, schedule } of activeFeedSchedules) {
     const pool = feedPosts.get(feed.id) ?? [];
     const feedRng = mulberry32(hashSeed(`buffer-scheduler:${localDate}:${feed.id}`));
-    const picked = pickRandomSchedulablePosts(pool, schedule.postsPerFeed, excludeKeys, feedRng);
+    const feedCooldown = effectiveCooldownDays(pool.length, schedule.postsPerFeed, cooldownDays);
+    const feedExcludeKeys = slugsInCooldownForFeed(recentEntries, feed.id, feedCooldown, now);
+    if (options?.extraExcludeKeys) {
+      for (const key of options.extraExcludeKeys) {
+        if (key.startsWith(`${feed.id}:`)) feedExcludeKeys.add(key);
+      }
+    }
+    const picked = pickRandomSchedulablePosts(pool, schedule.postsPerFeed, feedExcludeKeys, feedRng);
     pickedByFeed.set(feed.id, picked);
 
     if (picked.length === 0) {
-      return {
-        ok: false,
-        reason: `Feed "${feed.id}" has no posts available after cooldown exclusions`,
-        date: localDate,
-      };
+      if (pool.length > 0) {
+        console.warn(
+          `[buffer:scheduler] Feed "${feed.id}" has no posts after cooldown (pool ${pool.length}, cooldown ${feedCooldown}d) — skipping`,
+        );
+        continue;
+      }
+      console.warn(`[buffer:scheduler] Feed "${feed.id}" has empty pool — skipping`);
+      continue;
     }
 
     if (picked.length < schedule.postsPerFeed) {
@@ -252,14 +257,18 @@ export async function runBufferBlogScheduler(
     }
   }
 
+  if (toSchedule.length === 0) {
+    return {
+      ok: false,
+      reason: 'No posts could be scheduled — all active feeds skipped (cooldown or empty pools)',
+      date: localDate,
+    };
+  }
+
   for (const { feed, schedule } of activeFeedSchedules) {
     const picked = pickedByFeed.get(feed.id) ?? [];
     if (picked.length === 0) {
-      return {
-        ok: false,
-        reason: `Feed "${feed.id}" contributed zero posts — aborting before createPost`,
-        date: localDate,
-      };
+      continue;
     }
     if (picked.length < schedule.postsPerFeed && poolTooSmall(feedPosts.get(feed.id) ?? [], schedule.postsPerFeed)) {
       console.warn(

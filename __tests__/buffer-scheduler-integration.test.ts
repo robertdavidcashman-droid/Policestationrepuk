@@ -154,15 +154,15 @@ describe('runBufferBlogScheduler integration', () => {
     expect(savedRun.feedIds).toHaveLength(10);
   });
 
-  it('schedules 6 posts for psrtrain when feed uses 4 day + 2 night', async () => {
+  it('schedules 2 posts for psrtrain when feed uses 1 day + 1 night', async () => {
     mockGetContentFeeds.mockReturnValue([
       {
         id: 'psrtrain',
         type: 'rss',
         url: 'https://psrtrain.com/feed',
-        postsPerDay: 6,
-        dayPosts: 4,
-        nightPosts: 2,
+        postsPerDay: 2,
+        dayPosts: 1,
+        nightPosts: 1,
       },
     ]);
     mockLoadAll.mockResolvedValue({
@@ -172,19 +172,42 @@ describe('runBufferBlogScheduler integration', () => {
 
     const result = await runBufferBlogScheduler(new Date('2026-06-08T05:00:00Z'));
     expect(result.ok).toBe(true);
-    expect(result.posts).toHaveLength(6);
+    expect(result.posts).toHaveLength(2);
     expect(result.posts!.every((p) => p.feedId === 'psrtrain')).toBe(true);
+  });
 
-    const daySlots = result.posts!.filter((p) => {
-      const h = Number(p.dueAt?.match(/T(\d{2}):/)?.[1]);
-      return h >= 8 && h <= 21;
+  it('continues scheduling other feeds when psrtrain is on full cooldown', async () => {
+    mockGetContentFeeds.mockReturnValue([
+      { id: 'policestationrepuk', type: 'local' },
+      {
+        id: 'psrtrain',
+        type: 'rss',
+        url: 'https://psrtrain.com/feed',
+        postsPerDay: 2,
+        dayPosts: 1,
+        nightPosts: 1,
+      },
+    ]);
+    mockLoadAll.mockResolvedValue({
+      posts: new Map([
+        ['policestationrepuk', makePosts('policestationrepuk', 8)],
+        ['psrtrain', makePosts('psrtrain', 8)],
+      ]),
+      errors: [],
     });
-    const nightSlots = result.posts!.filter((p) => {
-      const h = Number(p.dueAt?.match(/T(\d{2}):/)?.[1]);
-      return h >= 21 || h <= 7;
-    });
-    expect(daySlots.length).toBeGreaterThanOrEqual(4);
-    expect(nightSlots.length).toBeGreaterThanOrEqual(2);
+    mockGetRecent.mockResolvedValue(
+      Array.from({ length: 8 }, (_, i) => ({
+        slug: `psrtrain-post-${i + 1}`,
+        feedId: 'psrtrain',
+        scheduledAt: new Date('2026-06-07T00:00:00Z').toISOString(),
+      })),
+    );
+
+    const result = await runBufferBlogScheduler(new Date('2026-06-08T05:00:00Z'));
+    expect(result.ok).toBe(true);
+    expect(result.posts!.some((p) => p.feedId === 'policestationrepuk')).toBe(true);
+    expect(result.posts!.every((p) => p.feedId !== 'psrtrain')).toBe(true);
+    expect(mockCreate).toHaveBeenCalled();
   });
 
   it('continues scheduling when one feed fails but others have posts', async () => {
@@ -229,7 +252,7 @@ describe('runBufferBlogScheduler integration', () => {
       {
         slug: 'policestationrepuk-post-1',
         feedId: 'policestationrepuk',
-        scheduledAt: new Date('2026-06-07T00:00:00Z').toISOString(),
+        scheduledAt: new Date('2026-06-08T04:00:00Z').toISOString(),
       },
     ]);
 

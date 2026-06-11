@@ -58,6 +58,16 @@ External feed may block datacenter IPs. The site proxies RSS at:
 
 Informational email only. To re-run: `GET /api/cron/buffer-blog-posts?force=1` or `npm run buffer:replace-today`.
 
+### Cooldown exhaustion (small RSS pools)
+
+Feeds with few items (e.g. `psrtrain` guides) can exhaust cooldown if `postsPerDay` is too high relative to pool size.
+
+- **Symptom:** `Feed "psrtrain" has no posts available after cooldown exclusions` (older scheduler) or warning `skipping` with other feeds still scheduled (current).
+- **Math:** effective cooldown per feed = `min(BUFFER_SCHEDULER_COOLDOWN_DAYS, floor(poolSize / postsPerFeed))`.
+- **psrtrain default:** 2 posts/day (1 day + 1 night) — tune in `lib/buffer/feeds.ts`.
+- **Recovery:** `npm run buffer:replace-today` clears today’s queue and prunes related cooldown KV entries, then re-runs the scheduler.
+- **Long-term:** grow the sister-site RSS pool (new guides on psrtrain.com with JPEG heroes in RSS enclosures).
+
 ### Partial feed outage
 
 If one RSS feed fails, the scheduler continues with feeds that loaded successfully. Check logs for `Skipping feeds with no posts`.
