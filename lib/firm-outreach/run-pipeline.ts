@@ -1,0 +1,153 @@
+import { fetchLaaCrimeProviders } from '@/lib/legal-directory/laa-fetch';
+import { ensureDsccRegisterCache } from '@/lib/dscc-register-lookup';
+import { outreachEnabled, outreachSendEnabled } from './constants';
+import { runFirmDiscovery } from './discovery/run-discovery';
+import { runFirmEnrichment } from './enrichment/run-enrich';
+import { sendOutreachDigestEmail } from './outreach/digest-email';
+import { runFirmOutreach } from './outreach/run-outreach';
+import { requalifyAllProspects } from './requalify-prospects';
+import { countProspectsByStatus } from './storage';
+import type {
+  DiscoveryRunStats,
+  EnrichmentRunStats,
+  OutreachRunStats,
+} from './types';
+
+export interface FirmOutreachPipelineResult {
+  skipped: boolean;
+  reason?: string;
+  laa: { refreshed: boolean; source: string; count: number };
+  dscc: { count: number; syncedAt: string | null };
+  discovery: DiscoveryRunStats;
+  requalify: Awaited<ReturnType<typeof requalifyAllProspects>>;
+  enrich: EnrichmentRunStats;
+  send: OutreachRunStats;
+  counts: Record<string, number>;
+  elapsedMs: number;
+}
+
+function isSundayUtc(): boolean {
+  return new Date().getUTCDay() === 0;
+}
+
+export async function runFirmOutreachPipeline(opts?: {
+  /** Force re-download LAA spreadsheet from gov.uk */
+  forceLaaRefresh?: boolean;
+  enrichLimit?: number;
+  sendLimit?: number;
+  skipSend?: boolean;
+  skipDigest?: boolean;
+}): Promise<FirmOutreachPipelineResult> {
+  const started = Date.now();
+
+  if (!outreachEnabled()) {
+    return {
+      skipped: true,
+      reason: 'FIRM_OUTREACH_ENABLED=false',
+      laa: { refreshed: false, source: 'none', count: 0 },
+      dscc: { count: 0, syncedAt: null },
+      discovery: emptyDiscovery(),
+      requalify: emptyRequalify(),
+      enrich: emptyEnrich(),
+      send: emptySend(),
+      counts: {},
+      elapsedMs: Date.now() - started,
+    };
+  }
+
+  const forceLaa = opts?.forceLaaRefresh ?? isSundayUtc();
+  const laaResult = await fetchLaaCrimeProviders({ force: forceLaa }).catch((err) => {
+    console.warn('[firm-outreach pipeline] LAA fetch failed, using cache:', err);
+    return fetchLaaCrimeProviders({ force: false });
+  });
+
+  const dscc = await ensureDsccRegisterCache();
+  const discovery = await runFirmDiscovery();
+  const requalify = await requalifyAllProspects();
+
+  const enrichLimit = opts?.enrichLimit ?? (opts?.skipSend ? 120 : 60);
+  const enrich = await runFirmEnrichment({ limit: enrichLimit });
+
+  const send =
+    opts?.skipSend || !outreachSendEnabled()
+      ? emptySend()
+      : await runFirmOutreach({ limit: opts?.sendLimit });
+
+  const counts = await countProspectsByStatus();
+
+  if (!opts?.skipDigest && (send.sent > 0 || enrich.emailsFound > 0)) {
+    await sendOutreachDigestEmail({
+      discovery,
+      enrich,
+      send,
+      counts,
+      laaRefreshed: laaResult.refreshed,
+    });
+  }
+
+  return {
+    skipped: false,
+    laa: {
+      refreshed: laaResult.refreshed,
+      source: laaResult.source,
+      count: laaResult.records.length,
+    },
+    dscc: {
+      count: dscc?.count ?? 0,
+      syncedAt: dscc?.syncedAt ?? null,
+    },
+    discovery,
+    requalify,
+    enrich,
+    send,
+    counts,
+    elapsedMs: Date.now() - started,
+  };
+}
+
+function emptyRequalify() {
+  return {
+    scanned: 0,
+    downgradedFromReady: 0,
+    heldForReview: 0,
+    websiteVerified: 0,
+    stillReady: 0,
+    samples: [],
+  };
+}
+
+function emptyDiscovery(): DiscoveryRunStats {
+  return {
+    laaRows: 0,
+    dsccFirms: 0,
+    dsccSolicitors: 0,
+    archiveRows: 0,
+    directoryRows: 0,
+    created: 0,
+    updated: 0,
+    excluded: 0,
+    elapsedMs: 0,
+  };
+}
+
+function emptyEnrich(): EnrichmentRunStats {
+  return {
+    processed: 0,
+    emailsFound: 0,
+    readyToSend: 0,
+    noEmail: 0,
+    errors: 0,
+    elapsedMs: 0,
+  };
+}
+
+function emptySend(): OutreachRunStats {
+  return {
+    queued: 0,
+    sent: 0,
+    skipped: 0,
+    suppressed: 0,
+    errors: 0,
+    elapsedMs: 0,
+  };
+}

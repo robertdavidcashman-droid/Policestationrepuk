@@ -10,7 +10,7 @@ let resend: Resend | null = null;
 
 function getResend(): Resend | null {
   if (resend) return resend;
-  const key = process.env.RESEND_API_KEY;
+  const key = process.env.RESEND_API_KEY?.trim();
   if (!key) return null;
   resend = new Resend(key);
   return resend;

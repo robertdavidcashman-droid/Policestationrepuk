@@ -216,16 +216,13 @@
     "phone": "01732 226000",
     "email": "info@brachers.co.uk",
     "website": "https://www.brachers.co.uk",
-    "specialisms": [
-      "Criminal Law",
-      "Police Station Representation"
-    ],
+    "specialisms": [],
     "county": "Kent",
     "region": "England",
     "sizeCategory": "large",
-    "criminalLawPractice": true,
-    "policeStationWork": true,
-    "dutySolicitorScheme": true,
+    "criminalLawPractice": false,
+    "policeStationWork": false,
+    "dutySolicitorScheme": false,
     "lastVerified": "2025-08-29T16:33:34.352Z",
     "slug": "brachers-llp"
   },

@@ -102,7 +102,13 @@
     "laa:clean": "npx tsx scripts/clean-legal-directory-duplicates.ts",
     "audit:station-phones": "npx tsx scripts/verify-station-phone-accuracy.ts",
     "audit:station-phones:fix": "npx tsx scripts/restore-cleared-station-phones.ts --write && npx tsx scripts/correct-station-phones.ts --write && npx tsx scripts/verify-station-phone-accuracy.ts --write",
-    "laa:refresh": "npm run laa:fetch && npm run laa:seed"
+    "laa:refresh": "npm run laa:fetch && npm run laa:seed",
+    "lead-engine:auto": "bash scripts/run-lead-engine-auto.sh",
+    "lead-engine:schedule": "cd lead_engine && (test -d .venv || python3 -m venv .venv && .venv/bin/pip install -q -r requirements.txt) && .venv/bin/python -m src.scheduler",
+    "firm-outreach:auto": "npx tsx scripts/firm-outreach-pipeline.ts",
+    "firm-outreach:maintain": "npx tsx scripts/firm-outreach-pipeline.ts --maintain",
+    "firm-outreach:requalify": "npx tsx scripts/firm-outreach-requalify.ts",
+    "firm-outreach:admin-smoke": "npx tsx scripts/firm-outreach-admin-smoke.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

@@ -63,6 +63,14 @@
     {
       "path": "/api/cron/editorial-audit",
       "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/cron/firm-outreach-pipeline/maintain",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/firm-outreach-pipeline/full",
+      "schedule": "30 9 * * 1-5"
     }
   ]
 }
