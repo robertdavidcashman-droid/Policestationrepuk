@@ -33,9 +33,36 @@ function daysSince(iso: string | undefined): number {
   return (Date.now() - Date.parse(iso)) / (1000 * 60 * 60 * 24);
 }
 
+/** Count sends with sentAt on or after the given ISO timestamp. */
+export function countSendsSince(
+  sends: Array<{ sentAt?: string }>,
+  sinceMs: number,
+): number {
+  return sends.filter((s) => s.sentAt && Date.parse(s.sentAt) >= sinceMs).length;
+}
+
+export function computeSendWindowCounts(sends: Array<{ sentAt?: string }>): {
+  sentToday: number;
+  sentLast7Days: number;
+} {
+  const now = Date.now();
+  const startOfUtcDay = Date.UTC(
+    new Date(now).getUTCFullYear(),
+    new Date(now).getUTCMonth(),
+    new Date(now).getUTCDate(),
+  );
+  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+  return {
+    sentToday: countSendsSince(sends, startOfUtcDay),
+    sentLast7Days: countSendsSince(sends, sevenDaysAgo),
+  };
+}
+
 function emptySummary(prospectCounts: Record<string, number>): OutreachActivitySummary {
   return {
     totalSends: 0,
+    sentToday: 0,
+    sentLast7Days: 0,
     uniqueRecipients: 0,
     bySendStatus: {},
     waClicks: 0,
@@ -134,8 +161,12 @@ export async function buildOutreachActivityReport(): Promise<OutreachActivityRep
     if (p.sequenceStep === 1 && days >= 14) pendingFollowUp2++;
   }
 
+  const windowCounts = computeSendWindowCounts(sends);
+
   const summary: OutreachActivitySummary = {
     totalSends: sends.length,
+    sentToday: windowCounts.sentToday,
+    sentLast7Days: windowCounts.sentLast7Days,
     uniqueRecipients: uniqueEmails.size,
     bySendStatus,
     waClicks,

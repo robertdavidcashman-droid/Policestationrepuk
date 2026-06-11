@@ -29,6 +29,8 @@ async function main() {
 
   console.log('[firm-outreach admin-smoke] elapsed_ms:', elapsed);
   console.log('[firm-outreach admin-smoke] sends:', report.summary.totalSends);
+  console.log('[firm-outreach admin-smoke] sent_today:', report.summary.sentToday);
+  console.log('[firm-outreach admin-smoke] sent_7d:', report.summary.sentLast7Days);
   console.log('[firm-outreach admin-smoke] discovered:', prospectCounts.discovered ?? report.summary.discovered);
   console.log('[firm-outreach admin-smoke] ready_to_send:', prospectCounts.ready_to_send ?? report.summary.readyToSend);
   console.log('[firm-outreach admin-smoke] ready_rows:', report.readyToSendProspects.length);

@@ -232,6 +232,70 @@ describe('buildOutreachActivityReport', () => {
     await buildOutreachActivityReport();
     expect(Date.now() - start).toBeLessThan(500);
   });
+
+  it('computes sentToday and sentLast7Days from send timestamps', async () => {
+    const now = new Date();
+    const todayIso = now.toISOString();
+    const oldIso = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString();
+
+    mockListAllSends.mockResolvedValue([
+      {
+        id: 'fos_today',
+        prospectId: 'fop_1',
+        firmName: 'A',
+        prospectType: 'firm',
+        email: 'a@test.co.uk',
+        campaignId: 'c',
+        sequenceStep: 0,
+        subject: 's',
+        status: 'sent',
+        createdAt: todayIso,
+        sentAt: todayIso,
+      },
+      {
+        id: 'fos_old',
+        prospectId: 'fop_2',
+        firmName: 'B',
+        prospectType: 'firm',
+        email: 'b@test.co.uk',
+        campaignId: 'c',
+        sequenceStep: 0,
+        subject: 's',
+        status: 'sent',
+        createdAt: oldIso,
+        sentAt: oldIso,
+      },
+    ]);
+
+    const { buildOutreachActivityReport } = await import(
+      '@/lib/firm-outreach/outreach/activity-report'
+    );
+    const { report } = await buildOutreachActivityReport();
+
+    expect(report.summary.sentToday).toBe(1);
+    expect(report.summary.sentLast7Days).toBe(1);
+  });
+});
+
+describe('computeSendWindowCounts', () => {
+  it('counts sends in UTC day and 7-day window', async () => {
+    const { computeSendWindowCounts } = await import(
+      '@/lib/firm-outreach/outreach/activity-report'
+    );
+    const now = Date.now();
+    const today = new Date(now).toISOString();
+    const threeDaysAgo = new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString();
+    const tenDaysAgo = new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString();
+
+    const counts = computeSendWindowCounts([
+      { sentAt: today },
+      { sentAt: threeDaysAgo },
+      { sentAt: tenDaysAgo },
+    ]);
+
+    expect(counts.sentToday).toBe(1);
+    expect(counts.sentLast7Days).toBe(2);
+  });
 });
 
 describe('GET /api/admin/firm-outreach', () => {
@@ -254,6 +318,8 @@ describe('GET /api/admin/firm-outreach', () => {
           generatedAt: '2026-06-11T12:00:00Z',
           summary: {
             totalSends: 1,
+            sentToday: 0,
+            sentLast7Days: 0,
             uniqueRecipients: 1,
             bySendStatus: { sent: 1 },
             waClicks: 0,

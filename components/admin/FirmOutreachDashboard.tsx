@@ -85,6 +85,8 @@ interface ReportPayload {
     discovered: number;
     noEmail: number;
     excluded: number;
+    sentToday: number;
+    sentLast7Days: number;
   };
   sends: ActivityRow[];
   readyToSendProspects: QueueRow[];
@@ -102,7 +104,7 @@ interface OutreachStats {
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'ready', label: 'Ready to send' },
-  { id: 'all', label: 'All sends' },
+  { id: 'all', label: 'Send log' },
   { id: 'delivered', label: 'Delivered' },
   { id: 'opened', label: 'Opened' },
   { id: 'clicked', label: 'WA clicked' },
@@ -113,6 +115,13 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'excluded', label: 'Excluded' },
   { id: 'suppressions', label: 'Suppressions' },
 ];
+
+function tabLabel(id: TabId, label: string, summary: ReportPayload['summary']): string {
+  if (id === 'all') return `${label} (${summary.totalSends})`;
+  if (id === 'ready') return `${label} (${summary.readyToSend})`;
+  if (id === 'excluded') return `${label} (${summary.excluded})`;
+  return label;
+}
 
 function fmt(iso?: string): string {
   if (!iso) return '—';
@@ -142,7 +151,11 @@ export function FirmOutreachDashboard() {
   const [tab, setTab] = useState<TabId>('ready');
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [actionId, setActionId] = useState<string | null>(null);
-  const [actionKind, setActionKind] = useState<'restore' | 'send' | 'dry_run' | 'exclude' | null>(null);
+  const [actionKind, setActionKind] = useState<
+    'restore' | 'send' | 'dry_run' | 'exclude' | 'bulk_send' | 'bulk_exclude' | null
+  >(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -187,31 +200,65 @@ export function FirmOutreachDashboard() {
   const filteredSends = useMemo(() => {
     if (!data?.report.sends) return [];
     const rows = data.report.sends;
+    let filtered: ActivityRow[];
     switch (tab) {
       case 'delivered':
-        return rows.filter((r) => r.sendStatus === 'delivered' || r.deliveredAt);
+        filtered = rows.filter((r) => r.sendStatus === 'delivered' || r.deliveredAt);
+        break;
       case 'opened':
-        return rows.filter((r) => r.sendStatus === 'opened' || r.openedAt);
+        filtered = rows.filter((r) => r.sendStatus === 'opened' || r.openedAt);
+        break;
       case 'clicked':
-        return rows.filter((r) => r.waLinkClickedAt || r.sendStatus === 'clicked');
+        filtered = rows.filter((r) => r.waLinkClickedAt || r.sendStatus === 'clicked');
+        break;
       case 'bounced':
-        return rows.filter((r) => r.sendStatus === 'bounced' || r.bouncedAt || r.prospectStatus === 'bounced');
+        filtered = rows.filter(
+          (r) => r.sendStatus === 'bounced' || r.bouncedAt || r.prospectStatus === 'bounced',
+        );
+        break;
       case 'unsubscribed':
-        return rows.filter((r) => r.prospectStatus === 'unsubscribed' || r.suppressionReason === 'unsubscribe');
+        filtered = rows.filter(
+          (r) => r.prospectStatus === 'unsubscribed' || r.suppressionReason === 'unsubscribe',
+        );
+        break;
       case 'joined':
-        return rows.filter((r) => r.joinedWhatsAppAt || r.prospectStatus === 'joined_whatsapp');
+        filtered = rows.filter((r) => r.joinedWhatsAppAt || r.prospectStatus === 'joined_whatsapp');
+        break;
       case 'followup':
-        return rows.filter(
+        filtered = rows.filter(
           (r) =>
             r.prospectStatus === 'sent' &&
             !r.waLinkClickedAt &&
             !r.joinedWhatsAppAt &&
             r.sequenceStep < 2,
         );
+        break;
       default:
-        return rows;
+        filtered = rows;
     }
+    return [...filtered].sort((a, b) => {
+      const ta = a.sentAt ? Date.parse(a.sentAt) : 0;
+      const tb = b.sentAt ? Date.parse(b.sentAt) : 0;
+      return tb - ta;
+    });
   }, [data, tab]);
+
+  const recentSends = useMemo(() => {
+    if (!data?.report.sends?.length) return [];
+    return [...data.report.sends]
+      .sort((a, b) => {
+        const ta = a.sentAt ? Date.parse(a.sentAt) : 0;
+        const tb = b.sentAt ? Date.parse(b.sentAt) : 0;
+        return tb - ta;
+      })
+      .slice(0, 8);
+  }, [data]);
+
+  const readyRows = data?.report.readyToSendProspects ?? [];
+  const sendableReadyIds = useMemo(
+    () => readyRows.filter((r) => r.email && !r.suppressed).map((r) => r.prospectId),
+    [readyRows],
+  );
 
   async function markJoined(prospectId: string) {
     setMarkingId(prospectId);
@@ -306,6 +353,99 @@ export function FirmOutreachDashboard() {
     }
   }
 
+  function toggleSelect(prospectId: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(prospectId)) next.delete(prospectId);
+      else next.add(prospectId);
+      return next;
+    });
+  }
+
+  function toggleSelectAllSendable() {
+    const allSelected = sendableReadyIds.every((id) => selectedIds.has(id));
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sendableReadyIds));
+    }
+  }
+
+  async function bulkSend(prospectIds: string[], dryRun: boolean) {
+    if (prospectIds.length === 0) return;
+
+    const sample = readyRows
+      .filter((r) => prospectIds.includes(r.prospectId))
+      .slice(0, 5)
+      .map((r) => r.email)
+      .filter(Boolean)
+      .join(', ');
+
+    if (
+      !dryRun &&
+      !window.confirm(
+        `Send outreach to ${prospectIds.length} firm(s)?${sample ? `\n\nIncludes: ${sample}${prospectIds.length > 5 ? '…' : ''}` : ''}\n\nRespects daily cap.`,
+      )
+    ) {
+      return;
+    }
+
+    setBulkBusy(true);
+    setActionKind(dryRun ? 'dry_run' : 'bulk_send');
+    try {
+      const res = await fetch('/api/admin/firm-outreach', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'bulk_send',
+          prospectIds,
+          dryRun,
+          respectDailyCap: true,
+        }),
+      });
+      const json = (await res.json()) as {
+        error?: string;
+        bulk?: { sent: number; skipped: number; errors: number };
+      };
+      if (!res.ok) throw new Error(json.error ?? 'Bulk send failed');
+      if (dryRun) {
+        window.alert(`Dry run OK — would send to ${json.bulk?.sent ?? 0} prospect(s).`);
+      } else {
+        setSelectedIds(new Set());
+        load();
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error');
+    } finally {
+      setBulkBusy(false);
+      setActionKind(null);
+    }
+  }
+
+  async function bulkExclude(prospectIds: string[]) {
+    if (prospectIds.length === 0) return;
+    if (!window.confirm(`Exclude ${prospectIds.length} prospect(s) from outreach?`)) return;
+
+    setBulkBusy(true);
+    setActionKind('bulk_exclude');
+    try {
+      const res = await fetch('/api/admin/firm-outreach', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'bulk_exclude', prospectIds }),
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) throw new Error(json.error ?? 'Bulk exclude failed');
+      setSelectedIds(new Set());
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error');
+    } finally {
+      setBulkBusy(false);
+      setActionKind(null);
+    }
+  }
+
   if (error) {
     return (
       <div className="space-y-3">
@@ -340,6 +480,8 @@ export function FirmOutreachDashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
         <StatCard label="Emails sent" value={s.totalSends} />
+        <StatCard label="Sent today" value={s.sentToday ?? 0} />
+        <StatCard label="Sent (7 days)" value={s.sentLast7Days ?? 0} />
         <StatCard label="Unique recipients" value={s.uniqueRecipients} />
         <StatCard label="Delivered" value={s.bySendStatus.delivered ?? 0} />
         <StatCard label="Opened" value={s.bySendStatus.opened ?? 0} />
@@ -364,6 +506,33 @@ export function FirmOutreachDashboard() {
         />
       </div>
 
+      {recentSends.length > 0 ? (
+        <div className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3">
+            <h2 className="text-sm font-bold text-[var(--navy)]">Recent sends</h2>
+            <button
+              type="button"
+              onClick={() => setTab('all')}
+              className="text-xs font-semibold text-[var(--gold-link)] hover:underline"
+            >
+              View full send log
+            </button>
+          </div>
+          <ul className="mt-3 divide-y divide-[var(--border)]">
+            {recentSends.map((r) => (
+              <li key={r.sendId} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-2 text-sm">
+                <span className="font-semibold text-[var(--navy)]">{r.firmName}</span>
+                <span className="font-mono text-xs text-[var(--muted)]">{r.email}</span>
+                <span className="text-xs text-[var(--muted)] truncate max-w-md" title={r.subject}>
+                  {r.subject}
+                </span>
+                <span className="text-xs whitespace-nowrap text-[var(--muted)]">{fmt(r.sentAt)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       <nav className="flex flex-wrap gap-2 border-b border-[var(--border)] pb-3">
         {TABS.map((t) => (
           <button
@@ -376,10 +545,16 @@ export function FirmOutreachDashboard() {
                 : 'bg-white text-[var(--navy)] border border-[var(--border)] hover:border-[var(--gold)]'
             }`}
           >
-            {t.label}
+            {tabLabel(t.id, t.label, s)}
           </button>
         ))}
       </nav>
+
+      {tab === 'all' ? (
+        <p className="text-xs text-[var(--muted)]">
+          Export includes firm, email, subject, sent_at, and delivery events (Download CSV above).
+        </p>
+      ) : null}
 
       {tab === 'suppressions' ? (
         <ActivityTable
@@ -397,18 +572,72 @@ export function FirmOutreachDashboard() {
         />
       ) : tab === 'ready' ? (
         <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-white shadow-sm">
-          <h2 className="border-b border-[var(--border)] px-4 py-3 text-sm font-bold text-[var(--navy)]">
-            Ready to send ({data.report.readyToSendProspects?.length ?? 0}
-            {s.readyToSend > (data.report.readyToSendProspects?.length ?? 0)
-              ? ` of ${s.readyToSend} total`
-              : ''}
-            )
-          </h2>
+          <div className="border-b border-[var(--border)] px-4 py-3 space-y-3">
+            <h2 className="text-sm font-bold text-[var(--navy)]">
+              Ready to send ({data.report.readyToSendProspects?.length ?? 0}
+              {s.readyToSend > (data.report.readyToSendProspects?.length ?? 0)
+                ? ` of ${s.readyToSend} total`
+                : ''}
+              )
+            </h2>
+            <p className="text-xs text-[var(--muted)]">
+              {selectedIds.size} selected · {sendableReadyIds.length} sendable · daily cap{' '}
+              {data.dailyCap} · sent today {s.sentToday ?? 0}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={bulkBusy || sendableReadyIds.length === 0}
+                onClick={() => bulkSend(sendableReadyIds, false)}
+                className="btn-primary !text-xs !py-1.5 !px-3 disabled:opacity-50"
+              >
+                {bulkBusy && actionKind === 'bulk_send'
+                  ? 'Sending…'
+                  : `Send to all (${sendableReadyIds.length})`}
+              </button>
+              <button
+                type="button"
+                disabled={bulkBusy || selectedIds.size === 0}
+                onClick={() => bulkSend([...selectedIds], false)}
+                className="btn-outline !text-xs !py-1.5 !px-3 disabled:opacity-50"
+              >
+                Send to selected ({selectedIds.size})
+              </button>
+              <button
+                type="button"
+                disabled={bulkBusy || selectedIds.size === 0}
+                onClick={() => bulkExclude([...selectedIds])}
+                className="btn-outline !text-xs !py-1.5 !px-3 !text-red-700 disabled:opacity-50"
+              >
+                Exclude selected ({selectedIds.size})
+              </button>
+              <button
+                type="button"
+                disabled={bulkBusy || sendableReadyIds.length === 0}
+                onClick={() => bulkSend(sendableReadyIds, true)}
+                className="btn-outline !text-xs !py-1.5 !px-3 disabled:opacity-50"
+              >
+                Dry run all
+              </button>
+            </div>
+          </div>
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[var(--border)] bg-slate-50 text-xs uppercase tracking-wide text-[var(--muted)]">
               <tr>
-                <th className="px-4 py-3">Firm / contact</th>
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all sendable"
+                    checked={
+                      sendableReadyIds.length > 0 &&
+                      sendableReadyIds.every((id) => selectedIds.has(id))
+                    }
+                    onChange={toggleSelectAllSendable}
+                    disabled={sendableReadyIds.length === 0}
+                  />
+                </th>
                 <th className="px-4 py-3">Email</th>
+                <th className="px-4 py-3">Firm / contact</th>
                 <th className="px-4 py-3">Sources</th>
                 <th className="px-4 py-3">Priority</th>
                 <th className="px-4 py-3">Updated</th>
@@ -416,18 +645,30 @@ export function FirmOutreachDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
-              {(data.report.readyToSendProspects ?? []).length === 0 ? (
+              {readyRows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-[var(--muted)]">
+                  <td colSpan={7} className="px-4 py-8 text-center text-[var(--muted)]">
                     No firms queued for outreach yet. Check the Excluded tab or run enrichment.
                   </td>
                 </tr>
               ) : (
-                (data.report.readyToSendProspects ?? []).map((r) => {
-                  const busy = actionId === r.prospectId;
+                readyRows.map((r) => {
+                  const busy = actionId === r.prospectId || bulkBusy;
                   const canSend = Boolean(r.email) && !r.suppressed;
                   return (
                     <tr key={r.prospectId} className="hover:bg-slate-50/80">
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${r.firmName}`}
+                          checked={selectedIds.has(r.prospectId)}
+                          onChange={() => toggleSelect(r.prospectId)}
+                          disabled={!canSend}
+                        />
+                      </td>
+                      <td className="px-4 py-3 font-mono text-sm text-[var(--navy)]">
+                        {r.email ?? '—'}
+                      </td>
                       <td className="px-4 py-3">
                         <p className="font-semibold text-[var(--navy)]">{r.firmName}</p>
                         {r.contactName ? (
@@ -440,7 +681,6 @@ export function FirmOutreachDashboard() {
                           <p className="text-xs text-emerald-700">Crime website verified</p>
                         ) : null}
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs">{r.email ?? '—'}</td>
                       <td className="px-4 py-3 text-xs">{r.sources.join(', ')}</td>
                       <td className="px-4 py-3 text-xs font-semibold">{r.priorityScore}</td>
                       <td className="px-4 py-3 text-xs whitespace-nowrap">{fmt(r.updatedAt)}</td>
@@ -588,21 +828,24 @@ export function FirmOutreachDashboard() {
               <tr>
                 <th className="px-4 py-3">Firm / contact</th>
                 <th className="px-4 py-3">Email</th>
+                <th className="px-4 py-3">Subject</th>
                 <th className="px-4 py-3">Touch</th>
                 <th className="px-4 py-3">Send status</th>
-                <th className="px-4 py-3">Sent</th>
-                <th className="px-4 py-3">Delivered</th>
-                <th className="px-4 py-3">Opened</th>
-                <th className="px-4 py-3">WA click</th>
-                <th className="px-4 py-3">Joined</th>
+                <th className="px-4 py-3">Sent at</th>
+                <th className="hidden md:table-cell px-4 py-3">Delivered</th>
+                <th className="hidden md:table-cell px-4 py-3">Opened</th>
+                <th className="hidden lg:table-cell px-4 py-3">WA click</th>
+                <th className="hidden lg:table-cell px-4 py-3">Joined</th>
                 <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {filteredSends.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-[var(--muted)]">
-                    No records in this view yet.
+                  <td colSpan={11} className="px-4 py-8 text-center text-[var(--muted)]">
+                    {tab === 'all'
+                      ? 'No outreach emails sent yet. Use Ready to send or wait for the daily cron.'
+                      : 'No records in this view yet.'}
                   </td>
                 </tr>
               ) : (
@@ -618,6 +861,9 @@ export function FirmOutreachDashboard() {
                       ) : null}
                     </td>
                     <td className="px-4 py-3 font-mono text-xs">{r.email}</td>
+                    <td className="px-4 py-3 text-xs max-w-xs truncate" title={r.subject}>
+                      {r.subject}
+                    </td>
                     <td className="px-4 py-3 text-xs">{r.touchLabel}</td>
                     <td className="px-4 py-3">
                       <span
@@ -630,10 +876,18 @@ export function FirmOutreachDashboard() {
                       ) : null}
                     </td>
                     <td className="px-4 py-3 text-xs whitespace-nowrap">{fmt(r.sentAt)}</td>
-                    <td className="px-4 py-3 text-xs whitespace-nowrap">{fmt(r.deliveredAt)}</td>
-                    <td className="px-4 py-3 text-xs whitespace-nowrap">{fmt(r.openedAt)}</td>
-                    <td className="px-4 py-3 text-xs whitespace-nowrap">{fmt(r.waLinkClickedAt)}</td>
-                    <td className="px-4 py-3 text-xs whitespace-nowrap">{fmt(r.joinedWhatsAppAt)}</td>
+                    <td className="hidden md:table-cell px-4 py-3 text-xs whitespace-nowrap">
+                      {fmt(r.deliveredAt)}
+                    </td>
+                    <td className="hidden md:table-cell px-4 py-3 text-xs whitespace-nowrap">
+                      {fmt(r.openedAt)}
+                    </td>
+                    <td className="hidden lg:table-cell px-4 py-3 text-xs whitespace-nowrap">
+                      {fmt(r.waLinkClickedAt)}
+                    </td>
+                    <td className="hidden lg:table-cell px-4 py-3 text-xs whitespace-nowrap">
+                      {fmt(r.joinedWhatsAppAt)}
+                    </td>
                     <td className="px-4 py-3">
                       {!r.joinedWhatsAppAt ? (
                         <button

@@ -126,6 +126,8 @@ export interface OutreachActivityRow {
 
 export interface OutreachActivitySummary {
   totalSends: number;
+  sentToday: number;
+  sentLast7Days: number;
   uniqueRecipients: number;
   bySendStatus: Record<string, number>;
   waClicks: number;

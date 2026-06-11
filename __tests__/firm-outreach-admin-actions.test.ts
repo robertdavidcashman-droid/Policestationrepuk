@@ -7,6 +7,8 @@ const mockIsSuppressed = vi.fn();
 const mockSaveSend = vi.fn();
 const mockSendOutreachEmail = vi.fn();
 const mockGetSuppressionsByEmails = vi.fn();
+const mockGetDailySendCount = vi.fn();
+const mockIncrementDailySendCount = vi.fn();
 
 vi.mock('@/lib/firm-outreach/storage', () => ({
   getProspect: (...args: unknown[]) => mockGetProspect(...args),
@@ -14,6 +16,8 @@ vi.mock('@/lib/firm-outreach/storage', () => ({
   isSuppressed: (...args: unknown[]) => mockIsSuppressed(...args),
   saveSend: (...args: unknown[]) => mockSaveSend(...args),
   getSuppressionsByEmails: (...args: unknown[]) => mockGetSuppressionsByEmails(...args),
+  getDailySendCount: (...args: unknown[]) => mockGetDailySendCount(...args),
+  incrementDailySendCount: (...args: unknown[]) => mockIncrementDailySendCount(...args),
   createSendRecord: (input: Record<string, unknown>) => ({
     id: 'fos_test',
     status: 'queued',
@@ -24,6 +28,10 @@ vi.mock('@/lib/firm-outreach/storage', () => ({
 
 vi.mock('@/lib/firm-outreach/outreach/send', () => ({
   sendOutreachEmail: (...args: unknown[]) => mockSendOutreachEmail(...args),
+}));
+
+vi.mock('@/lib/firm-outreach/constants', () => ({
+  dailySendCap: () => 30,
 }));
 
 function excludedProspect(overrides: Partial<FirmProspect> = {}): FirmProspect {
@@ -191,6 +199,75 @@ describe('excludeProspect', () => {
   });
 });
 
+describe('bulkSendProspects', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSaveProspect.mockResolvedValue(undefined);
+    mockSaveSend.mockResolvedValue(undefined);
+    mockIsSuppressed.mockResolvedValue(false);
+    mockGetDailySendCount.mockResolvedValue(0);
+    mockIncrementDailySendCount.mockResolvedValue(1);
+    mockSendOutreachEmail.mockResolvedValue({
+      ok: true,
+      subject: 'Police station cover',
+      messageId: 'msg_123',
+    });
+  });
+
+  it('respects daily cap and skips when exhausted', async () => {
+    mockGetDailySendCount.mockResolvedValue(30);
+    mockGetProspect.mockResolvedValue(
+      excludedProspect({ status: 'ready_to_send', excludedReason: undefined }),
+    );
+
+    const { bulkSendProspects } = await import('@/lib/firm-outreach/outreach/admin-actions');
+    const result = await bulkSendProspects(['fop_ex1'], { respectDailyCap: true });
+
+    expect(result.sent).toBe(0);
+    expect(result.skipped).toBe(1);
+    expect(result.results[0].error).toBe('daily_cap_reached');
+    expect(mockSendOutreachEmail).not.toHaveBeenCalled();
+  });
+
+  it('dry run does not increment daily count', async () => {
+    mockGetProspect.mockResolvedValue(
+      excludedProspect({ status: 'ready_to_send', excludedReason: undefined }),
+    );
+
+    const { bulkSendProspects } = await import('@/lib/firm-outreach/outreach/admin-actions');
+    const result = await bulkSendProspects(['fop_ex1'], { dryRun: true });
+
+    expect(result.sent).toBe(1);
+    expect(mockIncrementDailySendCount).not.toHaveBeenCalled();
+    expect(mockSaveSend).not.toHaveBeenCalled();
+  });
+});
+
+describe('bulkExcludeProspects', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSaveProspect.mockResolvedValue(undefined);
+  });
+
+  it('excludes multiple prospects', async () => {
+    mockGetProspect.mockImplementation((id: string) =>
+      Promise.resolve(
+        excludedProspect({
+          id,
+          status: 'ready_to_send',
+          excludedReason: undefined,
+        }),
+      ),
+    );
+
+    const { bulkExcludeProspects } = await import('@/lib/firm-outreach/outreach/admin-actions');
+    const result = await bulkExcludeProspects(['fop_ex1', 'fop_ex2']);
+
+    expect(result.excluded).toBe(2);
+    expect(mockSaveProspect).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe('POST /api/admin/firm-outreach restore and send', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -206,6 +283,8 @@ describe('POST /api/admin/firm-outreach restore and send', () => {
       restoreExcludedProspect: vi.fn().mockResolvedValue({ ok: true, prospect }),
       manualSendProspect: vi.fn(),
       excludeProspect: vi.fn(),
+      bulkSendProspects: vi.fn(),
+      bulkExcludeProspects: vi.fn(),
     }));
 
     const { POST } = await import('@/app/api/admin/firm-outreach/route');
@@ -231,6 +310,8 @@ describe('POST /api/admin/firm-outreach restore and send', () => {
       restoreExcludedProspect: vi.fn(),
       manualSendProspect: vi.fn().mockResolvedValue({ ok: false, error: 'suppressed' }),
       excludeProspect: vi.fn(),
+      bulkSendProspects: vi.fn(),
+      bulkExcludeProspects: vi.fn(),
     }));
 
     const { POST } = await import('@/app/api/admin/firm-outreach/route');

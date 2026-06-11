@@ -1,9 +1,12 @@
+import { dailySendCap } from '../constants';
 import { computeProspectPriority } from '../enrichment/scorer';
 import { resolveStatusWithQualification } from '../qualification';
 import {
   createSendRecord,
+  getDailySendCount,
   getProspect,
   getSuppressionsByEmails,
+  incrementDailySendCount,
   isSuppressed,
   saveProspect,
   saveSend,
@@ -132,6 +135,105 @@ export async function manualSendProspect(
     prospect,
     data: { subject: result.subject, messageId: result.messageId, dryRun: false },
   };
+}
+
+export type BulkSendItemResult = {
+  prospectId: string;
+  ok: boolean;
+  error?: string;
+  subject?: string;
+};
+
+export type BulkSendResult = {
+  sent: number;
+  skipped: number;
+  errors: number;
+  results: BulkSendItemResult[];
+};
+
+export type BulkExcludeResult = {
+  excluded: number;
+  skipped: number;
+  errors: number;
+  results: Array<{ prospectId: string; ok: boolean; error?: string }>;
+};
+
+export async function bulkSendProspects(
+  prospectIds: string[],
+  opts?: { dryRun?: boolean; limit?: number; respectDailyCap?: boolean },
+): Promise<BulkSendResult> {
+  const dryRun = opts?.dryRun ?? false;
+  const respectDailyCap = opts?.respectDailyCap ?? true;
+  const date = new Date().toISOString().slice(0, 10);
+  const cap = dailySendCap();
+  let remaining = respectDailyCap
+    ? Math.max(0, cap - (await getDailySendCount(date)))
+    : Infinity;
+  const maxCount = opts?.limit ?? prospectIds.length;
+
+  const result: BulkSendResult = { sent: 0, skipped: 0, errors: 0, results: [] };
+
+  for (const prospectId of prospectIds) {
+    if (result.sent >= maxCount) break;
+    if (respectDailyCap && remaining <= 0) {
+      result.skipped++;
+      result.results.push({ prospectId, ok: false, error: 'daily_cap_reached' });
+      continue;
+    }
+
+    const sendResult = await manualSendProspect(prospectId, { dryRun });
+    if (!sendResult.ok) {
+      if (sendResult.error === 'not_eligible' || sendResult.error === 'no_email') {
+        result.skipped++;
+      } else {
+        result.errors++;
+      }
+      result.results.push({ prospectId, ok: false, error: sendResult.error });
+      continue;
+    }
+
+    result.results.push({
+      prospectId,
+      ok: true,
+      subject: sendResult.data?.subject,
+    });
+
+    if (!dryRun) {
+      result.sent++;
+      if (respectDailyCap) {
+        remaining--;
+        await incrementDailySendCount(date);
+      }
+    } else {
+      result.sent++;
+    }
+  }
+
+  return result;
+}
+
+export async function bulkExcludeProspects(
+  prospectIds: string[],
+  reason?: string,
+): Promise<BulkExcludeResult> {
+  const result: BulkExcludeResult = { excluded: 0, skipped: 0, errors: 0, results: [] };
+
+  for (const prospectId of prospectIds) {
+    const excludeResult = await excludeProspect(prospectId, reason);
+    if (!excludeResult.ok) {
+      if (excludeResult.error === 'already_excluded') {
+        result.skipped++;
+      } else {
+        result.errors++;
+      }
+      result.results.push({ prospectId, ok: false, error: excludeResult.error });
+      continue;
+    }
+    result.excluded++;
+    result.results.push({ prospectId, ok: true });
+  }
+
+  return result;
 }
 
 export async function excludeProspect(

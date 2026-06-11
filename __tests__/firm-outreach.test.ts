@@ -190,6 +190,8 @@ describe('activity report CSV', () => {
       generatedAt: '2026-06-11T12:00:00.000Z',
       summary: {
         totalSends: 1,
+        sentToday: 0,
+        sentLast7Days: 0,
         uniqueRecipients: 1,
         bySendStatus: { sent: 1 },
         waClicks: 0,

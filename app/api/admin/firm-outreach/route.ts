@@ -9,13 +9,15 @@ import {
 } from '@/lib/firm-outreach/outreach/activity-report';
 import { markProspectJoinedWhatsApp } from '@/lib/firm-outreach/storage';
 import {
+  bulkExcludeProspects,
+  bulkSendProspects,
   excludeProspect,
   manualSendProspect,
   restoreExcludedProspect,
 } from '@/lib/firm-outreach/outreach/admin-actions';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 30;
+export const maxDuration = 120;
 
 export async function GET(request: Request) {
   const auth = await requireAdmin();
@@ -84,11 +86,14 @@ export async function POST(request: Request) {
     let body: {
       action?: string;
       prospectId?: string;
+      prospectIds?: string[];
       targetStatus?: 'discovered' | 'ready_to_send';
       addManualSource?: boolean;
       crimeWebsiteVerified?: boolean;
       dryRun?: boolean;
       reason?: string;
+      limit?: number;
+      respectDailyCap?: boolean;
     };
     try {
       body = (await request.json()) as typeof body;
@@ -124,6 +129,22 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: result.error }, { status });
       }
       return NextResponse.json({ ok: true, prospect: result.prospect });
+    }
+
+    if (body.action === 'bulk_send' && Array.isArray(body.prospectIds) && body.prospectIds.length > 0) {
+      const ids = body.prospectIds.map((id) => id.trim()).filter(Boolean);
+      const result = await bulkSendProspects(ids, {
+        dryRun: body.dryRun,
+        limit: body.limit,
+        respectDailyCap: body.respectDailyCap,
+      });
+      return NextResponse.json({ ok: true, bulk: result });
+    }
+
+    if (body.action === 'bulk_exclude' && Array.isArray(body.prospectIds) && body.prospectIds.length > 0) {
+      const ids = body.prospectIds.map((id) => id.trim()).filter(Boolean);
+      const result = await bulkExcludeProspects(ids, body.reason);
+      return NextResponse.json({ ok: true, bulk: result });
     }
 
     if (body.action === 'manual_send' && body.prospectId?.trim()) {
