@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { Resend } from 'resend';
 import {
   addSuppression,
   applySendWebhookEvent,
@@ -25,10 +26,41 @@ function emailsFromEvent(data: ResendWebhookEvent['data']): string[] {
   return [];
 }
 
+function verifyResendWebhook(request: Request, rawBody: string): boolean {
+  const secret = process.env.RESEND_WEBHOOK_SECRET?.trim();
+  if (!secret) return true;
+
+  const id = request.headers.get('svix-id');
+  const timestamp = request.headers.get('svix-timestamp');
+  const signature = request.headers.get('svix-signature');
+  if (!id || !timestamp || !signature) return false;
+
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (!key) return false;
+
+  try {
+    const resend = new Resend(key);
+    resend.webhooks.verify({
+      payload: rawBody,
+      headers: { id, timestamp, signature },
+      webhookSecret: secret,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: Request) {
+  const rawBody = await request.text();
+
+  if (!verifyResendWebhook(request, rawBody)) {
+    return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 401 });
+  }
+
   let body: ResendWebhookEvent;
   try {
-    body = (await request.json()) as ResendWebhookEvent;
+    body = JSON.parse(rawBody) as ResendWebhookEvent;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }

@@ -23,6 +23,7 @@ All cron routes require `Authorization: Bearer $CRON_SECRET` (Vercel adds this a
 | `CRON_SECRET` | — | Cron auth + unsubscribe token signing |
 | `FIRM_OUTREACH_DAILY_CAP` | `50` | Max outreach sends per UTC day |
 | `FIRM_OUTREACH_DIGEST_EMAIL` | `robertdavidcashman@gmail.com` | Daily digest recipient |
+| `RESEND_WEBHOOK_SECRET` | — | Resend webhook signing secret (from configure script) |
 | `FIRM_OUTREACH_CRON_ENRICH_BATCH` | `25` | Firms per cron enrich tick |
 | `FIRM_OUTREACH_ENRICH_BATCH` | `150` | Firms per local/manual enrich run |
 | `FIRM_OUTREACH_ENRICH_MAX_MS` | `240000` | Stop enrich before serverless timeout |
@@ -41,12 +42,19 @@ Confirmed present on Vercel production (via env pull):
 Recommended to set explicitly (otherwise code defaults apply):
 
 - `FIRM_OUTREACH_DIGEST_EMAIL=robertdavidcashman@gmail.com`
+- `RESEND_WEBHOOK_SECRET` — set via `node scripts/resend-configure-webhook.mjs`
 - `FIRM_OUTREACH_CRON_ENRICH_BATCH=25`
 - `FIRM_OUTREACH_DAILY_CAP=50` (or higher if you want larger daily batches)
 
 ## Resend webhook
 
-Register in the Resend dashboard:
+Register automatically (idempotent):
+
+```bash
+node scripts/resend-configure-webhook.mjs
+```
+
+Or manually in the Resend dashboard:
 
 - **URL:** `https://policestationrepuk.org/api/webhooks/resend`
 - **Events:** `email.delivered`, `email.opened`, `email.clicked`, `email.bounced`, `email.complained`

@@ -108,7 +108,8 @@
     "firm-outreach:auto": "npx tsx scripts/firm-outreach-pipeline.ts",
     "firm-outreach:maintain": "npx tsx scripts/firm-outreach-pipeline.ts --maintain",
     "firm-outreach:requalify": "npx tsx scripts/firm-outreach-requalify.ts",
-    "firm-outreach:admin-smoke": "npx tsx scripts/firm-outreach-admin-smoke.ts"
+    "firm-outreach:admin-smoke": "npx tsx scripts/firm-outreach-admin-smoke.ts",
+    "firm-outreach:configure-resend": "node scripts/resend-configure-webhook.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
