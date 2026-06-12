@@ -114,7 +114,23 @@ export function csvRowsToObjects(text: string): LeadEngineCsvRow[] {
     headers.forEach((h, i) => {
       obj[h] = (cells[i] ?? '').trim();
     });
-    if (obj.firm_name && obj.email) out.push(obj as LeadEngineCsvRow);
+    if (!obj.firm_name || !obj.email) continue;
+    out.push({
+      firm_name: obj.firm_name,
+      email: obj.email,
+      contact_name: obj.contact_name,
+      contact_role: obj.contact_role,
+      email_type: obj.email_type,
+      source_type: obj.source_type,
+      source_provider: obj.source_provider,
+      website: obj.website,
+      source_url: obj.source_url,
+      town: obj.town,
+      county: obj.county,
+      criminal_relevance_score: obj.criminal_relevance_score,
+      contact_relevance_score: obj.contact_relevance_score,
+      status: obj.status,
+    });
   }
 
   return out;
