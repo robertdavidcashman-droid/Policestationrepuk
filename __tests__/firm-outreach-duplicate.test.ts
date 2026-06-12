@@ -90,12 +90,12 @@ describe('dailySendCap default', () => {
 });
 
 describe('cronEnrichBatchSize default', () => {
-  it('defaults to 25 when env is unset', async () => {
+  it('defaults to 50 when env is unset', async () => {
     const prev = process.env.FIRM_OUTREACH_CRON_ENRICH_BATCH;
     delete process.env.FIRM_OUTREACH_CRON_ENRICH_BATCH;
     vi.resetModules();
     const { cronEnrichBatchSize } = await import('@/lib/firm-outreach/constants');
-    expect(cronEnrichBatchSize()).toBe(25);
+    expect(cronEnrichBatchSize()).toBe(50);
     if (prev === undefined) delete process.env.FIRM_OUTREACH_CRON_ENRICH_BATCH;
     else process.env.FIRM_OUTREACH_CRON_ENRICH_BATCH = prev;
   });
