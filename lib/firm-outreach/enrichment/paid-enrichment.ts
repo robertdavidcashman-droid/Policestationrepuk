@@ -19,7 +19,11 @@ async function trackPaidLookup(): Promise<void> {
   await incrementPaidLookupCount(date);
 }
 
-/** Hunter.io domain search — optional, env-gated. */
+export function isHunterConfigured(): boolean {
+  return Boolean(process.env.HUNTER_API_KEY?.trim());
+}
+
+/** Hunter.io domain search — optional, env-gated. Runs after website crawl finds no email. */
 async function hunterDomainSearch(domain: string): Promise<FirmProspectEmail[]> {
   const key = process.env.HUNTER_API_KEY?.trim();
   if (!key) return [];

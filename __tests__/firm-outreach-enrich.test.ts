@@ -80,8 +80,8 @@ describe('runFirmEnrichment cursor on timeout', () => {
       setCursor,
     }));
 
-    vi.doMock('@/lib/firm-outreach/sra-org-lookup', () => ({
-      lookupSraOrganisationByName: vi.fn(),
+    vi.doMock('@/lib/firm-outreach/enrichment/resolve-prospect-website', () => ({
+      resolveProspectWebsite: vi.fn(async (p: typeof prospect) => p),
     }));
 
     vi.doMock('@/lib/firm-outreach/enrichment/email-crawler', () => ({

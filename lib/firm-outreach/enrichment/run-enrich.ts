@@ -1,5 +1,5 @@
 import { enrichBatchSize } from '../constants';
-import { lookupSraOrganisationByName } from '../sra-org-lookup';
+import { resolveProspectWebsite } from './resolve-prospect-website';
 import {
   CURSOR_ENRICH,
   getCursor,
@@ -23,19 +23,8 @@ async function enrichOne(prospect: FirmProspect): Promise<FirmProspect> {
   prospect.enrichAttempts += 1;
   prospect.updatedAt = now;
 
-  if (!prospect.regulatoryNumber || !prospect.websiteUrl) {
-    const sra = await lookupSraOrganisationByName(prospect.firmName, prospect.postcode);
-    if (sra.organisation) {
-      prospect.regulatoryNumber = prospect.regulatoryNumber || sra.organisation.sraNumber;
-      prospect.websiteUrl = prospect.websiteUrl || sra.organisation.website;
-      if (sra.matched && !sra.organisation.authorised) {
-        prospect.status = 'excluded';
-        prospect.excludedReason = 'sra_not_authorised';
-        return prospect;
-      }
-    }
-    await new Promise((r) => setTimeout(r, 2000));
-  }
+  prospect = await resolveProspectWebsite(prospect);
+  if (prospect.status === 'excluded') return prospect;
 
   if (!prospect.email) {
     const crawled = await crawlEmailsForProspect(prospect);
