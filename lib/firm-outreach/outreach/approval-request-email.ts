@@ -60,8 +60,8 @@ export async function sendOutreachApprovalRequestEmail(opts?: {
     return { sent: false, reason: 'daily_cap_reached', date };
   }
 
-  const { token } = await issueSendApprovalToken({ date, recipient: to });
-  const approveUrl = `${SITE_URL}/outreach/send-approve/${encodeURIComponent(token)}`;
+  const { jti } = await issueSendApprovalToken({ date, recipient: to });
+  const approveUrl = `${SITE_URL}/outreach/send-approve/${jti}`;
 
   const queuePreview = report.readyToSendProspects
     .slice(0, 10)

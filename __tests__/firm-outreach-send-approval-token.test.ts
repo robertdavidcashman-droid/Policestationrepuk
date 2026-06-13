@@ -17,7 +17,8 @@ class FakeKV {
     }
     return Promise.resolve(rec.value as T);
   }
-  set(key: string, value: unknown, opts?: { ex?: number }): Promise<'OK'> {
+  set(key: string, value: unknown, opts?: { ex?: number; nx?: boolean }): Promise<'OK' | null> {
+    if (opts?.nx && this.store.has(key)) return Promise.resolve(null);
     this.store.set(key, { value, ttlSec: opts?.ex, setAt: Date.now() });
     return Promise.resolve('OK');
   }
@@ -54,7 +55,37 @@ afterEach(() => {
 });
 
 describe('send-approval-token', () => {
-  it('issues, peeks, and consumes a one-shot token', async () => {
+  it('issues, peeks by jti, claims, finalizes, and rejects replay', async () => {
+    const {
+      issueSendApprovalToken,
+      peekSendApprovalByJti,
+      tryClaimSendApproval,
+      finalizeSendApproval,
+      peekSendApprovalRef,
+    } = await import('@/lib/firm-outreach/outreach/send-approval-token');
+
+    const { jti } = await issueSendApprovalToken({
+      recipient: 'robertdavidcashman@gmail.com',
+    });
+
+    const peek = await peekSendApprovalByJti(jti);
+    expect(peek.ok).toBe(true);
+
+    const claim = await tryClaimSendApproval(jti);
+    expect(claim.ok).toBe(true);
+
+    const duplicateClaim = await tryClaimSendApproval(jti);
+    expect(duplicateClaim.ok).toBe(false);
+    if (!duplicateClaim.ok) expect(duplicateClaim.status).toBe(409);
+
+    await finalizeSendApproval(jti);
+
+    const replay = await peekSendApprovalRef(jti);
+    expect(replay.ok).toBe(false);
+    if (!replay.ok) expect(replay.status).toBe(410);
+  });
+
+  it('issues, peeks, and consumes a legacy signed token', async () => {
     const {
       issueSendApprovalToken,
       peekSendApprovalToken,

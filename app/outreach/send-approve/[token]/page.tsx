@@ -2,7 +2,10 @@ import Link from 'next/link';
 import { dailySendCap } from '@/lib/firm-outreach/constants';
 import { getDailySendCount } from '@/lib/firm-outreach/storage';
 import { buildOutreachActivityReport } from '@/lib/firm-outreach/outreach/activity-report';
-import { peekSendApprovalToken } from '@/lib/firm-outreach/outreach/send-approval-token';
+import {
+  normalizeSendApprovalRef,
+  peekSendApprovalRef,
+} from '@/lib/firm-outreach/outreach/send-approval-token';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,9 +15,10 @@ interface PageProps {
 }
 
 export default async function SendApproveInterstitialPage({ params }: PageProps) {
-  const { token } = await params;
+  const { token: rawRef } = await params;
+  const approvalRef = normalizeSendApprovalRef(rawRef);
 
-  const peek = await peekSendApprovalToken(token);
+  const peek = await peekSendApprovalRef(approvalRef);
   if (!peek.ok) {
     const guidance =
       peek.status === 410
@@ -100,7 +104,7 @@ export default async function SendApproveInterstitialPage({ params }: PageProps)
         action="/api/outreach/send-approved"
         className="mt-6 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-5"
       >
-        <input type="hidden" name="token" value={token} />
+        <input type="hidden" name="approvalRef" value={approvalRef} />
         <p className="text-sm text-slate-700">
           This will send initial invites (and any due follow-ups) from the ready queue,
           respecting suppressions and duplicate-email rules. You will receive a confirmation

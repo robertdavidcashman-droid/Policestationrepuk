@@ -1,13 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GET, POST } from '@/app/api/outreach/send-approved/route';
 
-const mockConsume = vi.fn();
+const mockTryClaim = vi.fn();
+const mockFinalize = vi.fn();
+const mockRelease = vi.fn();
 const mockRunOutreach = vi.fn();
 const mockBuildReport = vi.fn();
 const mockConfirmEmail = vi.fn();
 
 vi.mock('@/lib/firm-outreach/outreach/send-approval-token', () => ({
-  consumeSendApprovalToken: (...args: unknown[]) => mockConsume(...args),
+  tryClaimSendApproval: (...args: unknown[]) => mockTryClaim(...args),
+  finalizeSendApproval: (...args: unknown[]) => mockFinalize(...args),
+  releaseSendApprovalClaim: (...args: unknown[]) => mockRelease(...args),
 }));
 
 vi.mock('@/lib/firm-outreach/outreach/run-outreach', () => ({
@@ -32,10 +36,12 @@ describe('outreach send-approved route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env = { ...ENV };
-    mockConsume.mockResolvedValue({
+    mockTryClaim.mockResolvedValue({
       ok: true,
       payload: { action: 'send_batch', date: '2026-06-13', recipient: 'a@b.com', exp: 999, jti: 'j1' },
     });
+    mockFinalize.mockResolvedValue(undefined);
+    mockRelease.mockResolvedValue(undefined);
     mockRunOutreach.mockResolvedValue({
       queued: 5,
       sent: 5,
@@ -71,7 +77,7 @@ describe('outreach send-approved route', () => {
 
   it('POST redirects to result on success', async () => {
     const form = new FormData();
-    form.set('token', 'valid-token');
+    form.set('approvalRef', '11111111-1111-4111-8111-111111111111');
     const res = await POST(
       new Request('http://localhost/api/outreach/send-approved', {
         method: 'POST',
@@ -82,16 +88,18 @@ describe('outreach send-approved route', () => {
     expect(res.headers.get('location')).toContain('sent=5');
     expect(mockRunOutreach).toHaveBeenCalledOnce();
     expect(mockConfirmEmail).toHaveBeenCalledOnce();
+    expect(mockFinalize).toHaveBeenCalledOnce();
+    expect(mockRelease).not.toHaveBeenCalled();
   });
 
-  it('POST redirects on expired token', async () => {
-    mockConsume.mockResolvedValue({
+  it('POST redirects on expired link', async () => {
+    mockTryClaim.mockResolvedValue({
       ok: false,
       status: 410,
       error: 'already used',
     });
     const form = new FormData();
-    form.set('token', 'used-token');
+    form.set('approvalRef', 'used-jti');
     const res = await POST(
       new Request('http://localhost/api/outreach/send-approved', {
         method: 'POST',
@@ -100,5 +108,20 @@ describe('outreach send-approved route', () => {
     );
     expect(res.headers.get('location')).toContain('expired-or-already-used');
     expect(mockRunOutreach).not.toHaveBeenCalled();
+  });
+
+  it('POST releases claim when send fails', async () => {
+    mockRunOutreach.mockRejectedValue(new Error('send boom'));
+    const form = new FormData();
+    form.set('approvalRef', '11111111-1111-4111-8111-111111111111');
+    const res = await POST(
+      new Request('http://localhost/api/outreach/send-approved', {
+        method: 'POST',
+        body: form,
+      }),
+    );
+    expect(res.headers.get('location')).toContain('send-failed');
+    expect(mockRelease).toHaveBeenCalledOnce();
+    expect(mockFinalize).not.toHaveBeenCalled();
   });
 });

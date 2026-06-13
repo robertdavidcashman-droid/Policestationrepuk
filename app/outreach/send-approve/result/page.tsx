@@ -8,6 +8,21 @@ export default async function SendApproveResultPage({ searchParams }: PageProps)
   const params = await searchParams;
   const detail = params.detail?.trim();
 
+  if (detail === 'in-progress') {
+    return (
+      <main className="mx-auto max-w-xl px-4 py-16 text-center">
+        <h1 className="text-xl font-bold text-blue-900">Send in progress</h1>
+        <p className="mt-3 text-sm text-slate-600">
+          Your batch is already being sent. This can take a few minutes — check your inbox
+          for the confirmation email, or open the admin dashboard.
+        </p>
+        <Link href="/admin/firm-outreach" className="mt-6 inline-block text-blue-700 font-semibold">
+          Open admin dashboard
+        </Link>
+      </main>
+    );
+  }
+
   if (detail === 'missing-token' || detail === 'invalid-token' || detail === 'expired-or-already-used') {
     return (
       <main className="mx-auto max-w-xl px-4 py-16 text-center">

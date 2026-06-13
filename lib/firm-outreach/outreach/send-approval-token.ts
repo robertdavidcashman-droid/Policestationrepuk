@@ -18,7 +18,10 @@ export interface SendApprovalKVRecord {
 }
 
 const TOKEN_KV_PREFIX = 'firmoutreach:send-approval:';
+const SEND_LOCK_PREFIX = 'firmoutreach:send-approval-lock:';
 const APPROVAL_EMAIL_PREFIX = 'firmoutreach:approval-email:';
+const SEND_APPROVAL_JTI_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const NOTIFY_TIMEZONE =
   process.env.FIRM_OUTREACH_DIGEST_TIMEZONE?.trim() || 'Europe/London';
 
@@ -58,6 +61,23 @@ function timingSafeEqualStrings(a: string, b: string): boolean {
 
 function tokenKey(jti: string): string {
   return `${TOKEN_KV_PREFIX}${jti}`;
+}
+
+function sendLockKey(jti: string): string {
+  return `${SEND_LOCK_PREFIX}${jti}`;
+}
+
+export function normalizeSendApprovalRef(raw: string): string {
+  const trimmed = raw.trim();
+  try {
+    return decodeURIComponent(trimmed);
+  } catch {
+    return trimmed;
+  }
+}
+
+export function isSendApprovalJti(ref: string): boolean {
+  return SEND_APPROVAL_JTI_RE.test(ref);
 }
 
 export function outreachApprovalDate(now = new Date()): string {
@@ -168,6 +188,53 @@ export async function issueSendApprovalToken(opts: {
   return { token, jti, exp, date };
 }
 
+export async function peekSendApprovalByJti(jti: string): Promise<
+  | { ok: true; payload: SendApprovalPayload; record: SendApprovalKVRecord }
+  | { ok: false; status: 400 | 401 | 410; error: string }
+> {
+  const kv = getKV();
+  if (!kv) return { ok: false, status: 400, error: 'Storage not configured' };
+
+  const record = await kv.get<SendApprovalKVRecord>(tokenKey(jti));
+  if (!record) {
+    return {
+      ok: false,
+      status: 410,
+      error: 'This send link has already been used or has expired.',
+    };
+  }
+
+  if (record.exp < Math.floor(Date.now() / 1000)) {
+    return { ok: false, status: 410, error: 'Token expired' };
+  }
+
+  if (record.date !== outreachApprovalDate()) {
+    return { ok: false, status: 410, error: 'Token is for a different day' };
+  }
+
+  const payload: SendApprovalPayload = {
+    action: 'send_batch',
+    date: record.date,
+    recipient: record.recipient,
+    exp: record.exp,
+    jti,
+  };
+
+  return { ok: true, payload, record };
+}
+
+/** Accepts a short jti (email link) or legacy signed token string. */
+export async function peekSendApprovalRef(ref: string): Promise<
+  | { ok: true; payload: SendApprovalPayload; record: SendApprovalKVRecord }
+  | { ok: false; status: 400 | 401 | 410; error: string }
+> {
+  const normalized = normalizeSendApprovalRef(ref);
+  if (isSendApprovalJti(normalized)) {
+    return peekSendApprovalByJti(normalized);
+  }
+  return peekSendApprovalToken(normalized);
+}
+
 export async function peekSendApprovalToken(token: string): Promise<
   | { ok: true; payload: SendApprovalPayload; record: SendApprovalKVRecord }
   | { ok: false; status: 400 | 401 | 410; error: string }
@@ -203,11 +270,60 @@ export async function peekSendApprovalToken(token: string): Promise<
   return { ok: true, payload: verify.payload, record };
 }
 
+export async function tryClaimSendApproval(ref: string): Promise<
+  | { ok: true; payload: SendApprovalPayload }
+  | { ok: false; status: 400 | 401 | 409 | 410; error: string; inProgress?: boolean }
+> {
+  const peek = await peekSendApprovalRef(ref);
+  if (!peek.ok) return peek;
+
+  const kv = getKV();
+  if (!kv) return { ok: false, status: 400, error: 'Storage not configured' };
+
+  const lockKey = sendLockKey(peek.payload.jti);
+  const acquired = await kv.set(lockKey, new Date().toISOString(), { nx: true, ex: 600 });
+  if (!acquired) {
+    return {
+      ok: false,
+      status: 409,
+      inProgress: true,
+      error: 'A send is already in progress for this link.',
+    };
+  }
+
+  return { ok: true, payload: peek.payload };
+}
+
+export async function releaseSendApprovalClaim(ref: string): Promise<void> {
+  const normalized = normalizeSendApprovalRef(ref);
+  let jti: string | null = null;
+  if (isSendApprovalJti(normalized)) {
+    jti = normalized;
+  } else {
+    const peek = await peekSendApprovalToken(normalized);
+    if (peek.ok) jti = peek.payload.jti;
+  }
+  if (!jti) return;
+  const kv = getKV();
+  if (!kv) return;
+  await kv.del(sendLockKey(jti));
+}
+
+export async function finalizeSendApproval(ref: string): Promise<void> {
+  const peek = await peekSendApprovalRef(ref);
+  if (!peek.ok) return;
+  const kv = getKV();
+  if (!kv) return;
+  await kv.del(tokenKey(peek.payload.jti));
+  await kv.del(sendLockKey(peek.payload.jti));
+}
+
+/** @deprecated Prefer tryClaimSendApproval + finalizeSendApproval so failed sends can retry. */
 export async function consumeSendApprovalToken(token: string): Promise<
   | { ok: true; payload: SendApprovalPayload }
   | { ok: false; status: 400 | 401 | 410; error: string }
 > {
-  const peek = await peekSendApprovalToken(token);
+  const peek = await peekSendApprovalRef(token);
   if (!peek.ok) return peek;
 
   const kv = getKV();

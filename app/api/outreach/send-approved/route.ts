@@ -2,27 +2,32 @@ import { NextResponse } from 'next/server';
 import { outreachSendEnabled } from '@/lib/firm-outreach/constants';
 import { buildOutreachActivityReport } from '@/lib/firm-outreach/outreach/activity-report';
 import { sendOutreachSendConfirmationEmail } from '@/lib/firm-outreach/outreach/send-confirmation-email';
-import { consumeSendApprovalToken } from '@/lib/firm-outreach/outreach/send-approval-token';
+import {
+  finalizeSendApproval,
+  releaseSendApprovalClaim,
+  tryClaimSendApproval,
+} from '@/lib/firm-outreach/outreach/send-approval-token';
 import { runFirmOutreach } from '@/lib/firm-outreach/outreach/run-outreach';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
-async function readToken(request: Request): Promise<string | null> {
+async function readApprovalRef(request: Request): Promise<string | null> {
   const ct = request.headers.get('content-type') ?? '';
   if (ct.includes('application/json')) {
     try {
-      const body = (await request.json()) as { token?: unknown };
-      return typeof body.token === 'string' ? body.token : null;
+      const body = (await request.json()) as { approvalRef?: unknown; token?: unknown };
+      const ref = body.approvalRef ?? body.token;
+      return typeof ref === 'string' && ref.length > 0 ? ref : null;
     } catch {
       return null;
     }
   }
   try {
     const form = await request.formData();
-    const t = form.get('token');
-    return typeof t === 'string' && t.length > 0 ? t : null;
+    const ref = form.get('approvalRef') ?? form.get('token');
+    return typeof ref === 'string' && ref.length > 0 ? ref : null;
   } catch {
     return null;
   }
@@ -40,19 +45,23 @@ function redirectToResult(
 }
 
 export async function POST(request: Request) {
-  const token = await readToken(request);
-  if (!token) {
+  const approvalRef = await readApprovalRef(request);
+  if (!approvalRef) {
     return redirectToResult(request, { detail: 'missing-token' });
   }
 
-  const result = await consumeSendApprovalToken(token);
-  if (!result.ok) {
+  const claim = await tryClaimSendApproval(approvalRef);
+  if (!claim.ok) {
+    if (claim.status === 409) {
+      return redirectToResult(request, { detail: 'in-progress' });
+    }
     const detail =
-      result.status === 410 ? 'expired-or-already-used' : 'invalid-token';
+      claim.status === 410 ? 'expired-or-already-used' : 'invalid-token';
     return redirectToResult(request, { detail });
   }
 
   if (!outreachSendEnabled()) {
+    await releaseSendApprovalClaim(approvalRef);
     return redirectToResult(request, { detail: 'send-disabled' });
   }
 
@@ -75,6 +84,8 @@ export async function POST(request: Request) {
       readyRemaining: report.summary.readyToSend,
     });
 
+    await finalizeSendApproval(approvalRef);
+
     return redirectToResult(request, {
       sent: String(stats.sent),
       skipped: String(stats.skipped),
@@ -82,6 +93,7 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     console.error('[outreach/send-approved]', err);
+    await releaseSendApprovalClaim(approvalRef);
     return redirectToResult(request, { detail: 'send-failed' });
   }
 }

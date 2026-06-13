@@ -35,7 +35,12 @@ describe('sendOutreachApprovalRequestEmail', () => {
     process.env.FIRM_OUTREACH_DIGEST_EMAIL = 'robertdavidcashman@gmail.com';
     mockWasSent.mockResolvedValue(false);
     mockGetDailySendCount.mockResolvedValue(0);
-    mockIssueToken.mockResolvedValue({ token: 'tok_test', jti: 'j1', exp: 9999999999, date: '2026-06-13' });
+    mockIssueToken.mockResolvedValue({
+      token: 'tok_test',
+      jti: '11111111-1111-4111-8111-111111111111',
+      exp: 9999999999,
+      date: '2026-06-13',
+    });
     mockBuildReport.mockResolvedValue({
       report: {
         summary: { readyToSend: 120, sentToday: 0 },
@@ -64,7 +69,7 @@ describe('sendOutreachApprovalRequestEmail', () => {
       expect.objectContaining({
         to: 'robertdavidcashman@gmail.com',
         subject: expect.stringContaining('ready to send'),
-        html: expect.stringContaining('Ready to send'),
+        html: expect.stringMatching(/send-approve\/11111111-1111-4111-8111-111111111111/),
       }),
     );
     expect(mockMarkSent).toHaveBeenCalledWith('2026-06-13');
