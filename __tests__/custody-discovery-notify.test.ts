@@ -30,7 +30,7 @@ vi.mock('@/lib/custody-discovery/daily-notify', () => ({
   dailyNotifyDate: (...args: unknown[]) => dailyNotifyDate(...args),
 }));
 
-import { notifyIfNewFindings } from '@/lib/custody-discovery/notify';
+import { flushPendingDailyDigest, notifyIfNewFindings } from '@/lib/custody-discovery/notify';
 import { sendCustodyDiscoveryBatchEmail } from '@/lib/custody-discovery/email';
 
 const baseStats = {
@@ -157,6 +157,39 @@ describe('custody discovery batch notification', () => {
       }),
     );
     expect(markDailyNotifySent).toHaveBeenCalledWith('2026-06-07');
+  });
+
+  it('force-sends a queued digest before the evening window', async () => {
+    getDailyNotifyBucket.mockResolvedValue({
+      date: '2026-06-07',
+      findingIds: ['f1'],
+      suitesScanned: 5,
+      conflictsFlagged: 0,
+      elapsedMs: 5000,
+    });
+    getFinding.mockImplementation(async (id: string) => mockFinding(id, 75));
+    shouldSendDailyDigest.mockReturnValue(false);
+
+    const result = await flushPendingDailyDigest(new Date(), { force: true });
+
+    expect(result.emailed).toBe(true);
+    expect(result.notifyCount).toBe(1);
+    expect(sendCustodyDiscoveryBatchEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it('respects forceDigest on notifyIfNewFindings with new findings', async () => {
+    getFinding.mockImplementation(async (id: string) => mockFinding(id, 75));
+    shouldSendDailyDigest.mockReturnValue(false);
+
+    const result = await notifyIfNewFindings({
+      newFindingIds: ['f1'],
+      stats: baseStats,
+      forceDigest: true,
+    });
+
+    expect(result.emailed).toBe(true);
+    expect(result.pendingDailyDigest).toBe(false);
+    expect(sendCustodyDiscoveryBatchEmail).toHaveBeenCalledTimes(1);
   });
 
   it('does not send a second email on the same day', async () => {

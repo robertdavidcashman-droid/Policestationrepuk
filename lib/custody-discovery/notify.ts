@@ -16,6 +16,8 @@ export interface BatchNotifyInput {
   newFindingIds: string[];
   stats: CrawlerRunStats;
   seededCreated?: number;
+  /** Bypass the 18:00 London send window (cron ?forceDigest=1). */
+  forceDigest?: boolean;
 }
 
 export interface BatchNotifyResult {
@@ -81,7 +83,10 @@ async function sendDailyDigestFromBucket(opts: {
 }
 
 /** Send today's queued digest if the evening window is open and not yet sent. */
-export async function flushPendingDailyDigest(now = new Date()): Promise<BatchNotifyResult> {
+export async function flushPendingDailyDigest(
+  now = new Date(),
+  opts?: { force?: boolean },
+): Promise<BatchNotifyResult> {
   const today = dailyNotifyDate(now);
   const bucket = await getDailyNotifyBucket(today);
 
@@ -107,7 +112,7 @@ export async function flushPendingDailyDigest(now = new Date()): Promise<BatchNo
     };
   }
 
-  if (!shouldSendDailyDigest(now)) {
+  if (!opts?.force && !shouldSendDailyDigest(now)) {
     return {
       emailed: false,
       newCount: 0,
@@ -139,7 +144,7 @@ export async function flushPendingDailyDigest(now = new Date()): Promise<BatchNo
 export async function notifyIfNewFindings(input: BatchNotifyInput): Promise<BatchNotifyResult> {
   const newCount = input.newFindingIds.length;
   if (newCount === 0) {
-    return flushPendingDailyDigest();
+    return flushPendingDailyDigest(undefined, { force: input.forceDigest });
   }
 
   const findings = (
@@ -202,7 +207,7 @@ export async function notifyIfNewFindings(input: BatchNotifyInput): Promise<Batc
     };
   }
 
-  if (!shouldSendDailyDigest()) {
+  if (!input.forceDigest && !shouldSendDailyDigest()) {
     return {
       emailed: false,
       batchId: batch.id,
