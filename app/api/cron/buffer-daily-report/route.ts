@@ -48,7 +48,6 @@ export async function GET(request: Request) {
       await markBufferDigestSent(verifyDate);
       return NextResponse.json(
         { ok: false, date: verifyDate, reason: report.reason },
-        { status: 500 },
       );
     }
 
@@ -63,7 +62,6 @@ export async function GET(request: Request) {
       await markBufferDigestSent(verifyDate);
       return NextResponse.json(
         { ok: false, date: verifyDate, reason: report.reason },
-        { status: 500 },
       );
     }
 
@@ -115,7 +113,6 @@ export async function GET(request: Request) {
         failed: report.failed,
         problems: report.problems,
       },
-      { status: 500 },
     );
   } catch (err) {
     const error = err instanceof Error ? err.message : 'Buffer daily report failed';

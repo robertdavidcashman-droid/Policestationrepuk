@@ -47,7 +47,7 @@ export async function reviewFindingWithAi(
     ? finding.notes
     : [notesPrefix, finding.notes].filter(Boolean).join('\n');
 
-  let updated: CustodyNumberFinding = {
+  const updated: CustodyNumberFinding = {
     ...finding,
     aiReview: review,
     notes: mergedNotes,

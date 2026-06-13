@@ -2,8 +2,8 @@
 import { config } from 'dotenv';
 import path from 'path';
 
-config({ path: path.join(process.cwd(), '.env.local') });
-config({ path: path.join(process.cwd(), '.env.vercel.production') });
+config({ path: path.join(process.cwd(), '.env.vercel.production'), quiet: true });
+config({ path: path.join(process.cwd(), '.env.local'), override: true, quiet: true });
 
 /**
  * Manual custody number discovery run.

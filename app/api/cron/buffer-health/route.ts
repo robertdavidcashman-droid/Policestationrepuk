@@ -31,7 +31,6 @@ export async function GET(request: Request) {
           issueCount: result.issueCount,
           issues: result.issues,
         },
-        { status: 500 },
       );
     }
 

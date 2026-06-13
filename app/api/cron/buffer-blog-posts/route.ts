@@ -30,7 +30,6 @@ export async function GET(request: Request) {
       await sendBufferSchedulerFailureEmail({ error, date: result.date ?? scheduleDate });
       return NextResponse.json(
         { ok: false, error, gbpIssues: result.gbpIssues },
-        { status: 500 },
       );
     }
     if (result.skipped) {

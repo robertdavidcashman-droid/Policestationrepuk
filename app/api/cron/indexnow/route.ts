@@ -32,7 +32,6 @@ export async function GET(request: Request) {
     console.error('[cron:indexnow]', err);
     return NextResponse.json(
       { ok: false, error: err instanceof Error ? err.message : 'IndexNow failed' },
-      { status: 500 },
     );
   }
 }

@@ -95,6 +95,7 @@ export async function applyAutoDecision(
         }
         return { action: 'published', reason: 'auto_publish' };
       }
+      return { action: 'queued', reason: 'approve_failed' };
     }
     return { action: 'queued', reason: gates.reason };
   }

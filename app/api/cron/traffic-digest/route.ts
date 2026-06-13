@@ -61,7 +61,6 @@ export async function GET(request: Request) {
   if (!ok) {
     return NextResponse.json(
       { ok: false, gbpOk, gbpIssueCount, crossDomainOk, crossDomainIssues },
-      { status: 500 },
     );
   }
 
