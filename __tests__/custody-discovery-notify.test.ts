@@ -77,7 +77,28 @@ describe('custody discovery batch notification', () => {
     vi.useRealTimers();
   });
 
-  it('does not email when no new findings', async () => {
+  it('flushes a queued daily digest when a later run has no new findings', async () => {
+    getDailyNotifyBucket.mockResolvedValue({
+      date: '2026-06-07',
+      findingIds: ['f1', 'f2'],
+      suitesScanned: 10,
+      conflictsFlagged: 1,
+      elapsedMs: 8000,
+    });
+    getFinding.mockImplementation(async (id: string) => mockFinding(id, 75));
+
+    const result = await notifyIfNewFindings({ newFindingIds: [], stats: baseStats });
+
+    expect(result.emailed).toBe(true);
+    expect(result.newCount).toBe(0);
+    expect(result.notifyCount).toBe(2);
+    expect(sendCustodyDiscoveryBatchEmail).toHaveBeenCalledTimes(1);
+    expect(markDailyNotifySent).toHaveBeenCalledWith('2026-06-07');
+  });
+
+  it('does not email when no new findings and nothing is queued', async () => {
+    getDailyNotifyBucket.mockResolvedValue(null);
+
     const result = await notifyIfNewFindings({ newFindingIds: [], stats: baseStats });
     expect(result.emailed).toBe(false);
     expect(result.newCount).toBe(0);
