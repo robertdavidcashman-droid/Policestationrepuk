@@ -100,3 +100,15 @@ describe('cronEnrichBatchSize default', () => {
     else process.env.FIRM_OUTREACH_CRON_ENRICH_BATCH = prev;
   });
 });
+
+describe('paidDailyCap default', () => {
+  it('defaults to 100 when env is unset', async () => {
+    const prev = process.env.FIRM_OUTREACH_PAID_DAILY_CAP;
+    delete process.env.FIRM_OUTREACH_PAID_DAILY_CAP;
+    vi.resetModules();
+    const { paidDailyCap } = await import('@/lib/firm-outreach/constants');
+    expect(paidDailyCap()).toBe(100);
+    if (prev === undefined) delete process.env.FIRM_OUTREACH_PAID_DAILY_CAP;
+    else process.env.FIRM_OUTREACH_PAID_DAILY_CAP = prev;
+  });
+});

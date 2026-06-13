@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Mirror .github/workflows/ci.yml locally (fail-fast).
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=8192}"
+export LEGACY_REPS_PUBLIC="${LEGACY_REPS_PUBLIC:-1}"
+
+run_step() {
+  echo ""
+  echo "==> $1"
+  shift
+  "$@"
+}
+
+run_step "npm run build" npm run build
+run_step "Vitest unit tests" npm test
+run_step "Buffer scheduler + GBP probe" npm run test:buffer:ci
+run_step "Directory search self-test" npm run test:directory-search
+run_step "Lighthouse CI" npx lhci autorun
+run_step "Blog SEO audit" npm run audit:blog-seo
+run_step "Blog orphan links" npm run audit:blog-orphans
+run_step "Cross-domain partner links" npm run audit:cross-domain-links
+run_step "Partner UTM guard" node scripts/audit/partner-utm-guard.mjs
+run_step "Blog partner UTM guard" node scripts/audit/blog-partner-utm.mjs
+run_step "Blog JSON-LD validation" npm run validate:schema
+
+export CRAWL_MAX_URLS="${CRAWL_MAX_URLS:-800}"
+export CRAWL_CONCURRENCY="${CRAWL_CONCURRENCY:-10}"
+export CRAWL_FAIL_THRESHOLD="${CRAWL_FAIL_THRESHOLD:-25}"
+run_step "Live sitemap crawl (sample)" node scripts/audit/sitemap-crawl.mjs
+
+echo ""
+echo "ci-local: all steps passed"
