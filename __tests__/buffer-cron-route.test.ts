@@ -59,14 +59,16 @@ describe('buffer-blog-posts cron route', () => {
     expect(mockRun).toHaveBeenCalledOnce();
   });
 
-  it('returns 500 when scheduler reports failure', async () => {
+  it('returns 200 with ok false when scheduler reports failure (Resend notified)', async () => {
     mockRun.mockResolvedValue({ ok: false, reason: 'BUFFER_API_KEY is not configured' });
     const res = await GET(
       new Request('http://localhost/api/cron/buffer-blog-posts', {
         headers: { 'x-cron-secret': 'cron-test-secret' },
       }),
     );
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(false);
     expect(mockEmail).toHaveBeenCalledWith(
       expect.objectContaining({ error: 'BUFFER_API_KEY is not configured' }),
     );
@@ -95,7 +97,7 @@ describe('buffer-blog-posts cron route', () => {
     expect(mockRun).toHaveBeenCalledWith(expect.any(Date), { force: true });
   });
 
-  it('returns 500 with gbpIssues when GBP preflight fails', async () => {
+  it('returns 200 with ok false when GBP preflight fails (Resend notified)', async () => {
     mockRun.mockResolvedValue({
       ok: false,
       reason: 'GBP preflight failed',
@@ -106,8 +108,9 @@ describe('buffer-blog-posts cron route', () => {
         headers: { authorization: 'Bearer cron-test-secret' },
       }),
     );
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(200);
     const json = await res.json();
+    expect(json.ok).toBe(false);
     expect(json.gbpIssues).toHaveLength(1);
     expect(mockEmail).toHaveBeenCalledWith(
       expect.objectContaining({ error: 'GBP preflight failed' }),

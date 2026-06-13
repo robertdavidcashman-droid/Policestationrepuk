@@ -98,7 +98,9 @@ describe('buffer-daily-report cron route', () => {
         headers: { authorization: 'Bearer cron-test-secret' },
       }),
     );
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(false);
     expect(mockFailureEmail).toHaveBeenCalledOnce();
     expect(mockSuccessEmail).not.toHaveBeenCalled();
   });
