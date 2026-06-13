@@ -56,6 +56,24 @@ function mockFinding(id: string, confidenceScore: number) {
     possiblePhoneNumber: '01634 123 456',
     confidenceScore,
     confidenceLevel: confidenceScore > 50 ? 'medium' : 'low',
+    aiReview: {
+      recommendation: 'hold' as const,
+      aiConfidence: 80,
+      whyPublish: '',
+      whyNot: 'Needs human review of the custody excerpt.',
+      evidence: {
+        quote: 'Test Suite custody desk **01634 123 456**',
+        section: 'Contact',
+        sourceUrl: 'https://example.com',
+        sourceTitle: 'Contact',
+        source: 'page_fetch' as const,
+        fetchedAt: '2026-06-07T10:00:00.000Z',
+      },
+      publishVerified: false,
+      flags: [],
+      model: 'gpt-4o-mini',
+      reviewedAt: '2026-06-07T10:00:00.000Z',
+    },
   };
 }
 

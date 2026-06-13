@@ -45,6 +45,31 @@ export interface CustodySuite {
   updatedAt: string;
 }
 
+export type AiReviewRecommendation = 'approve' | 'reject' | 'hold';
+
+export type SourceEvidenceKind = 'page_fetch' | 'search_snippet' | 'pdf_unfetched';
+
+export interface SourceEvidence {
+  quote: string;
+  section: string;
+  sourceUrl: string;
+  sourceTitle: string;
+  source: SourceEvidenceKind;
+  fetchedAt: string;
+}
+
+export interface CustodyAiReview {
+  recommendation: AiReviewRecommendation;
+  aiConfidence: number;
+  whyPublish: string;
+  whyNot?: string;
+  evidence: SourceEvidence;
+  publishVerified: boolean;
+  flags: string[];
+  model: string;
+  reviewedAt: string;
+}
+
 export interface CustodyNumberFinding {
   id: string;
   custodySuiteId: string;
@@ -67,6 +92,9 @@ export interface CustodyNumberFinding {
   hashOfSourceEvidence: string;
   notes: string;
   conflictReason?: string;
+  aiReview?: CustodyAiReview;
+  autoPublishedAt?: string;
+  autoRejectedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

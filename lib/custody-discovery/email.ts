@@ -31,21 +31,37 @@ function escapeHtml(val: unknown): string {
     .replace(/"/g, '&quot;');
 }
 
+function formatEvidenceQuote(quote: string): string {
+  return escapeHtml(quote.replace(/\*\*/g, ''));
+}
+
 function formatFindingRows(findings: CustodyNumberFinding[]): string {
   const rows = findings.slice(0, 6);
-  if (rows.length === 0) return '<p>No finding details available.</p>';
+  if (rows.length === 0) return '<p>No AI-reviewed findings to show yet.</p>';
   return rows
-    .map(
-      (f) => `
+    .map((f) => {
+      const ai = f.aiReview;
+      const section = ai?.evidence.section ?? f.sourceTitle;
+      const excerpt = ai?.evidence.quote ?? f.pageSnippet;
+      const why =
+        ai?.recommendation === 'approve'
+          ? ai.whyPublish
+          : ai?.whyNot || ai?.whyPublish || '';
+      const aiBadge = ai
+        ? `AI: ${ai.recommendation.toUpperCase()} (${ai.aiConfidence}%)`
+        : '';
+      return `
     <div style="margin:0 0 16px;padding:12px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;">
       <p style="margin:0 0 6px;font-weight:600;">${escapeHtml(f.custodySuiteName)}</p>
-      <p style="margin:0 0 6px;font-family:monospace;">${escapeHtml(f.possiblePhoneNumber)} · score ${f.confidenceScore} (${escapeHtml(f.confidenceLevel)})</p>
-      <p style="margin:0 0 6px;font-size:13px;">
+      <p style="margin:0 0 6px;font-family:monospace;">${escapeHtml(f.possiblePhoneNumber)} · score ${f.confidenceScore} (${escapeHtml(f.confidenceLevel)})${aiBadge ? ` · ${escapeHtml(aiBadge)}` : ''}</p>
+      <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#475569;">Section: ${escapeHtml(section)}</p>
+      <blockquote style="margin:0 0 8px;padding:8px 12px;border-left:3px solid #cbd5e1;background:#fff;font-size:12px;color:#334155;line-height:1.5;">${formatEvidenceQuote(excerpt)}</blockquote>
+      ${why ? `<p style="margin:0 0 8px;font-size:12px;color:#0f2749;line-height:1.5;"><strong>Why publish:</strong> ${escapeHtml(why)}</p>` : ''}
+      <p style="margin:0;font-size:13px;">
         <a href="${escapeHtml(f.sourceUrl)}" style="color:#0f2749;">${escapeHtml(f.sourceTitle || f.sourceUrl)}</a>
       </p>
-      <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">${escapeHtml(f.pageSnippet)}</p>
-    </div>`,
-    )
+    </div>`;
+    })
     .join('') + (findings.length > 6
     ? `<p style="color:#64748b;font-size:12px;">+ ${findings.length - 6} more in the review dashboard.</p>`
     : '');

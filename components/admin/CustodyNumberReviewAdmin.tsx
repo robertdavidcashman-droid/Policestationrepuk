@@ -13,7 +13,10 @@ type FilterKey =
   | 'high'
   | 'low'
   | 'official'
-  | 'conflicts';
+  | 'conflicts'
+  | 'awaiting_ai'
+  | 'ai_reviewed'
+  | 'needs_human';
 
 export function CustodyNumberReviewAdmin({
   initialFindings,
@@ -62,6 +65,15 @@ export function CustodyNumberReviewAdmin({
     [batchFindingIds],
   );
 
+  const awaitingAiCount = useMemo(
+    () =>
+      rows.filter(
+        (r) =>
+          (r.status === 'needs_review' || r.status === 'new') && !r.aiReview?.reviewedAt,
+      ).length,
+    [rows],
+  );
+
   const filtered = rows.filter((r) => {
     if (showBatchOnly && batchSet.size > 0 && !batchSet.has(r.id)) return false;
     if (
@@ -79,6 +91,21 @@ export function CustodyNumberReviewAdmin({
     if (filter === 'low' && r.confidenceLevel !== 'low' && r.confidenceLevel !== 'reject') return false;
     if (filter === 'official' && !isOfficialSourceType(r.sourceType)) return false;
     if (filter === 'conflicts' && !r.conflictReason) return false;
+    if (filter === 'awaiting_ai' && (r.aiReview?.reviewedAt || (r.status !== 'needs_review' && r.status !== 'new'))) {
+      return false;
+    }
+    if (filter === 'ai_reviewed' && !r.aiReview?.reviewedAt) return false;
+    if (filter === 'needs_human') {
+      if (!r.aiReview?.reviewedAt) return false;
+      if (r.status !== 'needs_review' && r.status !== 'new') return false;
+      const weakEvidence = r.aiReview.evidence.source !== 'page_fetch';
+      const needsHuman =
+        r.aiReview.recommendation === 'hold' ||
+        r.aiReview.recommendation === 'approve' ||
+        Boolean(r.conflictReason) ||
+        weakEvidence;
+      if (!needsHuman) return false;
+    }
     if (forceFilter && r.forceName !== forceFilter) return false;
     if (countyFilter && (suiteMeta[r.custodySuiteId]?.county || '') !== countyFilter) return false;
     if (suiteFilter && !r.custodySuiteName.toLowerCase().includes(suiteFilter.toLowerCase())) return false;
@@ -144,6 +171,122 @@ export function CustodyNumberReviewAdmin({
     }
   }
 
+  async function runAiBatch(force = false) {
+    setBusy('ai-batch');
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/custody-number-review/ai-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'batch', limit: 25, force }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'AI batch failed');
+      const refresh = await fetch('/api/admin/custody-number-review');
+      const refreshData = await refresh.json();
+      if (refreshData.findings) setRows(refreshData.findings);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'AI batch failed');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function rerunAi(findingId: string) {
+    setBusy(`ai-${findingId}`);
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/custody-number-review/ai-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'single', findingId, force: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'AI review failed');
+      if (data.result?.finding) {
+        setRows((prev) =>
+          prev.map((r) => (r.id === findingId ? data.result.finding : r)),
+        );
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'AI review failed');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function renderEvidenceQuote(quote: string) {
+    const parts = quote.split(/\*\*/);
+    return parts.map((part, i) =>
+      i % 2 === 1 ? (
+        <strong key={i} className="font-bold text-[var(--navy)]">
+          {part}
+        </strong>
+      ) : (
+        <span key={i}>{part}</span>
+      ),
+    );
+  }
+
+  function aiBadge(r: CustodyNumberFinding) {
+    const ai = r.aiReview;
+    if (!ai) return null;
+    const colors =
+      ai.recommendation === 'approve'
+        ? 'bg-emerald-100 text-emerald-900 border-emerald-200'
+        : ai.recommendation === 'reject'
+          ? 'bg-red-100 text-red-900 border-red-200'
+          : 'bg-amber-100 text-amber-900 border-amber-200';
+    return (
+      <span className={`inline-block rounded-md border px-2 py-0.5 text-xs font-semibold ${colors}`}>
+        AI {ai.recommendation} · {ai.aiConfidence}%
+      </span>
+    );
+  }
+
+  function evidencePanel(r: CustodyNumberFinding) {
+    const ai = r.aiReview;
+    if (!ai) {
+      return (
+        <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+          Awaiting AI review — run batch review or wait for the next cron pass.
+        </p>
+      );
+    }
+    const why =
+      ai.recommendation === 'approve'
+        ? ai.whyPublish
+        : ai.whyNot || ai.whyPublish;
+    return (
+      <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-600">Evidence</p>
+        <p className="mt-1 text-sm font-semibold text-[var(--navy)]">
+          Section: {ai.evidence.section}
+          {ai.evidence.source !== 'page_fetch' && (
+            <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-900">
+              {ai.evidence.source === 'pdf_unfetched' ? 'PDF not fetched' : 'Search snippet only'}
+            </span>
+          )}
+        </p>
+        <blockquote className="mt-2 border-l-4 border-slate-300 pl-3 text-sm leading-relaxed text-slate-800">
+          {renderEvidenceQuote(ai.evidence.quote)}
+        </blockquote>
+        {why && (
+          <p className="mt-3 text-sm text-[var(--navy)]">
+            <strong>{ai.recommendation === 'approve' ? 'Why publish:' : 'Why not:'}</strong>{' '}
+            {why}
+          </p>
+        )}
+        {r.autoPublishedAt && (
+          <p className="mt-2 text-xs font-semibold text-emerald-800">Auto-published by AI reviewer</p>
+        )}
+        {r.autoRejectedAt && (
+          <p className="mt-2 text-xs font-semibold text-red-800">Auto-rejected by AI reviewer</p>
+        )}
+      </div>
+    );
+  }
+
   function card(r: CustodyNumberFinding) {
     const county = suiteMeta[r.custodySuiteId]?.county || '—';
     const pub = published[r.custodySuiteId];
@@ -159,6 +302,7 @@ export function CustodyNumberReviewAdmin({
             <p className="text-xs text-[var(--muted)]">
               {r.forceName} · {county} · {r.status} · score {r.confidenceScore} ({r.confidenceLevel})
             </p>
+            <div className="mt-1">{aiBadge(r)}</div>
             <p className="mt-2 font-mono text-lg text-[var(--navy)]">{r.possiblePhoneNumber}</p>
             <p className="mt-1 text-sm text-[var(--muted)]">
               Classification: <strong>{r.classification}</strong> · Source: {r.sourceType}
@@ -174,9 +318,10 @@ export function CustodyNumberReviewAdmin({
                 {r.sourceTitle || r.sourceUrl}
               </a>
             </p>
-            <p className="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-[var(--navy)]">
+            <p className="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-[var(--navy)] md:hidden">
               {r.pageSnippet}
             </p>
+            {evidencePanel(r)}
             <p className="mt-2 text-xs text-[var(--muted)]">
               Found {new Date(r.dateFound).toLocaleString('en-GB')} · Last checked{' '}
               {new Date(r.lastChecked).toLocaleString('en-GB')}
@@ -198,6 +343,16 @@ export function CustodyNumberReviewAdmin({
             )}
           </div>
           <div className="flex flex-col gap-2">
+            {(r.status === 'needs_review' || r.status === 'new') && (
+              <button
+                type="button"
+                onClick={() => rerunAi(r.id)}
+                disabled={busy !== null}
+                className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-900 hover:bg-blue-100 disabled:opacity-50"
+              >
+                {busy === `ai-${r.id}` ? 'AI reviewing…' : r.aiReview ? 'Re-run AI' : 'Run AI review'}
+              </button>
+            )}
             {r.status !== 'approved' && (
               <>
                 <label className="flex items-center gap-2 text-xs text-[var(--muted)]">
@@ -295,10 +450,26 @@ export function CustodyNumberReviewAdmin({
         </div>
       )}
 
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => runAiBatch(false)}
+          disabled={busy !== null || awaitingAiCount === 0}
+          className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800 disabled:opacity-50"
+        >
+          {busy === 'ai-batch'
+            ? 'Running AI review…'
+            : `Run AI review on queue (${awaitingAiCount})`}
+        </button>
+      </div>
+
       <div className="flex flex-wrap gap-2">
         {(
           [
             ['inspect', `Inspect queue (≥${NOTIFY_MIN_CONFIDENCE_SCORE}%)`],
+            ['awaiting_ai', 'Awaiting AI'],
+            ['needs_human', 'Needs human'],
+            ['ai_reviewed', 'AI reviewed'],
             ['needs_review', 'Needs review'],
             ['new', 'New'],
             ['high', 'High confidence'],

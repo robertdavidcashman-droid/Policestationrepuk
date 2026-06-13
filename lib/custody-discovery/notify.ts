@@ -35,7 +35,8 @@ async function loadQualifyingFindings(ids: string[]): Promise<CustodyNumberFindi
     await Promise.all(ids.map((id) => getFinding(id)))
   )
     .filter((f): f is CustodyNumberFinding => Boolean(f))
-    .filter((f) => meetsNotifyConfidenceThreshold(f.confidenceScore));
+    .filter((f) => meetsNotifyConfidenceThreshold(f.confidenceScore))
+    .filter((f) => Boolean(f.aiReview?.reviewedAt));
 }
 
 async function sendDailyDigestFromBucket(opts: {
