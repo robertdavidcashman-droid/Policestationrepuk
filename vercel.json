@@ -57,6 +57,10 @@
       "schedule": "5 5 * * *"
     },
     {
+      "path": "/api/cron/buffer-daily-report",
+      "schedule": "30 4 * * *"
+    },
+    {
       "path": "/api/cron/traffic-digest",
       "schedule": "0 7 * * 1"
     },

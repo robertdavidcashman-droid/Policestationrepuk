@@ -270,6 +270,87 @@ export async function listScheduledBufferPosts(
   return posts;
 }
 
+export interface BufferPostStatusSummary {
+  id: string;
+  dueAt: string | null;
+  status: string;
+  channelService: string;
+}
+
+/** Fetch status for specific post IDs by paginating org posts (avoids UTC dueAt day-filter gaps). */
+export async function fetchBufferPostStatusMap(
+  apiKey: string,
+  organizationId: string,
+  postIds: string[],
+): Promise<Map<string, BufferPostStatusSummary>> {
+  const wanted = new Set(postIds);
+  const found = new Map<string, BufferPostStatusSummary>();
+  if (wanted.size === 0) return found;
+
+  let after: string | undefined;
+
+  do {
+    const data = await bufferGraphql<{
+      posts: {
+        edges: Array<{
+          node: {
+            id: string;
+            dueAt: string | null;
+            status: string;
+            channelService: string;
+          };
+        }>;
+        pageInfo: { hasNextPage: boolean; endCursor: string | null };
+      };
+    }>(
+      apiKey,
+      `query ListPostsForStatus($input: PostsInput!, $first: Int!, $after: String) {
+        posts(input: $input, first: $first, after: $after) {
+          edges {
+            node {
+              id
+              dueAt
+              status
+              channelService
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }`,
+      {
+        first: 100,
+        after,
+        input: {
+          organizationId,
+          filter: {
+            status: ['sent', 'scheduled', 'error', 'draft'],
+          },
+        },
+      },
+    );
+
+    for (const edge of data.posts.edges) {
+      const node = edge.node;
+      if (!wanted.has(node.id)) continue;
+      found.set(node.id, {
+        id: node.id,
+        dueAt: node.dueAt,
+        status: node.status,
+        channelService: node.channelService,
+      });
+    }
+
+    if (found.size >= wanted.size) break;
+
+    after = data.posts.pageInfo.hasNextPage ? (data.posts.pageInfo.endCursor ?? undefined) : undefined;
+  } while (after);
+
+  return found;
+}
+
 export async function deleteBufferPost(apiKey: string, postId: string): Promise<void> {
   const data = await bufferGraphql<{
     deletePost:

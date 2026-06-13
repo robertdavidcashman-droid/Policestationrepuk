@@ -7,6 +7,7 @@ Daily social scheduling for blog content across Twitter, LinkedIn, and Google Bu
 | Schedule (UTC) | Route | Purpose |
 |----------------|-------|---------|
 | `5 5 * * *` | `/api/cron/buffer-blog-posts` | Schedule today's posts from all feeds |
+| `30 4 * * *` | `/api/cron/buffer-daily-report` | Daily email: verify yesterday's posts all sent |
 | `0 6 * * 1` | `/api/cron/buffer-health` | Weekly GBP scheduled-image verification |
 
 Auth: `Authorization: Bearer $CRON_SECRET` (or `x-cron-secret` locally).
@@ -19,7 +20,7 @@ Auth: `Authorization: Bearer $CRON_SECRET` (or `x-cron-secret` locally).
 | `BUFFER_ORGANIZATION_ID` | Yes | Buffer org ID |
 | `CRON_SECRET` | Yes (cron) | Vercel cron auth |
 | `RESEND_API_KEY` | Optional | Failure/skip/health emails |
-| `BUFFER_SCHEDULER_NOTIFY_EMAIL` | Optional | Override notify address |
+| `BUFFER_SCHEDULER_NOTIFY_EMAIL` | Optional | Override notify address (daily report + failures) |
 | `BUFFER_CONTENT_FEEDS` | Optional | JSON override for feed URLs |
 | `BUFFER_VERIFY_GBP_ONLY` | Optional | Set `1` for GBP-only verify scripts |
 
@@ -29,12 +30,30 @@ Auth: `Authorization: Bearer $CRON_SECRET` (or `x-cron-secret` locally).
 npm run buffer:schedule              # Run scheduler once (manual)
 npm run buffer:list-today              # List today's scheduled posts
 npm run buffer:verify-feeds            # Live RSS + image ratio check
+npm run buffer:verify-posted           # Verify yesterday's run all reached sent
 npm run buffer:verify-scheduled-images # All channels (GBP issues fatal)
 npm run buffer:verify-scheduled-gbp    # GBP channel only
 npm run buffer:repair-gbp              # Fix bad GBP posts in queue
 npm run buffer:replace-today           # Delete + reschedule today
 npm run test:buffer                    # CI suite + verify-feeds
 ```
+
+## Daily publish report email
+
+At **04:30 UTC** the cron verifies **yesterday's** scheduler run (Europe/London), including night slots that publish after midnight UTC. You receive:
+
+- **Success:** `[Buffer daily] All posts sent — YYYY-MM-DD`
+- **Failure:** `[Buffer daily] Posts not all sent — YYYY-MM-DD`
+
+One email per verify date (KV dedup). Manual re-run:
+
+```bash
+npm run buffer:verify-posted
+curl -H "Authorization: Bearer $CRON_SECRET" \
+  "https://policestationrepuk.org/api/cron/buffer-daily-report?date=2026-06-12&force=1"
+```
+
+Requires `RESEND_API_KEY` and `BUFFER_API_KEY`. Recipient: `BUFFER_SCHEDULER_NOTIFY_EMAIL` or your default admin email.
 
 ## Common failures
 

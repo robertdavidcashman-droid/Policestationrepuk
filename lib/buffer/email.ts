@@ -59,6 +59,36 @@ export interface TrafficDigestEmailInput {
   adminEmail?: string;
 }
 
+export interface BufferDailySuccessEmailInput {
+  date: string;
+  total: number;
+  sent: number;
+  feedCounts: Record<string, number>;
+  posts: Array<{
+    slug: string;
+    feed?: string;
+    channelService?: string;
+    dueAt: string;
+  }>;
+  adminEmail?: string;
+}
+
+export interface BufferDailyFailureEmailInput {
+  date: string;
+  total: number;
+  failed: number;
+  reason?: string;
+  problems: Array<{
+    slug: string;
+    feed?: string;
+    channelService?: string;
+    dueAt: string;
+    status: string;
+    issue?: string;
+  }>;
+  adminEmail?: string;
+}
+
 export async function sendBufferSchedulerSkippedEmail(
   input: BufferSchedulerSkippedEmailInput,
 ): Promise<boolean> {
@@ -242,6 +272,139 @@ export async function sendTrafficDigestEmail(input: TrafficDigestEmailInput): Pr
     return true;
   } catch (err) {
     console.error('[traffic-digest email]', err);
+    return false;
+  }
+}
+
+function formatDueAtLondon(iso: string): string {
+  try {
+    return new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/London',
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+}
+
+export async function sendBufferDailySuccessEmail(
+  input: BufferDailySuccessEmailInput,
+): Promise<boolean> {
+  const to = input.adminEmail?.trim() || NOTIFY_EMAIL;
+  const subject = `[Buffer daily] All posts sent — ${input.date}`;
+
+  const feedSummary = Object.entries(input.feedCounts)
+    .map(([feed, count]) => `<li>${escapeHtml(feed)}: ${escapeHtml(String(count))}</li>`)
+    .join('');
+
+  const rows = input.posts
+    .slice(0, 30)
+    .map(
+      (p) =>
+        `<tr>
+          <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(p.slug)}</td>
+          <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(p.feed ?? '—')}</td>
+          <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(p.channelService ?? '—')}</td>
+          <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(formatDueAtLondon(p.dueAt))}</td>
+        </tr>`,
+    )
+    .join('');
+
+  const html = `
+    <div style="font-family:system-ui,sans-serif;color:#0f172a;max-width:720px;">
+      <h2 style="margin:0 0 12px;">Buffer daily report — all posts sent</h2>
+      <p style="margin:0 0 16px;line-height:1.5;">
+        Scheduler run for <strong>${escapeHtml(input.date)}</strong> (Europe/London):
+        <strong>${escapeHtml(String(input.sent))}</strong> / ${escapeHtml(String(input.total))} posts published successfully.
+      </p>
+      <p style="margin:0 0 8px;"><strong>By feed:</strong></p>
+      <ul style="margin:0 0 16px;padding-left:20px;line-height:1.6;">${feedSummary}</ul>
+      <table style="border-collapse:collapse;width:100%;font-size:13px;line-height:1.5;">
+        <thead>
+          <tr style="background:#f1f5f9;">
+            <th style="padding:6px 8px;text-align:left;">Slug</th>
+            <th style="padding:6px 8px;text-align:left;">Feed</th>
+            <th style="padding:6px 8px;text-align:left;">Channel</th>
+            <th style="padding:6px 8px;text-align:left;">Due (London)</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p style="margin:16px 0 0;color:#64748b;font-size:12px;line-height:1.5;">
+        Verified via <code>/api/cron/buffer-daily-report</code>. Manual check:
+        <code>npm run buffer:verify-posted</code>
+      </p>
+    </div>
+  `;
+
+  const client = getResend();
+  if (!client) {
+    console.warn('[buffer-daily email]', subject);
+    return false;
+  }
+
+  try {
+    await client.emails.send({ from: FROM_EMAIL, to, subject, html });
+    return true;
+  } catch (err) {
+    console.error('[buffer-daily email]', err);
+    return false;
+  }
+}
+
+export async function sendBufferDailyFailureEmail(
+  input: BufferDailyFailureEmailInput,
+): Promise<boolean> {
+  const to = input.adminEmail?.trim() || NOTIFY_EMAIL;
+  const subject = `[Buffer daily] Posts not all sent — ${input.date}`;
+
+  const reasonLine = input.reason
+    ? `<p style="margin:0 0 16px;padding:12px;border:1px solid #fecaca;border-radius:8px;background:#fef2f2;line-height:1.5;">
+         ${escapeHtml(input.reason)}
+       </p>`
+    : '';
+
+  const problemList =
+    input.problems.length > 0
+      ? `<ul style="margin:0 0 16px;padding-left:20px;line-height:1.6;font-size:13px;">
+           ${input.problems
+             .slice(0, 15)
+             .map(
+               (p) =>
+                 `<li><strong>${escapeHtml(p.slug)}</strong> (${escapeHtml(p.feed ?? 'unknown')}, ${escapeHtml(p.channelService ?? '?')}) — ${escapeHtml(p.status)}${p.issue ? `: ${escapeHtml(p.issue)}` : ''} · due ${escapeHtml(formatDueAtLondon(p.dueAt))}</li>`,
+             )
+             .join('')}
+         </ul>`
+      : '<p>No per-post details available.</p>';
+
+  const html = `
+    <div style="font-family:system-ui,sans-serif;color:#0f172a;max-width:720px;">
+      <h2 style="margin:0 0 12px;">Buffer daily report — posts missing or failed</h2>
+      <p style="margin:0 0 16px;line-height:1.5;">
+        Scheduler run for <strong>${escapeHtml(input.date)}</strong>:
+        <strong>${escapeHtml(String(input.failed))}</strong> post(s) did not reach <code>sent</code> status after their due time.
+      </p>
+      ${reasonLine}
+      ${problemList}
+      <p style="margin:0;color:#64748b;font-size:12px;line-height:1.5;">
+        Run <code>npm run buffer:verify-posted</code> and
+        <code>npm run buffer:replace-today</code> if needed. See <code>docs/buffer-ops.md</code>.
+      </p>
+    </div>
+  `;
+
+  const client = getResend();
+  if (!client) {
+    console.error('[buffer-daily email]', subject, input.failed);
+    return false;
+  }
+
+  try {
+    await client.emails.send({ from: FROM_EMAIL, to, subject, html });
+    return true;
+  } catch (err) {
+    console.error('[buffer-daily email]', err);
     return false;
   }
 }
