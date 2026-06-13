@@ -153,9 +153,11 @@ export async function sendDailyOutreachDigest(opts?: {
   const sendableReady = report.readyToSendProspects.filter((r) => !r.suppressed && r.email);
 
   const subject =
-    readyCount > 0
-      ? `[Firm outreach] ${readyCount} ready to send — ${date}`
-      : `[Firm outreach] Daily digest — ${date}`;
+    sentToday > 0
+      ? `[Firm outreach] ${sentToday} sent today — ${date}`
+      : readyCount > 0
+        ? `[Firm outreach] ${readyCount} ready to send — ${date}`
+        : `[Firm outreach] Daily digest — ${date}`;
 
   const pipelineSection = opts?.pipeline
     ? `

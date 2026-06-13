@@ -46,6 +46,9 @@ export async function runFirmOutreachPipeline(opts?: {
   const started = Date.now();
 
   if (!outreachEnabled()) {
+    if (!opts?.skipDigest) {
+      await sendDailyOutreachDigest();
+    }
     return {
       skipped: true,
       reason: 'FIRM_OUTREACH_ENABLED=false',

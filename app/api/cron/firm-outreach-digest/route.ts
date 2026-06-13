@@ -12,6 +12,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const result = await sendDailyOutreachDigest();
-  return NextResponse.json({ ok: true, ...result });
+  const url = new URL(request.url);
+  const force = url.searchParams.get('force') === '1';
+  const result = await sendDailyOutreachDigest({ force });
+  return NextResponse.json({ ok: result.sent, ...result });
 }

@@ -12,6 +12,13 @@ Automated WhatsApp invitation emails to qualified criminal defence firms. Admin 
 | `09:30` | `/api/cron/firm-outreach-pipeline/full` | Send from ready queue + daily digest |
 | `17:00` | `/api/cron/firm-outreach-digest` | Digest backup if morning run did not send one |
 
+Manual re-run (one email per London day unless forced):
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" \
+  "https://policestationrepuk.org/api/cron/firm-outreach-digest?force=1"
+```
+
 All cron routes require `Authorization: Bearer $CRON_SECRET` (Vercel adds this automatically).
 
 ## Environment variables

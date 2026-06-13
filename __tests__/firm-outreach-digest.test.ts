@@ -98,7 +98,7 @@ describe('sendDailyOutreachDigest', () => {
     expect(mockResendSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'robertdavidcashman@gmail.com',
-        subject: expect.stringContaining('ready to send'),
+        subject: expect.stringContaining('sent today'),
         html: expect.stringContaining('crime@alpha.co.uk'),
       }),
     );
