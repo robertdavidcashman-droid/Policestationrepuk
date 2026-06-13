@@ -119,6 +119,11 @@ export function outreachPaused(): boolean {
   return process.env.FIRM_OUTREACH_PAUSED === 'true';
 }
 
+/** When true (default), daily sends require email approval instead of auto-send cron. */
+export function outreachRequireApproval(): boolean {
+  return process.env.FIRM_OUTREACH_REQUIRE_APPROVAL !== 'false';
+}
+
 export function dailySendCap(): number {
   return Number(process.env.FIRM_OUTREACH_DAILY_CAP ?? 50) || 50;
 }

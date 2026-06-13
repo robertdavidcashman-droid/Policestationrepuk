@@ -112,3 +112,23 @@ describe('paidDailyCap default', () => {
     else process.env.FIRM_OUTREACH_PAID_DAILY_CAP = prev;
   });
 });
+
+describe('outreachRequireApproval default', () => {
+  it('defaults to true when env is unset', async () => {
+    const prev = process.env.FIRM_OUTREACH_REQUIRE_APPROVAL;
+    delete process.env.FIRM_OUTREACH_REQUIRE_APPROVAL;
+    vi.resetModules();
+    const { outreachRequireApproval } = await import('@/lib/firm-outreach/constants');
+    expect(outreachRequireApproval()).toBe(true);
+    if (prev === undefined) delete process.env.FIRM_OUTREACH_REQUIRE_APPROVAL;
+    else process.env.FIRM_OUTREACH_REQUIRE_APPROVAL = prev;
+  });
+
+  it('returns false when env is false', async () => {
+    process.env.FIRM_OUTREACH_REQUIRE_APPROVAL = 'false';
+    vi.resetModules();
+    const { outreachRequireApproval } = await import('@/lib/firm-outreach/constants');
+    expect(outreachRequireApproval()).toBe(false);
+    delete process.env.FIRM_OUTREACH_REQUIRE_APPROVAL;
+  });
+});

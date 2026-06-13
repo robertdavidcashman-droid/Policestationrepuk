@@ -77,7 +77,8 @@
     "buffer:verify-scheduled-gbp": "npx tsx scripts/verify-buffer-scheduled-images.ts --google-business",
     "buffer:repair-gbp": "npx tsx scripts/repair-buffer-gbp-images.ts",
     "buffer:smoke": "npx tsx scripts/smoke-buffer-api.ts",
-    "test:buffer:ci": "vitest run __tests__/buffer-config.test.ts __tests__/buffer-client.test.ts __tests__/buffer-blog-scheduler.test.ts __tests__/buffer-day-night.test.ts __tests__/buffer-rss.test.ts __tests__/buffer-rss-fetch.test.ts __tests__/buffer-feeds.test.ts __tests__/buffer-feed-health.test.ts __tests__/buffer-image-url.test.ts __tests__/buffer-psrtrain-feed.test.ts __tests__/buffer-scheduler-integration.test.ts __tests__/buffer-scheduler-gbp-preflight-integration.test.ts __tests__/buffer-cron-route.test.ts __tests__/buffer-blog-catalog.test.ts __tests__/buffer-blog-hero-jpeg.test.ts __tests__/buffer-gbp-preflight.test.ts __tests__/buffer-gbp-feed-fallbacks.test.ts __tests__/buffer-email.test.ts __tests__/cron-auth.test.ts && npx tsx scripts/probe-feed-images.ts --google-business",
+    "test:buffer:ci": "vitest run __tests__/buffer-config.test.ts __tests__/buffer-client.test.ts __tests__/buffer-blog-scheduler.test.ts __tests__/buffer-day-night.test.ts __tests__/buffer-rss.test.ts __tests__/buffer-rss-fetch.test.ts __tests__/buffer-feeds.test.ts __tests__/buffer-feed-health.test.ts __tests__/buffer-image-url.test.ts __tests__/buffer-psrtrain-feed.test.ts __tests__/buffer-scheduler-integration.test.ts __tests__/buffer-scheduler-gbp-preflight-integration.test.ts __tests__/buffer-cron-route.test.ts __tests__/buffer-daily-report-cron.test.ts __tests__/buffer-verify-posted.test.ts __tests__/buffer-blog-catalog.test.ts __tests__/buffer-blog-hero-jpeg.test.ts __tests__/buffer-gbp-preflight.test.ts __tests__/buffer-gbp-feed-fallbacks.test.ts __tests__/buffer-email.test.ts __tests__/cron-auth.test.ts && npx tsx scripts/probe-feed-images.ts --google-business",
+    "test:firm-outreach:ci": "vitest run __tests__/firm-outreach*.test.ts __tests__/outreach-send-approved-route.test.ts",
     "test:buffer": "npm run test:buffer:ci && npm run buffer:verify-feeds",
     "test:assistant": "vitest run __tests__/assistant-match.test.ts __tests__/assistant-cover-routing.test.ts __tests__/assistant-kent-promo.test.ts __tests__/assistant-llm.test.ts __tests__/assistant-query-route.test.ts __tests__/assistant-content-accuracy.test.ts __tests__/assistant-guardrails-extended.test.ts __tests__/assistant-output-validator.test.ts __tests__/assistant-eval.test.ts __tests__/assistant-logging.test.ts",
     "test:assistant:e2e": "npx playwright install chromium && playwright test --config=playwright.assistant.config.ts",
@@ -113,6 +114,7 @@
     "firm-outreach:maintain": "npx tsx scripts/firm-outreach-pipeline.ts --maintain",
     "firm-outreach:requalify": "npx tsx scripts/firm-outreach-requalify.ts",
     "firm-outreach:admin-smoke": "npx tsx scripts/firm-outreach-admin-smoke.ts",
+    "firm-outreach:send-approval-email": "npx tsx scripts/firm-outreach-send-approval-email.ts",
     "firm-outreach:import-lead-engine": "npx tsx scripts/firm-outreach-import-lead-engine.ts",
     "firm-outreach:configure-resend": "node scripts/resend-configure-webhook.mjs"
   },

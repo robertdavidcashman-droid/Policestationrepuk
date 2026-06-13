@@ -69,8 +69,8 @@ describe('editorial audit section splitting', () => {
 });
 
 describe('editorial audit cursor rotation', () => {
-  beforeEach(() => {
-    resetAuditCursorForTests();
+  beforeEach(async () => {
+    await resetAuditCursorForTests();
   });
 
   it('advances through units without repeating within a batch', async () => {

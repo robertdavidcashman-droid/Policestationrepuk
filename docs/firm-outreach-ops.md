@@ -9,14 +9,16 @@ Automated WhatsApp invitation emails to qualified criminal defence firms. Admin 
 | `03:00` | `/api/cron/firm-outreach-pipeline/maintain` | LAA + DSCC + discovery + requalify + enrich (50 firms, max ~240s) |
 | `06:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms) |
 | `08:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms) |
-| `09:30` | `/api/cron/firm-outreach-pipeline/full` | Send from ready queue + daily digest |
-| `17:00` | `/api/cron/firm-outreach-digest` | Digest backup if morning run did not send one |
+| `09:30` | `/api/cron/firm-outreach-pipeline/full` | **Approval email** with Ready to send button (no auto-send) |
+| `17:00` | `/api/cron/firm-outreach-digest` | **Reminder** approval email if daily cap not yet reached |
 
-Manual re-run (one email per London day unless forced):
+Manual approval email (one per London day unless `--force` or reminder cron):
 
 ```bash
+npm run firm-outreach:send-approval-email
+npm run firm-outreach:send-approval-email -- --force
 curl -H "Authorization: Bearer $CRON_SECRET" \
-  "https://policestationrepuk.org/api/cron/firm-outreach-digest?force=1"
+  "https://policestationrepuk.org/api/cron/firm-outreach-pipeline/full?force=1"
 ```
 
 All cron routes require `Authorization: Bearer $CRON_SECRET` (Vercel adds this automatically).
@@ -29,7 +31,9 @@ All cron routes require `Authorization: Bearer $CRON_SECRET` (Vercel adds this a
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | — | **Required** for prospect storage |
 | `CRON_SECRET` | — | Cron auth + unsubscribe token signing |
 | `FIRM_OUTREACH_DAILY_CAP` | `50` | Max outreach sends per UTC day |
-| `FIRM_OUTREACH_DIGEST_EMAIL` | `robertdavidcashman@gmail.com` | Daily digest recipient |
+| `FIRM_OUTREACH_DIGEST_EMAIL` | `robertdavidcashman@gmail.com` | Approval + confirmation email recipient |
+| `FIRM_OUTREACH_REQUIRE_APPROVAL` | `true` | Set `false` to restore automatic 09:30 sends |
+| `ADMIN_DECISION_TOKEN_SECRET` | — | Signs Ready to send links (or falls back to `CRON_SECRET`) |
 | `RESEND_WEBHOOK_SECRET` | — | Resend webhook signing secret (from configure script) |
 | `FIRM_OUTREACH_CRON_ENRICH_BATCH` | `50` | Firms per cron enrich tick |
 | `FIRM_OUTREACH_ENRICH_BATCH` | `150` | Firms per local/manual enrich run |
@@ -87,7 +91,10 @@ npx tsx scripts/firm-outreach-enrich.ts --limit=150
 npx tsx scripts/firm-outreach-import-lead-engine.ts --dry-run
 npx tsx scripts/firm-outreach-import-lead-engine.ts
 
-# Send locally (dry-run by default)
+# Send approval email locally
+npm run firm-outreach:send-approval-email
+
+# Send locally (dry-run by default) — bypasses approval flow
 npx tsx scripts/firm-outreach-send.ts
 npx tsx scripts/firm-outreach-send.ts --apply --limit=50
 
@@ -106,13 +113,22 @@ npm run firm-outreach:requalify
 3. You verify and add them to the group on WhatsApp.
 4. In admin Send log, click **Mark joined** — stops follow-ups and suppresses future outreach to that address.
 
-## Daily digest
+## Daily approval email (Ready to send)
 
-Sent to `FIRM_OUTREACH_DIGEST_EMAIL` after the 09:30 send run (and at 17:00 if not already sent that day). Includes:
+When `FIRM_OUTREACH_REQUIRE_APPROVAL=true` (default):
 
-- Ready-to-send queue (firm, email, county)
-- Today's send receipts
-- Daily cap usage
+1. **09:30 UTC** — email to `FIRM_OUTREACH_DIGEST_EMAIL` with a **Ready to send** button and queue summary.
+2. You click the button → confirmation page → **Confirm — Ready to send** sends up to `FIRM_OUTREACH_DAILY_CAP` (default 50) from the ready queue.
+3. **Confirmation email** lists sent count and receipts.
+4. **17:00 UTC** — reminder if you have not yet reached today's cap.
+
+Links are prefetch-safe: the email button only opens a preview; sends happen on POST confirm.
+
+Set `FIRM_OUTREACH_REQUIRE_APPROVAL=false` to restore the legacy automatic 09:30 send + informational digest.
+
+## Legacy daily digest
+
+When approval is disabled, the old digest still runs after auto-send. When approval is enabled, use the confirmation email after each approved batch instead.
 
 ## Email discovery pipeline
 

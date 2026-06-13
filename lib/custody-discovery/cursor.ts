@@ -66,7 +66,11 @@ export async function selectSuiteBatch(
   };
 }
 
-/** Test helper — reset in-memory cursor when KV is unavailable. */
-export function resetCursorForTests(): void {
+/** Test helper — reset cursor in memory and KV so tests are isolated. */
+export async function resetCursorForTests(): Promise<void> {
   memoryCursor = 0;
+  const kv = getKV();
+  if (kv) {
+    await kv.del(CURSOR_KEY);
+  }
 }

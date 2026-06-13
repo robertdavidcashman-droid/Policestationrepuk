@@ -403,7 +403,7 @@ describe('approval verification status', () => {
 describe('batch cursor rotation', () => {
   it('rotates sequentially without repeating suites between consecutive runs', async () => {
     const { selectSuiteBatch, resetCursorForTests } = await import('@/lib/custody-discovery/cursor');
-    resetCursorForTests();
+    await resetCursorForTests();
     const suites = Array.from({ length: 10 }, (_, i) => ({
       ...suite,
       id: `suite-${String(i).padStart(2, '0')}`,
@@ -430,7 +430,7 @@ describe('batch cursor rotation', () => {
 
   it('wraps to start after covering all suites', async () => {
     const { selectSuiteBatch, resetCursorForTests } = await import('@/lib/custody-discovery/cursor');
-    resetCursorForTests();
+    await resetCursorForTests();
     const suites = Array.from({ length: 5 }, (_, i) => ({
       ...suite,
       id: `suite-${i}`,

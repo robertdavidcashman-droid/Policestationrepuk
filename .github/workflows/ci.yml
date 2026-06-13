@@ -27,6 +27,8 @@ jobs:
       - run: npm run build
       - name: Vitest unit tests
         run: npm test
+      - name: Firm outreach approval + send tests
+        run: npm run test:firm-outreach:ci
       - name: Buffer scheduler unit tests and GBP image probe
         run: npm run test:buffer:ci
       - name: Directory search engine self-test

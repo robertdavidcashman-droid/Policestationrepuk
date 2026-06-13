@@ -1,11 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('@/lib/contact-guards', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/contact-guards')>();
+  return {
+    ...actual,
+    rateLimitOk: vi.fn(async () => ({ ok: true, remaining: 19 })),
+  };
+});
+
 vi.mock('@/lib/assistant/llm', () => ({
   isAssistantLlmEnabled: vi.fn(() => false),
   generateAssistantLlmAnswer: vi.fn(async () => null),
 }));
 
 import { isAssistantLlmEnabled, generateAssistantLlmAnswer } from '@/lib/assistant/llm';
+import { rateLimitOk } from '@/lib/contact-guards';
 
 function makeRequest(body: unknown, ip = '10.20.30.40'): Request {
   return new Request('http://localhost/api/assistant/query', {
@@ -37,6 +46,7 @@ describe('POST /api/assistant/query', () => {
   });
 
   afterEach(() => {
+    vi.mocked(rateLimitOk).mockResolvedValue({ ok: true, remaining: 19 });
     vi.restoreAllMocks();
   });
 
@@ -123,7 +133,12 @@ describe('POST /api/assistant/query', () => {
   });
 
   it('429 after exceeding the per-IP rate limit', async () => {
-    const ip = `rate-limit-${Date.now()}@test`;
+    const actual = await vi.importActual<typeof import('@/lib/contact-guards')>(
+      '@/lib/contact-guards',
+    );
+    vi.mocked(rateLimitOk).mockImplementation(actual.rateLimitOk);
+
+    const ip = `10.88.${Date.now() % 250}.${(Date.now() >> 4) % 250}`;
     let lastStatus = 200;
 
     for (let i = 0; i < 21; i += 1) {

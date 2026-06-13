@@ -16,7 +16,14 @@ Same steps as [`.github/workflows/ci.yml`](../.github/workflows/ci.yml):
 npm run test:ci
 ```
 
-Includes build, vitest, buffer tests, Lighthouse, blog audits, UTM guards, schema validation, and live sitemap crawl sample.
+Includes build, vitest, **firm outreach approval tests** (`test:firm-outreach:ci`), buffer tests (including daily report), Lighthouse, blog audits, UTM guards, schema validation, and live sitemap crawl sample.
+
+## Targeted autotest suites
+
+```bash
+npm run test:firm-outreach:ci   # approval token, emails, cron routes, send flow
+npm run test:buffer:ci          # scheduler + daily digest + GBP probe
+```
 
 ## Autofix + verify
 

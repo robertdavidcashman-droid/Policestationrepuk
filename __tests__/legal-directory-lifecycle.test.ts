@@ -146,7 +146,9 @@ describe('Legal Directory — risk scoring', () => {
 
 describe('Legal Directory — full lifecycle (in-memory store)', () => {
   it('creates a listing as approved and shows it in public views immediately', async () => {
-    const res = await createListing(baseInput({ email: 'lifecycle@example.com' }));
+    const res = await createListing(
+      baseInput({ email: `lifecycle-${Date.now()}@example.com` }),
+    );
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.status).toBe('approved');
@@ -163,7 +165,7 @@ describe('Legal Directory — full lifecycle (in-memory store)', () => {
   });
 
   it('rejects a duplicate listing for the same owner email', async () => {
-    const email = 'dupe@example.com';
+    const email = `dupe-${Date.now()}@example.com`;
     const first = await createListing(baseInput({ email }));
     expect(first.ok).toBe(true);
     const second = await createListing(baseInput({ email }));
@@ -172,7 +174,9 @@ describe('Legal Directory — full lifecycle (in-memory store)', () => {
   });
 
   it('approves, then appears in public search and strips private fields', async () => {
-    const res = await createListing(baseInput({ email: 'approve@example.com' }));
+    const res = await createListing(
+      baseInput({ email: `approve-${Date.now()}@example.com` }),
+    );
     expect(res.ok).toBe(true);
     if (!res.ok) return;
 

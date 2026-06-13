@@ -17,6 +17,7 @@ run_step() {
 
 run_step "npm run build" npm run build
 run_step "Vitest unit tests" npm test
+run_step "Firm outreach approval tests" npm run test:firm-outreach:ci
 run_step "Buffer scheduler + GBP probe" npm run test:buffer:ci
 run_step "Directory search self-test" npm run test:directory-search
 run_step "Lighthouse CI" npx lhci autorun
