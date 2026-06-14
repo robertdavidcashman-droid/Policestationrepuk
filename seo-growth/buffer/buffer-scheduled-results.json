@@ -1,9 +1,9 @@
 {
-  "ok": false,
-  "syncedFromBufferQueue": 2,
-  "scheduled": 119,
-  "failed": 10,
-  "capturedAt": "2026-06-14T10:32:58.855Z",
+  "ok": true,
+  "syncedFromBufferQueue": 0,
+  "scheduled": 129,
+  "failed": 0,
+  "capturedAt": "2026-06-14T20:11:10.291Z",
   "results": [
     {
       "ok": true,
@@ -870,84 +870,84 @@
       "postId": "6a2e8275cbbe21946a3821ea"
     },
     {
-      "ok": false,
+      "ok": true,
       "feedId": "psrtrain",
       "slug": "sqe-criminal-practice-police-station-basics",
       "channelService": "twitter",
-      "dueAt": "2026-07-18T08:30:00.000Z",
-      "error": "Too many requests from this client. Please try again later."
+      "dueAt": "2026-07-18T12:30:00.000Z",
+      "postId": "6a2f0620824a5ebfe36bb69e"
     },
     {
-      "ok": false,
+      "ok": true,
       "feedId": "custodynote",
       "slug": "how-to-write-police-station-attendance-note",
       "channelService": "linkedin",
       "dueAt": "2026-07-20T08:30:00.000Z",
-      "error": "Too many requests from this client. Please try again later."
+      "postId": "6a2f0698897a9080afa4590a"
     },
     {
-      "ok": false,
+      "ok": true,
       "feedId": "custodynote",
       "slug": "how-to-write-police-station-attendance-note",
       "channelService": "twitter",
-      "dueAt": "2026-07-20T08:30:00.000Z",
-      "error": "Too many requests from this client. Please try again later."
+      "dueAt": "2026-07-20T12:30:00.000Z",
+      "postId": "6a2f071161b0aab8c168bafd"
     },
     {
-      "ok": false,
+      "ok": true,
       "feedId": "custodynote",
       "slug": "what-should-go-in-custody-note",
       "channelService": "linkedin",
       "dueAt": "2026-07-22T08:30:00.000Z",
-      "error": "Too many requests from this client. Please try again later."
+      "postId": "6a2f078acaa57c982023c7ee"
     },
     {
-      "ok": false,
+      "ok": true,
       "feedId": "custodynote",
       "slug": "what-should-go-in-custody-note",
       "channelService": "twitter",
-      "dueAt": "2026-07-22T08:30:00.000Z",
-      "error": "Too many requests from this client. Please try again later."
+      "dueAt": "2026-07-22T12:30:00.000Z",
+      "postId": "6a2f080361b0aab8c168c0e0"
     },
     {
-      "ok": false,
+      "ok": true,
       "feedId": "custodynote",
       "slug": "police-interview-note-taking-checklist",
       "channelService": "linkedin",
       "dueAt": "2026-07-24T08:30:00.000Z",
-      "error": "Too many requests from this client. Please try again later."
+      "postId": "6a2f087c824a5ebfe36bc79a"
     },
     {
-      "ok": false,
+      "ok": true,
       "feedId": "custodynote",
       "slug": "police-interview-note-taking-checklist",
       "channelService": "twitter",
-      "dueAt": "2026-07-24T08:30:00.000Z",
-      "error": "Too many requests from this client. Please try again later."
+      "dueAt": "2026-07-24T12:30:00.000Z",
+      "postId": "6a2f08f561b0aab8c168cc57"
     },
     {
-      "ok": false,
+      "ok": true,
       "feedId": "custodynote",
       "slug": "dscc-custody-records-attendance-notes",
       "channelService": "linkedin",
       "dueAt": "2026-07-26T08:30:00.000Z",
-      "error": "Too many requests from this client. Please try again later."
+      "postId": "6a2f096e173b697c8a942579"
     },
     {
-      "ok": false,
+      "ok": true,
       "feedId": "custodynote",
       "slug": "dscc-custody-records-attendance-notes",
       "channelService": "twitter",
-      "dueAt": "2026-07-26T08:30:00.000Z",
-      "error": "Too many requests from this client. Please try again later."
+      "dueAt": "2026-07-26T12:30:00.000Z",
+      "postId": "6a2f09e6caa57c982023dd31"
     },
     {
-      "ok": false,
+      "ok": true,
       "feedId": "custodynote",
       "slug": "police-bail-notes-what-to-record",
       "channelService": "linkedin",
       "dueAt": "2026-07-28T08:30:00.000Z",
-      "error": "Too many requests from this client. Please try again later."
+      "postId": "6a2f0a5f897a9080afa474b5"
     },
     {
       "ok": true,

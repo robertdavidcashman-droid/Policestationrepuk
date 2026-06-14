@@ -27,7 +27,7 @@
 
 ## Buffer
 
-- [ ] Retry failed posts: `npm run buffer:retry-failed` (rate-limit safe)
+- [x] Retry failed posts — **129 scheduled, 0 failed** (2026-06-14)
 - [ ] Facebook rows — manual only
 
 See [`buffer/BUFFER_MANUAL_UPLOAD_INSTRUCTIONS.md`](buffer/BUFFER_MANUAL_UPLOAD_INSTRUCTIONS.md).
