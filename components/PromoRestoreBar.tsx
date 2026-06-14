@@ -19,7 +19,7 @@ export function PromoRestoreBar({ cnDismissed, onExpand }: PromoRestoreBarProps)
           href={WHATSAPP_PAGE_REPS}
           className="inline-flex h-8 min-h-[2rem] max-w-[45%] shrink-0 items-center justify-center truncate rounded-full bg-emerald-900/80 px-2.5 py-0.5 text-[10px] font-bold text-emerald-50 no-underline ring-1 ring-emerald-700/50 transition-colors hover:bg-emerald-800 sm:h-9 sm:max-w-none sm:px-3 sm:text-[11px]"
         >
-          Join WhatsApp
+          Join WhatsApp group
         </Link>
         {!cnDismissed && (
           <a
