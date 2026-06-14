@@ -304,7 +304,7 @@ describe('GET /api/admin/firm-outreach', () => {
     vi.clearAllMocks();
   });
 
-  it('returns ok payload with report and counts when admin authorised', async () => {
+  it('returns summary view by default when admin authorised', async () => {
     vi.doMock('@/lib/admin-auth', () => ({
       requireAdmin: vi.fn().mockResolvedValue({ ok: true, email: 'admin@test.co.uk' }),
     }));
@@ -312,34 +312,34 @@ describe('GET /api/admin/firm-outreach', () => {
       getKV: vi.fn().mockReturnValue({}),
     }));
     vi.doMock('@/lib/firm-outreach/outreach/activity-report', () => ({
-      buildOutreachActivityReport: vi.fn().mockResolvedValue({
+      getCachedOutreachSummaryView: vi.fn().mockResolvedValue({
+        generatedAt: '2026-06-11T12:00:00Z',
         prospectCounts: { discovered: 10, ready_to_send: 2 },
-        report: {
-          generatedAt: '2026-06-11T12:00:00Z',
-          summary: {
-            totalSends: 1,
-            sentToday: 0,
-            sentLast7Days: 0,
-            uniqueRecipients: 1,
-            bySendStatus: { sent: 1 },
-            waClicks: 0,
-            joinedWhatsApp: 0,
-            bounced: 0,
-            complained: 0,
-            unsubscribed: 0,
-            pendingFollowUp1: 0,
-            pendingFollowUp2: 0,
-            readyToSend: 2,
-            discovered: 10,
-            noEmail: 0,
-            excluded: 0,
-          },
-          sends: [],
-          readyToSendProspects: [],
-          excludedProspects: [],
-          suppressions: [],
+        summary: {
+          totalSends: 1,
+          sentToday: 0,
+          sentLast7Days: 0,
+          uniqueRecipients: 1,
+          bySendStatus: { sent: 1 },
+          waClicks: 0,
+          joinedWhatsApp: 0,
+          bounced: 0,
+          complained: 0,
+          unsubscribed: 0,
+          pendingFollowUp1: 0,
+          pendingFollowUp2: 0,
+          readyToSend: 2,
+          discovered: 10,
+          noEmail: 0,
+          excluded: 0,
         },
+        recentSends: [],
       }),
+      buildOutreachActivityReport: vi.fn(),
+      buildReadyProspectsView: vi.fn(),
+      buildExcludedProspectsView: vi.fn(),
+      buildSendsView: vi.fn(),
+      buildSuppressionsView: vi.fn(),
       emptyOutreachActivityReport: vi.fn(),
       activityReportToCsv: vi.fn(),
     }));
@@ -355,7 +355,42 @@ describe('GET /api/admin/firm-outreach', () => {
 
     expect(res.status).toBe(200);
     expect(json.ok).toBe(true);
+    expect(json.view).toBe('summary');
     expect(json.counts.discovered).toBe(10);
-    expect(json.report.summary.totalSends).toBe(1);
+    expect(json.summary.totalSends).toBe(1);
+  });
+
+  it('returns ready view when requested', async () => {
+    vi.doMock('@/lib/admin-auth', () => ({
+      requireAdmin: vi.fn().mockResolvedValue({ ok: true, email: 'admin@test.co.uk' }),
+    }));
+    vi.doMock('@/lib/kv', () => ({
+      getKV: vi.fn().mockReturnValue({}),
+    }));
+    vi.doMock('@/lib/firm-outreach/outreach/activity-report', () => ({
+      buildReadyProspectsView: vi.fn().mockResolvedValue([
+        { prospectId: 'fop_1', firmName: 'Test LLP', prospectType: 'firm', sources: [], priorityScore: 1, updatedAt: '2026-01-01', suppressed: false },
+      ]),
+      getCachedOutreachSummaryView: vi.fn(),
+      buildOutreachActivityReport: vi.fn(),
+      buildExcludedProspectsView: vi.fn(),
+      buildSendsView: vi.fn(),
+      buildSuppressionsView: vi.fn(),
+      emptyOutreachActivityReport: vi.fn(),
+      activityReportToCsv: vi.fn(),
+    }));
+    vi.doMock('@/lib/firm-outreach/constants', () => ({
+      dailySendCap: () => 30,
+      outreachPaused: () => false,
+      outreachSendEnabled: () => true,
+    }));
+
+    const { GET } = await import('@/app/api/admin/firm-outreach/route');
+    const res = await GET(new Request('http://localhost/api/admin/firm-outreach?view=ready'));
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.view).toBe('ready');
+    expect(json.readyToSendProspects).toHaveLength(1);
   });
 });

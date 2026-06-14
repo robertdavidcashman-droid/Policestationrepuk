@@ -154,6 +154,28 @@ export function CountySeoTemplate({ page, reps, stations }: CountySeoTemplatePro
           </div>
         </section>
 
+        <section className="mt-12 flex flex-wrap gap-3">
+          <Link
+            href="/directory"
+            className="btn-gold !text-sm"
+            data-event="blog_cta_click"
+            data-event-placement="county_seo_directory"
+          >
+            Find a Police Station Rep
+          </Link>
+          <Link
+            href="/Register"
+            className="btn-outline !text-sm"
+            data-event="rep_registration"
+            data-event-source="county_seo_register"
+          >
+            Register as a Police Station Rep
+          </Link>
+          <Link href="/PoliceStationCover" className="btn-outline !text-sm">
+            Police station cover guide
+          </Link>
+        </section>
+
         {/* FAQ */}
         <section className="mt-12">
           <h2 className="text-xl font-bold text-[var(--navy)]">

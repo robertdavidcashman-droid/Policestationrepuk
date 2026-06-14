@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type TabId =
   | 'ready'
@@ -94,12 +94,36 @@ interface ReportPayload {
   suppressions: Array<{ email: string; reason: string; createdAt: string }>;
 }
 
-interface OutreachStats {
+interface SummaryPayload {
+  ok?: boolean;
+  kvConfigured?: boolean;
   paused: boolean;
   sendEnabled: boolean;
   dailyCap: number;
   counts: Record<string, number>;
-  report: ReportPayload;
+  generatedAt: string;
+  summary: ReportPayload['summary'];
+  recentSends: Array<{
+    sendId: string;
+    firmName: string;
+    email: string;
+    subject: string;
+    sentAt?: string;
+  }>;
+}
+
+interface TabCache {
+  ready?: QueueRow[];
+  excluded?: ExcludedRow[];
+  sends?: ActivityRow[];
+  suppressions?: Array<{ email: string; reason: string; createdAt: string }>;
+}
+
+function tabView(tab: TabId): string {
+  if (tab === 'ready') return 'ready';
+  if (tab === 'excluded') return 'excluded';
+  if (tab === 'suppressions') return 'suppressions';
+  return 'sends';
 }
 
 const TABS: { id: TabId; label: string }[] = [
@@ -116,10 +140,10 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'suppressions', label: 'Suppressions' },
 ];
 
-function tabLabel(id: TabId, label: string, summary: ReportPayload['summary']): string {
-  if (id === 'all') return `${label} (${summary.totalSends})`;
-  if (id === 'ready') return `${label} (${summary.readyToSend})`;
-  if (id === 'excluded') return `${label} (${summary.excluded})`;
+function tabLabel(id: TabId, label: string, summaryStats: ReportPayload['summary']): string {
+  if (id === 'all') return `${label} (${summaryStats.totalSends})`;
+  if (id === 'ready') return `${label} (${summaryStats.readyToSend})`;
+  if (id === 'excluded') return `${label} (${summaryStats.excluded})`;
   return label;
 }
 
@@ -145,9 +169,11 @@ function statusBadge(status: string): string {
 const FETCH_TIMEOUT_MS = 25_000;
 
 export function FirmOutreachDashboard() {
-  const [data, setData] = useState<OutreachStats | null>(null);
+  const [summary, setSummary] = useState<SummaryPayload | null>(null);
+  const [tabCache, setTabCache] = useState<TabCache>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tabLoading, setTabLoading] = useState(false);
   const [tab, setTab] = useState<TabId>('ready');
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [actionId, setActionId] = useState<string | null>(null);
@@ -156,16 +182,36 @@ export function FirmOutreachDashboard() {
   >(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const loadedViews = useRef(new Set<string>());
 
-  const load = useCallback(() => {
+  const data = useMemo(() => {
+    if (!summary) return null;
+    return {
+      paused: summary.paused,
+      sendEnabled: summary.sendEnabled,
+      dailyCap: summary.dailyCap,
+      counts: summary.counts,
+      report: {
+        generatedAt: summary.generatedAt,
+        summary: summary.summary,
+        sends: tabCache.sends ?? [],
+        readyToSendProspects: tabCache.ready ?? [],
+        excludedProspects: tabCache.excluded ?? [],
+        suppressions: tabCache.suppressions ?? [],
+      },
+    };
+  }, [summary, tabCache]);
+
+  const loadSummary = useCallback((refresh = false) => {
     setLoading(true);
     setError(null);
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    const qs = refresh ? '?view=summary&refresh=1' : '?view=summary';
 
-    fetch('/api/admin/firm-outreach', { signal: controller.signal })
+    fetch(`/api/admin/firm-outreach${qs}`, { signal: controller.signal })
       .then(async (res) => {
-        const json = (await res.json()) as OutreachStats & { ok?: boolean; error?: string; warning?: string };
+        const json = (await res.json()) as SummaryPayload & { error?: string; warning?: string };
         if (!res.ok) {
           throw new Error(json.error ?? `Failed to load stats (${res.status})`);
         }
@@ -174,12 +220,12 @@ export function FirmOutreachDashboard() {
         }
         return json;
       })
-      .then((json) => setData(json))
+      .then((json) => setSummary(json))
       .catch((e) => {
         if (e instanceof Error && e.name === 'AbortError') {
-          setError('Report timed out — the server may be busy. Please retry.');
+          setError('Summary timed out — the server may be busy. Please retry.');
         } else {
-          setError(e instanceof Error ? e.message : 'Error loading outreach report');
+          setError(e instanceof Error ? e.message : 'Error loading outreach summary');
         }
       })
       .finally(() => {
@@ -193,9 +239,55 @@ export function FirmOutreachDashboard() {
     };
   }, []);
 
+  const loadTabData = useCallback(async (tabId: TabId, force = false) => {
+    const view = tabView(tabId);
+    if (!force && loadedViews.current.has(view)) return;
+
+    setTabLoading(true);
+    try {
+      const url =
+        view === 'sends'
+          ? '/api/admin/firm-outreach?view=sends&limit=500'
+          : `/api/admin/firm-outreach?view=${view}`;
+      const res = await fetch(url);
+      const json = (await res.json()) as {
+        error?: string;
+        readyToSendProspects?: QueueRow[];
+        excludedProspects?: ExcludedRow[];
+        sends?: ActivityRow[];
+        suppressions?: TabCache['suppressions'];
+      };
+      if (!res.ok) throw new Error(json.error ?? `Failed to load ${view} tab`);
+
+      loadedViews.current.add(view);
+      setTabCache((prev) => {
+        if (view === 'ready') return { ...prev, ready: json.readyToSendProspects ?? [] };
+        if (view === 'excluded') return { ...prev, excluded: json.excludedProspects ?? [] };
+        if (view === 'suppressions') return { ...prev, suppressions: json.suppressions ?? [] };
+        return { ...prev, sends: json.sends ?? [] };
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error loading tab data');
+    } finally {
+      setTabLoading(false);
+    }
+  }, []);
+
+  const reload = useCallback(() => {
+    loadedViews.current.clear();
+    setTabCache({});
+    loadSummary(true);
+    void loadTabData(tab, true);
+  }, [loadSummary, loadTabData, tab]);
+
   useEffect(() => {
-    return load();
-  }, [load]);
+    return loadSummary();
+  }, [loadSummary]);
+
+  useEffect(() => {
+    if (!summary) return;
+    void loadTabData(tab);
+  }, [summary, tab, loadTabData]);
 
   const filteredSends = useMemo(() => {
     if (!data?.report.sends) return [];
@@ -244,6 +336,7 @@ export function FirmOutreachDashboard() {
   }, [data, tab]);
 
   const recentSends = useMemo(() => {
+    if (summary?.recentSends?.length) return summary.recentSends;
     if (!data?.report.sends?.length) return [];
     return [...data.report.sends]
       .sort((a, b) => {
@@ -252,7 +345,7 @@ export function FirmOutreachDashboard() {
         return tb - ta;
       })
       .slice(0, 8);
-  }, [data]);
+  }, [summary, data]);
 
   const readyRows = data?.report.readyToSendProspects ?? [];
   const sendableReadyIds = useMemo(
@@ -269,7 +362,7 @@ export function FirmOutreachDashboard() {
         body: JSON.stringify({ action: 'mark_joined', prospectId }),
       });
       if (!res.ok) throw new Error('Failed to mark joined');
-      load();
+      reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
     } finally {
@@ -292,7 +385,7 @@ export function FirmOutreachDashboard() {
       });
       const json = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(json.error ?? 'Failed to restore prospect');
-      load();
+      reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
     } finally {
@@ -314,7 +407,7 @@ export function FirmOutreachDashboard() {
       });
       const json = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(json.error ?? 'Failed to exclude prospect');
-      load();
+      reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
     } finally {
@@ -344,7 +437,7 @@ export function FirmOutreachDashboard() {
       if (dryRun && json.send?.subject) {
         window.alert(`Dry run OK — would send: ${json.send.subject}`);
       }
-      if (!dryRun) load();
+      if (!dryRun) reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
     } finally {
@@ -412,7 +505,7 @@ export function FirmOutreachDashboard() {
         window.alert(`Dry run OK — would send to ${json.bulk?.sent ?? 0} prospect(s).`);
       } else {
         setSelectedIds(new Set());
-        load();
+        reload();
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
@@ -437,7 +530,7 @@ export function FirmOutreachDashboard() {
       const json = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(json.error ?? 'Bulk exclude failed');
       setSelectedIds(new Set());
-      load();
+      reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
     } finally {
@@ -450,15 +543,19 @@ export function FirmOutreachDashboard() {
     return (
       <div className="space-y-3">
         <p className="text-sm text-red-700">{error}</p>
-        <button type="button" onClick={load} className="btn-outline !text-sm">
+        <button type="button" onClick={reload} className="btn-outline !text-sm">
           Retry
         </button>
       </div>
     );
   }
 
-  if (loading || !data) {
-    return <p className="text-sm text-[var(--muted)]">Loading outreach report…</p>;
+  if (loading && !summary) {
+    return <p className="text-sm text-[var(--muted)]">Loading outreach summary…</p>;
+  }
+
+  if (!data) {
+    return null;
   }
 
   const s = data.report.summary;
@@ -549,6 +646,10 @@ export function FirmOutreachDashboard() {
           </button>
         ))}
       </nav>
+
+      {tabLoading ? (
+        <p className="text-sm text-[var(--muted)]">Loading tab data…</p>
+      ) : null}
 
       {tab === 'all' ? (
         <p className="text-xs text-[var(--muted)]">

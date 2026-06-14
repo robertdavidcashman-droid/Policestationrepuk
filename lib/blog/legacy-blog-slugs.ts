@@ -26,6 +26,9 @@ export const NEW_BLOG_SLUGS_LIST = [
   'handling-disclosure-police-station',
   'adverse-inference-no-comment-rep-guide',
   'sentencing-act-2026-key-changes',
+  'police-station-rep-coverage-location-matters',
+  'keep-directory-profile-useful',
+  'accredited-reps-keep-availability-updated',
 ] as const;
 
 export const NEW_BLOG_SLUG_SET = new Set<string>(NEW_BLOG_SLUGS_LIST as unknown as string[]);

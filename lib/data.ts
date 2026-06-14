@@ -311,6 +311,7 @@ export function invalidateProfileCache(): void {
 /* ------------------------------------------------------------------ */
 
 let _registeredReps: Representative[] | null = null;
+let _registeredRawByEmail: Map<string, Record<string, unknown>> | null = null;
 let _registeredRepsAt = 0;
 // Same reasoning as PROFILE_OVERRIDES_CACHE_MS above. Override with
 // REGISTERED_CACHE_TTL_SECONDS.
@@ -354,7 +355,14 @@ export function invalidateHiddenListingEmailsCache(): void {
 
 export function invalidateRegisteredRepsCache(): void {
   _registeredReps = null;
+  _registeredRawByEmail = null;
   _registeredRepsAt = 0;
+}
+
+/** Admin-only: raw `newrep:*` rows keyed by email, populated from the same KV scan as registered reps. */
+export async function getRegisteredRowsByEmail(): Promise<Map<string, Record<string, unknown>>> {
+  await loadRegisteredReps();
+  return _registeredRawByEmail ?? new Map();
 }
 
 /**
@@ -400,27 +408,8 @@ export async function getHiddenListingEmails(): Promise<Set<string>> {
 export async function getAllRegisteredRepsRaw(): Promise<
   Array<{ key: string; row: Record<string, unknown> }>
 > {
-  if (skipKVInPrerender()) return [];
-  const kv = getKV();
-  if (!kv) return [];
-  try {
-    const keys = await kv.keys('newrep:*');
-    if (keys.length === 0) return [];
-    const pipeline = kv.pipeline();
-    for (const key of keys) pipeline.get(key);
-    const results = await pipeline.exec<(Record<string, unknown> | null)[]>();
-    const out: Array<{ key: string; row: Record<string, unknown> }> = [];
-    for (let i = 0; i < keys.length; i++) {
-      const row = results[i];
-      if (row && typeof row === 'object') {
-        out.push({ key: keys[i], row });
-      }
-    }
-    return out;
-  } catch (err) {
-    console.error('[data] getAllRegisteredRepsRaw failed:', err);
-    return [];
-  }
+  const byEmail = await getRegisteredRowsByEmail();
+  return [...byEmail.entries()].map(([email, row]) => ({ key: `newrep:${email}`, row }));
 }
 
 /** Admin-only: returns all profile-override rows from `profile:*`. */
@@ -561,22 +550,37 @@ async function loadRegisteredReps(): Promise<Representative[]> {
   if (skipKVInPrerender()) {
     if (_registeredReps === null) {
       _registeredReps = [];
+      _registeredRawByEmail = new Map();
       _registeredRepsAt = now;
     }
     return _registeredReps;
   }
   const kv = getKV();
-  if (!kv) { _registeredReps = []; _registeredRepsAt = now; return []; }
+  if (!kv) {
+    _registeredReps = [];
+    _registeredRawByEmail = new Map();
+    _registeredRepsAt = now;
+    return [];
+  }
   try {
     const keys = await kv.keys('newrep:*');
-    if (keys.length === 0) { _registeredReps = []; _registeredRepsAt = now; return []; }
+    if (keys.length === 0) {
+      _registeredReps = [];
+      _registeredRawByEmail = new Map();
+      _registeredRepsAt = now;
+      return [];
+    }
     const pipeline = kv.pipeline();
     for (const key of keys) pipeline.get(key);
     const results = await pipeline.exec<(Record<string, unknown> | null)[]>();
     const reps: Representative[] = [];
+    const rawByEmail = new Map<string, Record<string, unknown>>();
     const stations = loadDataFromFiles()?.stations ?? [];
     for (const row of results) {
       if (!row || typeof row !== 'object') continue;
+      const email =
+        typeof row.email === 'string' ? row.email.trim().toLowerCase() : '';
+      if (email) rawByEmail.set(email, row);
       const rep = registrationToRep(row);
       if (rep) {
         const enriched = enrichRepCountyFromStations(rep, stations);
@@ -584,11 +588,13 @@ async function loadRegisteredReps(): Promise<Representative[]> {
       }
     }
     _registeredReps = reps;
+    _registeredRawByEmail = rawByEmail;
     _registeredRepsAt = now;
     return reps;
   } catch (err) {
     console.error('[data] Failed to load registered reps from KV:', err);
     _registeredReps = [];
+    _registeredRawByEmail = new Map();
     _registeredRepsAt = now;
     return [];
   }

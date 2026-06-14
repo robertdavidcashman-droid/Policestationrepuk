@@ -156,17 +156,20 @@ export function RepVerificationAudit() {
   const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'visible' | 'hidden'>('all');
   const [query, setQuery] = useState('');
   const [openEmail, setOpenEmail] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(50);
 
-  const reload = async () => {
+  const reload = async (refresh = false) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/admin/rep-audit', { cache: 'no-store' });
+      const url = refresh ? '/api/admin/rep-audit?refresh=1' : '/api/admin/rep-audit';
+      const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `Request failed: ${res.status}`);
       }
       setData((await res.json()) as AuditResponse);
+      setVisibleCount(50);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -174,9 +177,33 @@ export function RepVerificationAudit() {
     }
   };
 
+  const patchAuditRow = (updatedRow: RepAuditRow) => {
+    setData((prev) => {
+      if (!prev) return prev;
+      const rows = prev.rows.map((r) => (r.email === updatedRow.email ? updatedRow : r));
+      return {
+        counts: {
+          ...prev.counts,
+          total: rows.length,
+          ineligible: rows.filter((r) => r.risk.category === 'ineligible').length,
+          high: rows.filter((r) => r.risk.category === 'high').length,
+          medium: rows.filter((r) => r.risk.category === 'medium').length,
+          low: rows.filter((r) => r.risk.category === 'low').length,
+          publiclyVisible: rows.filter((r) => r.publiclyVisible).length,
+          hiddenPending: rows.filter((r) => !r.publiclyVisible).length,
+        },
+        rows,
+      };
+    });
+  };
+
   useEffect(() => {
     void reload();
   }, []);
+
+  useEffect(() => {
+    setVisibleCount(50);
+  }, [query, riskFilter, sourceFilter, visibilityFilter]);
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -204,6 +231,8 @@ export function RepVerificationAudit() {
     });
   }, [data, query, riskFilter, sourceFilter, visibilityFilter]);
 
+  const visibleRows = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+
   return (
     <section className="rounded-xl border border-[var(--card-border)] bg-white p-5 shadow-sm">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -216,7 +245,7 @@ export function RepVerificationAudit() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button onClick={reload} disabled={loading} className="btn-outline !text-lg">
+          <button onClick={() => void reload(true)} disabled={loading} className="btn-outline !text-lg">
             {loading ? 'Refreshing…' : 'Refresh'}
           </button>
         </div>
@@ -296,7 +325,7 @@ export function RepVerificationAudit() {
 
           {/* Card layout — phones & tablets */}
           <div className="mt-3 space-y-3 xl:hidden">
-            {filtered.map((r) => (
+            {visibleRows.map((r) => (
               <article
                 key={`card:${r.source}:${r.email}`}
                 className={`rounded-xl border p-4 shadow-sm ${
@@ -379,7 +408,7 @@ export function RepVerificationAudit() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((r) => (
+                {visibleRows.map((r) => (
                   <tr
                     key={`${r.source}:${r.email}`}
                     className={`border-b border-slate-100 align-top ${
@@ -450,6 +479,18 @@ export function RepVerificationAudit() {
               </tbody>
             </table>
           </div>
+
+          {filtered.length > visibleCount ? (
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setVisibleCount((n) => n + 50)}
+                className="btn-outline !text-lg"
+              >
+                Show more ({filtered.length - visibleCount} remaining)
+              </button>
+            </div>
+          ) : null}
         </>
       )}
 
@@ -458,8 +499,9 @@ export function RepVerificationAudit() {
           email={openEmail}
           row={data?.rows.find((r) => r.email === openEmail) ?? null}
           onClose={() => setOpenEmail(null)}
-          onChanged={() => {
-            void reload();
+          onChanged={(updatedRow) => {
+            if (updatedRow) patchAuditRow(updatedRow);
+            else void reload(true);
           }}
         />
       )}
@@ -493,7 +535,7 @@ function AuditDetailDrawer({
   email: string;
   row: RepAuditRow | null;
   onClose: () => void;
-  onChanged: () => void;
+  onChanged: (updatedRow?: RepAuditRow) => void;
 }) {
   const [action, setAction] = useState<string>('');
   const [adminNotes, setAdminNotes] = useState(row?.adminNotes ?? '');
@@ -510,10 +552,14 @@ function AuditDetailDrawer({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, action: actionId, adminNotes }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as {
+        error?: string;
+        verificationStatus?: string;
+        auditRow?: RepAuditRow;
+      };
       if (!res.ok) throw new Error(data.error || 'Action failed');
       setMessage(`Saved. New status: ${data.verificationStatus ?? '—'}`);
-      onChanged();
+      onChanged(data.auditRow);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Action failed');
     } finally {

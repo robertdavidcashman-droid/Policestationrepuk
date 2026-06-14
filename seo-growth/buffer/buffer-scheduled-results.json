@@ -1,0 +1,1044 @@
+{
+  "ok": false,
+  "dryRun": false,
+  "planned": 129,
+  "scheduled": 99,
+  "failed": 30,
+  "psrUkPosts": 75,
+  "externalPosts": 60,
+  "capturedAt": "2026-06-14T09:56:44.859Z",
+  "results": [
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "accredited-reps-keep-availability-updated",
+      "channelService": "twitter",
+      "dueAt": "2026-06-15T08:15:00.000Z",
+      "postId": "6a2e7a8888e56947beb65178"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "accredited-reps-keep-availability-updated",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-15T11:45:00.000Z",
+      "postId": "6a2e7a88699f807eb307bf65"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "accredited-reps-keep-availability-updated",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-15T16:30:00.000Z",
+      "postId": "6a2e7a89173b697c8a911bc0"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "keep-directory-profile-useful",
+      "channelService": "twitter",
+      "dueAt": "2026-06-16T08:15:00.000Z",
+      "postId": "6a2e7a8a88e56947beb6519c"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "keep-directory-profile-useful",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-16T11:45:00.000Z",
+      "postId": "6a2e7a8bcaa57c982020f17b"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "keep-directory-profile-useful",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-16T16:30:00.000Z",
+      "postId": "6a2e7a8bcbbe21946a37f8be"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "police-station-rep-coverage-location-matters",
+      "channelService": "twitter",
+      "dueAt": "2026-06-17T08:15:00.000Z",
+      "postId": "6a2e7a8c88e56947beb651c2"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "police-station-rep-coverage-location-matters",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-17T11:45:00.000Z",
+      "postId": "6a2e7a8d61b0aab8c165e78b"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "police-station-rep-coverage-location-matters",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-17T16:30:00.000Z",
+      "postId": "6a2e7a8e173b697c8a911bee"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "sentencing-act-2026-key-changes",
+      "channelService": "twitter",
+      "dueAt": "2026-06-18T08:15:00.000Z",
+      "postId": "6a2e7a8f173b697c8a911c37"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "sentencing-act-2026-key-changes",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-18T11:45:00.000Z",
+      "postId": "6a2e7a8fcbbe21946a37f918"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "sentencing-act-2026-key-changes",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-18T16:30:00.000Z",
+      "postId": "6a2e7a90caa57c982020f24e"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "why-firms-need-rep-directory",
+      "channelService": "twitter",
+      "dueAt": "2026-06-19T08:15:00.000Z",
+      "postId": "6a2e7a9161b0aab8c165e7ee"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "why-firms-need-rep-directory",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-19T11:45:00.000Z",
+      "postId": "6a2e7a92173b697c8a911c5f"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "why-firms-need-rep-directory",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-19T16:30:00.000Z",
+      "postId": "6a2e7a93699f807eb307c024"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "how-firms-source-emergency-rep-cover",
+      "channelService": "twitter",
+      "dueAt": "2026-06-20T08:15:00.000Z",
+      "postId": "6a2e7a94cbbe21946a37f958"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "how-firms-source-emergency-rep-cover",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-20T11:45:00.000Z",
+      "postId": "6a2e7a9488e56947beb6522a"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "how-firms-source-emergency-rep-cover",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-20T16:30:00.000Z",
+      "postId": "6a2e7a9561b0aab8c165e835"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "freelance-police-station-rep-career",
+      "channelService": "twitter",
+      "dueAt": "2026-06-21T08:15:00.000Z",
+      "postId": "6a2e7a96caa57c982020f293"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "freelance-police-station-rep-career",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-21T11:45:00.000Z",
+      "postId": "6a2e7a97699f807eb307c080"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "freelance-police-station-rep-career",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-21T16:30:00.000Z",
+      "postId": "6a2e7a98cbbe21946a37f97b"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "professional-indemnity-insurance-reps",
+      "channelService": "twitter",
+      "dueAt": "2026-06-22T08:15:00.000Z",
+      "postId": "6a2e7a9988e56947beb65266"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "professional-indemnity-insurance-reps",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-22T11:45:00.000Z",
+      "postId": "6a2e7a9961b0aab8c165e859"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "professional-indemnity-insurance-reps",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-22T16:30:00.000Z",
+      "postId": "6a2e7a9acaa57c982020f2b6"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "police-station-rep-fee-rates-2026",
+      "channelService": "twitter",
+      "dueAt": "2026-06-23T08:15:00.000Z",
+      "postId": "6a2e7a9b699f807eb307c0a4"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "police-station-rep-fee-rates-2026",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-23T11:45:00.000Z",
+      "postId": "6a2e7a9ccbbe21946a37f99f"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "police-station-rep-fee-rates-2026",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-23T16:30:00.000Z",
+      "postId": "6a2e7a9d173b697c8a911c8e"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "pre-interview-consultation-rep-guide",
+      "channelService": "twitter",
+      "dueAt": "2026-06-24T08:15:00.000Z",
+      "postId": "6a2e7a9ecaa57c982020f2da"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "pre-interview-consultation-rep-guide",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-24T11:45:00.000Z",
+      "postId": "6a2e7a9ecbbe21946a37f9c3"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "pre-interview-consultation-rep-guide",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-24T16:30:00.000Z",
+      "postId": "6a2e7a9f699f807eb307c0c7"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "how-to-review-custody-record",
+      "channelService": "twitter",
+      "dueAt": "2026-06-25T08:15:00.000Z",
+      "postId": "6a2e7aa061b0aab8c165e880"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "how-to-review-custody-record",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-25T11:45:00.000Z",
+      "postId": "6a2e7aa1173b697c8a911cb2"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "how-to-review-custody-record",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-25T16:30:00.000Z",
+      "postId": "6a2e7aa2699f807eb307c0ea"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "handling-disclosure-police-station",
+      "channelService": "twitter",
+      "dueAt": "2026-06-26T08:15:00.000Z",
+      "postId": "6a2e7aa2173b697c8a911cd6"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "handling-disclosure-police-station",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-26T11:45:00.000Z",
+      "postId": "6a2e7aa388e56947beb652d0"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "handling-disclosure-police-station",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-26T16:30:00.000Z",
+      "postId": "6a2e7aa4caa57c982020f2fd"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "adverse-inference-no-comment-rep-guide",
+      "channelService": "twitter",
+      "dueAt": "2026-06-27T08:15:00.000Z",
+      "postId": "6a2e7aa5173b697c8a911cfa"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "adverse-inference-no-comment-rep-guide",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-27T11:45:00.000Z",
+      "postId": "6a2e7aa5cbbe21946a37f9e7"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "adverse-inference-no-comment-rep-guide",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-27T16:30:00.000Z",
+      "postId": "6a2e7aa6caa57c982020f320"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "how-firms-can-instruct-freelance-police-station-reps",
+      "channelService": "twitter",
+      "dueAt": "2026-06-28T08:15:00.000Z",
+      "postId": "6a2e7aa761b0aab8c165e8df"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "how-firms-can-instruct-freelance-police-station-reps",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-28T11:45:00.000Z",
+      "postId": "6a2e7aa8699f807eb307c127"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "how-firms-can-instruct-freelance-police-station-reps",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-28T16:30:00.000Z",
+      "postId": "6a2e7aa988e56947beb652f3"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "what-does-a-freelance-police-station-representative-do",
+      "channelService": "twitter",
+      "dueAt": "2026-06-29T08:15:00.000Z",
+      "postId": "6a2e7aaa88e56947beb65317"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "what-does-a-freelance-police-station-representative-do",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-29T11:45:00.000Z",
+      "postId": "6a2e7aaa88e56947beb6533b"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "what-does-a-freelance-police-station-representative-do",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-29T16:30:00.000Z",
+      "postId": "6a2e7aab173b697c8a911d1d"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "what-to-include-in-a-police-station-brief",
+      "channelService": "twitter",
+      "dueAt": "2026-06-30T08:15:00.000Z",
+      "postId": "6a2e7aac173b697c8a911d41"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "what-to-include-in-a-police-station-brief",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-30T11:45:00.000Z",
+      "postId": "6a2e7aadcbbe21946a37fa10"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "what-to-include-in-a-police-station-brief",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-06-30T16:30:00.000Z",
+      "postId": "6a2e7aaecaa57c982020f364"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "police-station-attendance-checklist",
+      "channelService": "twitter",
+      "dueAt": "2026-07-01T08:15:00.000Z",
+      "postId": "6a2e7aaf699f807eb307c160"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "police-station-attendance-checklist",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-01T11:45:00.000Z",
+      "postId": "6a2e7ab061b0aab8c165e90d"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "police-station-attendance-checklist",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-07-01T16:30:00.000Z",
+      "postId": "6a2e7ab061b0aab8c165e930"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "freelance-police-station-representative-vs-duty-solicitor",
+      "channelService": "twitter",
+      "dueAt": "2026-07-02T08:15:00.000Z",
+      "postId": "6a2e7ab1699f807eb307c184"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "freelance-police-station-representative-vs-duty-solicitor",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-02T11:45:00.000Z",
+      "postId": "6a2e7ab2173b697c8a911d65"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "freelance-police-station-representative-vs-duty-solicitor",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-07-02T16:30:00.000Z",
+      "postId": "6a2e7ab3caa57c982020f387"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "common-mistakes-when-instructing-freelance-police-station-reps",
+      "channelService": "twitter",
+      "dueAt": "2026-07-03T08:15:00.000Z",
+      "postId": "6a2e7ab4cbbe21946a37fa7d"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "common-mistakes-when-instructing-freelance-police-station-reps",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-03T11:45:00.000Z",
+      "postId": "6a2e7ab461b0aab8c165e954"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "common-mistakes-when-instructing-freelance-police-station-reps",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-07-03T16:30:00.000Z",
+      "postId": "6a2e7ab561b0aab8c165e977"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "best-practice-handover-notes-after-police-station-attendance",
+      "channelService": "twitter",
+      "dueAt": "2026-07-04T08:15:00.000Z",
+      "postId": "6a2e7ab688e56947beb65383"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "best-practice-handover-notes-after-police-station-attendance",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-04T11:45:00.000Z",
+      "postId": "6a2e7ab7699f807eb307c1a8"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "best-practice-handover-notes-after-police-station-attendance",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-07-04T16:30:00.000Z",
+      "postId": "6a2e7ab788e56947beb653a6"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "out-of-hours-police-station-cover-for-law-firms",
+      "channelService": "twitter",
+      "dueAt": "2026-07-05T08:15:00.000Z",
+      "postId": "6a2e7ab8caa57c982020f3b1"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "out-of-hours-police-station-cover-for-law-firms",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-05T11:45:00.000Z",
+      "postId": "6a2e7ab9cbbe21946a37faa1"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "out-of-hours-police-station-cover-for-law-firms",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-07-05T16:30:00.000Z",
+      "postId": "6a2e7abacaa57c982020f3e1"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "accreditation-and-standards-in-freelance-police-station-work",
+      "channelService": "twitter",
+      "dueAt": "2026-07-06T08:15:00.000Z",
+      "postId": "6a2e7abbcbbe21946a37fac5"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "accreditation-and-standards-in-freelance-police-station-work",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-06T11:45:00.000Z",
+      "postId": "6a2e7abc61b0aab8c165e99b"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "accreditation-and-standards-in-freelance-police-station-work",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-07-06T16:30:00.000Z",
+      "postId": "6a2e7abc699f807eb307c1cb"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "how-freelance-police-station-reps-win-repeat-instructions",
+      "channelService": "twitter",
+      "dueAt": "2026-07-07T08:15:00.000Z",
+      "postId": "6a2e7abd61b0aab8c165e9bf"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "how-freelance-police-station-reps-win-repeat-instructions",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-07T11:45:00.000Z",
+      "postId": "6a2e7abe699f807eb307c1ef"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "how-freelance-police-station-reps-win-repeat-instructions",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-07-07T16:30:00.000Z",
+      "postId": "6a2e7abf88e56947beb653c9"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "what-makes-a-good-police-station-representative",
+      "channelService": "twitter",
+      "dueAt": "2026-07-08T08:15:00.000Z",
+      "postId": "6a2e7ac0173b697c8a911dd2"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "what-makes-a-good-police-station-representative",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-08T11:45:00.000Z",
+      "postId": "6a2e7ac188e56947beb653ed"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "what-makes-a-good-police-station-representative",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-07-08T16:30:00.000Z",
+      "postId": "6a2e7ac2173b697c8a911df5"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "why-fast-clear-communication-matters-in-police-station-representation",
+      "channelService": "twitter",
+      "dueAt": "2026-07-09T08:15:00.000Z",
+      "postId": "6a2e7ac2caa57c982020f40d"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "why-fast-clear-communication-matters-in-police-station-representation",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-09T11:45:00.000Z",
+      "postId": "6a2e7ac3cbbe21946a37fae9"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationrepuk",
+      "slug": "why-fast-clear-communication-matters-in-police-station-representation",
+      "channelService": "googlebusiness",
+      "dueAt": "2026-07-09T16:30:00.000Z",
+      "postId": "6a2e7ac4caa57c982020f444"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "police-bail-conditions-guidance",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-16T08:30:00.000Z",
+      "postId": "6a2e7ac5cbbe21946a37fb0d"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "police-bail-conditions-guidance",
+      "channelService": "twitter",
+      "dueAt": "2026-06-16T08:30:00.000Z",
+      "postId": "6a2e7ac661b0aab8c165e9e3"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "released-under-investigation-guidance",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-18T08:30:00.000Z",
+      "postId": "6a2e7ac7699f807eb307c22a"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "released-under-investigation-guidance",
+      "channelService": "twitter",
+      "dueAt": "2026-06-18T08:30:00.000Z",
+      "postId": "6a2e7ac761b0aab8c165ea07"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "why-firms-use-freelance-police-station-agents",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-20T08:30:00.000Z",
+      "postId": "6a2e7ac8699f807eb307c262"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "why-firms-use-freelance-police-station-agents",
+      "channelService": "twitter",
+      "dueAt": "2026-06-20T08:30:00.000Z",
+      "postId": "6a2e7ac988e56947beb65411"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "police-station-cover-kent-solicitors",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-22T08:30:00.000Z",
+      "postId": "6a2e7aca173b697c8a911e19"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "police-station-cover-kent-solicitors",
+      "channelService": "twitter",
+      "dueAt": "2026-06-22T08:30:00.000Z",
+      "postId": "6a2e7acb88e56947beb65435"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "what-to-send-instructing-police-station-rep",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-24T08:30:00.000Z",
+      "postId": "6a2e7acb173b697c8a911e3d"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "what-to-send-instructing-police-station-rep",
+      "channelService": "twitter",
+      "dueAt": "2026-06-24T08:30:00.000Z",
+      "postId": "6a2e7acccbbe21946a37fb31"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "custody-record-dscc-references",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-26T08:30:00.000Z",
+      "postId": "6a2e7acd61b0aab8c165ea2b"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "custody-record-dscc-references",
+      "channelService": "twitter",
+      "dueAt": "2026-06-26T08:30:00.000Z",
+      "postId": "6a2e7ace61b0aab8c165ea4f"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "out-of-hours-police-station-legal-advice",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-28T08:30:00.000Z",
+      "postId": "6a2e7acf699f807eb307c29e"
+    },
+    {
+      "ok": true,
+      "feedId": "policestationagent",
+      "slug": "out-of-hours-police-station-legal-advice",
+      "channelService": "twitter",
+      "dueAt": "2026-06-28T08:30:00.000Z",
+      "postId": "6a2e7acf699f807eb307c2d6"
+    },
+    {
+      "ok": true,
+      "feedId": "psrtrain",
+      "slug": "how-to-become-police-station-representative",
+      "channelService": "linkedin",
+      "dueAt": "2026-06-30T08:30:00.000Z",
+      "postId": "6a2e7ad088e56947beb65459"
+    },
+    {
+      "ok": true,
+      "feedId": "psrtrain",
+      "slug": "how-to-become-police-station-representative",
+      "channelService": "twitter",
+      "dueAt": "2026-06-30T08:30:00.000Z",
+      "postId": "6a2e7ad188e56947beb6547d"
+    },
+    {
+      "ok": true,
+      "feedId": "psrtrain",
+      "slug": "pace-interview-basics-new-reps",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-02T08:30:00.000Z",
+      "postId": "6a2e7ad2173b697c8a911e61"
+    },
+    {
+      "ok": true,
+      "feedId": "psrtrain",
+      "slug": "pace-interview-basics-new-reps",
+      "channelService": "twitter",
+      "dueAt": "2026-07-02T08:30:00.000Z",
+      "postId": "6a2e7ad3173b697c8a911e85"
+    },
+    {
+      "ok": true,
+      "feedId": "psrtrain",
+      "slug": "understanding-the-police-caution",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-04T08:30:00.000Z",
+      "postId": "6a2e7ad4caa57c982020f49a"
+    },
+    {
+      "ok": true,
+      "feedId": "psrtrain",
+      "slug": "understanding-the-police-caution",
+      "channelService": "twitter",
+      "dueAt": "2026-07-04T08:30:00.000Z",
+      "postId": "6a2e7ad4caa57c982020f4bf"
+    },
+    {
+      "ok": true,
+      "feedId": "psrtrain",
+      "slug": "advising-no-comment-interview",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-06T08:30:00.000Z",
+      "postId": "6a2e7ad5cbbe21946a37fb55"
+    },
+    {
+      "ok": true,
+      "feedId": "psrtrain",
+      "slug": "advising-no-comment-interview",
+      "channelService": "twitter",
+      "dueAt": "2026-07-06T08:30:00.000Z",
+      "postId": "6a2e7ad6cbbe21946a37fb79"
+    },
+    {
+      "ok": true,
+      "feedId": "psrtrain",
+      "slug": "youth-suspects-police-station",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-08T08:30:00.000Z",
+      "postId": "6a2e7ad7699f807eb307c2fa"
+    },
+    {
+      "ok": true,
+      "feedId": "psrtrain",
+      "slug": "youth-suspects-police-station",
+      "channelService": "twitter",
+      "dueAt": "2026-07-08T08:30:00.000Z",
+      "postId": "6a2e7ad8cbbe21946a37fb9d"
+    },
+    {
+      "ok": false,
+      "feedId": "psrtrain",
+      "slug": "vulnerable-suspects-police-interviews",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-10T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "psrtrain",
+      "slug": "vulnerable-suspects-police-interviews",
+      "channelService": "twitter",
+      "dueAt": "2026-07-10T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "psrtrain",
+      "slug": "police-station-accreditation-preparation",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-12T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "psrtrain",
+      "slug": "police-station-accreditation-preparation",
+      "channelService": "twitter",
+      "dueAt": "2026-07-12T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "psrtrain",
+      "slug": "common-mistakes-new-police-station-reps",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-14T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "psrtrain",
+      "slug": "common-mistakes-new-police-station-reps",
+      "channelService": "twitter",
+      "dueAt": "2026-07-14T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "psrtrain",
+      "slug": "how-to-structure-police-station-advice",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-16T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "psrtrain",
+      "slug": "how-to-structure-police-station-advice",
+      "channelService": "twitter",
+      "dueAt": "2026-07-16T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "psrtrain",
+      "slug": "sqe-criminal-practice-police-station-basics",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-18T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "psrtrain",
+      "slug": "sqe-criminal-practice-police-station-basics",
+      "channelService": "twitter",
+      "dueAt": "2026-07-18T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "how-to-write-police-station-attendance-note",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-20T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "how-to-write-police-station-attendance-note",
+      "channelService": "twitter",
+      "dueAt": "2026-07-20T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "what-should-go-in-custody-note",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-22T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "what-should-go-in-custody-note",
+      "channelService": "twitter",
+      "dueAt": "2026-07-22T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "police-interview-note-taking-checklist",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-24T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "police-interview-note-taking-checklist",
+      "channelService": "twitter",
+      "dueAt": "2026-07-24T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "dscc-custody-records-attendance-notes",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-26T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "dscc-custody-records-attendance-notes",
+      "channelService": "twitter",
+      "dueAt": "2026-07-26T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "police-bail-notes-what-to-record",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-28T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "police-bail-notes-what-to-record",
+      "channelService": "twitter",
+      "dueAt": "2026-07-28T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "rui-notes-criminal-practitioners",
+      "channelService": "linkedin",
+      "dueAt": "2026-07-30T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "rui-notes-criminal-practitioners",
+      "channelService": "twitter",
+      "dueAt": "2026-07-30T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "why-good-attendance-notes-matter",
+      "channelService": "linkedin",
+      "dueAt": "2026-08-01T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "why-good-attendance-notes-matter",
+      "channelService": "twitter",
+      "dueAt": "2026-08-01T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "ai-assisted-custody-notes-benefits-limits",
+      "channelService": "linkedin",
+      "dueAt": "2026-08-03T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "ai-assisted-custody-notes-benefits-limits",
+      "channelService": "twitter",
+      "dueAt": "2026-08-03T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "police-station-file-preparation-checklist",
+      "channelService": "linkedin",
+      "dueAt": "2026-08-05T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "police-station-file-preparation-checklist",
+      "channelService": "twitter",
+      "dueAt": "2026-08-05T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "attendance-note-template-police-station-reps",
+      "channelService": "linkedin",
+      "dueAt": "2026-08-07T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    },
+    {
+      "ok": false,
+      "feedId": "custodynote",
+      "slug": "attendance-note-template-police-station-reps",
+      "channelService": "twitter",
+      "dueAt": "2026-08-07T08:30:00.000Z",
+      "error": "Too many requests from this client. Please try again later."
+    }
+  ]
+}

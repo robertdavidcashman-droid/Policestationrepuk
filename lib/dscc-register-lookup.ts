@@ -1,5 +1,5 @@
 import { getKV, skipKVInPrerender } from '@/lib/kv';
-import { namesLikelyMatch, namePartiallyMatches, normalizePersonName } from '@/lib/name-match';
+import { namesLikelyMatch, namePartiallyMatches, nameTokens, normalizePersonName } from '@/lib/name-match';
 
 const DSCC_REGISTER_URL = 'https://www.dutysolicitors.org/ords/f?p=109:45::::::';
 const DSCC_AJAX_URL = 'https://www.dutysolicitors.org/ords/wwv_flow.ajax';
@@ -234,11 +234,66 @@ function entryDisplayName(entry: DsccRegisterEntry): string {
   return `${entry.forename} ${entry.surname}`.replace(/\s+/g, ' ').trim();
 }
 
+export interface DsccNameIndex {
+  byNormalizedName: Map<string, DsccRegisterEntry[]>;
+  bySurname: Map<string, DsccRegisterEntry[]>;
+}
+
+/** Build once per request — O(1) surname lookup instead of scanning ~20k register rows per rep. */
+export function buildDsccNameIndex(entries: DsccRegisterEntry[]): DsccNameIndex {
+  const byNormalizedName = new Map<string, DsccRegisterEntry[]>();
+  const bySurname = new Map<string, DsccRegisterEntry[]>();
+
+  for (const entry of entries) {
+    const display = entryDisplayName(entry);
+    const norm = normalizePersonName(display);
+    if (norm) {
+      const exact = byNormalizedName.get(norm) ?? [];
+      exact.push(entry);
+      byNormalizedName.set(norm, exact);
+    }
+    const tokens = nameTokens(display);
+    if (tokens.length > 0) {
+      const surname = tokens[tokens.length - 1];
+      const bucket = bySurname.get(surname) ?? [];
+      bucket.push(entry);
+      bySurname.set(surname, bucket);
+    }
+  }
+
+  return { byNormalizedName, bySurname };
+}
+
+function findDsccRegisterMatchesIndexed(
+  name: string,
+  index: DsccNameIndex,
+  options: { allowPartial?: boolean } = {},
+): DsccRegisterEntry[] {
+  const target = normalizePersonName(name);
+  if (!target) return [];
+
+  const matchName = options.allowPartial ? namePartiallyMatches : namesLikelyMatch;
+  const tokens = nameTokens(name);
+  if (tokens.length === 0) return index.byNormalizedName.get(target) ?? [];
+  const surname = tokens[tokens.length - 1];
+  const candidates = index.bySurname.get(surname) ?? [];
+
+  return candidates.filter((entry) => {
+    const display = entryDisplayName(entry);
+    if (normalizePersonName(display) === target) return true;
+    return matchName(name, display);
+  });
+}
+
 export function findDsccRegisterMatches(
   name: string,
   entries: DsccRegisterEntry[],
-  options: { allowPartial?: boolean } = {},
+  options: { allowPartial?: boolean; index?: DsccNameIndex } = {},
 ): DsccRegisterEntry[] {
+  if (options.index) {
+    return findDsccRegisterMatchesIndexed(name, options.index, options);
+  }
+
   const target = normalizePersonName(name);
   if (!target) return [];
 
@@ -262,6 +317,7 @@ export function checkDsccPinAgainstRegister(
   name: string,
   pinNumber: string,
   entries: DsccRegisterEntry[],
+  options: { index?: DsccNameIndex } = {},
 ): DsccPinLookupResult {
   const pinSupplied = normalizeDsccPin(pinNumber) ?? pinNumber.trim();
   if (!pinSupplied) {
@@ -274,7 +330,10 @@ export function checkDsccPinAgainstRegister(
     };
   }
 
-  const matches = findDsccRegisterMatches(name, entries, { allowPartial: true });
+  const matches = findDsccRegisterMatches(name, entries, {
+    allowPartial: true,
+    index: options.index,
+  });
   if (matches.length === 0) {
     return {
       pinSupplied,

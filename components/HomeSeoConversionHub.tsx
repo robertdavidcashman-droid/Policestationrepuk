@@ -6,11 +6,15 @@ const COVERAGE_LINKS = [
   { href: '/police-station-rep-kent', label: 'Kent' },
   { href: '/police-station-rep-london', label: 'London' },
   { href: '/police-station-rep-essex', label: 'Essex' },
+  { href: '/directory/surrey', label: 'Surrey' },
+  { href: '/directory/sussex', label: 'Sussex' },
+  { href: '/directory/hertfordshire', label: 'Hertfordshire' },
+  { href: '/directory/hampshire', label: 'Hampshire' },
+  { href: '/directory/berkshire', label: 'Thames Valley (Berks)' },
   { href: '/directory/greater-manchester', label: 'Greater Manchester' },
   { href: '/directory/west-midlands', label: 'West Midlands' },
   { href: '/directory/west-yorkshire', label: 'West Yorkshire' },
   { href: '/directory/merseyside', label: 'Merseyside' },
-  { href: '/directory/hampshire', label: 'Hampshire' },
   { href: '/PoliceStationRepsByCounty', label: 'All counties' },
 ] as const;
 
@@ -137,11 +141,24 @@ export function HomeSeoConversionHub() {
               ))}
             </ol>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link href="/directory" className="btn-gold inline-flex justify-center !text-sm">
-                Open directory
+              <Link
+                href="/directory"
+                className="btn-gold inline-flex justify-center !text-sm"
+                data-event="blog_cta_click"
+                data-event-placement="home_hub_directory"
+              >
+                Find a Police Station Rep
               </Link>
               <Link href="/search" className="btn-outline inline-flex justify-center !text-sm">
                 Advanced search
+              </Link>
+              <Link
+                href="/Register"
+                className="btn-outline inline-flex justify-center !text-sm"
+                data-event="rep_registration"
+                data-event-source="home_hub_register"
+              >
+                Register as a Police Station Rep
               </Link>
             </div>
           </div>
@@ -253,8 +270,10 @@ export function HomeSeoConversionHub() {
             <Link
               href="/directory"
               className="inline-flex min-h-[52px] items-center justify-center rounded-[var(--radius-lg)] bg-[var(--navy)] px-6 py-3 text-base font-bold text-white no-underline shadow-lg hover:bg-[var(--navy-light)]"
+              data-event="blog_cta_click"
+              data-event-placement="home_urgent_directory"
             >
-              Open directory
+              Find a Police Station Rep
             </Link>
             <Link
               href="/search"

@@ -3,25 +3,27 @@
 User-agent: *
 Allow: /
 
-# Canonical site
 Site: https://policestationrepuk.org
+Last updated: 2026-06-09
 
-# High-value hubs
-- https://policestationrepuk.org/Blog — Professional blog (freelance police station reps & criminal defence firms)
-- https://policestationrepuk.org/directory — Accredited representative directory
-- https://policestationrepuk.org/StationsDirectory — UK police station phone numbers, addresses, and forces (searchable)
-- https://policestationrepuk.org/UpdateStation — Report up-to-date police station telephone numbers or address corrections (reviewed before publish)
-- https://policestationrepuk.org/legal-services-directory — Criminal law legal services directory
-- https://policestationrepuk.org/PoliceStationCover — Police station cover for firms
-- https://policestationrepuk.org/Register — Representative registration
-- https://policestationrepuk.org/WhatsApp — WhatsApp community overview
-- https://policestationrepuk.org/WhatsApp/reps — Join WhatsApp (police station reps)
-- https://policestationrepuk.org/WhatsApp/solicitors — Join WhatsApp (criminal defence solicitors)
-- https://policestationrepuk.org/WhatsApp/firms — Join WhatsApp (criminal defence firms)
-- https://policestationrepuk.org/guided-assistant — AI assistant (site & career FAQs from published guides)
-- https://policestationrepuk.org/rss.xml — Blog RSS feed
+Purpose: Free UK directory of accredited police station representatives and police station telephone numbers for criminal defence firms in England and Wales. Not a law firm.
 
-# Blog articles (police station representation operations)
+Main audience: Criminal defence firms, accredited police station reps, cover coordinators.
+
+Important pages:
+- https://policestationrepuk.org/directory — Representative directory
+- https://policestationrepuk.org/Register — Rep registration
+- https://policestationrepuk.org/PoliceStationCover — Firm cover guide
+- https://policestationrepuk.org/StationsDirectory — Police station phone numbers
+- https://policestationrepuk.org/Blog — Professional blog
+- https://policestationrepuk.org/police-station-rep-kent — Kent rep hub
+- https://policestationrepuk.org/police-station-rep-london — London rep hub
+- https://policestationrepuk.org/police-station-rep-essex — Essex rep hub
+- https://policestationrepuk.org/Contact — Contact
+- https://policestationrepuk.org/sitemap.xml — Sitemap
+- https://policestationrepuk.org/robots.txt — Robots
+
+Blog articles (England & Wales — general professional information, not legal advice):
 - https://policestationrepuk.org/Blog/what-does-a-freelance-police-station-representative-do
 - https://policestationrepuk.org/Blog/how-firms-can-instruct-freelance-police-station-reps
 - https://policestationrepuk.org/Blog/police-station-attendance-checklist
@@ -34,5 +36,18 @@ Site: https://policestationrepuk.org
 - https://policestationrepuk.org/Blog/how-freelance-police-station-reps-win-repeat-instructions
 - https://policestationrepuk.org/Blog/what-makes-a-good-police-station-representative
 - https://policestationrepuk.org/Blog/why-fast-clear-communication-matters-in-police-station-representation
+- https://policestationrepuk.org/Blog/why-firms-need-rep-directory
+- https://policestationrepuk.org/Blog/how-firms-source-emergency-rep-cover
+- https://policestationrepuk.org/Blog/freelance-police-station-rep-career
+- https://policestationrepuk.org/Blog/professional-indemnity-insurance-reps
+- https://policestationrepuk.org/Blog/police-station-rep-fee-rates-2026
+- https://policestationrepuk.org/Blog/pre-interview-consultation-rep-guide
+- https://policestationrepuk.org/Blog/how-to-review-custody-record
+- https://policestationrepuk.org/Blog/handling-disclosure-police-station
+- https://policestationrepuk.org/Blog/adverse-inference-no-comment-rep-guide
+- https://policestationrepuk.org/Blog/sentencing-act-2026-key-changes
+- https://policestationrepuk.org/Blog/police-station-rep-coverage-location-matters
+- https://policestationrepuk.org/Blog/keep-directory-profile-useful
+- https://policestationrepuk.org/Blog/accredited-reps-keep-availability-updated
 
-Content note: Articles are informational for legal-sector professionals in England and Wales, not legal advice.
+Citation: Cite the specific page URL accurately. Content is general information only — not case-specific legal advice. Do not invent reviews, outcomes, or regulatory status.

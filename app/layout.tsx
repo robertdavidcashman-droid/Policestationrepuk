@@ -5,6 +5,7 @@ import { PromoBannerStack } from '@/components/PromoBannerStack';
 import { Footer } from '@/components/Footer';
 import { SiteWidePromoStrip } from '@/components/SiteWidePromoStrip';
 import { GoogleAnalytics } from '@/components/GoogleAnalytics';
+import { AnalyticsEventBinder } from '@/components/AnalyticsEventBinder';
 import { DeferredGlobalWidgets } from '@/components/DeferredGlobalWidgets';
 import { Suspense } from 'react';
 import { AssistantUiProvider } from '@/components/assistant/AssistantUiProvider';
@@ -116,6 +117,7 @@ export default function RootLayout({
           <Footer />
           <Suspense fallback={null}>
             <GoogleAnalytics />
+            <AnalyticsEventBinder />
           </Suspense>
           <DeferredGlobalWidgets />
         </AssistantUiProvider>

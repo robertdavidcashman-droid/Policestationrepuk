@@ -16,9 +16,9 @@ export const COUNTY_SEO_PAGES: CountySeoPage[] = [
     slug: 'kent',
     countyName: 'Kent',
     pageSlug: 'PoliceStationRepsKent',
-    metaTitle: 'Kent Police Station Cover Network | Find Reps for Firms',
+    metaTitle: 'Kent Police Station Reps | Directory for Firms',
     metaDescription:
-      'Find accredited police station representatives covering Kent. Representatives available 24/7 for Maidstone, Canterbury, Medway, Folkestone, Tunbridge Wells, and more.',
+      'Accredited police station reps covering Kent custody suites — Maidstone, Medway, Folkestone, Tunbridge Wells. Free directory for criminal defence firms.',
     h1: 'Kent Police Station Cover Network',
     intro:
       'Accredited police station representatives covering Maidstone, Canterbury, Medway, Folkestone, Tunbridge Wells, and all Kent custody suites. Our Kent representatives are available 24/7 for criminal defence firms needing police station cover.',
@@ -28,9 +28,9 @@ export const COUNTY_SEO_PAGES: CountySeoPage[] = [
     slug: 'london',
     countyName: 'London',
     pageSlug: 'PoliceStationRepsLondon',
-    metaTitle: 'London Police Station Representatives | Find Reps for Firms',
+    metaTitle: 'London Police Station Reps | Directory for Firms',
     metaDescription:
-      'Find accredited police station representatives covering Greater London. Reps available 24/7 for all Metropolitan Police custody suites.',
+      'Accredited reps for Greater London custody suites — Metropolitan Police area. Search the free directory for criminal defence firms needing cover.',
     h1: 'London Police Station Representatives',
     intro:
       'Accredited police station representatives covering all Greater London custody suites. Our London representatives provide 24/7 cover for criminal defence firms across the Metropolitan Police area.',
@@ -40,9 +40,9 @@ export const COUNTY_SEO_PAGES: CountySeoPage[] = [
     slug: 'essex',
     countyName: 'Essex',
     pageSlug: 'PoliceStationRepsEssex',
-    metaTitle: 'Essex Police Station Representatives | Find Reps for Firms',
+    metaTitle: 'Essex Police Station Reps | Directory for Firms',
     metaDescription:
-      'Find accredited police station representatives covering Essex. Representatives available for all Essex Police custody suites.',
+      'Accredited reps for Essex Police custody suites — Chelmsford, Southend, Basildon, Colchester. Free directory for criminal defence firms.',
     h1: 'Essex Police Station Representatives',
     intro:
       'Accredited police station representatives covering all Essex Police custody suites. Our Essex representatives are available for criminal defence firms needing police station cover across the county.',
@@ -88,9 +88,9 @@ export const COUNTY_SEO_PAGES: CountySeoPage[] = [
     slug: 'surrey',
     countyName: 'Surrey',
     pageSlug: 'PoliceStationRepsSurrey',
-    metaTitle: 'Surrey Police Station Representatives | Find Reps for Firms',
+    metaTitle: 'Surrey Police Station Reps | Directory for Firms',
     metaDescription:
-      'Find accredited police station representatives covering Surrey. Representatives available for all Surrey Police custody suites.',
+      'Accredited reps for Surrey custody suites — Guildford, Woking, Staines, Reigate. Search the free UK directory for criminal defence firms.',
     h1: 'Surrey Police Station Representatives',
     intro:
       'Accredited police station representatives covering Surrey Police custody suites including Guildford, Woking, Staines, and surrounding areas.',
@@ -100,9 +100,9 @@ export const COUNTY_SEO_PAGES: CountySeoPage[] = [
     slug: 'sussex',
     countyName: 'Sussex',
     pageSlug: 'PoliceStationRepsSussex',
-    metaTitle: 'Sussex Police Station Representatives | Find Reps for Firms',
+    metaTitle: 'Sussex Police Station Reps | Directory for Firms',
     metaDescription:
-      'Find accredited police station representatives covering Sussex. Representatives available for all Sussex Police custody suites.',
+      'Accredited reps for Sussex custody — Brighton, Crawley, Eastbourne, Hastings. Free directory for criminal defence firms in England and Wales.',
     h1: 'Sussex Police Station Representatives',
     intro:
       'Accredited police station representatives covering Sussex Police custody suites including Brighton, Crawley, Eastbourne, and surrounding areas.',
@@ -112,9 +112,9 @@ export const COUNTY_SEO_PAGES: CountySeoPage[] = [
     slug: 'hampshire',
     countyName: 'Hampshire',
     pageSlug: 'PoliceStationRepsHampshire',
-    metaTitle: 'Hampshire Police Station Representatives | Find Reps for Firms',
+    metaTitle: 'Hampshire Police Station Reps | Directory for Firms',
     metaDescription:
-      'Find accredited police station representatives covering Hampshire. Representatives available for all Hampshire Constabulary custody suites.',
+      'Accredited reps for Hampshire custody — Southampton, Portsmouth, Winchester. Free directory for criminal defence firms needing police station cover.',
     h1: 'Hampshire Police Station Representatives',
     intro:
       'Accredited police station representatives covering Hampshire Constabulary custody suites including Southampton, Portsmouth, Winchester, and surrounding areas.',
@@ -148,9 +148,9 @@ export const COUNTY_SEO_PAGES: CountySeoPage[] = [
     slug: 'berkshire',
     countyName: 'Berkshire',
     pageSlug: 'PoliceStationRepsBerkshire',
-    metaTitle: 'Berkshire Police Station Representatives | Find Reps for Firms',
+    metaTitle: 'Thames Valley Police Station Reps | Berkshire',
     metaDescription:
-      'Find accredited police station representatives covering Berkshire. Representatives available for all Thames Valley Police custody suites in Berkshire.',
+      'Accredited reps for Thames Valley custody in Berkshire — Reading, Slough, Maidenhead. Free directory for criminal defence firms.',
     h1: 'Berkshire Police Station Representatives',
     intro:
       'Accredited police station representatives covering Berkshire custody suites including Reading, Slough, Maidenhead, and surrounding areas under Thames Valley Police.',
@@ -160,9 +160,9 @@ export const COUNTY_SEO_PAGES: CountySeoPage[] = [
     slug: 'hertfordshire',
     countyName: 'Hertfordshire',
     pageSlug: 'PoliceStationRepsHertfordshire',
-    metaTitle: 'Hertfordshire Police Station Representatives | Find Reps for Firms',
+    metaTitle: 'Hertfordshire Police Station Reps | Directory',
     metaDescription:
-      'Find accredited police station representatives covering Hertfordshire. Representatives available for all Hertfordshire Constabulary custody suites.',
+      'Accredited reps for Hertfordshire custody — Hatfield, Stevenage, Watford. Search the free directory for criminal defence firms.',
     h1: 'Hertfordshire Police Station Representatives',
     intro:
       'Accredited police station representatives covering Hertfordshire Constabulary custody suites including Hatfield, Stevenage, Watford, and surrounding areas.',

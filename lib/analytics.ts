@@ -31,9 +31,19 @@ export function trackEvent(
 
 export const AnalyticsEvents = {
   directorySearch: (query: string) => trackEvent('directory_search', { search_term: query.slice(0, 80) }),
-  registerCtaClick: (source: string) => trackEvent('register_cta_click', { source }),
-  blogToDirectoryClick: (slug: string) => trackEvent('blog_directory_click', { blog_slug: slug }),
-  legalDirectorySubmit: () => trackEvent('legal_directory_submit'),
+  registerCtaClick: (source: string) => trackEvent('rep_registration', { source }),
+  blogToDirectoryClick: (slug: string) => trackEvent('blog_cta_click', { blog_slug: slug }),
+  legalDirectorySubmit: () => trackEvent('form_submit', { form: 'legal_directory' }),
+  callClick: (placement: string) => trackEvent('call_click', { placement }),
+  whatsappClick: (placement: string) => trackEvent('whatsapp_click', { placement }),
+  emailClick: (placement: string) => trackEvent('email_click', { placement }),
+  formSubmit: (form: string) => trackEvent('form_submit', { form }),
+  repRegistration: (source: string) => trackEvent('rep_registration', { source }),
+  trainingInterest: (placement: string) => trackEvent('training_interest', { placement }),
+  demoRequest: (placement: string) => trackEvent('demo_request', { placement }),
+  templateDownload: (placement: string) => trackEvent('template_download', { placement }),
+  blogCtaClick: (slug: string, placement?: string) =>
+    trackEvent('blog_cta_click', { blog_slug: slug, ...(placement ? { placement } : {}) }),
   custodynotePromoClick: (placement: string) =>
     trackEvent('outbound_partner_click', { partner: 'custodynote', placement }),
   psrTrainPromoClick: (placement: string) =>
@@ -42,4 +52,6 @@ export const AnalyticsEvents = {
     trackEvent('outbound_partner_click', { partner: 'policestationagent', placement }),
   outboundPartnerClick: (partner: string, placement: string) =>
     trackEvent('outbound_partner_click', { partner, placement }),
+  outboundDirectoryClick: (placement: string) =>
+    trackEvent('outbound_directory_click', { placement }),
 } as const;

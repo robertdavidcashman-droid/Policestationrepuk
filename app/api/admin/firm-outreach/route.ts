@@ -4,10 +4,16 @@ import { getKV } from '@/lib/kv';
 import { dailySendCap, outreachPaused, outreachSendEnabled } from '@/lib/firm-outreach/constants';
 import {
   activityReportToCsv,
+  buildExcludedProspectsView,
   buildOutreachActivityReport,
+  buildReadyProspectsView,
+  buildSendsView,
+  buildSuppressionsView,
   emptyOutreachActivityReport,
+  getCachedOutreachSummaryView,
 } from '@/lib/firm-outreach/outreach/activity-report';
 import { markProspectJoinedWhatsApp } from '@/lib/firm-outreach/storage';
+import { invalidateOutreachSummaryCache } from '@/lib/firm-outreach/outreach/activity-report';
 import {
   bulkExcludeProspects,
   bulkSendProspects,
@@ -19,6 +25,14 @@ import {
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
+function baseMeta() {
+  return {
+    paused: outreachPaused(),
+    sendEnabled: outreachSendEnabled(),
+    dailyCap: dailySendCap(),
+  };
+}
+
 export async function GET(request: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -26,6 +40,8 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const format = url.searchParams.get('format');
+    const view = url.searchParams.get('view') ?? 'summary';
+    const refresh = url.searchParams.get('refresh') === '1';
 
     if (!getKV()) {
       const empty = emptyOutreachActivityReport();
@@ -41,35 +57,86 @@ export async function GET(request: Request) {
         ok: true,
         kvConfigured: false,
         warning: 'KV not configured — outreach data unavailable',
-        paused: outreachPaused(),
-        sendEnabled: outreachSendEnabled(),
-        dailyCap: dailySendCap(),
+        ...baseMeta(),
         counts: empty.prospectCounts,
         report: empty.report,
       });
     }
 
-    const { report, prospectCounts } = await buildOutreachActivityReport();
-
-    if (format === 'csv') {
-      const csv = activityReportToCsv(report);
-      const date = report.generatedAt.slice(0, 10);
-      return new NextResponse(csv, {
-        headers: {
-          'Content-Type': 'text/csv; charset=utf-8',
-          'Content-Disposition': `attachment; filename="firm-outreach-${date}.csv"`,
-        },
+    if (format === 'csv' || view === 'full') {
+      const { report, prospectCounts } = await buildOutreachActivityReport();
+      if (format === 'csv') {
+        const csv = activityReportToCsv(report);
+        const date = report.generatedAt.slice(0, 10);
+        return new NextResponse(csv, {
+          headers: {
+            'Content-Type': 'text/csv; charset=utf-8',
+            'Content-Disposition': `attachment; filename="firm-outreach-${date}.csv"`,
+          },
+        });
+      }
+      return NextResponse.json({
+        ok: true,
+        kvConfigured: true,
+        ...baseMeta(),
+        counts: prospectCounts,
+        report,
       });
     }
 
+    if (view === 'ready') {
+      const readyToSendProspects = await buildReadyProspectsView();
+      return NextResponse.json({
+        ok: true,
+        kvConfigured: true,
+        view: 'ready',
+        readyToSendProspects,
+      });
+    }
+
+    if (view === 'excluded') {
+      const excludedProspects = await buildExcludedProspectsView();
+      return NextResponse.json({
+        ok: true,
+        kvConfigured: true,
+        view: 'excluded',
+        excludedProspects,
+      });
+    }
+
+    if (view === 'sends') {
+      const limit = Math.min(500, Math.max(1, Number(url.searchParams.get('limit')) || 100));
+      const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
+      const { sends, total } = await buildSendsView(limit, offset);
+      return NextResponse.json({
+        ok: true,
+        kvConfigured: true,
+        view: 'sends',
+        sends,
+        pagination: { limit, offset, total },
+      });
+    }
+
+    if (view === 'suppressions') {
+      const suppressions = await buildSuppressionsView();
+      return NextResponse.json({
+        ok: true,
+        kvConfigured: true,
+        view: 'suppressions',
+        suppressions,
+      });
+    }
+
+    const summaryView = await getCachedOutreachSummaryView(refresh);
     return NextResponse.json({
       ok: true,
       kvConfigured: true,
-      paused: outreachPaused(),
-      sendEnabled: outreachSendEnabled(),
-      dailyCap: dailySendCap(),
-      counts: prospectCounts,
-      report,
+      view: 'summary',
+      ...baseMeta(),
+      counts: summaryView.prospectCounts,
+      generatedAt: summaryView.generatedAt,
+      summary: summaryView.summary,
+      recentSends: summaryView.recentSends,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to build outreach report';
@@ -106,6 +173,7 @@ export async function POST(request: Request) {
       if (!prospect) {
         return NextResponse.json({ error: 'Prospect not found' }, { status: 404 });
       }
+      void invalidateOutreachSummaryCache();
       return NextResponse.json({ ok: true, prospect });
     }
 

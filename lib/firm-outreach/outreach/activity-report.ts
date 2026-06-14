@@ -1,3 +1,4 @@
+import { getKV, skipKVInPrerender } from '@/lib/kv';
 import {
   countProspectsByStatus,
   getProspectsByIds,
@@ -12,16 +13,33 @@ import type {
   OutreachActivityReport,
   OutreachActivityRow,
   OutreachActivitySummary,
+  OutreachExcludedRow,
+  OutreachQueueRow,
 } from '../types';
 
 const TOUCH_LABELS = ['Initial invite', 'Follow-up (day 7)', 'Follow-up (day 21)'] as const;
 const SENT_PROSPECTS_FOLLOWUP_LIMIT = 1000;
 const EXCLUDED_PROSPECTS_LIMIT = 500;
 const READY_TO_SEND_LIMIT = 500;
+const SUMMARY_CACHE_KEY = 'firmoutreach:admin:summary:v1';
+const SUMMARY_CACHE_TTL_SECONDS = 60;
 
 export interface OutreachActivityReportResult {
   report: OutreachActivityReport;
   prospectCounts: Record<string, number>;
+}
+
+export interface OutreachSummaryView {
+  generatedAt: string;
+  summary: OutreachActivitySummary;
+  prospectCounts: Record<string, number>;
+  recentSends: Array<{
+    sendId: string;
+    firmName: string;
+    email: string;
+    subject: string;
+    sentAt?: string;
+  }>;
 }
 
 function touchLabel(step: number): string {
@@ -79,33 +97,173 @@ function emptySummary(prospectCounts: Record<string, number>): OutreachActivityS
   };
 }
 
-export async function buildOutreachActivityReport(): Promise<OutreachActivityReportResult> {
-  const [sends, suppressions, prospectCounts] = await Promise.all([
-    listAllSends(),
-    listAllSuppressions(),
-    countProspectsByStatus(),
-  ]);
+function computeFollowUpStats(
+  sentProspects: Array<{
+    waLinkClickedAt?: string;
+    joinedWhatsAppAt?: string;
+    lastEmailAt?: string;
+    sequenceStep: number;
+  }>,
+): { pendingFollowUp1: number; pendingFollowUp2: number; waClicks: number } {
+  let pendingFollowUp1 = 0;
+  let pendingFollowUp2 = 0;
+  let waClicks = 0;
 
-  const prospectIds = [...new Set(sends.map((s) => s.prospectId))];
-  const sendEmails = sends.map((s) => s.email);
+  for (const p of sentProspects) {
+    if (p.waLinkClickedAt) waClicks++;
+    if (p.waLinkClickedAt || p.joinedWhatsAppAt) continue;
+    const days = daysSince(p.lastEmailAt);
+    if (p.sequenceStep === 0 && days >= 7 && days < 21) pendingFollowUp1++;
+    if (p.sequenceStep === 1 && days >= 14) pendingFollowUp2++;
+  }
+
+  return { pendingFollowUp1, pendingFollowUp2, waClicks };
+}
+
+function buildSummaryFromSends(
+  sends: Array<{ sentAt?: string; status: string; email: string }>,
+  prospectCounts: Record<string, number>,
+  followUp: { pendingFollowUp1: number; pendingFollowUp2: number; waClicks: number },
+): OutreachActivitySummary {
+  const bySendStatus: Record<string, number> = {};
+  const uniqueEmails = new Set<string>();
+  for (const send of sends) {
+    uniqueEmails.add(send.email.toLowerCase());
+    bySendStatus[send.status] = (bySendStatus[send.status] ?? 0) + 1;
+  }
+  const windowCounts = computeSendWindowCounts(sends);
+  return {
+    totalSends: sends.length,
+    sentToday: windowCounts.sentToday,
+    sentLast7Days: windowCounts.sentLast7Days,
+    uniqueRecipients: uniqueEmails.size,
+    bySendStatus,
+    waClicks: followUp.waClicks,
+    joinedWhatsApp: prospectCounts.joined_whatsapp ?? 0,
+    bounced: (prospectCounts.bounced ?? 0) + (bySendStatus.bounced ?? 0),
+    complained: bySendStatus.complained ?? 0,
+    unsubscribed: prospectCounts.unsubscribed ?? 0,
+    pendingFollowUp1: followUp.pendingFollowUp1,
+    pendingFollowUp2: followUp.pendingFollowUp2,
+    readyToSend: prospectCounts.ready_to_send ?? 0,
+    discovered: prospectCounts.discovered ?? 0,
+    noEmail: prospectCounts.no_email ?? 0,
+    excluded: prospectCounts.excluded ?? 0,
+  };
+}
+
+async function loadSentProspectsForFollowUp() {
+  const sentIds = await listProspectIdsByStatus('sent').then((ids) =>
+    ids.slice(0, SENT_PROSPECTS_FOLLOWUP_LIMIT),
+  );
+  const sentProspectsMap = await getProspectsByIds(sentIds);
+  return [...sentProspectsMap.values()];
+}
+
+export async function buildOutreachSummaryView(): Promise<OutreachSummaryView> {
+  const [sends, prospectCounts, sentProspects] = await Promise.all([
+    listAllSends(),
+    countProspectsByStatus(),
+    loadSentProspectsForFollowUp(),
+  ]);
+  const followUp = computeFollowUpStats(sentProspects);
+  const summary = buildSummaryFromSends(sends, prospectCounts, followUp);
+  const recentSends = sends.slice(0, 8).map((s) => ({
+    sendId: s.id,
+    firmName: s.firmName || '—',
+    email: s.email,
+    subject: s.subject,
+    sentAt: s.sentAt,
+  }));
+  return {
+    generatedAt: new Date().toISOString(),
+    summary,
+    prospectCounts,
+    recentSends,
+  };
+}
+
+export async function getCachedOutreachSummaryView(refresh = false): Promise<OutreachSummaryView> {
+  if (!refresh && !skipKVInPrerender()) {
+    const kv = getKV();
+    if (kv) {
+      try {
+        const cached = await kv.get<OutreachSummaryView>(SUMMARY_CACHE_KEY);
+        if (cached?.summary && cached.generatedAt) return cached;
+      } catch (err) {
+        console.warn('[firm-outreach] summary cache read failed:', err);
+      }
+    }
+  }
+
+  const built = await buildOutreachSummaryView();
+  if (!skipKVInPrerender()) {
+    const kv = getKV();
+    if (kv) {
+      try {
+        await kv.set(SUMMARY_CACHE_KEY, built, { ex: SUMMARY_CACHE_TTL_SECONDS });
+      } catch (err) {
+        console.warn('[firm-outreach] summary cache write failed:', err);
+      }
+    }
+  }
+  return built;
+}
+
+export async function invalidateOutreachSummaryCache(): Promise<void> {
+  if (skipKVInPrerender()) return;
+  const kv = getKV();
+  if (!kv) return;
+  try {
+    await kv.del(SUMMARY_CACHE_KEY);
+  } catch (err) {
+    console.warn('[firm-outreach] summary cache invalidate failed:', err);
+  }
+}
+
+export async function buildReadyProspectsView(
+  limit = READY_TO_SEND_LIMIT,
+): Promise<OutreachQueueRow[]> {
+  const readyIds = await listProspectIdsByStatus('ready_to_send').then((ids) =>
+    ids.slice(0, limit),
+  );
+  const readyProspectsMap = await getProspectsByIds(readyIds);
+  const readyProspects = sortProspectsForSend([...readyProspectsMap.values()]);
+  return queueRowsForProspects(readyProspects);
+}
+
+export async function buildExcludedProspectsView(
+  limit = EXCLUDED_PROSPECTS_LIMIT,
+): Promise<OutreachExcludedRow[]> {
+  const excludedIds = await listProspectIdsByStatus('excluded').then((ids) =>
+    ids.slice(0, limit),
+  );
+  const excludedProspectsMap = await getProspectsByIds(excludedIds);
+  const excludedProspects = [...excludedProspectsMap.values()].sort((a, b) =>
+    b.updatedAt.localeCompare(a.updatedAt),
+  );
+  return excludedRowsForProspects(excludedProspects);
+}
+
+export async function buildSendsView(
+  limit = 100,
+  offset = 0,
+): Promise<{ sends: OutreachActivityRow[]; total: number }> {
+  const allSends = await listAllSends();
+  const total = allSends.length;
+  const page = allSends.slice(offset, offset + limit);
+  const prospectIds = [...new Set(page.map((s) => s.prospectId))];
+  const sendEmails = page.map((s) => s.email);
   const [prospectMap, suppressionMap] = await Promise.all([
     getProspectsByIds(prospectIds),
     getSuppressionsByEmails(sendEmails),
   ]);
 
-  const rows: OutreachActivityRow[] = [];
-  const bySendStatus: Record<string, number> = {};
-  const uniqueEmails = new Set<string>();
-
-  for (const send of sends) {
-    uniqueEmails.add(send.email.toLowerCase());
-    bySendStatus[send.status] = (bySendStatus[send.status] ?? 0) + 1;
-
+  const sends: OutreachActivityRow[] = page.map((send) => {
     const prospect = prospectMap.get(send.prospectId);
     const normEmail = send.email.toLowerCase();
     const suppression = suppressionMap.get(normEmail);
-
-    rows.push({
+    return {
       sendId: send.id,
       prospectId: send.prospectId,
       firmName: send.firmName || prospect?.firmName || '—',
@@ -126,70 +284,34 @@ export async function buildOutreachActivityReport(): Promise<OutreachActivityRep
       bouncedAt: send.bouncedAt,
       suppressed: Boolean(suppression),
       suppressionReason: suppression?.reason,
-    });
-  }
+    };
+  });
 
-  const [sentIds, excludedIds, readyIds] = await Promise.all([
-    listProspectIdsByStatus('sent').then((ids) => ids.slice(0, SENT_PROSPECTS_FOLLOWUP_LIMIT)),
-    listProspectIdsByStatus('excluded').then((ids) => ids.slice(0, EXCLUDED_PROSPECTS_LIMIT)),
-    listProspectIdsByStatus('ready_to_send').then((ids) => ids.slice(0, READY_TO_SEND_LIMIT)),
-  ]);
-  const [sentProspectsMap, excludedProspectsMap, readyProspectsMap] = await Promise.all([
-    getProspectsByIds(sentIds),
-    getProspectsByIds(excludedIds),
-    getProspectsByIds(readyIds),
-  ]);
-  const sentProspects = [...sentProspectsMap.values()];
-  const excludedProspects = [...excludedProspectsMap.values()].sort((a, b) =>
-    b.updatedAt.localeCompare(a.updatedAt),
-  );
-  const readyProspects = sortProspectsForSend([...readyProspectsMap.values()]);
-  const [excludedRows, readyRows] = await Promise.all([
-    excludedRowsForProspects(excludedProspects),
-    queueRowsForProspects(readyProspects),
-  ]);
+  return { sends, total };
+}
 
-  let pendingFollowUp1 = 0;
-  let pendingFollowUp2 = 0;
-  let waClicks = 0;
+export async function buildSuppressionsView() {
+  return listAllSuppressions();
+}
 
-  for (const p of sentProspects) {
-    if (p.waLinkClickedAt) waClicks++;
-    if (p.waLinkClickedAt || p.joinedWhatsAppAt) continue;
-    const days = daysSince(p.lastEmailAt);
-    if (p.sequenceStep === 0 && days >= 7 && days < 21) pendingFollowUp1++;
-    if (p.sequenceStep === 1 && days >= 14) pendingFollowUp2++;
-  }
-
-  const windowCounts = computeSendWindowCounts(sends);
-
-  const summary: OutreachActivitySummary = {
-    totalSends: sends.length,
-    sentToday: windowCounts.sentToday,
-    sentLast7Days: windowCounts.sentLast7Days,
-    uniqueRecipients: uniqueEmails.size,
-    bySendStatus,
-    waClicks,
-    joinedWhatsApp: prospectCounts.joined_whatsapp ?? 0,
-    bounced: (prospectCounts.bounced ?? 0) + (bySendStatus.bounced ?? 0),
-    complained: bySendStatus.complained ?? 0,
-    unsubscribed: prospectCounts.unsubscribed ?? 0,
-    pendingFollowUp1,
-    pendingFollowUp2,
-    readyToSend: prospectCounts.ready_to_send ?? 0,
-    discovered: prospectCounts.discovered ?? 0,
-    noEmail: prospectCounts.no_email ?? 0,
-    excluded: prospectCounts.excluded ?? 0,
-  };
+export async function buildOutreachActivityReport(): Promise<OutreachActivityReportResult> {
+  const [summaryView, readyToSendProspects, excludedProspects, sendsPage, suppressions] =
+    await Promise.all([
+      buildOutreachSummaryView(),
+      buildReadyProspectsView(),
+      buildExcludedProspectsView(),
+      buildSendsView(10_000, 0),
+      buildSuppressionsView(),
+    ]);
 
   return {
-    prospectCounts,
+    prospectCounts: summaryView.prospectCounts,
     report: {
-      generatedAt: new Date().toISOString(),
-      summary,
-      sends: rows,
-      readyToSendProspects: readyRows,
-      excludedProspects: excludedRows,
+      generatedAt: summaryView.generatedAt,
+      summary: summaryView.summary,
+      sends: sendsPage.sends,
+      readyToSendProspects,
+      excludedProspects,
       suppressions,
     },
   };

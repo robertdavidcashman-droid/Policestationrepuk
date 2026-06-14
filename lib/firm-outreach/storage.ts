@@ -221,10 +221,18 @@ export async function listAllSends(): Promise<FirmOutreachSend[]> {
   const kv = getKV();
   if (!kv) return [];
   const ids = [...(await readStringList(SEND_INDEX))].reverse();
+  if (ids.length === 0) return [];
+
   const out: FirmOutreachSend[] = [];
-  for (const id of ids) {
-    const s = await getSend(id);
-    if (s) out.push(s);
+  const BATCH = 100;
+  for (let i = 0; i < ids.length; i += BATCH) {
+    const batch = ids.slice(i, i + BATCH);
+    const pipeline = kv.pipeline();
+    for (const id of batch) pipeline.get(sendKey(id));
+    const rows = await pipeline.exec<(FirmOutreachSend | null)[]>();
+    for (const row of rows) {
+      if (row && typeof row === 'object' && row.id) out.push(row);
+    }
   }
   return out;
 }

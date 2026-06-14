@@ -63,6 +63,16 @@ export default function PoliceStationCoverPage() {
 
       <div className="page-container pt-10">
 
+      <section className="mb-10 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-slate-50 p-6">
+        <h2 className="text-lg font-bold text-[var(--navy)]">Quick answer</h2>
+        <p className="mt-2 text-base leading-relaxed text-[var(--muted)]">
+          <strong className="text-[var(--navy)]">PoliceStationRepUK</strong> helps criminal defence firms find{' '}
+          <strong className="text-[var(--navy)]">accredited police station representatives</strong> for custody
+          attendance across England and Wales. Search by county or station, contact reps directly, and instruct under
+          your firm&apos;s process. This directory does not provide legal advice to detainees.
+        </p>
+      </section>
+
       {/* What the Directory Offers */}
       <section className="mb-14">
         <h2 className="text-h2 mb-6 text-[var(--navy)]">What Our Directory Offers Firms</h2>

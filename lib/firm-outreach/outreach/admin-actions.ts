@@ -21,6 +21,7 @@ import type {
   OutreachQueueRow,
 } from '../types';
 import { sendOutreachEmail } from './send';
+import { invalidateOutreachSummaryCache } from './activity-report';
 
 export type RestoreExcludedOptions = {
   targetStatus?: 'discovered' | 'ready_to_send';
@@ -82,6 +83,7 @@ export async function restoreExcludedProspect(
   );
   prospect.updatedAt = new Date().toISOString();
   await saveProspect(prospect, prevStatus);
+  void invalidateOutreachSummaryCache();
   return { ok: true, prospect };
 }
 
@@ -136,6 +138,7 @@ export async function manualSendProspect(
   send.sentAt = now;
   send.resendMessageId = result.messageId;
   await saveSend(send);
+  void invalidateOutreachSummaryCache();
 
   return {
     ok: true,
@@ -246,6 +249,10 @@ export async function bulkSendProspects(
     }
   }
 
+  if (!dryRun && result.sent > 0) {
+    void invalidateOutreachSummaryCache();
+  }
+
   return result;
 }
 
@@ -270,6 +277,10 @@ export async function bulkExcludeProspects(
     result.results.push({ prospectId, ok: true });
   }
 
+  if (result.excluded > 0) {
+    void invalidateOutreachSummaryCache();
+  }
+
   return result;
 }
 
@@ -288,6 +299,7 @@ export async function excludeProspect(
   prospect.excludedReason = reason?.trim() || 'manual_admin_exclude';
   prospect.updatedAt = new Date().toISOString();
   await saveProspect(prospect, prevStatus);
+  void invalidateOutreachSummaryCache();
   return { ok: true, prospect };
 }
 

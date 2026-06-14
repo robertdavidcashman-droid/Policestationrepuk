@@ -13,6 +13,8 @@ import {
   invalidateProfileCache,
   invalidateRegisteredRepsCache,
 } from '@/lib/data';
+import { invalidateRepAuditCache } from '@/lib/admin/rep-audit-cache';
+import { buildRepAuditRowForEmail } from '@/lib/admin/rep-audit-loader';
 
 export const dynamic = 'force-dynamic';
 
@@ -147,6 +149,9 @@ export async function POST(request: Request) {
 
   invalidateProfileCache();
   invalidateRegisteredRepsCache();
+  invalidateRepAuditCache();
+
+  const auditRow = await buildRepAuditRowForEmail(email);
 
   // Best-effort applicant communication for the actions that warrant it.
   if (action === 'send-reverification-message' || action === 'request-evidence') {
@@ -172,5 +177,6 @@ export async function POST(request: Request) {
     adminApproved,
     isPublic,
     lastVerifiedDate: lastVerifiedDate ?? null,
+    auditRow,
   });
 }
