@@ -143,7 +143,7 @@ export default async function BlogPage({ searchParams }: { searchParams: SearchP
           </section>
         )}
 
-        <section className="mt-12" aria-labelledby="all-posts-heading">
+        <section className="mt-12 scroll-mt-28" aria-labelledby="all-posts-heading" id="all-posts">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 id="all-posts-heading" className="text-xl font-bold text-[var(--navy)]">
               {catFilter ? `${categoryLabel(catFilter)}` : 'All articles'}

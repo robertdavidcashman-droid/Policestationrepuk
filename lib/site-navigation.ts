@@ -27,7 +27,7 @@ export const HEADER_NAV_PRIMARY: HeaderNavLink[] = [
 
 /** Blog hub + topic filters for the header Blog menu. */
 export const HEADER_NAV_BLOG_LINKS: HeaderNavLink[] = [
-  { href: '/Blog', text: 'All articles' },
+  { href: '/Blog', text: 'All blog posts' },
   ...BLOG_CATEGORIES.map((c) => ({
     href: `/Blog?cat=${c.id}`,
     text: c.label,
@@ -236,8 +236,15 @@ export const FOOTER_PARTNERS: FooterLink[] = [
 export const FOOTER_TOOLS: FooterLink[] = [...FOOTER_GUIDES, ...FOOTER_FEES_FORMS];
 
 /** Grouped desktop dropdown menus — keep the header row readable (5 menus, not 8). */
-export const HEADER_NAV_DROPDOWNS: { label: string; links: HeaderNavLink[] }[] = [
-  { label: 'Blog', links: HEADER_NAV_BLOG_LINKS },
+export type HeaderNavDropdown = {
+  label: string;
+  links: HeaderNavLink[];
+  /** When set, the menu label navigates here; chevron opens topic links. */
+  labelHref?: string;
+};
+
+export const HEADER_NAV_DROPDOWNS: HeaderNavDropdown[] = [
+  { label: 'Blog', links: HEADER_NAV_BLOG_LINKS, labelHref: '/Blog#all-posts' },
   {
     label: 'For Reps',
     links: dedupeNavLinks([

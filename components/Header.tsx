@@ -80,12 +80,14 @@ function NavDropdown({
   linkClass,
   active,
   wide,
+  labelHref,
 }: {
   label: string;
   links: HeaderNavLink[];
   linkClass: string;
   active?: boolean;
   wide?: boolean;
+  labelHref?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -106,26 +108,60 @@ function NavDropdown({
     return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
+  const activeClass =
+    open || active ? '!bg-[var(--navy-light)] ring-1 ring-[var(--gold)]/40' : '';
+  const activeText = active && !open ? '!text-[var(--gold)]' : '';
+
   return (
     <div ref={ref} className="relative shrink-0">
-      <button
-        type="button"
-        onMouseDown={(e) => {
-          e.stopPropagation();
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((v) => !v);
-        }}
-        className={`${linkClass} ${open || active ? '!bg-[var(--navy-light)] ring-1 ring-[var(--gold)]/40' : ''} ${active && !open ? '!text-[var(--gold)]' : ''}`}
-        aria-expanded={open}
-        aria-haspopup="true"
-      >
-        {label}
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden className="ml-1">
-          <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </button>
+      {labelHref ? (
+        <div className={`inline-flex items-stretch rounded-lg ${activeClass}`}>
+          <Link
+            href={labelHref}
+            className={`${linkClass} rounded-r-none !ring-0 ${activeText}`}
+            onClick={() => setOpen(false)}
+          >
+            {label}
+          </Link>
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen((v) => !v);
+            }}
+            className={`${linkClass} rounded-l-none border-l border-white/15 px-1.5 !ring-0 ${activeText}`}
+            aria-expanded={open}
+            aria-haspopup="true"
+            aria-label={`${label} topics`}
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+              <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onMouseDown={(e) => {
+            e.stopPropagation();
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen((v) => !v);
+          }}
+          className={`${linkClass} ${activeClass} ${activeText}`}
+          aria-expanded={open}
+          aria-haspopup="true"
+        >
+          {label}
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden className="ml-1">
+            <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </button>
+      )}
       {open && (
         <div
           className={`absolute left-0 top-full z-[200] mt-1 max-h-[min(70vh,28rem)] overflow-y-auto rounded-lg border border-[var(--navy-light)] bg-[var(--navy)] py-1 shadow-xl ${
@@ -299,6 +335,7 @@ export function Header() {
               label={group.label}
               links={group.links}
               linkClass={desktopNavLinkClass}
+              labelHref={group.labelHref}
               active={group.label === 'Blog' ? isBlogActive : undefined}
               wide={group.label === 'More' || group.label === 'For Reps' || group.label === 'Guides'}
             />
