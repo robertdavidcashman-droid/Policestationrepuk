@@ -24,7 +24,14 @@ Verify via `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` meta tag (already supported in
 
 ## Bing Webmaster Tools
 
-Import from GSC or verify separately; submit sitemap.
+1. Verify at [Bing Webmaster Tools](https://www.bing.com/webmasters) (import from GSC or DNS/meta tag).
+2. Set `NEXT_PUBLIC_BING_SITE_VERIFICATION` in Vercel production (same pattern as Google — renders `msvalidate.01` in `app/layout.tsx`).
+3. Submit sitemap: `https://policestationrepuk.org/sitemap.xml`
+4. After deploys, run `npm run indexnow` to ping Bing/Yandex via IndexNow (also runs on postbuild in production).
+
+## Legal Services Directory (KV)
+
+LAA crime provider stubs: `npm run laa:fetch` then `npm run laa:seed:apply` (requires Upstash KV in `.env.local` / Vercel). Listings are `noindex` until claimed.
 
 ## Microsoft Clarity
 
