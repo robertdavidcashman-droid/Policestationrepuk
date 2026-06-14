@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Should I Answer Questions or Go No Comment in a Police Interview?",
+  "dateModified": "2026-06-14",
+  "author": {
+    "@type": "Organization",
+    "name": "Police Station Agent"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Police Station Agent",
+    "url": "https://www.policestationagent.com"
+  },
+  "mainEntityOfPage": "https://www.policestationagent.com/blog/answer-questions-or-no-comment"
+}

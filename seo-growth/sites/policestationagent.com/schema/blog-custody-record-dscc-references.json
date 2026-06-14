@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Custody Record Numbers and DSCC References Explained",
+  "dateModified": "2026-06-14",
+  "author": {
+    "@type": "Organization",
+    "name": "Police Station Agent"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Police Station Agent",
+    "url": "https://www.policestationagent.com"
+  },
+  "mainEntityOfPage": "https://www.policestationagent.com/blog/custody-record-dscc-references"
+}

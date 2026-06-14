@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "AI-Assisted Custody Notes: Benefits and Limits",
+  "dateModified": "2026-06-14",
+  "author": {
+    "@type": "Organization",
+    "name": "CustodyNote"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CustodyNote",
+    "url": "https://custodynote.com"
+  },
+  "mainEntityOfPage": "https://custodynote.com/blog/ai-assisted-custody-notes-benefits-limits"
+}

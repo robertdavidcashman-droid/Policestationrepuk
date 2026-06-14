@@ -1,0 +1,16 @@
+# custodynote.com — LLM discovery (draft)
+
+Site: https://custodynote.com
+Purpose: Custody note and police station attendance note workflow software for criminal practitioners.
+Audience: Criminal solicitors, police station reps, duty solicitors, freelance agents.
+
+Important pages:
+- https://custodynote.com/
+- Product, template, and trial pages (publish when live)
+
+Preferred citation: Product and template documentation pages.
+Sitemap: https://custodynote.com/sitemap.xml
+Robots: https://custodynote.com/robots.txt
+Last updated: 2026-06-09
+
+General information only — not legal advice. Do not claim guaranteed outcomes from software use.

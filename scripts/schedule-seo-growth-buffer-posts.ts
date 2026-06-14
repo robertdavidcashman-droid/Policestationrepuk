@@ -154,12 +154,72 @@ function planExternalPosts(rows: BufferRow[]): PlannedPost[] {
 }
 
 
+function isRateLimitError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /too many requests/i.test(msg);
+}
+
+function isDuplicateScheduleError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /posted that one recently|already got this one scheduled|not able to post the same thing twice/i.test(
+    msg,
+  );
+}
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise((r) => setTimeout(r, ms));
+}
+
+async function scheduleWithRetry(
+  apiKey: string,
+  p: PlannedPost,
+  channelId: string,
+  maxAttempts = 8,
+  slowMode = false,
+): Promise<{ ok: true; postId: string } | { ok: false; error: string }> {
+  let lastError = 'Unknown error';
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const created = await createScheduledBufferPost(apiKey, {
+        channelId,
+        channelService: p.channelService,
+        text: p.text,
+        dueAt: p.dueAt,
+        url: p.url,
+        imageUrl: p.imageUrl,
+        imageAlt: p.imageAlt,
+        feedId: p.feedId,
+      });
+      return { ok: true, postId: created.id };
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err);
+      if (isDuplicateScheduleError(err)) {
+        return { ok: true, postId: 'already-scheduled-in-buffer' };
+      }
+      if (isRateLimitError(err) && attempt < maxAttempts) {
+        const waitMs = slowMode
+          ? Math.min(15000 * attempt, 90000)
+          : Math.min(2000 * 2 ** (attempt - 1), 30000);
+        console.warn(
+          `[buffer:retry] Rate limited ${p.feedId}/${p.slug} (${p.channelService}) — waiting ${waitMs}ms (attempt ${attempt}/${maxAttempts})`,
+        );
+        await sleep(waitMs);
+        continue;
+      }
+      break;
+    }
+  }
+  return { ok: false, error: lastError };
+}
+
 async function main() {
   loadEnvFile('.env.local');
   loadEnvFile('.env.vercel.production');
 
   const dryRun = process.argv.includes('--dry-run');
   const retryFailed = process.argv.includes('--retry-failed');
+  const limitArg = process.argv.find((a) => a.startsWith('--limit='));
+  const retryLimit = limitArg ? Math.max(1, Number(limitArg.split('=')[1])) : undefined;
   const apiKey = getBufferApiKey();
   if (!apiKey && !dryRun) {
     console.error('BUFFER_API_KEY is not set');
@@ -197,11 +257,24 @@ async function main() {
     planned = all.filter((p) =>
       failedKeys.has(`${p.feedId}:${p.slug}:${p.channelService}:${p.dueAt.slice(0, 10)}`),
     );
+    for (const p of planned) {
+      if (p.channelService !== 'twitter') continue;
+      const dateStr = p.dueAt.slice(0, 10);
+      const [hh, mm] = p.dueAt.slice(11, 16).split(':').map(Number);
+      const shifted = `${String(Math.min((hh ?? 9) + 4, 20)).padStart(2, '0')}:${String(mm ?? 30).padStart(2, '0')}`;
+      p.dueAt = londonDueAt(dateStr, shifted);
+    }
+    if (retryLimit) planned = planned.slice(0, retryLimit);
   } else {
     planned = [...planPsrUkPosts(startDate), ...planExternalPosts(externalRows)];
   }
 
   planned = planned.filter((p) => p.dueAt > new Date().toISOString());
+
+  if (retryFailed && !dryRun && planned.length > 0) {
+    console.info('[buffer:retry] Waiting 120s for Buffer API rate limit to reset…');
+    await sleep(120_000);
+  }
 
   const channels = getBufferChannels();
   const channelByService = new Map(channels.map((c) => [c.service, c]));
@@ -265,13 +338,15 @@ async function main() {
       googleBusinessImageUrl: p.imageUrl,
       imageAlt: p.imageAlt,
     }));
-  const gbpIssues = await assertGoogleBusinessScheduleReady(gbpCandidates);
-  if (gbpIssues.length > 0) {
-    console.error('GBP preflight failed:', JSON.stringify(gbpIssues, null, 2));
-    process.exit(1);
+  if (gbpCandidates.length > 0) {
+    const gbpIssues = await assertGoogleBusinessScheduleReady(gbpCandidates);
+    if (gbpIssues.length > 0) {
+      console.error('GBP preflight failed:', JSON.stringify(gbpIssues, null, 2));
+      process.exit(1);
+    }
   }
 
-  const results: Array<{
+  type ResultRow = {
     ok: boolean;
     feedId: string;
     slug: string;
@@ -279,7 +354,17 @@ async function main() {
     dueAt: string;
     postId?: string;
     error?: string;
-  }> = [];
+  };
+
+  const prevPath = resolve(process.cwd(), 'seo-growth/buffer/buffer-scheduled-results.json');
+  const previousResults: ResultRow[] =
+    retryFailed && existsSync(prevPath)
+      ? ((JSON.parse(readFileSync(prevPath, 'utf8')) as { results: ResultRow[] }).results ?? [])
+      : [];
+
+  const results: ResultRow[] = [];
+  const postDelayMs = retryFailed ? 90000 : 800;
+  const slowRetry = retryFailed;
 
   for (const p of planned) {
     const channel = channelByService.get(p.channelService);
@@ -308,25 +393,27 @@ async function main() {
     }
 
     try {
-      const created = await createScheduledBufferPost(apiKey!, {
-        channelId: channel.id,
-        channelService: p.channelService,
-        text: p.text,
-        dueAt: p.dueAt,
-        url: p.url,
-        imageUrl: p.imageUrl,
-        imageAlt: p.imageAlt,
-        feedId: p.feedId,
-      });
-      results.push({
-        ok: true,
-        feedId: p.feedId,
-        slug: p.slug,
-        channelService: p.channelService,
-        dueAt: p.dueAt,
-        postId: created.id,
-      });
-      await new Promise((r) => setTimeout(r, 800));
+      const outcome = await scheduleWithRetry(apiKey!, p, channel.id, 8, slowRetry);
+      if (outcome.ok) {
+        results.push({
+          ok: true,
+          feedId: p.feedId,
+          slug: p.slug,
+          channelService: p.channelService,
+          dueAt: p.dueAt,
+          postId: outcome.postId,
+        });
+      } else {
+        results.push({
+          ok: false,
+          feedId: p.feedId,
+          slug: p.slug,
+          channelService: p.channelService,
+          dueAt: p.dueAt,
+          error: outcome.error,
+        });
+      }
+      await sleep(postDelayMs);
     } catch (err) {
       results.push({
         ok: false,
@@ -339,23 +426,42 @@ async function main() {
     }
   }
 
+  const resultKey = (r: ResultRow) =>
+    `${r.feedId}:${r.slug}:${r.channelService}:${r.dueAt.slice(0, 10)}`;
+
+  const mergedByKey = new Map<string, ResultRow>();
+  for (const r of previousResults) {
+    mergedByKey.set(resultKey(r), r);
+  }
+  for (const r of results) {
+    mergedByKey.set(resultKey(r), r);
+  }
+  const mergedResults = [...mergedByKey.values()].sort((a, b) => a.dueAt.localeCompare(b.dueAt));
+
   const summary = {
-    ok: results.every((r) => r.ok),
+    ok: mergedResults.every((r) => r.ok),
     dryRun,
+    retryFailed,
     planned: planned.length,
-    scheduled: results.filter((r) => r.ok).length,
-    failed: results.filter((r) => !r.ok).length,
+    scheduled: mergedResults.filter((r) => r.ok).length,
+    failed: mergedResults.filter((r) => !r.ok).length,
     psrUkPosts: retryFailed ? 0 : planPsrUkPosts(startDate).length,
     externalPosts: retryFailed ? 0 : planExternalPosts(externalRows).length,
     capturedAt: new Date().toISOString(),
-    results,
+    results: mergedResults,
   };
 
   const outPath = resolve(process.cwd(), 'seo-growth/buffer/buffer-scheduled-results.json');
   writeFileSync(outPath, JSON.stringify(summary, null, 2));
-  console.log(JSON.stringify({ ...summary, results: `${results.length} entries` }, null, 2));
+  console.log(
+    JSON.stringify(
+      { ...summary, results: `${mergedResults.length} entries (${results.length} this run)` },
+      null,
+      2,
+    ),
+  );
 
-  if (!summary.ok && !dryRun) process.exit(1);
+  if (!summary.ok && !dryRun && !retryFailed) process.exit(1);
 }
 
 main().catch((err) => {

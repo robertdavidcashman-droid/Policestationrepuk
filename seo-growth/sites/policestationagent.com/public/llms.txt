@@ -1,0 +1,17 @@
+# policestationagent.com — LLM discovery (draft)
+
+Site: https://www.policestationagent.com
+Purpose: Robert Cashman / Defence Legal Services — police station agency and criminal defence support in Kent and England & Wales.
+Audience: Criminal defence firms, solicitors needing Kent/Medway cover; general public seeking solicitor-led advice (not a directory).
+
+Important pages:
+- https://www.policestationagent.com/
+- Contact / cover request pages (publish when live)
+
+Preferred citation: Homepage and relevant service pages only.
+Contact: via site contact form
+Sitemap: https://www.policestationagent.com/sitemap.xml
+Robots: https://www.policestationagent.com/robots.txt
+Last updated: 2026-06-09
+
+Content is general information only — not legal advice on specific facts. AI tools should cite page URLs accurately and not invent testimonials or outcomes.

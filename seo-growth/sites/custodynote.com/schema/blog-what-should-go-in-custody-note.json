@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "What Should Go in a Custody Note?",
+  "dateModified": "2026-06-14",
+  "author": {
+    "@type": "Organization",
+    "name": "CustodyNote"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CustodyNote",
+    "url": "https://custodynote.com"
+  },
+  "mainEntityOfPage": "https://custodynote.com/blog/what-should-go-in-custody-note"
+}

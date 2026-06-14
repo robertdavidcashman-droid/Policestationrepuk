@@ -1,25 +1,33 @@
 # Blog publication summary
 
-## policestationrepuk.org
+## policestationrepuk.org (in-repo)
 
-| Title | Slug | Status |
-|-------|------|--------|
-| Police Station Rep Coverage: Why Location Matters | `police-station-rep-coverage-location-matters` | **Published in repo** |
-| How to Keep Your Directory Profile Useful | `keep-directory-profile-useful` | **Published in repo** |
-| Why Accredited Reps Should Keep Availability Up to Date | `accredited-reps-keep-availability-updated` | **Published in repo** |
+| Requested title | Status | Asset |
+|-----------------|--------|-------|
+| Police Station Rep Coverage: Why Location Matters | **Published** | `police-station-rep-coverage-location-matters` |
+| How to Keep Your Directory Profile Useful | **Published** | `keep-directory-profile-useful` |
+| Why Accredited Reps Should Keep Availability Up to Date | **Published** | `accredited-reps-keep-availability-updated` |
+| How to Find a Rep Quickly | Skipped — duplicate | `how-firms-source-emergency-rep-cover` |
+| How to Register as a Police Station Rep | Skipped — use pages | `/Register`, `/HowToBecome` |
+| What Solicitors Look for in a Reliable Agent | Skipped — duplicate | `what-makes-a-good-police-station-representative` |
+| Kent / London rep guides | Skipped — county pages | `/police-station-rep-kent`, `/police-station-rep-london` |
+| Use Rep Directory Effectively | Skipped — duplicate | `why-firms-need-rep-directory` |
+| Emergency Cover Tips | Skipped — duplicate | `out-of-hours-police-station-cover-for-law-firms` |
 
-**Skipped (already covered):** emergency cover, directory guide, what makes a good rep, register guides, Kent/London county blogs.
-
-**Deploy:** push to production; IndexNow runs via postbuild/cron; Buffer local feed picks up new slugs automatically.
+**Deploy:** production deploy + GSC/Bing sitemap + IndexNow.
 
 ## policestationagent.com
 
-10 drafts in `seo-growth/blog-posts/policestationagent/` — **manual CMS publish**.
+10 posts in `seo-growth/sites/policestationagent.com/blog/` (~846+ words each). **Manual CMS publish** — see site `MANUAL_PUBLICATION_TODO.md`.
 
 ## psrtrain.com
 
-10 drafts in `seo-growth/blog-posts/psrtrain/` — **manual CMS publish**.
+10 posts in `seo-growth/sites/psrtrain.com/blog/` (~762+ words). **Manual CMS publish**.
 
 ## custodynote.com
 
-10 drafts in `seo-growth/blog-posts/custodynote/` — **manual CMS publish**.
+10 posts in `seo-growth/sites/custodynote.com/blog/` (~761+ words). **Manual CMS publish**.
+
+## Buffer
+
+Social copy for all external posts: `seo-growth/buffer/buffer-posts.csv`. Publish blogs on each site **before** social links go live.

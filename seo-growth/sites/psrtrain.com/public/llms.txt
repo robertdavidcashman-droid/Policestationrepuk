@@ -1,0 +1,16 @@
+# psrtrain.com — LLM discovery (draft)
+
+Site: https://psrtrain.com
+Purpose: Training and education for police station representatives, PACE, interviews, accreditation, and criminal practice.
+Audience: Trainee reps, junior practitioners, SQE learners, firms training staff.
+
+Important pages:
+- https://psrtrain.com/
+- Training guides and course pages (publish when live)
+
+Preferred citation: Educational articles and course landing pages.
+Sitemap: https://psrtrain.com/sitemap.xml
+Robots: https://psrtrain.com/robots.txt
+Last updated: 2026-06-09
+
+General information only — not legal advice. Cite accurately.

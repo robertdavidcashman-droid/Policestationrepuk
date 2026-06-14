@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "SQE Criminal Practice: Police Station Interview Basics",
+  "dateModified": "2026-06-14",
+  "author": {
+    "@type": "Organization",
+    "name": "PSR Train"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "PSR Train",
+    "url": "https://psrtrain.com"
+  },
+  "mainEntityOfPage": "https://psrtrain.com/blog/sqe-criminal-practice-police-station-basics"
+}

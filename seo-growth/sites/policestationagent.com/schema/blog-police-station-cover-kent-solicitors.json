@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Police Station Cover in Kent: What Solicitors Need to Know",
+  "dateModified": "2026-06-14",
+  "author": {
+    "@type": "Organization",
+    "name": "Police Station Agent"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Police Station Agent",
+    "url": "https://www.policestationagent.com"
+  },
+  "mainEntityOfPage": "https://www.policestationagent.com/blog/police-station-cover-kent-solicitors"
+}

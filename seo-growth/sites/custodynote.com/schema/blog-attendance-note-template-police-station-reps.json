@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Attendance Note Template for Police Station Representatives",
+  "dateModified": "2026-06-14",
+  "author": {
+    "@type": "Organization",
+    "name": "CustodyNote"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CustodyNote",
+    "url": "https://custodynote.com"
+  },
+  "mainEntityOfPage": "https://custodynote.com/blog/attendance-note-template-police-station-reps"
+}

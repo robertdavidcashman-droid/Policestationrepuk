@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Released Under Investigation: Practical Guidance",
+  "dateModified": "2026-06-14",
+  "author": {
+    "@type": "Organization",
+    "name": "Police Station Agent"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Police Station Agent",
+    "url": "https://www.policestationagent.com"
+  },
+  "mainEntityOfPage": "https://www.policestationagent.com/blog/released-under-investigation-guidance"
+}

@@ -15,10 +15,14 @@ Kent town pages remain at dedicated routes (Maidstone, Medway, etc.) with redire
 
 12 markdown files in `seo-growth/local-seo/policestationagent/` — Kent/Medway town landing pages with FAQ and CTA blocks. **Manual publish** to PSA CMS.
 
+## policestationagent.com (drafts)
+
+12 markdown files in `seo-growth/sites/policestationagent.com/local/` (also `local-seo/policestationagent/`) — Kent/Medway town landing pages with metadata, FAQ, CTAs, schema notes. **Manual publish** to PSA CMS.
+
 ## psrtrain.com (drafts)
 
-9 markdown files in `seo-growth/local-seo/psrtrain/` — training landing pages (PACE, accreditation, youth/vulnerable interviews, SQE, etc.). **Manual publish** to PSR Train CMS.
+9 files in `seo-growth/sites/psrtrain.com/local/` — training landing pages with Course schema frontmatter.
 
 ## custodynote.com (drafts)
 
-9 markdown files in `seo-growth/local-seo/custodynote/` — template/tool landing pages (attendance notes, DSCC workflow, bail/RUI templates, etc.). **Manual publish** to CustodyNote site.
+9 files in `seo-growth/sites/custodynote.com/local/` — template/tool landing pages with SoftwareApplication schema frontmatter.

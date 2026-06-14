@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Police Station File Preparation Checklist",
+  "dateModified": "2026-06-14",
+  "author": {
+    "@type": "Organization",
+    "name": "CustodyNote"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CustodyNote",
+    "url": "https://custodynote.com"
+  },
+  "mainEntityOfPage": "https://custodynote.com/blog/police-station-file-preparation-checklist"
+}

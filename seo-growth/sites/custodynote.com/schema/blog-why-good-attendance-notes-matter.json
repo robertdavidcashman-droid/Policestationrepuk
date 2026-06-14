@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Why Good Attendance Notes Matter in Criminal Defence",
+  "dateModified": "2026-06-14",
+  "author": {
+    "@type": "Organization",
+    "name": "CustodyNote"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CustodyNote",
+    "url": "https://custodynote.com"
+  },
+  "mainEntityOfPage": "https://custodynote.com/blog/why-good-attendance-notes-matter"
+}

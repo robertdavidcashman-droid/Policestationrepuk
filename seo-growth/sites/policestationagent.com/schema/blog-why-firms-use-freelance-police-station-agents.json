@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Why Criminal Defence Firms Use Freelance Police Station Agents",
+  "dateModified": "2026-06-14",
+  "author": {
+    "@type": "Organization",
+    "name": "Police Station Agent"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Police Station Agent",
+    "url": "https://www.policestationagent.com"
+  },
+  "mainEntityOfPage": "https://www.policestationagent.com/blog/why-firms-use-freelance-police-station-agents"
+}

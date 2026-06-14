@@ -1,137 +1,131 @@
 #!/usr/bin/env node
 /**
- * Generates external-site blog drafts, Buffer CSV/JSON, and 90-day content calendar.
+ * Generates external-site blog drafts, Buffer CSV/JSON, local pages, and 90-day content calendar.
  * Run: node scripts/seo-growth/generate-external-content.mjs
+ * Then: node scripts/seo-growth/generate-site-packages.mjs
  */
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { SITE_META, topicContent, expandSections } from './external-content-data.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
 const OUT = path.join(ROOT, 'seo-growth');
 
-const SITES = {
-  policestationagent: {
-    domain: 'policestationagent.com',
-    baseUrl: 'https://www.policestationagent.com',
-    cta: 'Request Police Station Cover',
-  },
-  psrtrain: {
-    domain: 'psrtrain.com',
-    baseUrl: 'https://psrtrain.com',
-    cta: 'Register Interest',
-  },
-  custodynote: {
-    domain: 'custodynote.com',
-    baseUrl: 'https://custodynote.com',
-    cta: 'Try CustodyNote',
-  },
-};
+const POSTS = JSON.parse(fs.readFileSync(path.join(__dirname, 'posts-config.json'), 'utf8'));
 
-const POSTS = {
-  policestationagent: [
-    { slug: 'what-happens-police-station-interview', title: 'What Happens at a Police Station Interview?', keyword: 'police station interview UK' },
-    { slug: 'answer-questions-or-no-comment', title: 'Should I Answer Questions or Go No Comment in a Police Interview?', keyword: 'no comment police interview' },
-    { slug: 'voluntary-police-interview-legal-advice', title: 'Voluntary Police Interview: Why You Still Need Legal Advice', keyword: 'voluntary police interview' },
-    { slug: 'police-bail-conditions-guidance', title: 'Police Bail Conditions: What They Mean and What to Do', keyword: 'police bail conditions' },
-    { slug: 'released-under-investigation-guidance', title: 'Released Under Investigation: Practical Guidance', keyword: 'released under investigation' },
-    { slug: 'why-firms-use-freelance-police-station-agents', title: 'Why Criminal Defence Firms Use Freelance Police Station Agents', keyword: 'freelance police station agent' },
-    { slug: 'police-station-cover-kent-solicitors', title: 'Police Station Cover in Kent: What Solicitors Need to Know', keyword: 'police station cover Kent' },
-    { slug: 'what-to-send-instructing-police-station-rep', title: 'What to Send When Instructing a Police Station Representative', keyword: 'instruct police station rep' },
-    { slug: 'custody-record-dscc-references', title: 'Custody Record Numbers and DSCC References Explained', keyword: 'DSCC reference custody' },
-    { slug: 'out-of-hours-police-station-legal-advice', title: 'How Police Station Legal Advice Works Out of Hours', keyword: 'out of hours police station solicitor' },
-  ],
-  psrtrain: [
-    { slug: 'how-to-become-police-station-representative', title: 'How to Become a Police Station Representative', keyword: 'become police station rep' },
-    { slug: 'pace-interview-basics-new-reps', title: 'PACE Interview Basics for New Police Station Reps', keyword: 'PACE interview training' },
-    { slug: 'understanding-the-police-caution', title: 'Understanding the Police Caution', keyword: 'police caution explained' },
-    { slug: 'advising-no-comment-interview', title: 'Advising on a No Comment Interview', keyword: 'no comment interview advice' },
-    { slug: 'youth-suspects-police-station', title: 'Youth Suspects at the Police Station', keyword: 'youth suspect police station' },
-    { slug: 'vulnerable-suspects-police-interviews', title: 'Vulnerable Suspects and Police Interviews', keyword: 'vulnerable suspect interview' },
-    { slug: 'police-station-accreditation-preparation', title: 'Police Station Accreditation: Practical Preparation', keyword: 'PSRAS accreditation' },
-    { slug: 'common-mistakes-new-police-station-reps', title: 'Common Mistakes New Police Station Reps Make', keyword: 'new police station rep mistakes' },
-    { slug: 'how-to-structure-police-station-advice', title: 'How to Structure Police Station Advice', keyword: 'police station advice structure' },
-    { slug: 'sqe-criminal-practice-police-station-basics', title: 'SQE Criminal Practice: Police Station Interview Basics', keyword: 'SQE criminal practice police station' },
-  ],
-  custodynote: [
-    { slug: 'how-to-write-police-station-attendance-note', title: 'How to Write a Proper Police Station Attendance Note', keyword: 'police station attendance note' },
-    { slug: 'what-should-go-in-custody-note', title: 'What Should Go in a Custody Note?', keyword: 'custody note contents' },
-    { slug: 'police-interview-note-taking-checklist', title: 'Police Interview Note-Taking: Practical Checklist', keyword: 'police interview notes' },
-    { slug: 'dscc-custody-records-attendance-notes', title: 'DSCC References, Custody Records and Attendance Notes', keyword: 'DSCC attendance note' },
-    { slug: 'police-bail-notes-what-to-record', title: 'Police Bail Notes: What to Record', keyword: 'police bail notes' },
-    { slug: 'rui-notes-criminal-practitioners', title: 'RUI Notes: What Criminal Practitioners Should Keep', keyword: 'RUI notes criminal' },
-    { slug: 'why-good-attendance-notes-matter', title: 'Why Good Attendance Notes Matter in Criminal Defence', keyword: 'attendance notes criminal defence' },
-    { slug: 'ai-assisted-custody-notes-benefits-limits', title: 'AI-Assisted Custody Notes: Benefits and Limits', keyword: 'AI custody notes' },
-    { slug: 'police-station-file-preparation-checklist', title: 'Police Station File Preparation Checklist', keyword: 'police station file preparation' },
-    { slug: 'attendance-note-template-police-station-reps', title: 'Attendance Note Template for Police Station Representatives', keyword: 'attendance note template' },
-  ],
+const SITES = {
+  policestationagent: { domain: 'policestationagent.com', baseUrl: 'https://www.policestationagent.com', cta: 'Request Police Station Cover' },
+  psrtrain: { domain: 'psrtrain.com', baseUrl: 'https://psrtrain.com', cta: 'Register Interest' },
+  custodynote: { domain: 'custodynote.com', baseUrl: 'https://custodynote.com', cta: 'Try CustodyNote' },
 };
 
 const LOCAL_PSA = [
-  'kent-police-station-representative',
-  'medway-police-station-representative',
-  'sevenoaks-police-station-cover',
-  'swanley-police-station-cover',
-  'dartford-police-station-cover',
-  'gravesend-police-station-cover',
-  'maidstone-police-station-cover',
-  'tonbridge-police-station-cover',
-  'tunbridge-wells-police-station-cover',
-  'chatham-police-station-cover',
-  'gillingham-police-station-cover',
-  'rochester-police-station-cover',
+  { slug: 'kent-police-station-representative', place: 'Kent', context: 'county-wide cover including Medway, Maidstone, and north Kent custody suites' },
+  { slug: 'medway-police-station-representative', place: 'Medway', context: 'Medway custody and Chatham, Gillingham, Rochester attendances' },
+  { slug: 'sevenoaks-police-station-cover', place: 'Sevenoaks', context: 'West Kent custody routes' },
+  { slug: 'swanley-police-station-cover', place: 'Swanley', context: 'North West Kent and M25 corridor' },
+  { slug: 'dartford-police-station-cover', place: 'Dartford', context: 'North Kent and Thames corridor' },
+  { slug: 'gravesend-police-station-cover', place: 'Gravesend', context: 'North Kent custody attendance' },
+  { slug: 'maidstone-police-station-cover', place: 'Maidstone', context: 'Mid-Kent custody cover' },
+  { slug: 'tonbridge-police-station-cover', place: 'Tonbridge', context: 'West Kent police station representation' },
+  { slug: 'tunbridge-wells-police-station-cover', place: 'Tunbridge Wells', context: 'Tunbridge Wells and surrounding custody' },
+  { slug: 'chatham-police-station-cover', place: 'Chatham', context: 'Chatham and Medway police station cover' },
+  { slug: 'gillingham-police-station-cover', place: 'Gillingham', context: 'Gillingham custody attendance' },
+  { slug: 'rochester-police-station-cover', place: 'Rochester', context: 'Rochester and Medway legal representation' },
 ];
 
-function blogBody(siteKey, post) {
-  const site = SITES[siteKey];
+function psaLocalBody(page) {
+  const title = `${page.place} police station representative`;
   return `---
-title: "${post.title}"
-metaTitle: "${post.title.slice(0, 58)}"
+title: "${title}"
+metaTitle: "${title.slice(0, 58)} | Kent"
+metaDescription: "Police station representation for criminal defence firms covering ${page.place}, Kent. Robert Cashman — Defence Legal Services. General information only."
+slug: ${page.slug}
+canonical: https://www.policestationagent.com/${page.slug}
+schema: LegalService, LocalBusiness, FAQPage
+---
+
+# ${title}
+
+## Quick answer
+
+Robert Cashman / Defence Legal Services provides police station representation for criminal defence firms covering **${page.place}** — ${page.context}. This page is general information for instructing firms, not case-specific legal advice.
+
+## Local context
+
+Firms instructing cover in ${page.place} should provide DSCC reference, custody location, client details, and billing route early. Overnight and weekend attendances are common in Kent.
+
+## CTAs
+
+- **Call Robert Cashman**
+- **WhatsApp Now**
+- **Email Instructions**
+- **Request Police Station Cover**
+
+## FAQ
+
+### Do you cover overnight arrests?
+
+Contact to confirm availability for the specific custody suite.
+
+### Wider directory
+
+See [PoliceStationRepUK](https://policestationrepuk.org/directory) for a wider accredited rep directory.
+
+---
+
+*General information only — not legal advice.*
+`;
+}
+
+function blogBody(siteKey, post) {
+  const site = SITE_META[siteKey];
+  const topic = topicContent(siteKey, post.slug, post.title, post.keyword);
+  const body = expandSections(topic.sections);
+  const faq = topic.faq.map((f) => `### ${f.q}\n\n${f.a}`).join('\n\n');
+  const cross = site.crossLinks.map((l) => `- [${l.label}](${l.url})`).join('\n');
+  return `---
+title: "${post.title.replace(/"/g, '\\"')}"
+metaTitle: "${post.title.slice(0, 58).replace(/"/g, '\\"')}"
 metaDescription: "Practical UK guidance on ${post.keyword} for criminal defence professionals. General information only — not legal advice on specific facts."
 slug: ${post.slug}
 site: ${site.domain}
 published: draft
 author: Editorial team
-cta: ${site.cta}
+lastUpdated: 2026-06-14
+cta: ${site.ctas[0]}
 schema: Article
 primaryKeyword: ${post.keyword}
+canonical: ${site.baseUrl}/blog/${post.slug}
 ---
+
+# ${post.title}
+
+**Last updated:** 14 June 2026
 
 ## Quick answer
 
-${post.title} is a common question for ${siteKey === 'policestationagent' ? 'criminal defence firms and clients in Kent and across England & Wales' : siteKey === 'psrtrain' ? 'trainee and accredited police station representatives' : 'criminal solicitors and police station representatives'}. This article explains the practical steps, professional context, and what to record or prepare — in plain UK English.
+${topic.intro}
 
 ## Who this is for
 
-- ${siteKey === 'policestationagent' ? 'Criminal defence firms needing police station cover' : siteKey === 'psrtrain' ? 'People training for PSRAS accreditation or SQE criminal practice' : 'Practitioners who attend police stations and prepare attendance notes'}
+- ${site.audience}
 
-## Key points
-
-1. **Professional context** — work under PACE and the Codes of Practice; the instructing firm retains conduct of the case.
-2. **Preparation** — gather custody details, disclosure, and client instructions before interview where possible.
-3. **Documentation** — clear notes protect the client, the firm, and the professional.
-4. **Escalation** — know when to involve a supervising solicitor or duty scheme.
-
-## Practical workflow
-
-Start with the custody record and identification of the client’s status (detained, voluntary attendance, youth, vulnerability). Confirm the firm’s instruction route and billing. At interview, focus on advice quality and accurate recording rather than outcomes — no practitioner can guarantee a result.
-
-For firms in Kent seeking attendance cover, see [${site.domain}](${site.baseUrl}).
+${body}
 
 ## FAQ
 
-### Is this legal advice?
+${faq}
 
-No. This is general professional information. Anyone facing a police investigation should obtain advice on their own facts from a qualified criminal defence lawyer.
+## Related resources
 
-### Does this apply across the UK?
-
-This material focuses on **England and Wales** police station practice.
+${cross}
 
 ## Next step
 
-**${site.cta}** — visit [${site.baseUrl}](${site.baseUrl}).
+**${site.ctas[0]}** — visit [${site.baseUrl}](${site.baseUrl}).
 
 ---
 
@@ -154,13 +148,13 @@ for (const [siteKey, posts] of Object.entries(POSTS)) {
 
 // Local SEO drafts — PSA towns
 const psaDir = path.join(OUT, 'local-seo', 'policestationagent');
+const psaSiteDir = path.join(OUT, 'sites', 'policestationagent.com', 'local');
 ensureDir(psaDir);
-for (const slug of LOCAL_PSA) {
-  const town = slug.replace(/-police-station.*/, '').replace(/-/g, ' ');
-  fs.writeFileSync(
-    path.join(psaDir, `${slug}.md`),
-    `# ${town.charAt(0).toUpperCase() + town.slice(1)} police station cover\n\n**Site:** policestationagent.com\n\n## Summary\n\nRobert Cashman / Defence Legal Services provides police station representation for criminal defence firms covering ${town} and surrounding Kent custody suites.\n\n## CTAs\n\n- Call Robert Cashman\n- WhatsApp Now\n- Email Instructions\n- Request Police Station Cover\n\n## FAQ\n\n### Do you cover overnight arrests?\nContact to confirm availability for the specific custody suite.\n\n*General information only — not legal advice.*\n`,
-  );
+ensureDir(psaSiteDir);
+for (const page of LOCAL_PSA) {
+  const md = psaLocalBody(page);
+  fs.writeFileSync(path.join(psaDir, `${page.slug}.md`), md);
+  fs.writeFileSync(path.join(psaSiteDir, `${page.slug}.md`), md);
 }
 
 // Buffer + calendar
@@ -261,21 +255,75 @@ const CUSTODYNOTE_LANDING = [
 ];
 
 const trainDir = path.join(OUT, 'local-seo', 'psrtrain');
+const trainSiteDir = path.join(OUT, 'sites', 'psrtrain.com', 'local');
 const cnDir = path.join(OUT, 'local-seo', 'custodynote');
+const cnSiteDir = path.join(OUT, 'sites', 'custodynote.com', 'local');
 ensureDir(trainDir);
+ensureDir(trainSiteDir);
 ensureDir(cnDir);
+ensureDir(cnSiteDir);
+
+function trainLocalBody(slug) {
+  const title = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return `---
+title: "${title}"
+metaTitle: "${title.slice(0, 58)}"
+metaDescription: "${title} for police station representatives in England and Wales. Register interest for course updates."
+slug: ${slug}
+canonical: https://psrtrain.com/${slug}
+schema: Course, FAQPage
+---
+
+# ${title}
+
+## Quick answer
+
+Practical **${title.toLowerCase()}** for trainee and accredited police station representatives under PACE in England and Wales.
+
+## CTAs
+
+- **Register Interest** · **Download Training Guide** · **Book Training** · **Join Course Updates**
+
+Cross-link: [Register on PoliceStationRepUK](https://policestationrepuk.org/Register)
+
+*General information only — not legal advice.*
+`;
+}
+
+function cnLocalBody(slug) {
+  const title = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return `---
+title: "${title}"
+metaTitle: "${title.slice(0, 58)}"
+metaDescription: "${title} for criminal solicitors and police station reps. General information only."
+slug: ${slug}
+canonical: https://custodynote.com/${slug}
+schema: SoftwareApplication, FAQPage
+---
+
+# ${title}
+
+## Quick answer
+
+**${title}** supports structured **attendance notes** and custody workflows for criminal practitioners.
+
+## CTAs
+
+- **Try CustodyNote** · **Join Waitlist** · **Request Demo** · **Download Template**
+
+Cross-link: [PSR Train](https://psrtrain.com)
+
+*General information only — not legal advice.*
+`;
+}
 
 for (const slug of PSRTRAIN_LANDING) {
-  const title = slug.replace(/-/g, ' ');
-  fs.writeFileSync(
-    path.join(trainDir, `${slug}.md`),
-    `# ${title}\n\n**Site:** psrtrain.com\n\nTraining landing page draft — publish with Course schema.\n\nCTA: Register Interest · Download Training Guide · Book Training\n\n*General information only.*\n`,
-  );
+  const md = trainLocalBody(slug);
+  fs.writeFileSync(path.join(trainDir, `${slug}.md`), md);
+  fs.writeFileSync(path.join(trainSiteDir, `${slug}.md`), md);
 }
 for (const slug of CUSTODYNOTE_LANDING) {
-  const title = slug.replace(/-/g, ' ');
-  fs.writeFileSync(
-    path.join(cnDir, `${slug}.md`),
-    `# ${title}\n\n**Site:** custodynote.com\n\nTool/template landing page draft — publish with SoftwareApplication schema where appropriate.\n\nCTA: Try CustodyNote · Join Waitlist · Request Demo · Download Template\n\n*General information only.*\n`,
-  );
+  const md = cnLocalBody(slug);
+  fs.writeFileSync(path.join(cnDir, `${slug}.md`), md);
+  fs.writeFileSync(path.join(cnSiteDir, `${slug}.md`), md);
 }

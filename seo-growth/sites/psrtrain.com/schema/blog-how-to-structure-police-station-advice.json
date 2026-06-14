@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How to Structure Police Station Advice",
+  "dateModified": "2026-06-14",
+  "author": {
+    "@type": "Organization",
+    "name": "PSR Train"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "PSR Train",
+    "url": "https://psrtrain.com"
+  },
+  "mainEntityOfPage": "https://psrtrain.com/blog/how-to-structure-police-station-advice"
+}

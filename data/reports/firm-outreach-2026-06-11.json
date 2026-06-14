@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-06-11T08:49:02.110Z",
+  "summary": {
+    "totalSends": 0,
+    "uniqueRecipients": 0,
+    "bySendStatus": {},
+    "waClicks": 0,
+    "joinedWhatsApp": 0,
+    "bounced": 0,
+    "complained": 0,
+    "unsubscribed": 0,
+    "pendingFollowUp1": 0,
+    "pendingFollowUp2": 0,
+    "readyToSend": 0,
+    "discovered": 0,
+    "noEmail": 0,
+    "excluded": 0
+  },
+  "sends": [],
+  "suppressions": []
+}
