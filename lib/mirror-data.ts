@@ -121,5 +121,7 @@ export function shouldIncludeMirrorPathInSitemap(path: string): boolean {
   // engines indexing it. robots.ts also disallows it.
   if (lower === 'register' || lower.startsWith('register/')) return false;
   if (lower === 'custodynote') return false;
+  // Legacy /blog/{slug} mirror paths 301 to /Blog/{slug}; canonical blog URLs come from getAllBlogArticles().
+  if (decoded === 'blog' || decoded.startsWith('blog/')) return false;
   return true;
 }

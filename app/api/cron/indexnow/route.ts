@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const result = await submitSitemapToIndexNow({ source: 'build' });
+    const result = await submitSitemapToIndexNow({ source: 'live' });
     return NextResponse.json({
       ok: true,
       source: result.source,

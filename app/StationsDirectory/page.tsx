@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { getAllStations } from '@/lib/data';
+import { getAllReps, getAllStations } from '@/lib/data';
+import { countRepsForStation } from '@/lib/station-indexing';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { JsonLd } from '@/components/JsonLd';
 import { StationsDataContributeCta } from '@/components/StationsDataContributeCta';
@@ -35,7 +36,10 @@ interface PageProps {
 
 export default async function StationsDirectoryPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
-  const stations = await getAllStations();
+  const [stations, reps] = await Promise.all([getAllStations(), getAllReps()]);
+  const repCountBySlug = Object.fromEntries(
+    stations.map((s) => [s.slug, countRepsForStation(s, reps, stations)]),
+  );
   const stationListSample = stations.map((s) => ({ name: s.name, slug: s.slug }));
   const stats = computeStationPhoneStats(stations);
 
@@ -114,6 +118,7 @@ export default async function StationsDirectoryPage({ searchParams }: PageProps)
         <StationsDataContributeCta variant="slim" className="mb-6" />
         <StationsDirectoryExplorer
           stations={stations}
+          repCountBySlug={repCountBySlug}
           initialQuery={params.q ?? ''}
           initialForce={params.force ?? ''}
           initialCounty={params.county ?? ''}

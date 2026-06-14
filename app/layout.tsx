@@ -16,6 +16,8 @@ import { platformLegalServiceSchema, webSiteSchema } from '@/lib/seo';
 
 /** Set in Vercel / `.env` when verifying in Google Search Console (omit to skip meta tag). */
 const GOOGLE_SITE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
+/** Set in Vercel / `.env` when verifying in Bing Webmaster Tools (omit to skip meta tag). */
+const BING_SITE_VERIFICATION = process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION?.trim();
 
 const inter = Inter({
   subsets: ['latin'],
@@ -78,8 +80,15 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  ...(GOOGLE_SITE_VERIFICATION
-    ? { other: { 'google-site-verification': GOOGLE_SITE_VERIFICATION } }
+  ...(GOOGLE_SITE_VERIFICATION || BING_SITE_VERIFICATION
+    ? {
+        other: {
+          ...(GOOGLE_SITE_VERIFICATION
+            ? { 'google-site-verification': GOOGLE_SITE_VERIFICATION }
+            : {}),
+          ...(BING_SITE_VERIFICATION ? { 'msvalidate.01': BING_SITE_VERIFICATION } : {}),
+        },
+      }
     : {}),
 };
 

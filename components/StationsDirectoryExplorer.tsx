@@ -14,6 +14,7 @@ import {
   type AreaSelection,
   type AreaType,
 } from '@/lib/station-browse';
+import { shouldIndexPoliceStationPage } from '@/lib/station-indexing';
 
 type SortBy = 'relevance' | 'name';
 
@@ -25,11 +26,13 @@ function isCustodyStation(s: PoliceStation): boolean {
 
 export function StationsDirectoryExplorer({
   stations,
+  repCountBySlug = {},
   initialQuery = '',
   initialForce = '',
   initialCounty = '',
 }: {
   stations: PoliceStation[];
+  repCountBySlug?: Record<string, number>;
   initialQuery?: string;
   initialForce?: string;
   initialCounty?: string;
@@ -405,7 +408,11 @@ export function StationsDirectoryExplorer({
           )}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {visible.map((station) => (
-              <StationDirectoryCard key={station.id} station={station} />
+              <StationDirectoryCard
+                key={station.id}
+                station={station}
+                repCount={repCountBySlug[station.slug] ?? 0}
+              />
             ))}
           </div>
         </div>
@@ -421,7 +428,11 @@ export function StationsDirectoryExplorer({
               </h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {groupedSorted.map[groupName].map((station) => (
-                  <StationDirectoryCard key={station.id} station={station} />
+                  <StationDirectoryCard
+                    key={station.id}
+                    station={station}
+                    repCount={repCountBySlug[station.slug] ?? 0}
+                  />
                 ))}
               </div>
             </section>
@@ -451,37 +462,58 @@ export function StationsDirectoryExplorer({
 /*  Station card                                                       */
 /* ------------------------------------------------------------------ */
 
-function StationDirectoryCard({ station }: { station: PoliceStation }) {
+function StationDirectoryCard({
+  station,
+  repCount,
+}: {
+  station: PoliceStation;
+  repCount: number;
+}) {
   const custody = isCustodyStation(station);
+  const indexable = shouldIndexPoliceStationPage(station, repCount);
   const updateHref = `/UpdateStation?station=${encodeURIComponent(station.id)}`;
+
+  const cardBody = (
+    <>
+      <div className="flex items-start justify-between gap-2">
+        <p
+          className={`font-medium text-[var(--navy)] ${indexable ? 'group-hover:text-[var(--gold-link)]' : ''}`}
+        >
+          {station.name}
+        </p>
+        {custody && (
+          <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-700">
+            Custody
+          </span>
+        )}
+      </div>
+      {station.address && (
+        <p className="mt-1 text-xs text-[var(--muted)] line-clamp-2">{station.address}</p>
+      )}
+      {station.postcode && (
+        <p className="mt-0.5 text-xs text-[var(--muted)]">{station.postcode}</p>
+      )}
+      {(station.forceName || station.county) && (
+        <p className="mt-1 text-xs font-medium text-[var(--navy)]/80">
+          {station.forceName || station.county}
+        </p>
+      )}
+      <StationPhone station={station} link />
+    </>
+  );
 
   return (
     <article className="flex flex-col rounded-[var(--radius)] border border-[var(--card-border)] bg-[var(--card-bg)] shadow-[var(--card-shadow)] transition-all hover:border-[var(--gold)]/40 hover:shadow-[var(--card-shadow-hover)]">
-      <Link
-        href={`/police-station/${station.slug}`}
-        className="group flex flex-1 flex-col p-4 no-underline"
-      >
-        <div className="flex items-start justify-between gap-2">
-          <p className="font-medium text-[var(--navy)] group-hover:text-[var(--gold-link)]">{station.name}</p>
-          {custody && (
-            <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-700">
-              Custody
-            </span>
-          )}
-        </div>
-        {station.address && (
-          <p className="mt-1 text-xs text-[var(--muted)] line-clamp-2">{station.address}</p>
-        )}
-        {station.postcode && (
-          <p className="mt-0.5 text-xs text-[var(--muted)]">{station.postcode}</p>
-        )}
-        {(station.forceName || station.county) && (
-          <p className="mt-1 text-xs font-medium text-[var(--navy)]/80">
-            {station.forceName || station.county}
-          </p>
-        )}
-        <StationPhone station={station} link />
-      </Link>
+      {indexable ? (
+        <Link
+          href={`/police-station/${station.slug}`}
+          className="group flex flex-1 flex-col p-4 no-underline"
+        >
+          {cardBody}
+        </Link>
+      ) : (
+        <div className="flex flex-1 flex-col p-4">{cardBody}</div>
+      )}
       <div className="border-t border-[var(--card-border)] px-4 py-2.5">
         <Link
           href={updateHref}
