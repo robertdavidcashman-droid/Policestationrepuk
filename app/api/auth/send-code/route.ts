@@ -4,8 +4,15 @@ import { getRawReps, getRegisteredRepByEmail } from '@/lib/data';
 import { storeMagicCode } from '@/lib/auth';
 import { sendMagicCode } from '@/lib/email';
 import { getKV } from '@/lib/kv';
+import { getClientIp, rateLimitOk } from '@/lib/contact-guards';
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const limit = await rateLimitOk({ ip, scope: 'auth-send-code', max: 10, windowMs: 15 * 60 * 1000 });
+  if (!limit.ok) {
+    return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
+  }
+
   const kv = getKV();
   if (!kv) {
     return NextResponse.json(

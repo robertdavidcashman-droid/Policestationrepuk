@@ -1,7 +1,74 @@
 {
-  "generatedAt": "2026-04-03T11:59:37.012Z",
+  "generatedAt": "2026-06-15T08:35:41.114Z",
   "base": "https://policestationrepuk.org",
-  "sitemapUrlCount": 1605,
-  "okApprox": 1605,
-  "failures": []
+  "sitemapUrlCount": 800,
+  "okApprox": 787,
+  "failures": [
+    {
+      "url": "https://policestationrepuk.org/policestationrepskent",
+      "status": 404
+    },
+    {
+      "url": "https://policestationrepuk.org/policestationrepswestmidlands",
+      "status": 404
+    },
+    {
+      "url": "https://policestationrepuk.org/policestationrepshampshire",
+      "status": 404
+    },
+    {
+      "url": "https://policestationrepuk.org/policestationrepswestyorkshire",
+      "status": 404
+    },
+    {
+      "url": "https://policestationrepuk.org/policestationrepssussex",
+      "status": 404
+    },
+    {
+      "url": "https://policestationrepuk.org/policestationrepslondon",
+      "status": 404
+    },
+    {
+      "url": "https://policestationrepuk.org/policestationrepsnorfolk",
+      "status": 404
+    },
+    {
+      "url": "https://policestationrepuk.org/policestationrepsmanchester",
+      "status": 404
+    },
+    {
+      "url": "https://policestationrepuk.org/policestationrepssurrey",
+      "status": 404
+    },
+    {
+      "url": "https://policestationrepuk.org/policestationrepsessex",
+      "status": 404
+    },
+    {
+      "url": "https://policestationrepuk.org/policestationrepshertfordshire",
+      "status": 404
+    },
+    {
+      "url": "https://policestationrepuk.org/policestationrepssuffolk",
+      "status": 404
+    },
+    {
+      "url": "https://policestationrepuk.org/policestationrepsberkshire",
+      "status": 404
+    }
+  ],
+  "blogMissingFromSample": [
+    "https://policestationrepuk.org/Blog/what-does-a-freelance-police-station-representative-do",
+    "https://policestationrepuk.org/Blog/how-firms-can-instruct-freelance-police-station-reps",
+    "https://policestationrepuk.org/Blog/police-station-attendance-checklist",
+    "https://policestationrepuk.org/Blog/what-to-include-in-a-police-station-brief",
+    "https://policestationrepuk.org/Blog/freelance-police-station-representative-vs-duty-solicitor",
+    "https://policestationrepuk.org/Blog/common-mistakes-when-instructing-freelance-police-station-reps",
+    "https://policestationrepuk.org/Blog/best-practice-handover-notes-after-police-station-attendance",
+    "https://policestationrepuk.org/Blog/out-of-hours-police-station-cover-for-law-firms",
+    "https://policestationrepuk.org/Blog/accreditation-and-standards-in-freelance-police-station-work",
+    "https://policestationrepuk.org/Blog/how-freelance-police-station-reps-win-repeat-instructions",
+    "https://policestationrepuk.org/Blog/what-makes-a-good-police-station-representative",
+    "https://policestationrepuk.org/Blog/why-fast-clear-communication-matters-in-police-station-representation"
+  ]
 }

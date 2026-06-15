@@ -16,20 +16,6 @@
   {
     "name": "minScore",
     "expected": 0.9,
-    "actual": 0.87,
-    "values": [
-      0.87
-    ],
-    "operator": ">=",
-    "passed": false,
-    "auditProperty": "accessibility",
-    "auditId": "categories",
-    "level": "warn",
-    "url": "http://127.0.0.1:3000/Map"
-  },
-  {
-    "name": "minScore",
-    "expected": 0.9,
     "actual": 0.66,
     "values": [
       0.66

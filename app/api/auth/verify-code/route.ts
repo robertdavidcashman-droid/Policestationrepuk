@@ -2,8 +2,15 @@ import { NextResponse } from 'next/server';
 import { isAdminEmail } from '@/lib/admin-auth';
 import { getRawReps, getRegisteredRepByEmail } from '@/lib/data';
 import { verifyMagicCode, createSession, getSessionCookieName } from '@/lib/auth';
+import { getClientIp, rateLimitOk } from '@/lib/contact-guards';
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const limit = await rateLimitOk({ ip, scope: 'auth-verify-code', max: 20, windowMs: 15 * 60 * 1000 });
+  if (!limit.ok) {
+    return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 });
+  }
+
   let body: { email?: string; code?: string };
   try {
     body = await request.json();

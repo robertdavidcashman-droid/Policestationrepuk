@@ -1,11 +1,21 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 import { isCronAuthorized } from '@/lib/cron-auth';
 
 describe('isCronAuthorized', () => {
-  it('allows any request when secret is unset', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('allows any request when secret is unset in development', () => {
+    vi.stubEnv('NODE_ENV', 'development');
     const req = new Request('http://localhost/api/cron/test');
-    // Explicit empty string — `undefined` would fall through to process.env.CRON_SECRET via default param.
     expect(isCronAuthorized(req, '')).toBe(true);
+  });
+
+  it('rejects when secret is unset in production', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    const req = new Request('http://localhost/api/cron/test');
+    expect(isCronAuthorized(req, '')).toBe(false);
   });
 
   it('rejects missing credentials when secret is set', () => {

@@ -1,16 +1,21 @@
 import { getSession } from '@/lib/auth';
 
-const DEFAULT_ADMIN_EMAIL = 'robertdavidcashman@gmail.com';
-
-const ADMIN_EMAILS = new Set(
-  [
-    DEFAULT_ADMIN_EMAIL,
-    ...(process.env.ADMIN_EMAILS || process.env.OWNER_EMAIL || '')
+function parseAdminEmails(): Set<string> {
+  return new Set(
+    (process.env.ADMIN_EMAILS || process.env.OWNER_EMAIL || '')
       .split(/[,;]+/)
       .map((s) => s.trim().toLowerCase())
       .filter(Boolean),
-  ],
-);
+  );
+}
+
+function getAdminEmails(): Set<string> {
+  const emails = parseAdminEmails();
+  if (process.env.NODE_ENV === 'production' && emails.size === 0) {
+    console.error('[admin-auth] ADMIN_EMAILS or OWNER_EMAIL must be set in production');
+  }
+  return emails;
+}
 
 export type AdminCheckResult =
   | { ok: true; email: string }
@@ -20,10 +25,11 @@ export type AdminCheckResult =
 export async function requireAdmin(): Promise<AdminCheckResult> {
   const email = await getSession();
   if (!email) return { ok: false, status: 401, error: 'Not authenticated' };
-  if (ADMIN_EMAILS.size === 0) {
+  const adminEmails = getAdminEmails();
+  if (adminEmails.size === 0) {
     return { ok: false, status: 403, error: 'Admin access not configured' };
   }
-  if (!ADMIN_EMAILS.has(email.toLowerCase())) {
+  if (!adminEmails.has(email.toLowerCase())) {
     return { ok: false, status: 403, error: 'Not authorised' };
   }
   return { ok: true, email };
@@ -31,10 +37,11 @@ export async function requireAdmin(): Promise<AdminCheckResult> {
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
-  if (ADMIN_EMAILS.size === 0) return false;
-  return ADMIN_EMAILS.has(email.toLowerCase());
+  const adminEmails = getAdminEmails();
+  if (adminEmails.size === 0) return false;
+  return adminEmails.has(email.toLowerCase());
 }
 
 export function adminEmailListSize(): number {
-  return ADMIN_EMAILS.size;
+  return getAdminEmails().size;
 }

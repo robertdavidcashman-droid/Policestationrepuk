@@ -1,14 +1,8 @@
 import crypto from 'crypto';
 
-/**
- * Admin sign-in password. The ADMIN_PASSWORD env var takes precedence when set
- * (so it can be rotated without a deploy); otherwise this in-code default is
- * used so admin login always works in production.
- */
-const DEFAULT_ADMIN_PASSWORD = 'Bristol120566!';
-
+/** Admin sign-in password — must be set via ADMIN_PASSWORD in production. */
 function expectedPassword(): string {
-  return process.env.ADMIN_PASSWORD?.trim() || DEFAULT_ADMIN_PASSWORD;
+  return process.env.ADMIN_PASSWORD?.trim() || '';
 }
 
 /** Timing-safe password check for admin sign-in. */
@@ -22,5 +16,9 @@ export function verifyAdminPassword(password: string): boolean {
 }
 
 export function isAdminPasswordConfigured(): boolean {
-  return Boolean(expectedPassword());
+  if (expectedPassword()) return true;
+  if (process.env.NODE_ENV === 'production') {
+    console.error('[admin-password] ADMIN_PASSWORD must be set in production');
+  }
+  return false;
 }

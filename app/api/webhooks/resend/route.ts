@@ -28,7 +28,9 @@ function emailsFromEvent(data: ResendWebhookEvent['data']): string[] {
 
 function verifyResendWebhook(request: Request, rawBody: string): boolean {
   const secret = process.env.RESEND_WEBHOOK_SECRET?.trim();
-  if (!secret) return true;
+  if (!secret) {
+    return process.env.NODE_ENV !== 'production';
+  }
 
   const id = request.headers.get('svix-id');
   const timestamp = request.headers.get('svix-timestamp');
