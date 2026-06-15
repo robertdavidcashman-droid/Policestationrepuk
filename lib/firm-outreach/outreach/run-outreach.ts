@@ -1,4 +1,5 @@
 import { dailySendCap, outreachSendEnabled } from '../constants';
+import { isActiveCampaignProspect } from '../campaign-scope';
 import { sortProspectsForSend } from '../enrichment/scorer';
 import { validateEmailForSend } from '../enrichment/validator';
 import {
@@ -34,7 +35,7 @@ function daysSince(iso: string | undefined): number {
 async function firmRecentlyContacted(prospect: FirmProspect): Promise<boolean> {
   const siblings = await listProspectsForFirmKey(prospect.firmKey);
   for (const s of siblings) {
-    if (s.id === prospect.id) continue;
+    if (s.id === prospect.id || !isActiveCampaignProspect(s)) continue;
     if (s.lastEmailAt && daysSince(s.lastEmailAt) < FIRM_SEND_COOLDOWN_DAYS) {
       return true;
     }
@@ -89,8 +90,8 @@ export async function runFirmOutreach(opts?: {
     return stats;
   }
 
-  const ready = await listProspectsByStatus('ready_to_send', 2000);
-  const sent = await listProspectsByStatus('sent', 2000);
+  const ready = (await listProspectsByStatus('ready_to_send', 2000)).filter(isActiveCampaignProspect);
+  const sent = (await listProspectsByStatus('sent', 2000)).filter(isActiveCampaignProspect);
   const candidates = sortProspectsForSend([...ready, ...sent]);
   const emailsSentThisRun = new Set<string>();
 

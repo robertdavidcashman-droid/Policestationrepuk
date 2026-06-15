@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { getKV, skipKVInPrerender } from '@/lib/kv';
+import { dailySendKeyForCampaign, isActiveCampaignProspect } from './campaign-scope';
 import { emailHash, normalizeEmail } from './normalize';
 import type {
   FirmOutreachSend,
@@ -39,7 +40,7 @@ function sendKey(id: string): string {
 }
 
 function dailySendKey(date: string): string {
-  return `${SEND_DAILY_PREFIX}${date}`;
+  return dailySendKeyForCampaign(date);
 }
 
 function paidDailyKey(date: string): string {
@@ -519,7 +520,16 @@ export async function countProspectsByStatus(): Promise<Record<string, number>> 
   ];
   const out: Record<string, number> = {};
   for (const s of statuses) {
-    out[s] = (await listProspectIdsByStatus(s)).length;
+    const ids = await listProspectIdsByStatus(s);
+    if (ids.length === 0) {
+      out[s] = 0;
+      continue;
+    }
+    const map = await getProspectsByIds(ids);
+    out[s] = ids.filter((id) => {
+      const p = map.get(id);
+      return p && isActiveCampaignProspect(p);
+    }).length;
   }
   return out;
 }

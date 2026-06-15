@@ -7,6 +7,7 @@ import {
   listAllSuppressions,
   listProspectIdsByStatus,
 } from '../storage';
+import { activeOutreachCampaignId, isActiveCampaignProspect, isActiveCampaignSend } from '../campaign-scope';
 import { excludedRowsForProspects, queueRowsForProspects } from './admin-actions';
 import { sortProspectsForSend } from '../enrichment/scorer';
 import type {
@@ -21,7 +22,9 @@ const TOUCH_LABELS = ['Initial invite', 'Follow-up (day 7)', 'Follow-up (day 21)
 const SENT_PROSPECTS_FOLLOWUP_LIMIT = 1000;
 const EXCLUDED_PROSPECTS_LIMIT = 500;
 const READY_TO_SEND_LIMIT = 500;
-const SUMMARY_CACHE_KEY = 'firmoutreach:admin:summary:v1';
+function summaryCacheKey(): string {
+  return `firmoutreach:admin:summary:${activeOutreachCampaignId()}:v1`;
+}
 const SUMMARY_CACHE_TTL_SECONDS = 60;
 
 export interface OutreachActivityReportResult {
@@ -157,15 +160,16 @@ async function loadSentProspectsForFollowUp() {
     ids.slice(0, SENT_PROSPECTS_FOLLOWUP_LIMIT),
   );
   const sentProspectsMap = await getProspectsByIds(sentIds);
-  return [...sentProspectsMap.values()];
+  return [...sentProspectsMap.values()].filter(isActiveCampaignProspect);
 }
 
 export async function buildOutreachSummaryView(): Promise<OutreachSummaryView> {
-  const [sends, prospectCounts, sentProspects] = await Promise.all([
+  const [allSends, prospectCounts, sentProspects] = await Promise.all([
     listAllSends(),
     countProspectsByStatus(),
     loadSentProspectsForFollowUp(),
   ]);
+  const sends = allSends.filter(isActiveCampaignSend);
   const followUp = computeFollowUpStats(sentProspects);
   const summary = buildSummaryFromSends(sends, prospectCounts, followUp);
   const recentSends = sends.slice(0, 8).map((s) => ({
@@ -188,7 +192,7 @@ export async function getCachedOutreachSummaryView(refresh = false): Promise<Out
     const kv = getKV();
     if (kv) {
       try {
-        const cached = await kv.get<OutreachSummaryView>(SUMMARY_CACHE_KEY);
+        const cached = await kv.get<OutreachSummaryView>(summaryCacheKey());
         if (cached?.summary && cached.generatedAt) return cached;
       } catch (err) {
         console.warn('[firm-outreach] summary cache read failed:', err);
@@ -201,7 +205,7 @@ export async function getCachedOutreachSummaryView(refresh = false): Promise<Out
     const kv = getKV();
     if (kv) {
       try {
-        await kv.set(SUMMARY_CACHE_KEY, built, { ex: SUMMARY_CACHE_TTL_SECONDS });
+        await kv.set(summaryCacheKey(), built, { ex: SUMMARY_CACHE_TTL_SECONDS });
       } catch (err) {
         console.warn('[firm-outreach] summary cache write failed:', err);
       }
@@ -215,7 +219,7 @@ export async function invalidateOutreachSummaryCache(): Promise<void> {
   const kv = getKV();
   if (!kv) return;
   try {
-    await kv.del(SUMMARY_CACHE_KEY);
+    await kv.del(summaryCacheKey());
   } catch (err) {
     console.warn('[firm-outreach] summary cache invalidate failed:', err);
   }
@@ -228,7 +232,9 @@ export async function buildReadyProspectsView(
     ids.slice(0, limit),
   );
   const readyProspectsMap = await getProspectsByIds(readyIds);
-  const readyProspects = sortProspectsForSend([...readyProspectsMap.values()]);
+  const readyProspects = sortProspectsForSend(
+    [...readyProspectsMap.values()].filter(isActiveCampaignProspect),
+  );
   return queueRowsForProspects(readyProspects);
 }
 
@@ -239,9 +245,9 @@ export async function buildExcludedProspectsView(
     ids.slice(0, limit),
   );
   const excludedProspectsMap = await getProspectsByIds(excludedIds);
-  const excludedProspects = [...excludedProspectsMap.values()].sort((a, b) =>
-    b.updatedAt.localeCompare(a.updatedAt),
-  );
+  const excludedProspects = [...excludedProspectsMap.values()]
+    .filter(isActiveCampaignProspect)
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   return excludedRowsForProspects(excludedProspects);
 }
 
@@ -249,7 +255,7 @@ export async function buildSendsView(
   limit = 100,
   offset = 0,
 ): Promise<{ sends: OutreachActivityRow[]; total: number }> {
-  const allSends = await listAllSends();
+  const allSends = (await listAllSends()).filter(isActiveCampaignSend);
   const total = allSends.length;
   const page = allSends.slice(offset, offset + limit);
   const prospectIds = [...new Set(page.map((s) => s.prospectId))];

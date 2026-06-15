@@ -33,6 +33,7 @@ vi.mock('@/lib/firm-outreach/outreach/send', () => ({
 }));
 
 vi.mock('@/lib/firm-outreach/constants', () => ({
+  FIRM_OUTREACH_CAMPAIGN_ID: 'whatsapp_invite_v1',
   dailySendCap: () => 30,
 }));
 

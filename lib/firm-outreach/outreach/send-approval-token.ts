@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { approvalEmailKey } from '../campaign-scope';
 import { localDateInTimezone } from '@/lib/buffer/scheduler-core';
 import { getKV } from '@/lib/kv';
 
@@ -19,7 +20,6 @@ export interface SendApprovalKVRecord {
 
 const TOKEN_KV_PREFIX = 'firmoutreach:send-approval:';
 const SEND_LOCK_PREFIX = 'firmoutreach:send-approval-lock:';
-const APPROVAL_EMAIL_PREFIX = 'firmoutreach:approval-email:';
 const SEND_APPROVAL_JTI_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const NOTIFY_TIMEZONE =
@@ -146,13 +146,13 @@ export function verifySendApprovalTokenSignature(
 export async function wasOutreachApprovalEmailSent(date: string): Promise<boolean> {
   const kv = getKV();
   if (!kv) return false;
-  return Boolean(await kv.get(`${APPROVAL_EMAIL_PREFIX}${date}`));
+  return Boolean(await kv.get(approvalEmailKey(date)));
 }
 
 export async function markOutreachApprovalEmailSent(date: string): Promise<void> {
   const kv = getKV();
   if (!kv) return;
-  await kv.set(`${APPROVAL_EMAIL_PREFIX}${date}`, new Date().toISOString(), {
+  await kv.set(approvalEmailKey(date), new Date().toISOString(), {
     ex: 60 * 60 * 24 * 14,
   });
 }
