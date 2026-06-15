@@ -149,6 +149,11 @@ export async function runFirmOutreach(opts?: {
     const validation = await validateEmailForSend(email);
     if (!validation.ok) {
       stats.skipped++;
+      if (prospect.status === 'ready_to_send') {
+        prospect.status = validation.reason === 'no_mx' ? 'no_email' : 'discovered';
+        prospect.updatedAt = new Date().toISOString();
+        await saveProspect(prospect);
+      }
       continue;
     }
 

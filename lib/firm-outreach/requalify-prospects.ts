@@ -6,11 +6,13 @@ import {
   qualifyProspectForOutreach,
   resolveStatusWithQualification,
 } from './qualification';
+import { reconcileReadyProspectStatus } from './reconcile-ready-status';
 import { getProspect, listAllProspectIds, saveProspect } from './storage';
 
 export interface RequalifyResult {
   scanned: number;
   downgradedFromReady: number;
+  reconciledFromReady: number;
   heldForReview: number;
   websiteVerified: number;
   stillReady: number;
@@ -26,6 +28,7 @@ export async function requalifyAllProspects(opts?: {
   const result: RequalifyResult = {
     scanned: 0,
     downgradedFromReady: 0,
+    reconciledFromReady: 0,
     heldForReview: 0,
     websiteVerified: 0,
     stillReady: 0,
@@ -58,11 +61,30 @@ export async function requalifyAllProspects(opts?: {
     const q = qualifyProspectForOutreach(p, registry);
     const prevStatus = p.status;
 
+    const reconciled = reconcileReadyProspectStatus(p);
+    if (reconciled) {
+      p.status = reconciled;
+      p.updatedAt = new Date().toISOString();
+      await saveProspect(p, prevStatus);
+      result.reconciledFromReady++;
+      if (result.samples.length < sampleLimit) {
+        result.samples.push({
+          id: p.id,
+          firmName: p.firmName,
+          from: prevStatus,
+          to: p.status,
+          reason: reconciled === 'sent' ? 'initial_send_already_recorded' : 'invalid_email_format',
+        });
+      }
+      continue;
+    }
+
     if (p.status === 'excluded' && p.excludedReason === 'archive_only_not_on_laa_or_dscc') {
       if (q.qualified) {
         if (websiteVerifiedNow || p.crimeWebsiteVerified) result.websiteVerified++;
         p.excludedReason = undefined;
-        p.status = resolveStatusWithQualification(p, 'ready_to_send', registry);
+        const preferred = p.lastEmailAt ? 'sent' : 'ready_to_send';
+        p.status = resolveStatusWithQualification(p, preferred, registry);
         p.updatedAt = new Date().toISOString();
         await saveProspect(p, prevStatus);
         if (result.samples.length < sampleLimit) {
