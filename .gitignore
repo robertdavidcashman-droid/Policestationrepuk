@@ -81,3 +81,4 @@ next-env.d.ts
 /wayne-diag.json
 /home.html
 .env*
+.generated-admin-password.txt
