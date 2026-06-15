@@ -114,6 +114,7 @@ Firms posting urgent work should also use [Police Station Cover](/PoliceStationC
       'how-freelance-police-station-reps-win-repeat-instructions',
       'accreditation-and-standards-in-freelance-police-station-work',
       'why-fast-clear-communication-matters-in-police-station-representation',
+      'accredited-reps-keep-availability-updated',
     ],
     faqs: [
       {
@@ -143,7 +144,7 @@ When a duty fee-earner opens a rep profile during a live arrest, they typically 
 1. **Accreditation** they recognise for the scheme they use
 2. **Counties and stations** matching the custody suite
 3. **A working mobile** — not a generic office line that goes to voicemail
-4. **Signals of availability** — notes, WhatsApp community membership, or recent responsiveness
+4. **Signals of availability** — notes, WhatsApp community membership, or [keeping availability up to date](/Blog/accredited-reps-keep-availability-updated)
 
 If any of those are missing, they click the next result.
 
@@ -172,7 +173,7 @@ These issues are fixable in minutes and directly affect whether you appear in [d
 
 Representatives who win repeat work combine accurate listings with reliable attendance — see [winning repeat instructions](/Blog/how-freelance-police-station-reps-win-repeat-instructions). Your directory row is the first impression before any handover note exists.
 
-Training resources: [PSR Train](https://psrtrain.com) · Attendance notes: [CustodyNote](https://custodynote.com)
+Training resources: [PSR Train](https://psrtrain.com?utm_source=policestationrepuk&utm_medium=blog&utm_campaign=partner_tools) · Attendance notes: [CustodyNote](https://custodynote.com?utm_source=policestationrepuk&utm_medium=blog&utm_campaign=partner_tools)
 
 ---
 

@@ -29,6 +29,8 @@ const CLUSTER_DEFS: Record<
       'freelance-police-station-rep-career',
       'professional-indemnity-insurance-reps',
       'police-station-rep-fee-rates-2026',
+      'keep-directory-profile-useful',
+      'accredited-reps-keep-availability-updated',
     ],
   },
   'firm-instruction': {
@@ -42,6 +44,7 @@ const CLUSTER_DEFS: Record<
       'out-of-hours-police-station-cover-for-law-firms',
       'why-firms-need-rep-directory',
       'how-firms-source-emergency-rep-cover',
+      'police-station-rep-coverage-location-matters',
     ],
   },
   'attendance-communication': {
