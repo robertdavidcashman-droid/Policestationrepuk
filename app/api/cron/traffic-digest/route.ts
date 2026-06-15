@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { execSync } from 'node:child_process';
+import { auditCrossDomainLinks } from '@/lib/audit/cross-domain-links';
 import { sendTrafficDigestEmail } from '@/lib/buffer/email';
 import { verifyScheduledBufferImages } from '@/lib/buffer/verify-scheduled';
 import { isCronAuthorized } from '@/lib/cron-auth';
@@ -20,11 +20,7 @@ export async function GET(request: Request) {
   let crossDomainIssues: string[] = [];
 
   try {
-    const out = execSync('npx tsx scripts/audit/cross-domain-links.ts', {
-      encoding: 'utf8',
-      cwd: process.cwd(),
-    });
-    const parsed = JSON.parse(out) as { ok: boolean; issues: string[] };
+    const parsed = await auditCrossDomainLinks();
     crossDomainOk = parsed.ok;
     crossDomainIssues = parsed.issues ?? [];
   } catch (err) {

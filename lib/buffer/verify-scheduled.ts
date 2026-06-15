@@ -6,6 +6,7 @@ import {
   getSchedulerTimezone,
 } from './config';
 import { FEED_DEFAULT_IMAGES, loadAllFeedPosts } from './feeds';
+import { containsGoogleBusinessPhoneNumber } from './google-business-text';
 import { isDisallowedGbpAssetUrl } from './gbp-preflight';
 import {
   BUFFER_MAX_IMAGE_BYTES,
@@ -148,6 +149,10 @@ export async function verifyScheduledBufferImages(
     }
 
     if (isGoogleBusiness) {
+      if (containsGoogleBusinessPhoneNumber(item.text)) {
+        pushIssue(row, 'Google Business post text contains a phone number (use CTA link only)', true);
+      }
+
       if (!item.imageUrl?.trim()) {
         pushIssue(row, 'Google Business post missing Buffer asset image URL', true);
       } else if (/\.webp(\?|$)/i.test(item.imageUrl)) {
