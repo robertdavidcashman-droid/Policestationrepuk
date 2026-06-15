@@ -326,7 +326,7 @@ export async function runBufferBlogScheduler(
               message,
             );
           const imageRejected =
-            /file size limit|unsupported content-type|image exceeds|image validation failed|image too large|non-raster image path|requires a blog image url|google business requires|no google business compatible|magic-byte check failed|gbp preflight failed/i.test(
+            /file size limit|unsupported content-type|image exceeds|image validation failed|image too large|non-raster image path|requires a blog image url|google business requires|no google business compatible|magic-byte check failed|gbp preflight failed|cannot contain phone numbers/i.test(
               message,
             );
           if ((!duplicate && !imageRejected) || attempt >= 11) {

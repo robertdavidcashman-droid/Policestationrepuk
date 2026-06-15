@@ -2,6 +2,7 @@ import type { BlogArticle } from '@/lib/blog/types';
 import { appendUtm } from '@/lib/utm';
 import type { BufferChannelService } from './config';
 import type { SchedulablePost } from './content-types';
+import { sanitizeGoogleBusinessPostText } from './google-business-text';
 
 export type RandomFn = () => number;
 
@@ -76,6 +77,9 @@ export function buildSchedulablePostTextForService(
 ): string {
   const trackedUrl = withBufferSocialUtm(post.url, post.feedId, service);
   const full = buildSchedulablePostText(post, { feedId: post.feedId, service });
+  if (service === 'googlebusiness') {
+    return sanitizeGoogleBusinessPostText(full);
+  }
   if (service !== 'twitter' || full.length <= TWITTER_MAX_CHARS) {
     return full;
   }

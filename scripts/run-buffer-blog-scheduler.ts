@@ -32,7 +32,8 @@ async function main() {
   loadEnvFile('.env.vercel.production');
 
   const respectCurrentTime = process.argv.includes('--respect-now');
-  const result = await runBufferBlogScheduler(new Date(), { respectCurrentTime });
+  const force = process.argv.includes('--force');
+  const result = await runBufferBlogScheduler(new Date(), { respectCurrentTime, force });
   console.log(JSON.stringify(result, null, 2));
   if (!result.ok) process.exit(1);
 }

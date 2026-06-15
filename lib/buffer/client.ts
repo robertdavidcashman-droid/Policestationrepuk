@@ -1,5 +1,6 @@
 import type { BufferChannelService } from './config';
 import { buildBufferImageAssets } from './assets';
+import { sanitizeGoogleBusinessPostText } from './google-business-text';
 import { assertBufferPostImageReady } from './image-url';
 
 const BUFFER_API_URL = 'https://api.buffer.com';
@@ -114,6 +115,10 @@ export async function createScheduledBufferPost(
   });
 
   const metadata = postMetadataForService(input.channelService, input.url);
+  const text =
+    input.channelService === 'googlebusiness'
+      ? sanitizeGoogleBusinessPostText(input.text)
+      : input.text;
   const assets = buildBufferImageAssets({
     imageUrl: validatedImageUrl,
     imageAlt: input.imageAlt,
@@ -163,7 +168,7 @@ export async function createScheduledBufferPost(
         schedulingType: 'automatic',
         mode: 'customScheduled',
         dueAt: input.dueAt,
-        text: input.text,
+        text,
         assets,
         ...(metadata ? { metadata } : {}),
       },
