@@ -13,7 +13,7 @@ export const ARTICLES_BATCH_5: BlogArticle[] = [
     title: 'Police Station Rep Coverage: Why Location Matters for Criminal Defence Firms',
     metaTitle: 'Police Station Rep Coverage — Why Location Matters',
     metaDescription:
-      'Why geography matters when instructing police station reps: custody suite location, travel time, force areas, and how to search the UK directory by county and station.',
+      'Why geography matters when instructing police station reps: custody suite location, travel time, force areas, and searching the UK directory by county.',
     primaryKeyword: 'police station rep coverage location',
     categories: ['law-firms', 'best-practice'],
     published: '2026-06-09T09:00:00.000Z',
@@ -97,7 +97,7 @@ Firms posting urgent work should also use [Police Station Cover](/PoliceStationC
     title: 'How to Keep Your Police Station Rep Directory Profile Useful',
     metaTitle: 'Keep Your Rep Directory Profile Useful — PSR UK',
     metaDescription:
-      'How accredited police station reps can maintain a useful directory profile: counties, stations, contact details, availability, and what criminal defence firms look for.',
+      'How accredited police station reps maintain a useful directory profile: counties, stations, contact details, availability, and what firms look for.',
     primaryKeyword: 'police station rep directory profile',
     categories: ['freelance-reps', 'best-practice'],
     published: '2026-06-09T10:00:00.000Z',
@@ -184,7 +184,7 @@ Training resources: [PSR Train](https://psrtrain.com) · Attendance notes: [Cust
     title: 'Why Accredited Reps Should Keep Availability Up to Date',
     metaTitle: 'Why Reps Should Keep Availability Up to Date',
     metaDescription:
-      'Why accredited police station representatives should keep availability, contact routes, and directory details current — for firms, clients, and professional standards.',
+      'Why accredited police station reps should keep availability, contact routes, and directory details current — for firms, clients, and professional standards.',
     primaryKeyword: 'police station rep availability',
     categories: ['freelance-reps', 'best-practice'],
     published: '2026-06-09T11:00:00.000Z',
@@ -219,7 +219,7 @@ Training resources: [PSR Train](https://psrtrain.com) · Attendance notes: [Cust
     bodyMarkdown: `
 ## Key takeaways
 
-- **Availability** means firms can reach you and you can attend — not merely that you are accredited.
+- **Police station rep availability** means firms can reach you and you can attend — not merely that you are accredited.
 - Update **directory contact details**, **WhatsApp participation**, and **out-of-hours expectations** together.
 - Stale availability wastes firm time and damages professional trust.
 
