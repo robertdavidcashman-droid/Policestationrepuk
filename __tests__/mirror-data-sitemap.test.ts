@@ -19,5 +19,6 @@ describe('shouldIncludeMirrorPathInSitemap', () => {
   it('excludes register and legacy county landing paths', () => {
     expect(shouldIncludeMirrorPathInSitemap('register')).toBe(false);
     expect(shouldIncludeMirrorPathInSitemap('PoliceStationRepsKent')).toBe(false);
+    expect(shouldIncludeMirrorPathInSitemap('policestationrepskent')).toBe(false);
   });
 });

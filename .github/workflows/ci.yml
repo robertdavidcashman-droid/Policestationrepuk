@@ -24,6 +24,7 @@ jobs:
       # resolved on Linux that differ from a Windows-generated lockfile).
       # Matches Vercel's install behaviour.
       - run: npm install --no-audit --no-fund --prefer-offline
+      - run: npm run lint
       - run: npm run build
       - name: Vitest unit tests
         run: npm test

@@ -5,6 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { LEGACY_COUNTY_MIRROR_PATHS } from '@/lib/legacy-county-redirects';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const PAGES_PATH = path.join(DATA_DIR, 'pages.json');
@@ -80,22 +81,7 @@ export function hasMirrorData(): boolean {
   return !!loadMirror();
 }
 
-/** Legacy county landing URLs — canonical /directory/{slug} is already in sitemap. */
-const OMIT_SITEMAP_LEGACY_COUNTY_PATHS = new Set([
-  'PoliceStationRepsKent',
-  'PoliceStationRepsLondon',
-  'PoliceStationRepsEssex',
-  'PoliceStationRepsManchester',
-  'PoliceStationRepsWestMidlands',
-  'PoliceStationRepsWestYorkshire',
-  'PoliceStationRepsSurrey',
-  'PoliceStationRepsSussex',
-  'PoliceStationRepsHampshire',
-  'PoliceStationRepsNorfolk',
-  'PoliceStationRepsSuffolk',
-  'PoliceStationRepsBerkshire',
-  'PoliceStationRepsHertfordshire',
-]);
+
 
 /**
  * Exclude junk crawl paths and duplicate legacy county URLs from sitemap (mirror mode).
@@ -103,7 +89,7 @@ const OMIT_SITEMAP_LEGACY_COUNTY_PATHS = new Set([
  */
 export function shouldIncludeMirrorPathInSitemap(path: string): boolean {
   if (!path || path === '/') return false;
-  if (OMIT_SITEMAP_LEGACY_COUNTY_PATHS.has(path)) return false;
+  if (LEGACY_COUNTY_MIRROR_PATHS.has(path)) return false;
 
   let decoded: string;
   try {

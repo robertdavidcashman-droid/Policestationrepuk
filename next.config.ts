@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import path from "path";
 import bundleAnalyzer from "@next/bundle-analyzer";
 import packageJson from "./package.json";
+import { LEGACY_COUNTY_REDIRECTS } from "./lib/legacy-county-redirects";
 
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
@@ -121,19 +122,11 @@ const nextConfig: NextConfig = {
         destination: "https://policestationrepuk.org/:path*",
         permanent: true,
       },
-      { source: "/PoliceStationRepsKent", destination: "/directory/kent", permanent: true },
-      { source: "/PoliceStationRepsLondon", destination: "/directory/london", permanent: true },
-      { source: "/PoliceStationRepsEssex", destination: "/directory/essex", permanent: true },
-      { source: "/PoliceStationRepsManchester", destination: "/directory/greater-manchester", permanent: true },
-      { source: "/PoliceStationRepsWestMidlands", destination: "/directory/west-midlands", permanent: true },
-      { source: "/PoliceStationRepsWestYorkshire", destination: "/directory/west-yorkshire", permanent: true },
-      { source: "/PoliceStationRepsSurrey", destination: "/directory/surrey", permanent: true },
-      { source: "/PoliceStationRepsSussex", destination: "/directory/sussex", permanent: true },
-      { source: "/PoliceStationRepsHampshire", destination: "/directory/hampshire", permanent: true },
-      { source: "/PoliceStationRepsNorfolk", destination: "/directory/norfolk", permanent: true },
-      { source: "/PoliceStationRepsSuffolk", destination: "/directory/suffolk", permanent: true },
-      { source: "/PoliceStationRepsBerkshire", destination: "/directory/berkshire", permanent: true },
-      { source: "/PoliceStationRepsHertfordshire", destination: "/directory", permanent: true },
+      ...LEGACY_COUNTY_REDIRECTS.map(({ source, destination }) => ({
+        source,
+        destination,
+        permanent: true as const,
+      })),
       {
         source: "/police-station-representatives",
         destination: "/directory",
