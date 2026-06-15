@@ -14,6 +14,7 @@ import {
   isEnglandWalesPostcode,
   normalizeFirmName,
   prospectIdFromKey,
+  prospectIdForCampaign,
 } from '@/lib/firm-outreach/normalize';
 import {
   parseSraOrganisationPage,
@@ -52,6 +53,13 @@ describe('firm-outreach merge', () => {
     const b = prospectIdFromKey('abraham-solicitors-ll11');
     expect(a).toBe(b);
     expect(a.startsWith('fop_')).toBe(true);
+  });
+
+  it('builds distinct ids per campaign for the same firm key', () => {
+    const key = 'abraham-solicitors-ll11';
+    const kent = prospectIdForCampaign('agent_cover_kent_v1', key);
+    const wa = prospectIdForCampaign('whatsapp_invite_v1', key);
+    expect(kent).not.toBe(wa);
   });
 
   it('merges richer incoming data', () => {

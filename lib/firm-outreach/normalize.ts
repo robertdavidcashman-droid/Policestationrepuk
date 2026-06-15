@@ -46,6 +46,11 @@ export function prospectIdFromKey(key: string): string {
   return `fop_${hash}`;
 }
 
+/** Prospect ids are scoped per campaign so shared Redis can hold PSA + RepUK queues. */
+export function prospectIdForCampaign(campaignId: string, idKey: string): string {
+  return prospectIdFromKey(`${campaignId}:${idKey}`);
+}
+
 export function isEnglandWalesPostcode(postcode: string | undefined | null): boolean {
   const pc = (postcode ?? '').trim().toUpperCase().replace(/\s+/g, '');
   if (!pc || pc.length < 2) return true;

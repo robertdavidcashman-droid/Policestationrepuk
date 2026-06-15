@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { getKV, skipKVInPrerender } from '@/lib/kv';
-import { dailySendKeyForCampaign, isActiveCampaignProspect } from './campaign-scope';
+import { dailySendKeyForCampaign, isActiveCampaignProspect, isActiveCampaignSend, activeOutreachCampaignId } from './campaign-scope';
 import { emailHash, normalizeEmail } from './normalize';
 import type {
   FirmOutreachSend,
@@ -15,6 +15,9 @@ const PROSPECT_PREFIX = 'firmprospect:';
 const PROSPECT_INDEX = 'firmprospect:index';
 const PROSPECT_STATUS_INDEX = 'firmprospect:status:';
 const PROSPECT_EMAIL_INDEX = 'firmprospect:email:';
+function prospectEmailIndexKey(campaignId: string, email: string): string {
+  return `${PROSPECT_EMAIL_INDEX}${campaignId}:${emailHash(email)}`;
+}
 const PROSPECT_FIRM_INDEX = 'firmprospect:firm:';
 const SEND_PREFIX = 'firmoutreach:send:';
 const SEND_INDEX = 'firmoutreach:send:index';
@@ -86,7 +89,7 @@ export async function saveProspect(prospect: FirmProspect, previousStatus?: Firm
   await appendIndex(statusIndexKey(prospect.status), prospect.id);
   await appendIndex(PROSPECT_FIRM_INDEX + prospect.firmKey, prospect.id);
   if (prospect.email) {
-    await kv.set(PROSPECT_EMAIL_INDEX + emailHash(prospect.email), prospect.id);
+    await kv.set(prospectEmailIndexKey(prospect.campaignId, prospect.email), prospect.id);
   }
   if (oldStatus && oldStatus !== prospect.status) {
     await removeFromIndex(statusIndexKey(oldStatus), prospect.id);
@@ -141,10 +144,13 @@ export async function getSuppressionsByEmails(
   return map;
 }
 
-export async function getProspectByEmail(email: string): Promise<FirmProspect | null> {
+export async function getProspectByEmail(
+  email: string,
+  campaignId: string = activeOutreachCampaignId(),
+): Promise<FirmProspect | null> {
   const kv = getKV();
   if (!kv) return null;
-  const id = await kv.get<string>(PROSPECT_EMAIL_INDEX + emailHash(email));
+  const id = await kv.get<string>(prospectEmailIndexKey(campaignId, email));
   if (!id) return null;
   return getProspect(id);
 }
@@ -297,7 +303,7 @@ export async function isDuplicateInitialSend(
   email: string,
   prospectId: string,
 ): Promise<boolean> {
-  const sends = await listSendsForEmail(email);
+  const sends = (await listSendsForEmail(email)).filter(isActiveCampaignSend);
   return emailHasInitialOutreachFromOtherProspect(sends, email, prospectId);
 }
 

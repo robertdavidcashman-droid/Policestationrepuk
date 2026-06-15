@@ -9,7 +9,7 @@ import {
   firmKeyFromParts,
   isEnglandWalesPostcode,
   normalizeFirmName,
-  prospectIdFromKey,
+  prospectIdForCampaign,
 } from './normalize';
 import { resolveStatusWithQualification, type CrimeRegistry, isOnCrimeRegistry } from './qualification';
 import type { FirmProspect, FirmProspectSource, FirmProspectStatus, FirmProspectType } from './types';
@@ -77,7 +77,7 @@ export function buildProspectFromInput(input: RawProspectInput): FirmProspect | 
     excluded ? 'excluded' : email ? 'ready_to_send' : 'discovered';
 
   const prospect: FirmProspect = {
-    id: prospectIdFromKey(idKey),
+    id: prospectIdForCampaign(FIRM_OUTREACH_CAMPAIGN_ID, idKey),
     prospectType: input.prospectType,
     firmName,
     firmKey,
