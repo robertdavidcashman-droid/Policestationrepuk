@@ -6,9 +6,10 @@ Automated WhatsApp invitation emails to qualified criminal defence firms. Admin 
 
 | Time | Route | What runs |
 |------|-------|-----------|
-| `03:00` | `/api/cron/firm-outreach-pipeline/maintain` | LAA + DSCC + discovery + requalify + enrich (50 firms, max ~240s) |
-| `06:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms) |
-| `08:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms) |
+| `03:00` | `/api/cron/firm-outreach-pipeline/maintain` | LAA + DSCC + discovery + requalify; Sunday requeues `no_email` prospects |
+| `06:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms, ~240s max) |
+| `07:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms, ~240s max) |
+| `08:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms, ~240s max) |
 | `09:30` | `/api/cron/firm-outreach-pipeline/full` | **Approval email** with Ready to send button (no auto-send) |
 | `17:00` | `/api/cron/firm-outreach-digest` | **Reminder** approval email if daily cap not yet reached |
 

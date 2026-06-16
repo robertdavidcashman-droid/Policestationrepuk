@@ -6,6 +6,9 @@ import {
   shouldExcludeFirm,
 } from '@/lib/firm-outreach/merge-prospects';
 import {
+  isPlausibleOutreachEmail,
+} from '@/lib/firm-outreach/enrichment/validator';
+import {
   extractEmailsFromHtml,
   pickBestEmail,
   scoreEmailCandidate,
@@ -123,6 +126,12 @@ describe('firm-outreach email extract', () => {
 
   it('rejects noreply local part', () => {
     expect(scoreEmailCandidate('noreply@firm.co.uk', { prospectType: 'firm' })).toBe(0);
+  });
+
+  it('rejects CJSM secure mail domains', () => {
+    const html = '<p>Contact crime@firm.cjsm.net or info@firm.co.uk</p>';
+    expect(extractEmailsFromHtml(html)).toEqual(['info@firm.co.uk']);
+    expect(isPlausibleOutreachEmail('crime@firm.cjsm.net')).toBe(false);
   });
 });
 

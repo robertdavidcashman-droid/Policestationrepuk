@@ -4,10 +4,9 @@ import { domainFromUrl } from '../normalize';
 import {
   extractEmailsFromHtml,
   guessEmailsForDomain,
-  pickBestEmail,
   scoreEmailCandidate,
 } from './email-extract';
-import { hasMxRecord } from './validator';
+import { hasMxRecord, isPlausibleOutreachEmail } from './validator';
 import type { EmailConfidence, FirmProspect, FirmProspectEmail } from '../types';
 
 const FETCH_TIMEOUT_MS = 8_000;
@@ -78,6 +77,7 @@ export async function crawlEmailsForProspect(
   };
 
   const ranked = [...allCandidates]
+    .filter((address) => isPlausibleOutreachEmail(address))
     .map((address) => {
       const score = scoreEmailCandidate(address, opts);
       const confidence: EmailConfidence = address.includes('@') &&

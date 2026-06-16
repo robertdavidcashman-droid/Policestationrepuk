@@ -135,8 +135,8 @@ export function checkVercelCronConfig(vercelJson: {
     detail: String(schedules['/api/cron/firm-outreach-pipeline/full'] ?? 'missing'),
   });
   results.push({
-    name: 'vercel_cron_enrich_twice_daily',
-    ok: paths.filter((p) => p === '/api/cron/firm-outreach-enrich').length === 2,
+    name: 'vercel_cron_enrich_three_times_daily',
+    ok: paths.filter((p) => p === '/api/cron/firm-outreach-enrich').length === 3,
     detail: `count=${paths.filter((p) => p === '/api/cron/firm-outreach-enrich').length}`,
   });
 

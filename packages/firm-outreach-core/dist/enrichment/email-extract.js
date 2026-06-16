@@ -5,20 +5,27 @@ exports.scoreEmailCandidate = scoreEmailCandidate;
 exports.pickBestEmail = pickBestEmail;
 exports.guessEmailsForDomain = guessEmailsForDomain;
 const shared_constants_1 = require("../shared-constants");
+const validator_1 = require("./validator");
 const normalize_1 = require("../normalize");
 const EMAIL_RE = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi;
 function extractEmailsFromHtml(html) {
     const found = new Set();
     for (const m of html.matchAll(/mailto:([a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/gi)) {
-        found.add((0, normalize_1.normalizeEmail)(m[1]));
+        const norm = (0, normalize_1.normalizeEmail)(m[1]);
+        if ((0, validator_1.isPlausibleOutreachEmail)(norm))
+            found.add(norm);
     }
     for (const m of html.matchAll(EMAIL_RE)) {
-        found.add((0, normalize_1.normalizeEmail)(m[0]));
+        const norm = (0, normalize_1.normalizeEmail)(m[0]);
+        if ((0, validator_1.isPlausibleOutreachEmail)(norm))
+            found.add(norm);
     }
     return [...found];
 }
 function scoreEmailCandidate(email, opts) {
     const norm = (0, normalize_1.normalizeEmail)(email);
+    if (!(0, validator_1.isPlausibleOutreachEmail)(norm))
+        return 0;
     const [local, domain] = norm.split('@');
     if (!local || !domain)
         return 0;
@@ -52,7 +59,8 @@ function scoreEmailCandidate(email, opts) {
     return Math.min(100, Math.max(0, score));
 }
 function pickBestEmail(candidates, opts) {
-    const ranked = candidates
+    const filtered = candidates.filter((address) => (0, validator_1.isPlausibleOutreachEmail)(address));
+    const ranked = filtered
         .map((address) => ({
         address,
         score: scoreEmailCandidate(address, opts),

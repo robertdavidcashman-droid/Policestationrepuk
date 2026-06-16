@@ -80,8 +80,16 @@ describe('runFirmEnrichment cursor on timeout', () => {
       setCursor,
     }));
 
-    vi.doMock('@/lib/firm-outreach/enrichment/resolve-prospect-website', () => ({
-      resolveProspectWebsite: vi.fn(async (p: typeof prospect) => p),
+    vi.doMock('@/lib/dscc-register-lookup', () => ({
+      ensureDsccRegisterCache: vi.fn().mockResolvedValue({ entries: [] }),
+    }));
+
+    vi.doMock('@/lib/legal-directory/laa-fetch', () => ({
+      readLaaCrimeJson: vi.fn().mockReturnValue([]),
+    }));
+
+    vi.doMock('@/lib/firm-outreach/sra-org-lookup', () => ({
+      lookupSraOrganisationByName: vi.fn(),
     }));
 
     vi.doMock('@/lib/firm-outreach/enrichment/email-crawler', () => ({
@@ -102,5 +110,78 @@ describe('runFirmEnrichment cursor on timeout', () => {
     expect(stats.processed).toBe(0);
     expect(stats.stoppedEarly).toBe(true);
     expect(setCursor).not.toHaveBeenCalled();
+  });
+});
+
+describe('shouldEnrichProspect', () => {
+  const base = {
+    id: 'p1',
+    firmKey: 'k',
+    firmName: 'Test',
+    prospectType: 'firm' as const,
+    campaignId: 'c',
+    sources: ['laa'],
+    priorityScore: 10,
+    createdAt: '',
+    updatedAt: '',
+  };
+
+  it('includes discovered prospects under max attempts', async () => {
+    const { shouldEnrichProspect } = await import('@/lib/firm-outreach/enrichment/enrich-candidates');
+    expect(
+      shouldEnrichProspect({
+        ...base,
+        status: 'discovered',
+        enrichAttempts: 0,
+      }),
+    ).toBe(true);
+  });
+
+  it('retries no_email after 30 days when attempts remain', async () => {
+    const { shouldEnrichProspect } = await import('@/lib/firm-outreach/enrichment/enrich-candidates');
+    const now = Date.parse('2026-06-12T12:00:00.000Z');
+    const last = '2026-05-01T12:00:00.000Z';
+    expect(
+      shouldEnrichProspect(
+        {
+          ...base,
+          status: 'no_email',
+          enrichAttempts: 3,
+          lastEnrichAttemptAt: last,
+        },
+        now,
+      ),
+    ).toBe(true);
+  });
+
+  it('skips no_email within 30-day cooldown', async () => {
+    const { shouldEnrichProspect } = await import('@/lib/firm-outreach/enrichment/enrich-candidates');
+    const now = Date.parse('2026-06-12T12:00:00.000Z');
+    const last = '2026-06-01T12:00:00.000Z';
+    expect(
+      shouldEnrichProspect(
+        {
+          ...base,
+          status: 'no_email',
+          enrichAttempts: 3,
+          lastEnrichAttemptAt: last,
+        },
+        now,
+      ),
+    ).toBe(false);
+  });
+
+  it('stops after max enrich attempts', async () => {
+    const { shouldEnrichProspect, MAX_ENRICH_ATTEMPTS } = await import(
+      '@/lib/firm-outreach/enrichment/enrich-candidates'
+    );
+    expect(
+      shouldEnrichProspect({
+        ...base,
+        status: 'no_email',
+        enrichAttempts: MAX_ENRICH_ATTEMPTS,
+        lastEnrichAttemptAt: '2020-01-01T00:00:00.000Z',
+      }),
+    ).toBe(false);
   });
 });

@@ -1,5 +1,9 @@
+import { ensureDsccRegisterCache } from '@/lib/dscc-register-lookup';
+import { readLaaCrimeJson } from '@/lib/legal-directory/laa-fetch';
 import { enrichBatchSize } from '../constants';
-import { resolveProspectWebsite } from './resolve-prospect-website';
+import { buildCrimeRegistry, resolveStatusWithQualification } from '../qualification';
+import type { CrimeRegistry } from '../qualification';
+import { lookupSraOrganisationByName } from '../sra-org-lookup';
 import {
   CURSOR_ENRICH,
   getCursor,
@@ -10,30 +14,63 @@ import {
   setCursor,
 } from '../storage';
 import type { EnrichmentRunStats, FirmProspect } from '../types';
+import {
+  enrichCandidateScore,
+  MAX_ENRICH_ATTEMPTS,
+  shouldEnrichProspect,
+} from './enrich-candidates';
 import { crawlEmailsForProspect } from './email-crawler';
 import { paidEnrichEmails } from './paid-enrichment';
 import { domainFromUrl } from '../normalize';
-import { resolveStatusWithQualification } from '../qualification';
 import { websiteIndicatesCrimePractice } from '../crime-website-verify';
+import { isPlausibleOutreachEmail } from './validator';
 
-async function enrichOne(prospect: FirmProspect): Promise<FirmProspect> {
+function pickDeliverableEmail(
+  best: { address: string; confidence: FirmProspect['emailConfidence']; score: number } | null,
+  alternatives: Array<{ address: string; confidence: FirmProspect['emailConfidence']; score: number }>,
+): typeof best {
+  if (best && isPlausibleOutreachEmail(best.address)) return best;
+  return alternatives.find((a) => isPlausibleOutreachEmail(a.address)) ?? null;
+}
+
+async function enrichOne(prospect: FirmProspect, registry: CrimeRegistry): Promise<FirmProspect> {
   const now = new Date().toISOString();
   prospect.status = 'enriching';
   prospect.lastEnrichAttemptAt = now;
   prospect.enrichAttempts += 1;
   prospect.updatedAt = now;
 
-  prospect = await resolveProspectWebsite(prospect);
-  if (prospect.status === 'excluded') return prospect;
+  if (!prospect.regulatoryNumber || !prospect.websiteUrl) {
+    const sra = await lookupSraOrganisationByName(prospect.firmName, prospect.postcode);
+    if (sra.organisation) {
+      prospect.regulatoryNumber = prospect.regulatoryNumber || sra.organisation.sraNumber;
+      prospect.websiteUrl = prospect.websiteUrl || sra.organisation.website;
+      if (sra.matched && !sra.organisation.authorised) {
+        prospect.status = 'excluded';
+        prospect.excludedReason = 'sra_not_authorised';
+        return prospect;
+      }
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
 
-  if (!prospect.email) {
+  if (!prospect.email || !isPlausibleOutreachEmail(prospect.email)) {
+    if (prospect.email && !isPlausibleOutreachEmail(prospect.email)) {
+      prospect.email = undefined;
+      prospect.emailConfidence = undefined;
+      prospect.emailScore = undefined;
+    }
+
     const crawled = await crawlEmailsForProspect(prospect);
     prospect.websiteUrl = crawled.websiteUrl ?? prospect.websiteUrl;
-    if (crawled.best) {
-      prospect.email = crawled.best.address;
-      prospect.emailConfidence = crawled.best.confidence;
-      prospect.emailScore = crawled.best.score;
-      prospect.alternativeEmails = crawled.alternatives;
+    const chosen = pickDeliverableEmail(crawled.best, crawled.alternatives);
+    if (chosen) {
+      prospect.email = chosen.address;
+      prospect.emailConfidence = chosen.confidence;
+      prospect.emailScore = chosen.score;
+      prospect.alternativeEmails = crawled.alternatives.filter(
+        (a) => a.address !== chosen.address && isPlausibleOutreachEmail(a.address),
+      );
     } else {
       const domain = domainFromUrl(prospect.websiteUrl);
       const paid = await paidEnrichEmails({
@@ -41,11 +78,14 @@ async function enrichOne(prospect: FirmProspect): Promise<FirmProspect> {
         domain: domain ?? undefined,
         postcode: prospect.postcode,
       });
-      if (paid[0]) {
-        prospect.email = paid[0].address;
-        prospect.emailConfidence = paid[0].confidence;
-        prospect.emailScore = paid[0].score;
-        prospect.alternativeEmails = paid.slice(1);
+      const paidOk = paid.find((e) => isPlausibleOutreachEmail(e.address));
+      if (paidOk) {
+        prospect.email = paidOk.address;
+        prospect.emailConfidence = paidOk.confidence;
+        prospect.emailScore = paidOk.score;
+        prospect.alternativeEmails = paid.filter(
+          (e) => e.address !== paidOk.address && isPlausibleOutreachEmail(e.address),
+        );
       }
     }
   }
@@ -61,8 +101,8 @@ async function enrichOne(prospect: FirmProspect): Promise<FirmProspect> {
     prospect.crimeWebsiteVerified = await websiteIndicatesCrimePractice(prospect.websiteUrl);
   }
 
-  if (prospect.email) {
-    prospect.status = resolveStatusWithQualification(prospect, 'ready_to_send');
+  if (prospect.email && isPlausibleOutreachEmail(prospect.email)) {
+    prospect.status = resolveStatusWithQualification(prospect, 'ready_to_send', registry);
     if (
       prospect.status === 'ready_to_send' &&
       (await isDuplicateInitialSend(prospect.email, prospect.id))
@@ -101,25 +141,26 @@ export async function advanceEnrichCursor(
   return wrapped;
 }
 
+async function loadEnrichRegistry(): Promise<CrimeRegistry> {
+  const laa = readLaaCrimeJson();
+  const dscc = await ensureDsccRegisterCache();
+  return buildCrimeRegistry(laa, dscc?.entries ?? []);
+}
+
 export async function runFirmEnrichment(opts?: {
   limit?: number;
   maxElapsedMs?: number;
 }): Promise<EnrichmentRunStats> {
   const started = Date.now();
   const limit = opts?.limit ?? enrichBatchSize();
+  const registry = await loadEnrichRegistry();
   const ids = await listAllProspectIds();
   const candidates: { id: string; score: number }[] = [];
 
   for (const id of ids) {
     const p = await getProspect(id);
-    if (!p) continue;
-    if (p.status !== 'discovered' && (p.status !== 'no_email' || p.enrichAttempts >= 3)) continue;
-
-    let score = p.priorityScore;
-    if (p.sources.includes('laa')) score += 60;
-    if (p.sources.includes('dscc') && p.prospectType === 'firm') score += 30;
-    if (p.enrichAttempts > 0) score -= 20;
-    candidates.push({ id, score });
+    if (!p || !shouldEnrichProspect(p)) continue;
+    candidates.push({ id, score: enrichCandidateScore(p) });
   }
 
   candidates.sort((a, b) => b.score - a.score);
@@ -148,8 +189,8 @@ export async function runFirmEnrichment(opts?: {
 
     try {
       const p = await getProspect(id);
-      if (!p) continue;
-      const enriched = await enrichOne(p);
+      if (!p || !shouldEnrichProspect(p)) continue;
+      const enriched = await enrichOne(p, registry);
       await saveProspect(enriched, p.status);
       processedCount++;
       if (enriched.email) emailsFound++;
@@ -173,3 +214,5 @@ export async function runFirmEnrichment(opts?: {
     stoppedEarly: stoppedEarly || undefined,
   };
 }
+
+export { shouldEnrichProspect, enrichCandidateScore, MAX_ENRICH_ATTEMPTS } from './enrich-candidates';

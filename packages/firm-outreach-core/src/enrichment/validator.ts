@@ -17,6 +17,8 @@ const JUNK_EMAIL_DOMAIN_PATTERNS = [
   /sentry\.io$/i,
   /cloudflare\.com$/i,
   /\.(png|jpe?g|gif|webp|svg)$/i,
+  /\.cjsm\.net$/i,
+  /\.gsx\.gov\.uk$/i,
 ];
 
 const JUNK_EMAIL_LOCAL_PATTERNS = [/\.(png|jpe?g|gif|webp|svg)$/i, /\[email/i];

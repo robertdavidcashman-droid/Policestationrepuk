@@ -4,6 +4,7 @@ import {
   PREFERRED_EMAIL_LOCALS,
   REJECTED_EMAIL_LOCALS,
 } from '../shared-constants';
+import { isPlausibleOutreachEmail } from './validator';
 import { domainFromUrl, normalizeEmail } from '../normalize';
 import type { EmailConfidence, FirmProspectEmail } from '../types';
 
@@ -12,10 +13,12 @@ const EMAIL_RE = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi;
 export function extractEmailsFromHtml(html: string): string[] {
   const found = new Set<string>();
   for (const m of html.matchAll(/mailto:([a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/gi)) {
-    found.add(normalizeEmail(m[1]));
+    const norm = normalizeEmail(m[1]);
+    if (isPlausibleOutreachEmail(norm)) found.add(norm);
   }
   for (const m of html.matchAll(EMAIL_RE)) {
-    found.add(normalizeEmail(m[0]));
+    const norm = normalizeEmail(m[0]);
+    if (isPlausibleOutreachEmail(norm)) found.add(norm);
   }
   return [...found];
 }
@@ -31,6 +34,7 @@ export function scoreEmailCandidate(
   },
 ): number {
   const norm = normalizeEmail(email);
+  if (!isPlausibleOutreachEmail(norm)) return 0;
   const [local, domain] = norm.split('@');
   if (!local || !domain) return 0;
   if (REJECTED_EMAIL_LOCALS.has(local)) return 0;
@@ -69,7 +73,8 @@ export function pickBestEmail(
   candidates: string[],
   opts: Parameters<typeof scoreEmailCandidate>[1],
 ): FirmProspectEmail | null {
-  const ranked = candidates
+  const filtered = candidates.filter((address) => isPlausibleOutreachEmail(address));
+  const ranked = filtered
     .map((address) => ({
       address,
       score: scoreEmailCandidate(address, opts),
