@@ -1,0 +1,16 @@
+{
+  "name": "@robertcashman/seo-growth-content",
+  "version": "1.0.0",
+  "description": "Multi-site SEO growth content generators (blog drafts, local pages, Buffer calendar)",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "seo-growth-generate-external": "./bin/generate-external.mjs",
+    "seo-growth-generate-packages": "./bin/generate-site-packages.mjs"
+  },
+  "files": ["src", "bin"],
+  "scripts": {
+    "generate:external": "node bin/generate-external.mjs",
+    "generate:packages": "node bin/generate-site-packages.mjs"
+  }
+}

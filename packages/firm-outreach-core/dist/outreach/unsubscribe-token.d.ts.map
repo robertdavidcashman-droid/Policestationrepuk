@@ -1,0 +1,1 @@
+{"version":3,"file":"unsubscribe-token.d.ts","sourceRoot":"","sources":["../../src/outreach/unsubscribe-token.ts"],"names":[],"mappings":"AAEA,MAAM,WAAW,kBAAkB;IACjC,KAAK,EAAE,MAAM,CAAC;IACd,GAAG,EAAE,MAAM,CAAC;CACb;AA6BD,wBAAgB,qBAAqB,CAAC,KAAK,EAAE,MAAM,EAAE,OAAO,SAAK,GAAG,MAAM,CAOzE;AAED,wBAAgB,sBAAsB,CAAC,KAAK,EAAE,MAAM,GAAG,kBAAkB,GAAG,IAAI,CAW/E"}

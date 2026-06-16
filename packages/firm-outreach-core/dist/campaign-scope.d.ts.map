@@ -1,0 +1,1 @@
+{"version":3,"file":"campaign-scope.d.ts","sourceRoot":"","sources":["../src/campaign-scope.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,gBAAgB,EAAE,YAAY,EAAE,MAAM,SAAS,CAAC;AAE9D,wBAAgB,mBAAmB,CAAC,UAAU,EAAE,MAAM;gCAEtB,MAAM;uCAGC,YAAY,GAAG,OAAO;+BAG9B,gBAAgB,GAAG,OAAO;kCAGvB,MAAM,GAAG,MAAM;2BAGtB,MAAM,GAAG,MAAM;EAIzC;AAED,MAAM,MAAM,aAAa,GAAG,UAAU,CAAC,OAAO,mBAAmB,CAAC,CAAC"}

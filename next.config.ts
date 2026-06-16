@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
   transpilePackages: ['@robertcashman/firm-outreach-core'],
   turbopack: {
     resolveAlias: {
-      '@robertcashman/firm-outreach-core': './shared-packages/packages/firm-outreach-core',
+      '@robertcashman/firm-outreach-core': './packages/firm-outreach-core',
     },
   },
   env: {

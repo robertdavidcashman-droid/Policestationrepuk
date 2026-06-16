@@ -1,0 +1,24 @@
+{
+  "name": "@robertcashman/firm-outreach-core",
+  "version": "1.0.0",
+  "description": "Shared firm-outreach types, normalization, qualification, and enrichment for PSA and RepUK",
+  "private": true,
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0"
+  }
+}

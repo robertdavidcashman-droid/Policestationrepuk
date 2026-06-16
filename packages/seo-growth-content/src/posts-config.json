@@ -1,0 +1,38 @@
+{
+  "policestationagent": [
+    { "slug": "what-happens-police-station-interview", "title": "What Happens at a Police Station Interview?", "keyword": "police station interview UK" },
+    { "slug": "answer-questions-or-no-comment", "title": "Should I Answer Questions or Go No Comment in a Police Interview?", "keyword": "no comment police interview" },
+    { "slug": "voluntary-police-interview-legal-advice", "title": "Voluntary Police Interview: Why You Still Need Legal Advice", "keyword": "voluntary police interview" },
+    { "slug": "police-bail-conditions-guidance", "title": "Police Bail Conditions: What They Mean and What to Do", "keyword": "police bail conditions" },
+    { "slug": "released-under-investigation-guidance", "title": "Released Under Investigation: Practical Guidance", "keyword": "released under investigation" },
+    { "slug": "why-firms-use-freelance-police-station-agents", "title": "Why Criminal Defence Firms Use Freelance Police Station Agents", "keyword": "freelance police station agent" },
+    { "slug": "police-station-cover-kent-solicitors", "title": "Police Station Cover in Kent: What Solicitors Need to Know", "keyword": "police station cover Kent" },
+    { "slug": "what-to-send-instructing-police-station-rep", "title": "What to Send When Instructing a Police Station Representative", "keyword": "instruct police station rep" },
+    { "slug": "custody-record-dscc-references", "title": "Custody Record Numbers and DSCC References Explained", "keyword": "DSCC reference custody" },
+    { "slug": "out-of-hours-police-station-legal-advice", "title": "How Police Station Legal Advice Works Out of Hours", "keyword": "out of hours police station solicitor" }
+  ],
+  "psrtrain": [
+    { "slug": "how-to-become-police-station-representative", "title": "How to Become a Police Station Representative", "keyword": "become police station rep" },
+    { "slug": "pace-interview-basics-new-reps", "title": "PACE Interview Basics for New Police Station Reps", "keyword": "PACE interview training" },
+    { "slug": "understanding-the-police-caution", "title": "Understanding the Police Caution", "keyword": "police caution explained" },
+    { "slug": "advising-no-comment-interview", "title": "Advising on a No Comment Interview", "keyword": "no comment interview advice" },
+    { "slug": "youth-suspects-police-station", "title": "Youth Suspects at the Police Station", "keyword": "youth suspect police station" },
+    { "slug": "vulnerable-suspects-police-interviews", "title": "Vulnerable Suspects and Police Interviews", "keyword": "vulnerable suspect interview" },
+    { "slug": "police-station-accreditation-preparation", "title": "Police Station Accreditation: Practical Preparation", "keyword": "PSRAS accreditation" },
+    { "slug": "common-mistakes-new-police-station-reps", "title": "Common Mistakes New Police Station Reps Make", "keyword": "new police station rep mistakes" },
+    { "slug": "how-to-structure-police-station-advice", "title": "How to Structure Police Station Advice", "keyword": "police station advice structure" },
+    { "slug": "sqe-criminal-practice-police-station-basics", "title": "SQE Criminal Practice: Police Station Interview Basics", "keyword": "SQE criminal practice police station" }
+  ],
+  "custodynote": [
+    { "slug": "how-to-write-police-station-attendance-note", "title": "How to Write a Proper Police Station Attendance Note", "keyword": "police station attendance note" },
+    { "slug": "what-should-go-in-custody-note", "title": "What Should Go in a Custody Note?", "keyword": "custody note contents" },
+    { "slug": "police-interview-note-taking-checklist", "title": "Police Interview Note-Taking: Practical Checklist", "keyword": "police interview notes" },
+    { "slug": "dscc-custody-records-attendance-notes", "title": "DSCC References, Custody Records and Attendance Notes", "keyword": "DSCC attendance note" },
+    { "slug": "police-bail-notes-what-to-record", "title": "Police Bail Notes: What to Record", "keyword": "police bail notes" },
+    { "slug": "rui-notes-criminal-practitioners", "title": "RUI Notes: What Criminal Practitioners Should Keep", "keyword": "RUI notes criminal" },
+    { "slug": "why-good-attendance-notes-matter", "title": "Why Good Attendance Notes Matter in Criminal Defence", "keyword": "attendance notes criminal defence" },
+    { "slug": "ai-assisted-custody-notes-benefits-limits", "title": "AI-Assisted Custody Notes: Benefits and Limits", "keyword": "AI custody notes" },
+    { "slug": "police-station-file-preparation-checklist", "title": "Police Station File Preparation Checklist", "keyword": "police station file preparation" },
+    { "slug": "attendance-note-template-police-station-reps", "title": "Attendance Note Template for Police Station Representatives", "keyword": "attendance note template" }
+  ]
+}

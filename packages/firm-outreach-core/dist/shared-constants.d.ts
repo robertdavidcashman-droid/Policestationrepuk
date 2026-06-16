@@ -1,0 +1,30 @@
+export declare const CONTACT_PATHS: readonly ["/", "/contact", "/contact-us", "/about", "/about-us", "/criminal-law", "/police-station", "/criminal-defence"];
+export declare const REJECTED_EMAIL_LOCALS: Set<string>;
+export declare const PREFERRED_EMAIL_LOCALS: Record<string, number>;
+export declare const FREE_EMAIL_DOMAINS: Set<string>;
+export declare const EXCLUDED_FIRM_PATTERNS: RegExp[];
+export declare const CRIMINAL_KEYWORDS: readonly ["police station", "custody", "criminal defence", "criminal defense", "duty solicitor", "legal aid crime", "crime department"];
+export declare const COMPETITOR_KEYWORDS: readonly ["police station agency", "cover agency", "rep agency"];
+/** Scotland, NI, IoM, Channel Islands — not England & Wales. */
+export declare const NON_EW_POSTCODE_PREFIXES: readonly ["AB", "BT", "DD", "DG", "EH", "FK", "G", "GY", "HS", "IM", "IV", "JE", "KA", "KW", "KY", "ML", "PA", "PH", "TD", "ZE"];
+export interface OutreachLimitsDefaults {
+    dailyCap?: number;
+    enrichBatch?: number;
+    cronEnrichBatch?: number;
+    enrichMaxMs?: number;
+    paidDailyCap?: number;
+    countyAllowlist?: string[] | null;
+}
+export declare function createOutreachEnvHelpers(defaults?: OutreachLimitsDefaults): {
+    outreachEnabled(): boolean;
+    outreachPaused(): boolean;
+    outreachSendEnabled(): boolean;
+    outreachRequireApproval(): boolean;
+    dailySendCap(): number;
+    enrichBatchSize(): number;
+    cronEnrichBatchSize(): number;
+    enrichMaxElapsedMs(): number;
+    paidDailyCap(): number;
+    countyAllowlist(): string[] | null;
+};
+//# sourceMappingURL=shared-constants.d.ts.map

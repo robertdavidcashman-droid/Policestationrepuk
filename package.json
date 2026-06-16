@@ -78,7 +78,7 @@
     "buffer:schedule-seo-growth": "npx tsx scripts/schedule-seo-growth-buffer-posts.ts",
     "buffer:sync-seo-growth": "npx tsx scripts/sync-buffer-seo-growth-results.ts",
     "buffer:retry-failed": "npx tsx scripts/retry-failed-buffer-posts.ts",
-    "seo:generate-external": "node ./shared-packages/packages/seo-growth-content/bin/generate-external.mjs && node ./shared-packages/packages/seo-growth-content/bin/generate-site-packages.mjs",
+    "seo:generate-external": "node ./packages/seo-growth-content/bin/generate-external.mjs && node ./packages/seo-growth-content/bin/generate-site-packages.mjs",
     "buffer:verify-scheduled-images": "npx tsx scripts/verify-buffer-scheduled-images.ts",
     "buffer:verify-scheduled-gbp": "npx tsx scripts/verify-buffer-scheduled-images.ts --google-business",
     "buffer:repair-gbp": "npx tsx scripts/repair-buffer-gbp-images.ts",
@@ -129,8 +129,8 @@
     "firm-outreach:configure-resend": "node scripts/resend-configure-webhook.mjs"
   },
   "dependencies": {
-    "@robertcashman/firm-outreach-core": "file:./shared-packages/packages/firm-outreach-core",
-    "@robertcashman/seo-growth-content": "file:./shared-packages/packages/seo-growth-content",
+    "@robertcashman/firm-outreach-core": "file:./packages/firm-outreach-core",
+    "@robertcashman/seo-growth-content": "file:./packages/seo-growth-content",
     "@sentry/nextjs": "^10.58.0",
     "@supabase/supabase-js": "^2.49.1",
     "@upstash/redis": "^1.37.0",
