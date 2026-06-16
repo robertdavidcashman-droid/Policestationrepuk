@@ -1,0 +1,3 @@
+[submodule "shared-packages"]
+	path = shared-packages
+	url = https://github.com/robertcashman-bit/shared-packages.git

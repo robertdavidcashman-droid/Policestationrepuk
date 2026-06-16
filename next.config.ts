@@ -11,10 +11,8 @@ const siteBuildDate = new Date().toISOString().slice(0, 10);
 const nextConfig: NextConfig = {
   transpilePackages: ['@robertcashman/firm-outreach-core'],
   turbopack: {
-    root: path.join(__dirname, '..'),
     resolveAlias: {
-      '@robertcashman/firm-outreach-core':
-        '../shared-packages/packages/firm-outreach-core',
+      '@robertcashman/firm-outreach-core': './shared-packages/packages/firm-outreach-core',
     },
   },
   env: {
