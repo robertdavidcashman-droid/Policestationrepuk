@@ -1,5 +1,5 @@
-import { SITE_URL } from "@/config/site";
-import { PHONE_DISPLAY, SMS_DISPLAY } from "@/config/contact";
+import { SITE_URL } from '@/lib/seo-layer/config';
+import { CONTACT_PHONE_DISPLAY, CONTACT_SMS_DISPLAY } from '@/lib/contact-constants';
 
 /** A4 print-ready HTML — full colour, 2 pages (front + back). Police station focus only. */
 export function buildBrochureHtml(): string {
@@ -509,10 +509,10 @@ export function buildBrochureHtml(): string {
       </div>
       <div class="cta-phone">
         <div class="label">Instruct agent cover</div>
-        <div class="number">${PHONE_DISPLAY}</div>
+        <div class="number">${CONTACT_PHONE_DISPLAY}</div>
         <div class="number-secondary">
           <span>Call or text</span>
-          ${SMS_DISPLAY}
+          ${CONTACT_SMS_DISPLAY}
         </div>
       </div>
     </div>
@@ -560,8 +560,8 @@ export function buildBrochureHtml(): string {
       <div class="contact-row">
         <div class="contact-block">
           <h4>Telephone</h4>
-          <span class="gold">${PHONE_DISPLAY}</span>
-          <span class="sub">Call or text ${SMS_DISPLAY}</span>
+          <span class="gold">${CONTACT_PHONE_DISPLAY}</span>
+          <span class="sub">Call or text ${CONTACT_SMS_DISPLAY}</span>
         </div>
         <div class="contact-block">
           <h4>Website</h4>
