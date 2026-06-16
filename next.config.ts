@@ -9,6 +9,14 @@ const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "tr
 const siteBuildDate = new Date().toISOString().slice(0, 10);
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['@robertcashman/firm-outreach-core'],
+  turbopack: {
+    root: path.join(__dirname, '..'),
+    resolveAlias: {
+      '@robertcashman/firm-outreach-core':
+        '../shared-packages/packages/firm-outreach-core',
+    },
+  },
   env: {
     NEXT_PUBLIC_SITE_VERSION: packageJson.version,
     NEXT_PUBLIC_SITE_BUILD_DATE: siteBuildDate,

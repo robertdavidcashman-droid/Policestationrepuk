@@ -1,156 +1,32 @@
-export const FIRM_OUTREACH_UA =
-  'PoliceStationRepUK/1.0 (+https://policestationrepuk.org; firm-outreach)';
+import { createOutreachEnvHelpers } from '@robertcashman/firm-outreach-core';
 
-export const FIRM_OUTREACH_CAMPAIGN_ID = 'whatsapp_invite_v1';
+export { FIRM_OUTREACH_UA, FIRM_OUTREACH_CAMPAIGN_ID } from './site-config';
 
-export const CONTACT_PATHS = [
-  '/',
-  '/contact',
-  '/contact-us',
-  '/about',
-  '/about-us',
-  '/criminal-law',
-  '/police-station',
-  '/criminal-defence',
-] as const;
+export {
+  COMPETITOR_KEYWORDS,
+  CONTACT_PATHS,
+  CRIMINAL_KEYWORDS,
+  EXCLUDED_FIRM_PATTERNS,
+  FREE_EMAIL_DOMAINS,
+  NON_EW_POSTCODE_PREFIXES,
+  PREFERRED_EMAIL_LOCALS,
+  REJECTED_EMAIL_LOCALS,
+} from '@robertcashman/firm-outreach-core';
 
-export const REJECTED_EMAIL_LOCALS = new Set([
-  'noreply',
-  'no-reply',
-  'donotreply',
-  'careers',
-  'recruitment',
-  'jobs',
-  'privacy',
-  'gdpr',
-  'accounts',
-  'billing',
-  'newsletter',
-  'marketing',
-]);
+const env = createOutreachEnvHelpers({
+  countyAllowlist: null,
+  cronEnrichBatch: 50,
+  enrichMaxMs: 240_000,
+  paidDailyCap: 100,
+});
 
-export const PREFERRED_EMAIL_LOCALS: Record<string, number> = {
-  police: 30,
-  custody: 30,
-  crime: 30,
-  criminal: 30,
-  duty: 30,
-  stations: 30,
-  station: 25,
-  info: 20,
-  enquiries: 20,
-  enquiry: 20,
-  reception: 20,
-  contact: 20,
-  admin: 15,
-  office: 15,
-};
-
-export const FREE_EMAIL_DOMAINS = new Set([
-  'gmail.com',
-  'googlemail.com',
-  'hotmail.com',
-  'hotmail.co.uk',
-  'outlook.com',
-  'live.com',
-  'yahoo.com',
-  'yahoo.co.uk',
-  'icloud.com',
-]);
-
-export const EXCLUDED_FIRM_PATTERNS = [
-  /public defender service/i,
-  /^pds\b/i,
-  /crown prosecution/i,
-  /^cps\b/i,
-];
-
-export const CRIMINAL_KEYWORDS = [
-  'police station',
-  'custody',
-  'criminal defence',
-  'criminal defense',
-  'duty solicitor',
-  'legal aid crime',
-  'crime department',
-] as const;
-
-export const COMPETITOR_KEYWORDS = [
-  'police station agency',
-  'cover agency',
-  'rep agency',
-] as const;
-
-/** Scotland, NI, IoM, Channel Islands — not England & Wales. */
-export const NON_EW_POSTCODE_PREFIXES = [
-  'AB',
-  'BT',
-  'DD',
-  'DG',
-  'EH',
-  'FK',
-  'G',
-  'GY',
-  'HS',
-  'IM',
-  'IV',
-  'JE',
-  'KA',
-  'KW',
-  'KY',
-  'ML',
-  'PA',
-  'PH',
-  'TD',
-  'ZE',
-] as const;
-
-/** Master switch for discovery + enrichment crons. */
-export function outreachEnabled(): boolean {
-  return process.env.FIRM_OUTREACH_ENABLED !== 'false';
-}
-
-/** Sends run automatically unless explicitly disabled (FIRM_OUTREACH_SEND_ENABLED=false). */
-export function outreachSendEnabled(): boolean {
-  return outreachEnabled() && process.env.FIRM_OUTREACH_SEND_ENABLED !== 'false' && !outreachPaused();
-}
-
-export function outreachPaused(): boolean {
-  return process.env.FIRM_OUTREACH_PAUSED === 'true';
-}
-
-/** When true (default), daily sends require email approval instead of auto-send cron. */
-export function outreachRequireApproval(): boolean {
-  return process.env.FIRM_OUTREACH_REQUIRE_APPROVAL !== 'false';
-}
-
-export function dailySendCap(): number {
-  return Number(process.env.FIRM_OUTREACH_DAILY_CAP ?? 50) || 50;
-}
-
-export function enrichBatchSize(): number {
-  return Number(process.env.FIRM_OUTREACH_ENRICH_BATCH ?? 150) || 150;
-}
-
-/** Smaller batch for Vercel cron invocations (default 50). */
-export function cronEnrichBatchSize(): number {
-  return Number(process.env.FIRM_OUTREACH_CRON_ENRICH_BATCH ?? 50) || 50;
-}
-
-/** Stop enrichment before serverless timeout (default 240s). */
-export function enrichMaxElapsedMs(): number {
-  return Number(process.env.FIRM_OUTREACH_ENRICH_MAX_MS ?? 240_000) || 240_000;
-}
-
-export function paidDailyCap(): number {
-  return Number(process.env.FIRM_OUTREACH_PAID_DAILY_CAP ?? 100) || 100;
-}
-
-export function countyAllowlist(): string[] | null {
-  const raw = process.env.FIRM_OUTREACH_COUNTY_ALLOWLIST?.trim();
-  if (!raw) return null;
-  return raw
-    .split(/[,;]/)
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-}
+export const outreachEnabled = env.outreachEnabled;
+export const outreachSendEnabled = env.outreachSendEnabled;
+export const outreachPaused = env.outreachPaused;
+export const outreachRequireApproval = env.outreachRequireApproval;
+export const dailySendCap = env.dailySendCap;
+export const enrichBatchSize = env.enrichBatchSize;
+export const cronEnrichBatchSize = env.cronEnrichBatchSize;
+export const enrichMaxElapsedMs = env.enrichMaxElapsedMs;
+export const paidDailyCap = env.paidDailyCap;
+export const countyAllowlist = env.countyAllowlist;
