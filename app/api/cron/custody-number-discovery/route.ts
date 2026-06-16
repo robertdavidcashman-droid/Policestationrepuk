@@ -6,6 +6,7 @@ import { seedFindingsFromOfficialJson } from '@/lib/custody-discovery/seed-json'
 import { buildCustodySuitesFromStations } from '@/lib/custody-discovery/suites';
 import { bootstrapCustodySuites } from '@/lib/custody-discovery/storage';
 import { getAllStations } from '@/lib/data';
+import { isCronAuthorized } from '@/lib/cron-auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -27,13 +28,8 @@ function aiBatchLimit(): number {
  * Auth: Bearer ${CRON_SECRET} or x-cron-secret header.
  */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = request.headers.get('authorization') || '';
-    const xSecret = request.headers.get('x-cron-secret') || '';
-    if (auth !== `Bearer ${secret}` && xSecret !== secret) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (!isCronAuthorized(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const url = new URL(request.url);

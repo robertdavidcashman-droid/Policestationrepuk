@@ -66,7 +66,20 @@ const nextConfig: NextConfig = {
           // Turnstile — the widget caused too many "I entered the code but
           // the form never opened" support tickets — but the other surfaces
           // still need it. See lib/turnstile.ts + components/TurnstileWidget.tsx.
-          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://esm.sh https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: http:; connect-src 'self' https: wss:; frame-src 'self' https://challenges.cloudflare.com https:; object-src 'none'; base-uri 'self'" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://esm.sh https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: http:; connect-src 'self' https: wss:; frame-src 'self' https://challenges.cloudflare.com https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'" },
+        ],
+      },
+      {
+        // Keep API responses out of search indexes.
+        source: "/api/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        // Admin surfaces must never be indexed or cached by shared caches.
+        source: "/admin/:path*",
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+          { key: "Cache-Control", value: "no-store, max-age=0, must-revalidate" },
         ],
       },
       {

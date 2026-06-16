@@ -27,10 +27,19 @@ const NOTIFY_TIMEZONE =
 
 function getSecret(): string {
   const raw =
-    process.env.ADMIN_DECISION_TOKEN_SECRET?.trim() ??
-    process.env.CRON_SECRET?.trim() ??
-    'firm-outreach-dev-secret-change-me';
-  return raw;
+    process.env.ADMIN_DECISION_TOKEN_SECRET?.trim() ||
+    process.env.CRON_SECRET?.trim() ||
+    '';
+  if (raw) return raw;
+  // Fail closed in production: never sign/verify with a known default secret,
+  // which would let anyone forge send-approval links. Dev keeps a fallback so
+  // local testing without env vars still works.
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'ADMIN_DECISION_TOKEN_SECRET (or CRON_SECRET) must be set in production for outreach send-approval tokens.',
+    );
+  }
+  return 'firm-outreach-dev-secret-change-me';
 }
 
 function base64UrlEncode(input: Buffer | string): string {

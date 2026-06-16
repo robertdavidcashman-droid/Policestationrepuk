@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { loadAllReviews, setReview } from '@/lib/admin-review';
 import { REVERIFICATION_WINDOW_MS } from '@/lib/rep-status';
+import { isCronAuthorized } from '@/lib/cron-auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -16,13 +17,8 @@ export const runtime = 'nodejs';
  * be smoke-tested with curl.
  */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = request.headers.get('authorization') || '';
-    const xSecret = request.headers.get('x-cron-secret') || '';
-    if (auth !== `Bearer ${secret}` && xSecret !== secret) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (!isCronAuthorized(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const reviews = await loadAllReviews();

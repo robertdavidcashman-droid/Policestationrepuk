@@ -1,5 +1,14 @@
+import crypto from 'crypto';
 import { cookies } from 'next/headers';
 import { getKV } from './kv';
+
+/** Constant-time string comparison that doesn't leak length via early exit. */
+function timingSafeEqualStrings(a: string, b: string): boolean {
+  const ab = Buffer.from(String(a), 'utf8');
+  const bb = Buffer.from(String(b), 'utf8');
+  if (ab.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ab, bb);
+}
 
 const SESSION_TTL = 60 * 60 * 24 * 7; // 7 days
 const MAGIC_CODE_TTL = 60 * 10; // 10 minutes
@@ -80,7 +89,7 @@ export async function verifyMagicCode(
     return { ok: false, error: 'Too many attempts. Please request a new code.' };
   }
 
-  if (stored.code !== code) {
+  if (!timingSafeEqualStrings(stored.code, code)) {
     await kv.set<MagicCodeData>(
       key,
       { ...stored, attempts: stored.attempts + 1 },

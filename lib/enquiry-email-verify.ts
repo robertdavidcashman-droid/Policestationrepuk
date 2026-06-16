@@ -17,7 +17,16 @@
  * Vercel production env can flip the master switch.
  */
 
+import crypto from 'crypto';
 import { getKV } from '@/lib/kv';
+
+/** Constant-time comparison so a wrong code can't be guessed via timing. */
+function timingSafeEqualStrings(a: string, b: string): boolean {
+  const ab = Buffer.from(String(a), 'utf8');
+  const bb = Buffer.from(String(b), 'utf8');
+  if (ab.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ab, bb);
+}
 
 const PREFIX = 'enquiry-code:';
 const TTL_SECONDS = 15 * 60; // 15 minutes
@@ -93,7 +102,7 @@ export async function consumeEnquiryEmailCode(
     return { ok: false, reason: 'too-many-attempts' };
   }
   const submitted = String(submittedCode || '').trim();
-  if (submitted !== record.code) {
+  if (!timingSafeEqualStrings(submitted, record.code)) {
     const updated: CodeRecord = { ...record, attempts: record.attempts + 1 };
     const remainingTtl = Math.max(60, Math.floor((record.expiresAt - Date.now()) / 1000));
     await kv.set(key, updated, { ex: remainingTtl });

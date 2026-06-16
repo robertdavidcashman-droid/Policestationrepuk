@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { isAdminEmail } from '@/lib/admin-auth';
 import { getRawReps, getRegisteredRepByEmail } from '@/lib/data';
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const code = String(crypto.randomInt(100000, 1000000));
   await storeMagicCode(email, code);
   await sendMagicCode(email, code);
 
