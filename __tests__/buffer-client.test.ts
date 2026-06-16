@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { BufferApiError, createScheduledBufferPost } from '@/lib/buffer/client';
+import {
+  BufferApiError,
+  createScheduledBufferPost,
+  fetchBufferPostStatusMap,
+  getBufferPostById,
+} from '@/lib/buffer/client';
 
 function mockImageProbeHeaders() {
   return new Headers({
@@ -301,5 +306,76 @@ describe('buffer client', () => {
         imageUrl,
       }),
     ).rejects.toThrow(/dueAt is in the past/);
+  });
+});
+
+describe('fetchBufferPostStatusMap', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it('looks up each post id individually', async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn().mockImplementation(async (_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as { variables?: { input?: { id?: string } } };
+      const id = body.variables?.input?.id;
+      if (id === 'p1') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            data: {
+              post: {
+                id: 'p1',
+                dueAt: '2026-06-15T10:00:00.000Z',
+                status: 'sent',
+                channelService: 'linkedin',
+              },
+            },
+          }),
+        };
+      }
+      if (id === 'p2') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            errors: [{ message: 'Post not found', extensions: { code: 'NOT_FOUND' } }],
+          }),
+        };
+      }
+      throw new Error(`unexpected id ${id}`);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const promise = fetchBufferPostStatusMap('api-key', 'org-id', ['p1', 'p2']);
+    await vi.advanceTimersByTimeAsync(500);
+    const map = await promise;
+
+    expect(map.size).toBe(1);
+    expect(map.get('p1')?.status).toBe('sent');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('getBufferPostById', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('returns null when Buffer reports NOT_FOUND', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          errors: [{ message: 'Post not found', extensions: { code: 'NOT_FOUND' } }],
+        }),
+      }),
+    );
+
+    await expect(getBufferPostById('api-key', 'missing')).resolves.toBeNull();
   });
 });

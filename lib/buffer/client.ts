@@ -4,6 +4,26 @@ import { sanitizeGoogleBusinessPostText } from './google-business-text';
 import { assertBufferPostImageReady } from './image-url';
 
 const BUFFER_API_URL = 'https://api.buffer.com';
+const STATUS_LOOKUP_DELAY_MS = 400;
+const GRAPHQL_MAX_RETRIES = 5;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRateLimitError(message: string): boolean {
+  return /too many requests/i.test(message);
+}
+
+function retryAfterMs(errors: BufferGraphQLError[] | undefined): number | null {
+  for (const err of errors ?? []) {
+    const retryAfter = (err.extensions as { retryAfter?: number } | undefined)?.retryAfter;
+    if (typeof retryAfter === 'number' && retryAfter > 0) {
+      return retryAfter * 1000;
+    }
+  }
+  return null;
+}
 
 export interface BufferGraphQLError {
   message: string;
@@ -30,29 +50,57 @@ async function bufferGraphql<T>(
   query: string,
   variables?: Record<string, unknown>,
 ): Promise<T> {
-  const res = await fetch(BUFFER_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
+  let lastError: BufferApiError | null = null;
 
-  const json = (await res.json()) as {
-    data?: T;
-    errors?: BufferGraphQLError[];
-  };
+  for (let attempt = 0; attempt <= GRAPHQL_MAX_RETRIES; attempt++) {
+    const res = await fetch(BUFFER_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({ query, variables }),
+    });
 
-  if (json.errors?.length) {
-    throw new BufferApiError(json.errors.map((e) => e.message).join('; '), json.errors);
+    const json = (await res.json()) as {
+      data?: T;
+      errors?: BufferGraphQLError[];
+    };
+
+    if (json.errors?.length) {
+      const message = json.errors.map((e) => e.message).join('; ');
+      const notFoundOnly = json.errors.every(
+        (e) => (e.extensions as { code?: string } | undefined)?.code === 'NOT_FOUND',
+      );
+      if (notFoundOnly) {
+        throw new BufferApiError(message, json.errors);
+      }
+      if (isRateLimitError(message) && attempt < GRAPHQL_MAX_RETRIES) {
+        const waitMs = retryAfterMs(json.errors) ?? Math.min(60_000, 2000 * 2 ** attempt);
+        await sleep(waitMs);
+        continue;
+      }
+      throw new BufferApiError(message, json.errors);
+    }
+
+    if (!json.data) {
+      lastError = new BufferApiError(`Buffer API returned no data (HTTP ${res.status})`, json);
+      if (res.status === 429 && attempt < GRAPHQL_MAX_RETRIES) {
+        const headerWait = Number(res.headers.get('retry-after'));
+        await sleep(
+          Number.isFinite(headerWait) && headerWait > 0
+            ? headerWait * 1000
+            : Math.min(60_000, 2000 * 2 ** attempt),
+        );
+        continue;
+      }
+      throw lastError;
+    }
+
+    return json.data;
   }
 
-  if (!json.data) {
-    throw new BufferApiError(`Buffer API returned no data (HTTP ${res.status})`, json);
-  }
-
-  return json.data;
+  throw lastError ?? new BufferApiError('Buffer API request failed after retries');
 }
 
 export interface CreatedBufferPost {
@@ -282,76 +330,66 @@ export interface BufferPostStatusSummary {
   channelService: string;
 }
 
-/** Fetch status for specific post IDs by paginating org posts (avoids UTC dueAt day-filter gaps). */
-export async function fetchBufferPostStatusMap(
+/** Look up a single post by id (cheap vs paginating the whole org). */
+export async function getBufferPostById(
   apiKey: string,
-  organizationId: string,
-  postIds: string[],
-): Promise<Map<string, BufferPostStatusSummary>> {
-  const wanted = new Set(postIds);
-  const found = new Map<string, BufferPostStatusSummary>();
-  if (wanted.size === 0) return found;
-
-  let after: string | undefined;
-
-  do {
+  postId: string,
+): Promise<BufferPostStatusSummary | null> {
+  try {
     const data = await bufferGraphql<{
-      posts: {
-        edges: Array<{
-          node: {
-            id: string;
-            dueAt: string | null;
-            status: string;
-            channelService: string;
-          };
-        }>;
-        pageInfo: { hasNextPage: boolean; endCursor: string | null };
+      post: {
+        id: string;
+        dueAt: string | null;
+        status: string;
+        channelService: string;
       };
     }>(
       apiKey,
-      `query ListPostsForStatus($input: PostsInput!, $first: Int!, $after: String) {
-        posts(input: $input, first: $first, after: $after) {
-          edges {
-            node {
-              id
-              dueAt
-              status
-              channelService
-            }
-          }
-          pageInfo {
-            hasNextPage
-            endCursor
-          }
+      `query GetPostStatus($input: PostInput!) {
+        post(input: $input) {
+          id
+          dueAt
+          status
+          channelService
         }
       }`,
-      {
-        first: 100,
-        after,
-        input: {
-          organizationId,
-          filter: {
-            status: ['sent', 'scheduled', 'error', 'draft'],
-          },
-        },
-      },
+      { input: { id: postId } },
     );
-
-    for (const edge of data.posts.edges) {
-      const node = edge.node;
-      if (!wanted.has(node.id)) continue;
-      found.set(node.id, {
-        id: node.id,
-        dueAt: node.dueAt,
-        status: node.status,
-        channelService: node.channelService,
-      });
+    return {
+      id: data.post.id,
+      dueAt: data.post.dueAt,
+      status: data.post.status,
+      channelService: data.post.channelService,
+    };
+  } catch (err) {
+    if (err instanceof BufferApiError) {
+      const notFound = Array.isArray(err.details)
+        && err.details.some(
+          (e) => (e as BufferGraphQLError).extensions?.code === 'NOT_FOUND',
+        );
+      if (notFound || /post not found/i.test(err.message)) {
+        return null;
+      }
     }
+    throw err;
+  }
+}
 
-    if (found.size >= wanted.size) break;
+/** Fetch status for specific post IDs (one lookup per id; avoids org-wide pagination rate limits). */
+export async function fetchBufferPostStatusMap(
+  apiKey: string,
+  _organizationId: string,
+  postIds: string[],
+): Promise<Map<string, BufferPostStatusSummary>> {
+  const found = new Map<string, BufferPostStatusSummary>();
+  const unique = [...new Set(postIds)];
+  if (unique.length === 0) return found;
 
-    after = data.posts.pageInfo.hasNextPage ? (data.posts.pageInfo.endCursor ?? undefined) : undefined;
-  } while (after);
+  for (let i = 0; i < unique.length; i++) {
+    if (i > 0) await sleep(STATUS_LOOKUP_DELAY_MS);
+    const post = await getBufferPostById(apiKey, unique[i]);
+    if (post) found.set(post.id, post);
+  }
 
   return found;
 }
