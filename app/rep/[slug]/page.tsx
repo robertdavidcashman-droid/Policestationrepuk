@@ -18,15 +18,23 @@ import { repProfileUrl } from '@/lib/rep-link-kit';
 import { SITE_URL } from '@/lib/seo-layer/config';
 import { withSisterSiteUtm } from '@/lib/partner-website-href';
 
-// Render every rep slug on demand. The previous setup combined
-// `revalidate = 60` with `generateStaticParams()` returning ~180 known
-// slugs — Next.js 15.5 then served unknown slugs (e.g. registered reps
-// like Wayne Thomas, or genuinely unknown URLs) through a broken ISR
-// fallback that returned the legacy /500 page instead of either rendering
-// the rep or calling notFound() cleanly. Forcing dynamic rendering and
-// removing generateStaticParams sidesteps the bug; the in-process caches
-// in lib/data + lib/featured keep KV traffic low.
-export const dynamic = 'force-dynamic';
+// ISR (on-demand) for rep profiles. We intentionally do NOT use
+// `generateStaticParams()`: the previous setup combined `revalidate = 60`
+// with `generateStaticParams()` returning ~180 known slugs, and Next.js 15.5
+// then served unknown slugs (e.g. registered reps like Wayne Thomas, or
+// genuinely unknown URLs) through a broken ISR fallback that returned the
+// legacy /500 page instead of either rendering the rep or calling
+// notFound() cleanly.
+//
+// Leaving `generateStaticParams` off means every slug is treated as a dynamic
+// param (`dynamicParams` defaults to true): the first request for a slug is
+// rendered on demand, then cached and revalidated every hour. This keeps the
+// pages cacheable/CDN-friendly for SEO and performance while avoiding the
+// broken static-fallback path. KV is read at request/revalidation time (it is
+// only skipped during the build prerender phase), and the in-process caches in
+// lib/data + lib/featured keep KV traffic low. A newly registered or edited
+// rep becomes visible within `revalidate` seconds.
+export const revalidate = 3600;
 
 interface PageProps {
   params: Promise<{ slug: string }>;

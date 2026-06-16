@@ -10,6 +10,8 @@ import { DeferredGlobalWidgets } from '@/components/DeferredGlobalWidgets';
 import { Suspense } from 'react';
 import { AssistantUiProvider } from '@/components/assistant/AssistantUiProvider';
 import { JsonLd } from '@/components/JsonLd';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import { SITE_URL, SITE_NAME, SITE_KEYWORDS, socialPreviewImageUrl } from '@/lib/seo-layer/config';
 import { platformLegalServiceSchema, webSiteSchema } from '@/lib/seo';
@@ -130,6 +132,8 @@ export default function RootLayout({
           </Suspense>
           <DeferredGlobalWidgets />
         </AssistantUiProvider>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
