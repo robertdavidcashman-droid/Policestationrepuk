@@ -44,7 +44,7 @@ async function enrichOne(prospect: FirmProspect, registry: CrimeRegistry): Promi
   // website. Without the Serper step, firms/solicitors with no SRA-listed site
   // (notably DSCC-only solicitors) never get a website to crawl → no email.
   await resolveProspectWebsite(prospect);
-  if (prospect.status === 'excluded') {
+  if (prospect.excludedReason === 'sra_not_authorised') {
     prospect.updatedAt = new Date().toISOString();
     return prospect;
   }
