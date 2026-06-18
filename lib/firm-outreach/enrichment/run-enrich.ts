@@ -3,7 +3,7 @@ import { readLaaCrimeJson } from '@/lib/legal-directory/laa-fetch';
 import { enrichBatchSize } from '../constants';
 import { buildCrimeRegistry, resolveStatusWithQualification } from '../qualification';
 import type { CrimeRegistry } from '../qualification';
-import { lookupSraOrganisationByName } from '../sra-org-lookup';
+import { resolveProspectWebsite } from './resolve-prospect-website';
 import {
   CURSOR_ENRICH,
   getCursor,
@@ -40,18 +40,13 @@ async function enrichOne(prospect: FirmProspect, registry: CrimeRegistry): Promi
   prospect.enrichAttempts += 1;
   prospect.updatedAt = now;
 
-  if (!prospect.regulatoryNumber || !prospect.websiteUrl) {
-    const sra = await lookupSraOrganisationByName(prospect.firmName, prospect.postcode);
-    if (sra.organisation) {
-      prospect.regulatoryNumber = prospect.regulatoryNumber || sra.organisation.sraNumber;
-      prospect.websiteUrl = prospect.websiteUrl || sra.organisation.website;
-      if (sra.matched && !sra.organisation.authorised) {
-        prospect.status = 'excluded';
-        prospect.excludedReason = 'sra_not_authorised';
-        return prospect;
-      }
-    }
-    await new Promise((r) => setTimeout(r, 1500));
+  // SRA register lookup THEN Serper homepage discovery when the register has no
+  // website. Without the Serper step, firms/solicitors with no SRA-listed site
+  // (notably DSCC-only solicitors) never get a website to crawl → no email.
+  await resolveProspectWebsite(prospect);
+  if (prospect.status === 'excluded') {
+    prospect.updatedAt = new Date().toISOString();
+    return prospect;
   }
 
   if (!prospect.email || !isPlausibleOutreachEmail(prospect.email)) {
