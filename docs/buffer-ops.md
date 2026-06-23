@@ -22,6 +22,7 @@ Auth: `Authorization: Bearer $CRON_SECRET` (or `x-cron-secret` locally).
 | `RESEND_API_KEY` | Optional | Failure/skip/health emails |
 | `BUFFER_SCHEDULER_NOTIFY_EMAIL` | Optional | Override notify address (daily report + failures) |
 | `BUFFER_CONTENT_FEEDS` | Optional | JSON override for feed URLs |
+| `BUFFER_SCHEDULER_POSTS_PER_FEED` | Optional | Posts per feed per day (default 5, **minimum 4**, max 15) |
 | `BUFFER_VERIFY_GBP_ONLY` | Optional | Set `1` for GBP-only verify scripts |
 
 ## NPM scripts
@@ -83,7 +84,8 @@ Feeds with few items (e.g. `psrtrain` guides) can exhaust cooldown if `postsPerD
 
 - **Symptom:** `Feed "psrtrain" has no posts available after cooldown exclusions` (older scheduler) or warning `skipping` with other feeds still scheduled (current).
 - **Math:** effective cooldown per feed = `min(BUFFER_SCHEDULER_COOLDOWN_DAYS, floor(poolSize / postsPerFeed))`.
-- **psrtrain default:** 2 posts/day (1 day + 1 night) — tune in `lib/buffer/feeds.ts`.
+- **Minimum:** every feed schedules at least **4 posts/day** (`MIN_SCHEDULER_POSTS_PER_FEED` in `lib/buffer/config.ts`); env values below 4 are clamped up.
+- **psrtrain default:** 4 posts/day (2 day + 2 night) — tune in `lib/buffer/feeds.ts`.
 - **Recovery:** `npm run buffer:replace-today` clears today’s queue and prunes related cooldown KV entries, then re-runs the scheduler.
 - **Long-term:** grow the sister-site RSS pool (new guides on psrtrain.com with JPEG heroes in RSS enclosures).
 

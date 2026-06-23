@@ -45,9 +45,9 @@ const DEFAULT_FEEDS: ContentFeedSource[] = [
     id: 'psrtrain',
     type: 'rss',
     url: 'https://psrtrain.com/feed',
-    postsPerDay: 2,
-    dayPosts: 1,
-    nightPosts: 1,
+    postsPerDay: 4,
+    dayPosts: 2,
+    nightPosts: 2,
   },
 ];
 

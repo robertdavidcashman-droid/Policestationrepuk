@@ -4,6 +4,7 @@ import {
   getBufferChannels,
   getSchedulerCooldownDays,
   getSchedulerDayPosts,
+  getSchedulerMinPostsPerFeed,
   getSchedulerNightPosts,
   getSchedulerPostsPerFeed,
   getSchedulerTimeWindow,
@@ -59,6 +60,19 @@ describe('buffer config', () => {
     expect(getSchedulerTimeWindow().startHour).toBe(8);
   });
 
+  it('enforces minimum posts per feed of 4', () => {
+    expect(getSchedulerMinPostsPerFeed()).toBe(4);
+    process.env.BUFFER_SCHEDULER_POSTS_PER_FEED = '1';
+    expect(getSchedulerPostsPerFeed()).toBe(4);
+    process.env.BUFFER_SCHEDULER_POSTS_PER_FEED = '2';
+    expect(getSchedulerPostsPerFeed()).toBe(4);
+    expect(resolveFeedSchedule({ postsPerDay: 2 })).toEqual({
+      postsPerFeed: 4,
+      dayPosts: 2,
+      nightPosts: 2,
+    });
+  });
+
   it('defaults to four content feeds including psrtrain', () => {
     delete process.env.BUFFER_CONTENT_FEEDS;
     const feeds = getContentFeeds();
@@ -73,9 +87,9 @@ describe('buffer config', () => {
     expect(psrtrain).toMatchObject({
       type: 'rss',
       url: 'https://psrtrain.com/feed',
-      postsPerDay: 2,
-      dayPosts: 1,
-      nightPosts: 1,
+      postsPerDay: 4,
+      dayPosts: 2,
+      nightPosts: 2,
     });
   });
 

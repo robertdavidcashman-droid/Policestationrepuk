@@ -154,15 +154,15 @@ describe('runBufferBlogScheduler integration', () => {
     expect(savedRun.feedIds).toHaveLength(10);
   });
 
-  it('schedules 2 posts for psrtrain when feed uses 1 day + 1 night', async () => {
+  it('schedules 4 posts for psrtrain when feed uses 2 day + 2 night', async () => {
     mockGetContentFeeds.mockReturnValue([
       {
         id: 'psrtrain',
         type: 'rss',
         url: 'https://psrtrain.com/feed',
-        postsPerDay: 2,
-        dayPosts: 1,
-        nightPosts: 1,
+        postsPerDay: 4,
+        dayPosts: 2,
+        nightPosts: 2,
       },
     ]);
     mockLoadAll.mockResolvedValue({
@@ -172,7 +172,7 @@ describe('runBufferBlogScheduler integration', () => {
 
     const result = await runBufferBlogScheduler(new Date('2026-06-08T05:00:00Z'));
     expect(result.ok).toBe(true);
-    expect(result.posts).toHaveLength(2);
+    expect(result.posts).toHaveLength(4);
     expect(result.posts!.every((p) => p.feedId === 'psrtrain')).toBe(true);
   });
 
@@ -183,9 +183,9 @@ describe('runBufferBlogScheduler integration', () => {
         id: 'psrtrain',
         type: 'rss',
         url: 'https://psrtrain.com/feed',
-        postsPerDay: 2,
-        dayPosts: 1,
-        nightPosts: 1,
+        postsPerDay: 4,
+        dayPosts: 2,
+        nightPosts: 2,
       },
     ]);
     mockLoadAll.mockResolvedValue({

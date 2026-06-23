@@ -12,6 +12,7 @@ import {
   getBufferChannels,
   getSchedulerCooldownDays,
   getSchedulerDayWindow,
+  getSchedulerMinPostsPerFeed,
   getSchedulerNightWindow,
   getSchedulerTimezone,
 } from '../lib/buffer/config';
@@ -35,9 +36,9 @@ import {
   type SchedulerRunRecord,
 } from '../lib/buffer/scheduler-storage';
 
-const POSTS_PER_FEED = 3;
+const POSTS_PER_FEED = getSchedulerMinPostsPerFeed();
 const DAY_POSTS = 2;
-const NIGHT_POSTS = 1;
+const NIGHT_POSTS = 2;
 
 function loadEnvFile(filename: string) {
   const path = resolve(process.cwd(), filename);

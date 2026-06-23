@@ -37,12 +37,19 @@ export function getBufferChannels(): BufferChannelConfig[] {
   return DEFAULT_CHANNELS;
 }
 
-/** Posts scheduled per content feed each day (default 5: 3 day + 2 night). */
+/** Minimum posts scheduled per content feed each day (enforced in clampPostsPerFeed). */
+export const MIN_SCHEDULER_POSTS_PER_FEED = 4;
+
+export function getSchedulerMinPostsPerFeed(): number {
+  return MIN_SCHEDULER_POSTS_PER_FEED;
+}
+
+/** Posts scheduled per content feed each day (default 5: 3 day + 2 night, minimum 4). */
 export function getSchedulerPostsPerFeed(): number {
   const legacy = process.env.BUFFER_SCHEDULER_POSTS_PER_DAY?.trim();
   const raw = process.env.BUFFER_SCHEDULER_POSTS_PER_FEED ?? legacy ?? '5';
   const n = Number(raw);
-  return Number.isFinite(n) && n > 0 ? Math.min(Math.floor(n), 15) : 5;
+  return clampPostsPerFeed(Number.isFinite(n) && n > 0 ? n : 5);
 }
 
 /** @deprecated Use getSchedulerPostsPerFeed — kept for older env vars. */
@@ -119,7 +126,11 @@ export interface FeedSchedule {
 }
 
 function clampPostsPerFeed(n: number): number {
-  return Number.isFinite(n) && n > 0 ? Math.min(Math.floor(n), 15) : 5;
+  if (!Number.isFinite(n) || n <= 0) return 5;
+  return Math.max(
+    MIN_SCHEDULER_POSTS_PER_FEED,
+    Math.min(Math.floor(n), 15),
+  );
 }
 
 /** Per-feed schedule — scales default day/night ratio when only postsPerDay is set. */

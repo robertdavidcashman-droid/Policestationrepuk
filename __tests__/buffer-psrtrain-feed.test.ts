@@ -30,20 +30,20 @@ const SAMPLE_PSRTRAIN_RSS = `<?xml version="1.0" encoding="UTF-8"?>
 </rss>`;
 
 describe('psrtrain buffer feed', () => {
-  it('default feeds include psrtrain RSS at 2 posts per day (1 day + 1 night)', () => {
+  it('default feeds include psrtrain RSS at 4 posts per day (2 day + 2 night)', () => {
     const feeds = getContentFeeds();
     const psrtrain = feeds.find((f) => f.id === 'psrtrain');
     expect(psrtrain).toMatchObject({
       type: 'rss',
       url: 'https://psrtrain.com/feed',
-      postsPerDay: 2,
-      dayPosts: 1,
-      nightPosts: 1,
+      postsPerDay: 4,
+      dayPosts: 2,
+      nightPosts: 2,
     });
     expect(resolveFeedSchedule(psrtrain!)).toEqual({
-      postsPerFeed: 2,
-      dayPosts: 1,
-      nightPosts: 1,
+      postsPerFeed: 4,
+      dayPosts: 2,
+      nightPosts: 2,
     });
   });
 
