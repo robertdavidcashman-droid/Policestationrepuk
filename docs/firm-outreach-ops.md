@@ -7,10 +7,15 @@ Automated WhatsApp invitation emails to qualified criminal defence firms. Admin 
 | Time | Route | What runs |
 |------|-------|-----------|
 | `03:00` | `/api/cron/firm-outreach-pipeline/maintain` | LAA + DSCC + discovery + requalify; Sunday requeues `no_email` prospects |
-| `06:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms, ~240s max) |
-| `07:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms, ~240s max) |
-| `08:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms, ~240s max) |
-| `09:30` | `/api/cron/firm-outreach-pipeline/full` | **Approval email** with Ready to send button (no auto-send) |
+| `06:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms, ~270s max) |
+| `07:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms, ~270s max) |
+| `08:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms, ~270s max) |
+| `10:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms, ~270s max) |
+| `14:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms, ~270s max) |
+| `18:00` | `/api/cron/firm-outreach-enrich` | Enrich only (50 firms, ~270s max) |
+| `09:30` | `/api/cron/firm-outreach-pipeline/full` | Auto-send up to daily cap (when approval disabled) |
+| `14:30` | `/api/cron/firm-outreach-send` | Send-only top-up (no digest) |
+| `18:30` | `/api/cron/firm-outreach-send` | Send-only top-up (no digest) |
 | `17:00` | `/api/cron/firm-outreach-digest` | **Reminder** approval email if daily cap not yet reached |
 
 Manual approval email (one per London day unless `--force` or reminder cron):
@@ -31,14 +36,14 @@ All cron routes require `Authorization: Bearer $CRON_SECRET` (Vercel adds this a
 | `RESEND_API_KEY` | — | **Required** for sends and digest |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | — | **Required** for prospect storage |
 | `CRON_SECRET` | — | Cron auth + unsubscribe token signing |
-| `FIRM_OUTREACH_DAILY_CAP` | `50` | Max outreach sends per UTC day |
+| `FIRM_OUTREACH_DAILY_CAP` | `150` | Max outreach sends per UTC day |
 | `FIRM_OUTREACH_DIGEST_EMAIL` | `robertdavidcashman@gmail.com` | Approval + confirmation email recipient |
-| `FIRM_OUTREACH_REQUIRE_APPROVAL` | `true` | Set `false` to restore automatic 09:30 sends |
+| `FIRM_OUTREACH_REQUIRE_APPROVAL` | `false` | Set `true` to require Ready to send approval before sends |
 | `ADMIN_DECISION_TOKEN_SECRET` | — | Signs Ready to send links (or falls back to `CRON_SECRET`) |
 | `RESEND_WEBHOOK_SECRET` | — | Resend webhook signing secret (from configure script) |
 | `FIRM_OUTREACH_CRON_ENRICH_BATCH` | `50` | Firms per cron enrich tick |
 | `FIRM_OUTREACH_ENRICH_BATCH` | `150` | Firms per local/manual enrich run |
-| `FIRM_OUTREACH_ENRICH_MAX_MS` | `240000` | Stop enrich before serverless timeout |
+| `FIRM_OUTREACH_ENRICH_MAX_MS` | `270000` | Stop enrich before serverless timeout |
 | `SERPER_API_KEY` | — | Google search to resolve firm websites when SRA has none |
 | `HUNTER_API_KEY` | — | Paid domain email lookup after crawl fails (2nd pass) |
 | `FIRM_OUTREACH_PAID_DAILY_CAP` | `100` | Max Hunter lookups per UTC day |
@@ -59,7 +64,8 @@ Recommended to set explicitly (otherwise code defaults apply):
 - `FIRM_OUTREACH_DIGEST_EMAIL=robertdavidcashman@gmail.com`
 - `RESEND_WEBHOOK_SECRET` — set via `node scripts/resend-configure-webhook.mjs`
 - `FIRM_OUTREACH_CRON_ENRICH_BATCH=50`
-- `FIRM_OUTREACH_DAILY_CAP=50` (or higher if you want larger daily batches)
+- `FIRM_OUTREACH_DAILY_CAP=150`
+- `FIRM_OUTREACH_REQUIRE_APPROVAL=false`
 - `SERPER_API_KEY` — resolves firm websites via Google when SRA lookup has no URL
 - `HUNTER_API_KEY` — Hunter.io fallback when website crawl finds no email
 - `FIRM_OUTREACH_PAID_DAILY_CAP=100` — Hunter lookups per day (default 100)
@@ -116,16 +122,28 @@ npm run firm-outreach:requalify
 
 ## Daily approval email (Ready to send)
 
-When `FIRM_OUTREACH_REQUIRE_APPROVAL=true` (default):
+When `FIRM_OUTREACH_REQUIRE_APPROVAL=true`:
 
 1. **09:30 UTC** — email to `FIRM_OUTREACH_DIGEST_EMAIL` with a **Ready to send** button and queue summary.
-2. You click the button → confirmation page → **Confirm — Ready to send** sends up to `FIRM_OUTREACH_DAILY_CAP` (default 50) from the ready queue.
+2. You click the button → confirmation page → **Confirm — Ready to send** sends up to `FIRM_OUTREACH_DAILY_CAP` from the ready queue.
 3. **Confirmation email** lists sent count and receipts.
 4. **17:00 UTC** — reminder if you have not yet reached today's cap.
 
+**Production default:** `FIRM_OUTREACH_REQUIRE_APPROVAL=false` — 09:30, 14:30, and 18:30 UTC crons send automatically (no approval email). Quality gates (LAA/DSCC qualification, dedupe, suppression) still apply.
+
 Links are prefetch-safe: the email button only opens a preview; sends happen on POST confirm.
 
-Set `FIRM_OUTREACH_REQUIRE_APPROVAL=false` to restore the legacy automatic 09:30 send + informational digest.
+## Lead engine import (RepUK)
+
+After each successful [lead engine automation](.github/workflows/lead-engine.yml) run, download artifact `ready_to_send.csv` and import:
+
+```bash
+bash -c 'set -a; source .env.vercel.production; set +a; \
+  KV_REST_API_URL=... KV_REST_API_TOKEN=... \
+  npx tsx scripts/firm-outreach-import-lead-engine.ts --file=path/to/ready_to_send.csv'
+```
+
+Or use `scripts/firm-outreach-run-prod.mjs` after sourcing production env. Import dedupes against existing sends and skips guessed emails unless `--include-guessed`.
 
 ## Legacy daily digest
 
@@ -145,5 +163,7 @@ Guessed emails (`info@domain` via MX check) are used only when crawl/Hunter fail
 ## Reliability notes
 
 - Enrichment cursor advances **only after** each firm is processed — timeouts no longer skip firms.
-- Cron enrich uses batches of 50 (default) with a 240s wall-clock guard to stay within Vercel's 300s function limit.
+- Cron enrich uses batches of 50 (default) with a 270s wall-clock guard to stay within Vercel's 300s function limit.
+- Six enrich crons per day (06/07/08/10/14/18 UTC) plus send-only top-ups at 14:30 and 18:30 UTC.
+- Local ops: `bash -c 'set -a; source .env.vercel.production; set +a; npx tsx scripts/firm-outreach-run-prod.mjs enrich --limit=150'` (dotenv cannot parse `.env.vercel.production`; use bash `source` or inline env).
 - Duplicate initial sends to the same email address are blocked across automated and admin paths.

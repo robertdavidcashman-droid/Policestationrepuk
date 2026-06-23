@@ -12,10 +12,17 @@ export function skipKVInPrerender(): boolean {
   return process.env.NEXT_PHASE === 'phase-production-build';
 }
 
+function envOrAlt(primary: string | undefined, alt: string | undefined): string | undefined {
+  const p = primary?.trim();
+  if (p) return p;
+  const a = alt?.trim();
+  return a || undefined;
+}
+
 export function getKV(): Redis | null {
   if (_redis) return _redis;
-  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+  const url = envOrAlt(process.env.UPSTASH_REDIS_REST_URL, process.env.KV_REST_API_URL);
+  const token = envOrAlt(process.env.UPSTASH_REDIS_REST_TOKEN, process.env.KV_REST_API_TOKEN);
   if (!url || !token) return null;
   _redis = new Redis({ url, token });
   return _redis;

@@ -78,12 +78,12 @@ describe('emailHasInitialOutreachFromOtherProspect', () => {
 });
 
 describe('dailySendCap default', () => {
-  it('defaults to 50 when env is unset', async () => {
+  it('defaults to 150 when env is unset', async () => {
     const prev = process.env.FIRM_OUTREACH_DAILY_CAP;
     delete process.env.FIRM_OUTREACH_DAILY_CAP;
     vi.resetModules();
     const { dailySendCap } = await import('@/lib/firm-outreach/constants');
-    expect(dailySendCap()).toBe(50);
+    expect(dailySendCap()).toBe(150);
     if (prev === undefined) delete process.env.FIRM_OUTREACH_DAILY_CAP;
     else process.env.FIRM_OUTREACH_DAILY_CAP = prev;
   });
@@ -102,12 +102,12 @@ describe('cronEnrichBatchSize default', () => {
 });
 
 describe('paidDailyCap default', () => {
-  it('defaults to 100 when env is unset', async () => {
+  it('defaults to 150 when env is unset', async () => {
     const prev = process.env.FIRM_OUTREACH_PAID_DAILY_CAP;
     delete process.env.FIRM_OUTREACH_PAID_DAILY_CAP;
     vi.resetModules();
     const { paidDailyCap } = await import('@/lib/firm-outreach/constants');
-    expect(paidDailyCap()).toBe(100);
+    expect(paidDailyCap()).toBe(150);
     if (prev === undefined) delete process.env.FIRM_OUTREACH_PAID_DAILY_CAP;
     else process.env.FIRM_OUTREACH_PAID_DAILY_CAP = prev;
   });

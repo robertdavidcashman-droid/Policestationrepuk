@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
-/** @deprecated Prefer /api/cron/firm-outreach-pipeline */
+/** Send-only cron tick (no enrich, no owner digest). */
 export async function GET(request: Request) {
   if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -14,7 +14,11 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const sendLimit = Number(url.searchParams.get('limit') || 0) || undefined;
-  const enrichLimit = 30;
-  const result = await runFirmOutreachPipeline({ sendLimit, enrichLimit });
-  return NextResponse.json({ ok: true, ...result });
+  const result = await runFirmOutreachPipeline({
+    skipDiscovery: true,
+    skipEnrich: true,
+    skipDigest: true,
+    sendLimit,
+  });
+  return NextResponse.json({ ok: true, mode: 'send-only', ...result });
 }

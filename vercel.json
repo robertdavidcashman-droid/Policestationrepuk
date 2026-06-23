@@ -85,8 +85,28 @@
       "schedule": "0 8 * * *"
     },
     {
+      "path": "/api/cron/firm-outreach-enrich",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/firm-outreach-enrich",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/firm-outreach-enrich",
+      "schedule": "0 18 * * *"
+    },
+    {
       "path": "/api/cron/firm-outreach-pipeline/full",
       "schedule": "30 9 * * *"
+    },
+    {
+      "path": "/api/cron/firm-outreach-send",
+      "schedule": "30 14 * * *"
+    },
+    {
+      "path": "/api/cron/firm-outreach-send",
+      "schedule": "30 18 * * *"
     },
     {
       "path": "/api/cron/firm-outreach-digest",

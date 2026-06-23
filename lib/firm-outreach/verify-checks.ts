@@ -134,10 +134,17 @@ export function checkVercelCronConfig(vercelJson: {
     ok: schedules['/api/cron/firm-outreach-pipeline/full'] === '30 9 * * *',
     detail: String(schedules['/api/cron/firm-outreach-pipeline/full'] ?? 'missing'),
   });
+  const enrichCronCount = paths.filter((p) => p === '/api/cron/firm-outreach-enrich').length;
   results.push({
-    name: 'vercel_cron_enrich_three_times_daily',
-    ok: paths.filter((p) => p === '/api/cron/firm-outreach-enrich').length === 3,
-    detail: `count=${paths.filter((p) => p === '/api/cron/firm-outreach-enrich').length}`,
+    name: 'vercel_cron_enrich_six_times_daily',
+    ok: enrichCronCount === 6,
+    detail: `count=${enrichCronCount}`,
+  });
+  const sendOnlyCronCount = paths.filter((p) => p === '/api/cron/firm-outreach-send').length;
+  results.push({
+    name: 'vercel_cron_send_only_twice_daily',
+    ok: sendOnlyCronCount === 2,
+    detail: `count=${sendOnlyCronCount}`,
   });
 
   return results;

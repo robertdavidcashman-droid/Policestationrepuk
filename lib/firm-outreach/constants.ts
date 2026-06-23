@@ -16,8 +16,9 @@ export {
 const env = createOutreachEnvHelpers({
   countyAllowlist: null,
   cronEnrichBatch: 50,
-  enrichMaxMs: 240_000,
-  paidDailyCap: 100,
+  enrichMaxMs: 270_000,
+  paidDailyCap: 150,
+  dailyCap: 150,
 });
 
 export const outreachEnabled = env.outreachEnabled;
