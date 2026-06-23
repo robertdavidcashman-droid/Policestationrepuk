@@ -1,0 +1,16 @@
+{
+  "recordedAt": "2026-06-11T00:00:00.000Z",
+  "serperInLocalEnvPull": false,
+  "note": "SERPER_API_KEY must be set on RepUK Vercel production for search discovery; local .env.vercel.production may omit sensitive keys.",
+  "findings": {
+    "approved": 47,
+    "needs_review": 15,
+    "rejected": 162,
+    "stale": 3
+  },
+  "approvedPublished": 46,
+  "totalSuites": 896,
+  "suitesStillMissingNumber": 850,
+  "openQueue": 15,
+  "phase1Target": "Increase findingsCreated per suitesScanned vs pre-change baseline (0 created / 11 rejected per 1-suite smoke)"
+}

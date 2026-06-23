@@ -134,6 +134,7 @@ export interface CrawlerRunStats {
   findingsRejected: number;
   conflictsFlagged: number;
   officialPagesFetched: number;
+  pageFetchesUsed: number;
   batchCursor: number;
   batchStartIndex: number;
   batchTotal: number;

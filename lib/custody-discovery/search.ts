@@ -79,7 +79,7 @@ export function isSerperConfigured(): boolean {
 export async function searchForSuite(
   suite: CustodySuite,
   provider: SearchProvider = serperSearch,
-  maxQueries = 6,
+  maxQueries = 4,
 ): Promise<SearchResult[]> {
   const queries = buildSearchQueries(suite).slice(0, maxQueries);
   const seen = new Set<string>();

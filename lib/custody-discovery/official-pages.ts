@@ -5,13 +5,27 @@ import type { CustodySuite, SearchResult } from './types';
 const FETCH_TIMEOUT_MS = 12_000;
 
 /** Force-wide custody listing pages (verified public URLs). */
-const FORCE_CUSTODY_PAGES: Record<string, string[]> = {
+export const FORCE_CUSTODY_PAGES: Record<string, string[]> = {
   'devon and cornwall police': [
     'https://www.devon-cornwall.police.uk/contact/custody-information',
   ],
   'kent police': ['https://www.kent.police.uk/contact/'],
   'thames valley police': ['https://www.thamesvalley.police.uk/contact/'],
   'metropolitan police': ['https://www.met.police.uk/contact/af/contact-us/'],
+  'west midlands police': [
+    'https://www.west-midlands.police.uk/contact/custody-information',
+    'https://www.west-midlands.police.uk/contact',
+  ],
+  'essex police': ['https://www.essex.police.uk/contact/custody-information'],
+  'hampshire constabulary': ['https://www.hampshire.police.uk/contact/custody-information'],
+  'surrey police': ['https://www.surrey.police.uk/contact/custody-information'],
+  'sussex police': ['https://www.sussex.police.uk/contact/custody-information'],
+  'lancashire constabulary': ['https://www.lancashire.police.uk/contact/custody-information'],
+  'hertfordshire constabulary': ['https://www.herts.police.uk/contact/custody-information'],
+  'west yorkshire police': ['https://www.westyorkshire.police.uk/contact/custody-information'],
+  'northamptonshire police': ['https://www.northants.police.uk/contact/custody-information'],
+  'greater manchester police': ['https://www.gmp.police.uk/contact/custody-information'],
+  'british transport police': ['https://www.btp.police.uk/contact/'],
 };
 
 function htmlToText(html: string): string {
@@ -83,13 +97,37 @@ async function fetchPageText(url: string): Promise<string | null> {
   }
 }
 
+function phonesForSuiteFromPage(text: string, suite: CustodySuite, url: string): SearchResult[] {
+  const results: SearchResult[] = [];
+  const phones = extractPhonesFromText(text, 120, suite.forceName);
+  const seen = new Set<string>();
+
+  for (const phone of phones) {
+    if (seen.has(phone.normalized)) continue;
+    const relevant =
+      hasCustodyWordingNear(phone.context) ||
+      pageMentionsSuite(phone.context, suite) ||
+      pageMentionsSuite(text, suite);
+    if (!relevant) continue;
+    seen.add(phone.normalized);
+    results.push({
+      title: `${suite.forceName} — ${suite.custodySuiteName}`,
+      url,
+      snippet: phone.context,
+    });
+  }
+
+  return results;
+}
+
 /**
- * Fetch official force custody pages when Serper is unavailable.
- * Only returns hits where the page text mentions the suite and a phone near custody wording.
+ * Fetch official force custody pages (runs in parallel with Serper on every crawl).
+ * Returns hits where page text mentions the suite and a phone near custody wording.
  */
 export async function fetchOfficialSources(suite: CustodySuite): Promise<SearchResult[]> {
   const results: SearchResult[] = [];
   const urls = buildCandidateUrls(suite);
+  const seenUrls = new Set<string>();
 
   for (const url of urls) {
     const text = await fetchPageText(url);
@@ -98,19 +136,12 @@ export async function fetchOfficialSources(suite: CustodySuite): Promise<SearchR
     const suiteRelevant = pageMentionsSuite(text, suite) || hasCustodyWordingNear(text);
     if (!suiteRelevant) continue;
 
-    const phones = extractPhonesFromText(text);
-    for (const phone of phones) {
-      if (!hasCustodyWordingNear(phone.context) && !pageMentionsSuite(phone.context, suite)) {
-        continue;
-      }
-      results.push({
-        title: `${suite.forceName} — ${suite.custodySuiteName}`,
-        url,
-        snippet: phone.context,
-      });
-      break;
+    for (const hit of phonesForSuiteFromPage(text, suite, url)) {
+      const key = `${hit.url}:${hit.snippet.slice(0, 40)}`;
+      if (seenUrls.has(key)) continue;
+      seenUrls.add(key);
+      results.push(hit);
     }
-    if (results.some((r) => r.url === url)) continue;
   }
 
   return results;

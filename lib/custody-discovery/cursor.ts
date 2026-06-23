@@ -1,4 +1,5 @@
 import { getKV } from '@/lib/kv';
+import { loadAllApprovedNumbers } from './storage';
 import type { CustodySuite } from './types';
 
 const CURSOR_KEY = 'custodydiscovery:cursor';
@@ -13,14 +14,29 @@ export interface SuiteBatchSelection {
   scannedSuiteIds: string[];
 }
 
-/** Rotate through all active suites so cron batches eventually cover the full directory. */
+async function orderedActiveSuites(suites: CustodySuite[]): Promise<CustodySuite[]> {
+  const active = suites.filter((s) => s.active);
+  const approved = await loadAllApprovedNumbers();
+  const publishedIds = new Set(
+    [...approved.values()].filter((a) => a.publicVisible).map((a) => a.custodySuiteId),
+  );
+
+  const missing = active
+    .filter((s) => !publishedIds.has(s.id))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const hasNumber = active
+    .filter((s) => publishedIds.has(s.id))
+    .sort((a, b) => a.id.localeCompare(b.id));
+
+  return [...missing, ...hasNumber];
+}
+
+/** Rotate through active suites — missing approved numbers first, then recheck covered suites. */
 export async function selectSuiteBatch(
   suites: CustodySuite[],
   limit: number,
 ): Promise<SuiteBatchSelection> {
-  const active = suites
-    .filter((s) => s.active)
-    .sort((a, b) => a.id.localeCompare(b.id));
+  const active = await orderedActiveSuites(suites);
 
   if (active.length === 0 || limit <= 0) {
     return { batch: [], batchStartIndex: 0, nextCursor: 0, total: 0, scannedSuiteIds: [] };
@@ -41,7 +57,6 @@ export async function selectSuiteBatch(
   const batch: CustodySuite[] = [];
   const seenInBatch = new Set<string>();
 
-  // Sequential sweep: at most one pass per suite per run (no duplicates in batch).
   const take = Math.min(limit, active.length);
   for (let i = 0; i < take; i++) {
     const suite = active[(offset + i) % active.length];

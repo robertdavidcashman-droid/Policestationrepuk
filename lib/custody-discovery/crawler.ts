@@ -7,9 +7,17 @@ import {
 } from './confidence';
 import { classifyPhoneNumber } from './classify';
 import { hashSourceEvidence } from './hash';
-import { extractPhonesFromText, isValidCustodyCandidate, pickCustodyCandidatePhone } from './phone';
+import {
+  extractPhonesFromText,
+  hasCustodyWordingNear,
+  isValidCustodyCandidate,
+  pickBestCustodyCandidatePhone,
+  type ExtractedPhone,
+  type PhonePickContext,
+} from './phone';
 import { fetchOfficialSources } from './official-pages';
 import { searchForSuite, type SearchProvider } from './search';
+import { fetchPageTextFromUrl } from './source-evidence';
 import { detectSourceType, extractDomain } from './source-type';
 import {
   getApprovedNumber,
@@ -18,10 +26,102 @@ import {
   saveFinding,
 } from './storage';
 import { selectSuiteBatch } from './cursor';
-import type { CrawlerRunStats, CustodyNumberFinding, CustodySuite } from './types';
+import type { CrawlerRunStats, CustodyNumberFinding, CustodySuite, SearchResult } from './types';
+
+const REJECT_CLASSIFICATIONS = new Set([
+  'irrelevant',
+  'general_101',
+  'switchboard',
+  'solicitor_office',
+  'victim_witness',
+]);
 
 function newFindingId(): string {
   return `cnf_${Date.now().toString(36)}_${crypto.randomBytes(4).toString('hex')}`;
+}
+
+export function defaultMaxSearchQueries(): number {
+  return Math.max(1, Number(process.env.CUSTODY_DISCOVERY_MAX_QUERIES ?? 4));
+}
+
+export function maxPageFetchesPerSuite(): number {
+  return Math.max(0, Number(process.env.CUSTODY_DISCOVERY_PAGE_FETCH_LIMIT ?? 3));
+}
+
+function phonePickContext(suite: CustodySuite): PhonePickContext {
+  return {
+    forceName: suite.forceName,
+    suiteNames: [suite.custodySuiteName, suite.policeStationName],
+  };
+}
+
+export function mergeSearchResults(serper: SearchResult[], official: SearchResult[]): SearchResult[] {
+  const seen = new Set<string>();
+  const merged: SearchResult[] = [];
+  for (const row of [...official, ...serper]) {
+    const key = row.url.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(row);
+  }
+  return merged;
+}
+
+function urlFetchPriority(url: string): number {
+  const u = url.toLowerCase();
+  if (u.includes('.police.uk') || u.includes('police.uk/')) return 3;
+  if (u.includes('gov.uk')) return 2;
+  return 1;
+}
+
+function isFetchableUrl(url: string): boolean {
+  return url.startsWith('http') && !/\.pdf(\?|#|$)/i.test(url);
+}
+
+function snippetNeedsPageFetch(hit: SearchResult, opts: PhonePickContext): boolean {
+  const combined = `${hit.title} ${hit.snippet}`;
+  const phone = pickBestCustodyCandidatePhone(combined, opts);
+  if (!phone) return true;
+  return !hasCustodyWordingNear(phone.context);
+}
+
+function resolvePhoneFromHit(
+  hit: SearchResult,
+  opts: PhonePickContext,
+  pageText?: string,
+): ExtractedPhone | null {
+  const combined = `${hit.title} ${hit.snippet}`;
+  const fromSnippet = pickBestCustodyCandidatePhone(combined, opts);
+  if (fromSnippet && hasCustodyWordingNear(fromSnippet.context)) {
+    return fromSnippet;
+  }
+  if (pageText) {
+    const fromPage = pickBestCustodyCandidatePhone(pageText, opts);
+    if (fromPage) return fromPage;
+  }
+  return fromSnippet;
+}
+
+async function buildPageTextCache(
+  hits: SearchResult[],
+  opts: PhonePickContext,
+  budget: number,
+): Promise<Map<string, string>> {
+  const cache = new Map<string, string>();
+  if (budget <= 0) return cache;
+
+  const candidates = hits
+    .filter((hit) => isFetchableUrl(hit.url) && snippetNeedsPageFetch(hit, opts))
+    .sort((a, b) => urlFetchPriority(b.url) - urlFetchPriority(a.url));
+
+  for (const hit of candidates) {
+    if (cache.size >= budget) break;
+    if (cache.has(hit.url)) continue;
+    const text = await fetchPageTextFromUrl(hit.url);
+    if (text) cache.set(hit.url, text);
+  }
+
+  return cache;
 }
 
 export interface ProcessSearchResultInput {
@@ -32,19 +132,19 @@ export interface ProcessSearchResultInput {
   date?: string;
   existingFindings: CustodyNumberFinding[];
   searchProvider?: SearchProvider;
+  pageText?: string;
 }
 
 export async function processSearchHit(
   input: ProcessSearchResultInput,
 ): Promise<{ action: 'created' | 'updated' | 'rejected' | 'duplicate'; finding?: CustodyNumberFinding }> {
-  const { suite, title, url, snippet, date } = input;
+  const { suite, title, url, snippet, date, pageText } = input;
 
   if (!url?.trim().startsWith('http')) {
     return { action: 'rejected' };
   }
 
-  const combined = `${title} ${snippet}`;
-  const phone = pickCustodyCandidatePhone(combined, suite.forceName);
+  const phone = resolvePhoneFromHit({ title, url, snippet }, phonePickContext(suite), pageText);
   if (!phone || !isValidCustodyCandidate(phone.display, suite.forceName)) {
     return { action: 'rejected' };
   }
@@ -104,12 +204,7 @@ export async function processSearchHit(
     forceName: suite.forceName,
   });
 
-  if (
-    shouldAutoRejectFinding(confidenceScore, url) ||
-    classification === 'irrelevant' ||
-    classification === 'general_101' ||
-    classification === 'switchboard'
-  ) {
+  if (shouldAutoRejectFinding(confidenceScore, url) || REJECT_CLASSIFICATIONS.has(classification)) {
     return { action: 'rejected' };
   }
 
@@ -164,15 +259,24 @@ export async function crawlCustodySuite(
   rejected: number;
   conflicts: number;
   officialPagesFetched: number;
+  pageFetchesUsed: number;
   newFindingIds: string[];
 }> {
-  let results = await searchForSuite(suite, options.searchProvider, options.maxQueries ?? 6);
-  let officialPagesFetched = 0;
-  if (results.length === 0) {
-    const official = await fetchOfficialSources(suite);
-    officialPagesFetched = official.length;
-    results = official;
-  }
+  const maxQueries = options.maxQueries ?? defaultMaxSearchQueries();
+  const pickOpts = phonePickContext(suite);
+
+  const [serperResults, officialResults] = await Promise.all([
+    searchForSuite(suite, options.searchProvider, maxQueries),
+    fetchOfficialSources(suite),
+  ]);
+
+  const results = mergeSearchResults(serperResults, officialResults);
+  const pageTextCache = await buildPageTextCache(
+    results,
+    pickOpts,
+    maxPageFetchesPerSuite(),
+  );
+
   const existing = await getFindingsForSuite(suite.id);
 
   let created = 0;
@@ -183,7 +287,9 @@ export async function crawlCustodySuite(
   const newFindingIds: string[] = [];
 
   for (const hit of results) {
-    const phones = extractPhonesFromText(`${hit.title} ${hit.snippet}`);
+    const pageText = pageTextCache.get(hit.url);
+    const extractSource = pageText ? `${hit.title} ${hit.snippet} ${pageText}` : `${hit.title} ${hit.snippet}`;
+    const phones = extractPhonesFromText(extractSource, 120, suite.forceName);
     numbersExtracted += phones.length;
 
     const outcome = await processSearchHit({
@@ -194,6 +300,7 @@ export async function crawlCustodySuite(
       date: hit.date,
       existingFindings: existing,
       searchProvider: options.searchProvider,
+      pageText,
     });
 
     if (outcome.action === 'created') {
@@ -209,13 +316,14 @@ export async function crawlCustodySuite(
   }
 
   return {
-    searchesRun: Math.min(options.maxQueries ?? 6, 10),
+    searchesRun: maxQueries,
     numbersExtracted,
     created,
     updated,
     rejected,
     conflicts,
-    officialPagesFetched,
+    officialPagesFetched: officialResults.length,
+    pageFetchesUsed: pageTextCache.size,
     newFindingIds,
   };
 }
@@ -270,6 +378,7 @@ export async function runCustodyDiscoveryCrawler(
     findingsRejected: 0,
     conflictsFlagged: 0,
     officialPagesFetched: 0,
+    pageFetchesUsed: 0,
     batchCursor,
     batchStartIndex,
     batchTotal,
@@ -288,6 +397,7 @@ export async function runCustodyDiscoveryCrawler(
       stats.findingsRejected += row.rejected;
       stats.conflictsFlagged += row.conflicts;
       stats.officialPagesFetched += row.officialPagesFetched;
+      stats.pageFetchesUsed += row.pageFetchesUsed;
       newFindingIds.push(...row.newFindingIds);
     } catch (err) {
       console.error(`custody discovery: crawl failed for ${suite.id}`, err);

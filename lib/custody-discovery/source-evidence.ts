@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { getKV } from '@/lib/kv';
 import { normalizePhoneDigits } from '@/lib/phone-format';
-import { hasCustodyWordingNear } from './phone';
+import { hasCustodyWordingNear, pickBestCustodyCandidatePhone, type PhonePickContext } from './phone';
 import type { CustodyNumberFinding, SourceEvidence, SourceEvidenceKind } from './types';
 
 const FETCH_TIMEOUT_MS = 12_000;
@@ -80,7 +80,7 @@ function extractExcerptFromText(
   return { quote, section: 'Page content' };
 }
 
-async function fetchPageHtml(url: string): Promise<string | null> {
+export async function fetchCachedPageHtml(url: string): Promise<string | null> {
   const kv = getKV();
   if (kv) {
     const cached = await kv.get<string>(pageCacheKey(url));
@@ -147,7 +147,7 @@ export async function fetchSourceEvidence(finding: CustodyNumberFinding): Promis
     return snippetFallback(finding);
   }
 
-  const html = await fetchPageHtml(url);
+  const html = await fetchCachedPageHtml(url);
   if (!html) {
     return snippetFallback(finding);
   }
@@ -192,4 +192,18 @@ export function evidenceContainsPhone(
   const digits = normalizedPhoneNumber.replace(/\D/g, '');
   const hay = evidence.quote.replace(/\*\*/g, '').replace(/\D/g, '');
   return hay.includes(digits) || hay.includes(digits.replace(/^0/, ''));
+}
+
+/** Fetch page text for crawl-time extraction (skips PDFs; uses KV cache). */
+export async function fetchPageTextFromUrl(url: string): Promise<string | null> {
+  if (!url.startsWith('http') || /\.pdf(\?|#|$)/i.test(url)) return null;
+  const html = await fetchCachedPageHtml(url);
+  return html ? htmlToText(html) : null;
+}
+
+export function extractBestPhoneFromPageText(
+  text: string,
+  opts: PhonePickContext,
+): ReturnType<typeof pickBestCustodyCandidatePhone> {
+  return pickBestCustodyCandidatePhone(text, opts);
 }

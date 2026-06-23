@@ -4,6 +4,8 @@ import {
   isValidCustodyCandidate,
   normalizeUkPhone,
   hasCustodyWordingNear,
+  pickBestCustodyCandidatePhone,
+  scorePhoneCandidate,
 } from '@/lib/custody-discovery/phone';
 import { detectSourceType, extractDomain, isOfficialSourceType } from '@/lib/custody-discovery/source-type';
 import {
@@ -31,6 +33,7 @@ vi.mock('@/lib/custody-discovery/storage', () => ({
   saveFinding: vi.fn(),
   getApprovedCache: vi.fn(async () => approvedCache),
   approveFinding: vi.fn(),
+  loadAllApprovedNumbers: vi.fn(async () => new Map()),
 }));
 
 import { classifyPhoneNumber } from '@/lib/custody-discovery/classify';
@@ -71,6 +74,26 @@ describe('phone extraction and normalisation', () => {
     expect(isGenericCustodyNumber('101')).toBe(true);
     expect(extractPhonesFromText('call 101 for custody')).toHaveLength(0);
     expect(extractPhonesFromText('custody desk 01634 123456').length).toBeGreaterThan(0);
+  });
+
+  it('prefers custody-desk number over switchboard when both appear in text', () => {
+    const text =
+      'Main switchboard 01622 690690. Medway custody suite telephone 01634 123456 for detainee welfare.';
+    const picked = pickBestCustodyCandidatePhone(text, {
+      forceName: 'Kent Police',
+      suiteNames: ['Medway Custody Suite'],
+    });
+    expect(picked?.normalized).toBe('01634123456');
+  });
+
+  it('scores custody wording higher than plain contact lines', () => {
+    const custodyScore = scorePhoneCandidate('Medway custody desk 01634 123456', {
+      suiteNames: ['Medway Custody Suite'],
+    });
+    const plainScore = scorePhoneCandidate('Contact us on 01634 123456', {
+      suiteNames: ['Medway Custody Suite'],
+    });
+    expect(custodyScore).toBeGreaterThan(plainScore);
   });
 });
 
@@ -397,6 +420,34 @@ describe('approval verification status', () => {
     const display = getCustodyPhoneDisplay(station);
     expect(display.state).toBe('found_unverified');
     expect(display.number).toBe('01634 555 555');
+  });
+});
+
+describe('crawler helpers', () => {
+  it('merges serper and official results without duplicate URLs', async () => {
+    const { mergeSearchResults } = await import('@/lib/custody-discovery/crawler');
+    const merged = mergeSearchResults(
+      [{ title: 'A', url: 'https://kent.police.uk/a', snippet: 'one' }],
+      [
+        { title: 'B', url: 'https://kent.police.uk/b', snippet: 'two' },
+        { title: 'A dup', url: 'https://kent.police.uk/a', snippet: 'dup' },
+      ],
+    );
+    expect(merged).toHaveLength(2);
+    expect(merged.map((r) => r.url)).toEqual(['https://kent.police.uk/b', 'https://kent.police.uk/a']);
+  });
+
+  it('rejects solicitor_office classification at crawl', async () => {
+    vi.mocked(classifyPhoneNumber).mockResolvedValueOnce('solicitor_office');
+    vi.mocked(getFindingByHash).mockResolvedValue(null);
+    const outcome = await processSearchHit({
+      suite,
+      title: 'Law firm',
+      url: 'https://example-solicitors.co.uk/contact',
+      snippet: 'Call our crime team 01634 111111',
+      existingFindings: [],
+    });
+    expect(outcome.action).toBe('rejected');
   });
 });
 
