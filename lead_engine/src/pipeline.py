@@ -145,9 +145,24 @@ def cmd_resolve_websites(cfg: EngineConfig, db: Database, limit: int = 15) -> di
         if not website:
             continue
         domain = registrable_domain(website)
+        now = utc_now()
+        if domain:
+            owner = db.fetchone(
+                "SELECT id FROM firms WHERE domain = ? AND id != ? LIMIT 1",
+                (domain, row["id"]),
+            )
+            if owner:
+                db.execute(
+                    """UPDATE firms SET website=?, updated_at=?,
+                       source_discovery_method=COALESCE(source_discovery_method,'search_engine') WHERE id=?""",
+                    (website, now, row["id"]),
+                )
+                resolved += 1
+                continue
         db.execute(
-            "UPDATE firms SET website=?, domain=?, updated_at=?, source_discovery_method=COALESCE(source_discovery_method,'search_engine') WHERE id=?",
-            (website, domain, utc_now(), row["id"]),
+            """UPDATE firms SET website=?, domain=?, updated_at=?,
+               source_discovery_method=COALESCE(source_discovery_method,'search_engine') WHERE id=?""",
+            (website, domain, now, row["id"]),
         )
         resolved += 1
     return {"resolved": resolved, "attempted": len(rows)}
