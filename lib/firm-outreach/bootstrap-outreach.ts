@@ -99,10 +99,6 @@ export async function bootstrapOutreach(opts?: {
   );
 
   let countsAfter = await countProspectsByStatus();
-  if (totals.processed > 0) {
-    reindexResult = await reindexProspectStatuses();
-    countsAfter = await countProspectsByStatus();
-  }
 
   return {
     unpaused,

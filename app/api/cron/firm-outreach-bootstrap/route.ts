@@ -21,8 +21,8 @@ export async function GET(request: Request) {
     const requalify = await requalifyAllProspects({
       verifyWebsites: false,
       readyOnly: true,
-      mxCheckLimit: 50,
-      maxElapsedMs: 240_000,
+      mxCheckLimit: 0,
+      maxElapsedMs: 60_000,
     });
     const countsAfter = await countProspectsByStatus();
     return NextResponse.json({

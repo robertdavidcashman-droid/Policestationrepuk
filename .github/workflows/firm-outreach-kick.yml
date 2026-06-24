@@ -8,50 +8,70 @@ on:
     branches: [master]
 
 jobs:
-  kick:
+  should-kick:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect firm-outreach changes
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          SHA="${{ github.event.workflow_run.head_sha }}"
+          git fetch origin "$SHA" --depth=2
+          PARENT="$(git rev-parse "${SHA}^")"
+          if git diff --name-only "$PARENT" "$SHA" | grep -qE '^(lib/firm-outreach|app/api/cron/firm-outreach|packages/firm-outreach-core|scripts/firm-outreach|\.github/workflows/firm-outreach-kick\.yml)'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "No firm-outreach changes in ${SHA} — skipping kick"
+          fi
+
+  kick:
+    needs: should-kick
+    if: needs.should-kick.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
       - name: Pull production env
-        run: vercel env pull .env.production --environment=production --yes --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+            echo "VERCEL_TOKEN missing — skip kick"
+            exit 0
+          fi
+          vercel env pull .env.production --environment=production --yes --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Requalify + enrich kick on production
         run: |
           set -a
-          # shellcheck disable=SC1091
-          source .env.production
-          set +a
-          if [ -z "${CRON_SECRET:-}" ]; then
-            echo "CRON_SECRET missing from Vercel production env — skip kick"
-            exit 0
+          if [ -f .env.production ]; then
+            # shellcheck disable=SC1091
+            source .env.production
           fi
-          AUTH="Authorization: Bearer ${CRON_SECRET}"
-          BASE="https://policestationrepuk.org"
-          kick() {
-            local path="$1"
-            local label="$2"
-            echo "$label..."
-            local resp code body
-            resp=$(curl -sS --max-time 320 -w "\n%{http_code}" -H "$AUTH" "${BASE}${path}")
-            code=$(echo "$resp" | tail -1)
-            body=$(echo "$resp" | sed '$d')
-            echo "$body" | head -c 4000
-            echo ""
-            if [ "$code" != "200" ]; then
-              echo "HTTP $code for ${path}"
-              exit 1
-            fi
-          }
-          kick "/api/cron/firm-outreach-bootstrap?requalifyOnly=1" "Requalify ready_to_send junk rows"
-          kick "/api/cron/firm-outreach-bootstrap?batches=2&limit=60" "Run 2 enrich batches (limit=60)"
+          set +a
+          export FIRM_OUTREACH_KICK_BASE_URL="https://policestationrepuk.org"
+          export VERCEL_TOKEN="${{ secrets.VERCEL_TOKEN }}"
+          export FIRM_OUTREACH_KICK_COMMIT_SHA="${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}"
+          node scripts/firm-outreach-production-kick.mjs
