@@ -98,7 +98,7 @@ export async function bootstrapOutreach(opts?: {
     emptyTotals,
   );
 
-  let countsAfter = await countProspectsByStatus();
+  const countsAfter = await countProspectsByStatus();
 
   return {
     unpaused,
