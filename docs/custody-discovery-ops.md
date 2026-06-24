@@ -2,6 +2,8 @@
 
 Automated discovery of UK police station **custody desk** telephone numbers for [policestationrepuk.org](https://policestationrepuk.org).
 
+**Related:** unified monitoring hub and publish gate — [station-contacts-ops.md](./station-contacts-ops.md) (automation-first, no CSV).
+
 ## Pipeline
 
 1. **Cron** — `/api/cron/custody-number-discovery` every 6 hours (`vercel.json`)

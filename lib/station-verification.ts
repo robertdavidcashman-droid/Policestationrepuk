@@ -23,10 +23,14 @@ export type StationVerificationFieldKey =
   | 'custodyPhone'
   | 'custodyPhone2'
   | 'address'
-  | 'custodyStatus';
+  | 'custodyStatus'
+  | 'frontCounterStatus'
+  | 'email'
+  | 'openingHours';
 
 export interface StationVerificationRecord {
   sourceUrl?: string;
+  secondarySourceUrl?: string;
   dateVerified?: string;
   verificationStatus?: 'verified' | 'unverified' | 'partial';
   fields?: Partial<Record<StationVerificationFieldKey, FieldVerification>>;
@@ -132,6 +136,7 @@ export function applyStationVerificationMeta(
         verificationStatus: rec.verificationStatus ?? 'partial',
         dateVerified: rec.dateVerified,
         sourceUrl: rec.sourceUrl,
+        secondarySourceUrl: rec.secondarySourceUrl,
         fields: rec.fields,
       },
     };

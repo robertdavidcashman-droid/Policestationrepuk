@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { PoliceStation } from '@/lib/types';
 import { searchStations, type ScoredStation } from '@/lib/station-search';
-import { StationPhone } from '@/components/StationPhone';
+import { StationPhone, StationContactDisclaimer } from '@/components/StationPhone';
 import {
   ALL_AREAS,
   areaKey,
@@ -15,8 +15,18 @@ import {
   type AreaType,
 } from '@/lib/station-browse';
 import { shouldIndexPoliceStationPage } from '@/lib/station-indexing';
+import { getCustodyPublicDisplay } from '@/lib/station-contacts/publish';
+import { deriveRegionForStation } from '@/lib/station-contacts/types';
+import {
+  AdminWideTable,
+  adminBadgeClass,
+  type AdminWideTableColumn,
+} from '@/components/admin/AdminWideTable';
 
 type SortBy = 'relevance' | 'name';
+type ViewMode = 'cards' | 'table';
+type CustodyFilter = 'all' | 'published' | 'not_published';
+type FrontCounterFilter = 'all' | 'open' | 'closed' | 'appointment_only';
 
 const PAGE_SIZE = 60;
 
@@ -48,6 +58,10 @@ export function StationsDirectoryExplorer({
   );
   const [custodyOnly, setCustodyOnly] = useState(false);
   const [directOnly, setDirectOnly] = useState(false);
+  const [regionFilter, setRegionFilter] = useState('');
+  const [custodyFilter, setCustodyFilter] = useState<CustodyFilter>('all');
+  const [frontCounterFilter, setFrontCounterFilter] = useState<FrontCounterFilter>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [sortBy, setSortBy] = useState<SortBy>('name');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
@@ -86,7 +100,7 @@ export function StationsDirectoryExplorer({
   // Reset the visible window whenever the result set changes.
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [query, custodyOnly, directOnly, groupBy, sortBy, area]);
+  }, [query, custodyOnly, directOnly, regionFilter, custodyFilter, frontCounterFilter, groupBy, sortBy, area]);
 
   // Keep the URL in sync (q / force / county) so any view is shareable.
   useEffect(() => {
@@ -117,13 +131,26 @@ export function StationsDirectoryExplorer({
     if (directOnly) {
       result = result.filter((s) => hasDirectNumber(s));
     }
+    if (regionFilter) {
+      result = result.filter((s) => deriveRegionForStation(s) === regionFilter);
+    }
+    if (custodyFilter === 'published') {
+      result = result.filter((s) => getCustodyPublicDisplay(s).published);
+    } else if (custodyFilter === 'not_published') {
+      result = result.filter(
+        (s) => isCustodyStation(s) && !getCustodyPublicDisplay(s).published,
+      );
+    }
+    if (frontCounterFilter !== 'all') {
+      result = result.filter((s) => s.frontCounterStatus === frontCounterFilter);
+    }
 
     if (sortBy === 'name' || !hasTextQuery) {
       result.sort((a, b) => a.name.localeCompare(b.name, 'en-GB'));
     }
 
     return result;
-  }, [stations, query, area, hasArea, custodyOnly, directOnly, sortBy, hasTextQuery]);
+  }, [stations, query, area, hasArea, custodyOnly, directOnly, regionFilter, custodyFilter, frontCounterFilter, sortBy, hasTextQuery]);
 
   const total = stations.length;
   const shown = filtered.length;
@@ -171,6 +198,67 @@ export function StationsDirectoryExplorer({
 
   const areaNoun = groupBy === 'county' ? 'county' : 'force';
 
+  const regionOptions = useMemo(() => {
+    const set = new Set(stations.map((s) => deriveRegionForStation(s)));
+    return [...set].sort((a, b) => a.localeCompare(b, 'en-GB'));
+  }, [stations]);
+
+  const tableColumns = useMemo<AdminWideTableColumn<ScoredStation>[]>(
+    () => [
+      {
+        id: 'station',
+        header: 'Station',
+        render: (s) => (
+          <Link href={`/police-station/${s.slug}`} className="font-semibold text-[var(--gold-link)] no-underline hover:underline">
+            {s.name}
+          </Link>
+        ),
+      },
+      {
+        id: 'force',
+        header: 'Force',
+        hideBelow: 'md',
+        render: (s) => s.forceName ?? '—',
+      },
+      {
+        id: 'county',
+        header: 'County',
+        hideBelow: 'lg',
+        render: (s) => s.county ?? '—',
+      },
+      {
+        id: 'main',
+        header: 'Main',
+        render: (s) => <span className="font-mono text-xs">{s.phone ?? '—'}</span>,
+      },
+      {
+        id: 'custody',
+        header: 'Custody',
+        render: (s) => {
+          const pub = getCustodyPublicDisplay(s);
+          return pub.published ? (
+            <span className="font-mono text-xs">{pub.number ?? s.custodyPhone}</span>
+          ) : isCustodyStation(s) ? (
+            <span className="text-xs text-amber-800">Not published</span>
+          ) : (
+            '—'
+          );
+        },
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        render: (s) => {
+          const pub = getCustodyPublicDisplay(s);
+          if (pub.published) return <span className={adminBadgeClass('success')}>Custody published</span>;
+          if (isCustodyStation(s)) return <span className={adminBadgeClass('warning')}>Custody missing</span>;
+          return <span className={adminBadgeClass('neutral')}>Standard</span>;
+        },
+      },
+    ],
+    [],
+  );
+
   function selectArea(value: string) {
     setArea(value ? { type: groupBy, value } : ALL_AREAS);
   }
@@ -184,6 +272,9 @@ export function StationsDirectoryExplorer({
     setQuery('');
     setCustodyOnly(false);
     setDirectOnly(false);
+    setRegionFilter('');
+    setCustodyFilter('all');
+    setFrontCounterFilter('all');
     setArea(ALL_AREAS);
   }
 
@@ -354,6 +445,82 @@ export function StationsDirectoryExplorer({
             </label>
           </div>
 
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1">
+              <label htmlFor="stations-region" className="block text-xs font-semibold text-[var(--navy)]">
+                Region
+              </label>
+              <select
+                id="stations-region"
+                value={regionFilter}
+                onChange={(e) => setRegionFilter(e.target.value)}
+                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
+              >
+                <option value="">All regions</option>
+                {regionOptions.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="stations-custody-filter" className="block text-xs font-semibold text-[var(--navy)]">
+                Custody number
+              </label>
+              <select
+                id="stations-custody-filter"
+                value={custodyFilter}
+                onChange={(e) => setCustodyFilter(e.target.value as CustodyFilter)}
+                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
+              >
+                <option value="all">All</option>
+                <option value="published">Published custody line</option>
+                <option value="not_published">Custody not published</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="stations-front-counter" className="block text-xs font-semibold text-[var(--navy)]">
+                Front counter
+              </label>
+              <select
+                id="stations-front-counter"
+                value={frontCounterFilter}
+                onChange={(e) => setFrontCounterFilter(e.target.value as FrontCounterFilter)}
+                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm"
+              >
+                <option value="all">All</option>
+                <option value="open">Open</option>
+                <option value="closed">Closed</option>
+                <option value="appointment_only">Appointment only</option>
+              </select>
+            </div>
+            <fieldset className="hidden lg:block">
+              <legend className="text-xs font-semibold text-[var(--navy)]">Desktop view</legend>
+              <div className="mt-1 flex gap-2">
+                {(
+                  [
+                    { value: 'cards' as const, label: 'Cards' },
+                    { value: 'table' as const, label: 'Table' },
+                  ] as const
+                ).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setViewMode(opt.value)}
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
+                      viewMode === opt.value
+                        ? 'border-[var(--navy)] bg-[var(--navy)] text-white'
+                        : 'border-[var(--border)] bg-white text-[var(--navy)]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+
           <p className="text-sm text-[var(--muted)]" role="status" aria-live="polite">
             Showing <strong className="text-[var(--navy)]">{shown}</strong> of{' '}
             <strong className="text-[var(--navy)]">{total}</strong> stations
@@ -361,7 +528,16 @@ export function StationsDirectoryExplorer({
             {query.trim() ? ` matching "${query.trim()}"` : ''}
             {custodyOnly ? ' · custody only' : ''}
             {directOnly ? ' · direct number' : ''}
-            {(hasArea || hasTextQuery || custodyOnly || directOnly) && (
+            {regionFilter ? ` · ${regionFilter}` : ''}
+            {custodyFilter !== 'all' ? ` · custody ${custodyFilter.replace('_', ' ')}` : ''}
+            {frontCounterFilter !== 'all' ? ` · front counter ${frontCounterFilter.replace('_', ' ')}` : ''}
+            {(hasArea ||
+              hasTextQuery ||
+              custodyOnly ||
+              directOnly ||
+              regionFilter ||
+              custodyFilter !== 'all' ||
+              frontCounterFilter !== 'all') && (
               <>
                 {' · '}
                 <button
@@ -399,25 +575,34 @@ export function StationsDirectoryExplorer({
           </button>
         </div>
       ) : isFlat ? (
-        <div className="mt-8">
+        <div className="directory-container mt-8">
           {hasArea && (
             <h2 className="mb-4 text-lg font-semibold text-[var(--navy)]">
               {area.value}{' '}
               <span className="text-sm font-normal text-[var(--muted)]">({shown})</span>
             </h2>
           )}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {visible.map((station) => (
-              <StationDirectoryCard
-                key={station.id}
-                station={station}
-                repCount={repCountBySlug[station.slug] ?? 0}
-              />
-            ))}
-          </div>
+          {viewMode === 'table' ? (
+            <AdminWideTable
+              columns={tableColumns}
+              rows={visible}
+              getRowKey={(s) => s.id}
+              emptyMessage="No stations match your filters."
+            />
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {visible.map((station) => (
+                <StationDirectoryCard
+                  key={station.id}
+                  station={station}
+                  repCount={repCountBySlug[station.slug] ?? 0}
+                />
+              ))}
+            </div>
+          )}
         </div>
       ) : (
-        <div className="mt-8 space-y-10">
+        <div className="directory-container mt-8 space-y-10">
           {groupedSorted?.visibleKeys.map((groupName, idx) => (
             <section key={`${groupBy}-${groupName}-${idx}`} aria-labelledby={`stations-group-${idx}`}>
               <h2 id={`stations-group-${idx}`} className="mb-4 text-lg font-semibold text-[var(--navy)]">
@@ -441,7 +626,7 @@ export function StationsDirectoryExplorer({
       )}
 
       {hasMore && (
-        <div className="mt-8 flex flex-col items-center gap-2">
+        <div className="directory-container mt-8 flex flex-col items-center gap-2">
           <p className="text-xs text-[var(--muted)]">
             Showing {renderedCount} of {shown}
           </p>
@@ -452,8 +637,15 @@ export function StationsDirectoryExplorer({
           >
             Load more stations
           </button>
+          <StationContactDisclaimer className="mt-4 max-w-3xl text-center" />
         </div>
       )}
+
+      {!hasMore && shown > 0 ? (
+        <div className="directory-container mt-8">
+          <StationContactDisclaimer className="max-w-3xl" />
+        </div>
+      ) : null}
     </>
   );
 }

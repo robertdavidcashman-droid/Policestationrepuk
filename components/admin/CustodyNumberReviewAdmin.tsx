@@ -1,9 +1,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import type { CustodyNumberFinding } from '@/lib/custody-discovery/types';
 import { NOTIFY_MIN_CONFIDENCE_SCORE } from '@/lib/custody-discovery/confidence';
 import { isOfficialSourceType } from '@/lib/custody-discovery/source-type';
+import {
+  AdminWideTable,
+  adminBadgeClass,
+} from '@/components/admin/AdminWideTable';
 
 type FilterKey =
   | 'all'
@@ -533,7 +538,116 @@ export function CustodyNumberReviewAdmin({
         unverified until you mark them verified (high-confidence findings can be approved as verified).
       </p>
 
-      <div className="space-y-4">{filtered.map(card)}</div>
+      <div className="hidden lg:block">
+        <AdminWideTable
+          title="Findings (wide table)"
+          columns={[
+            {
+              id: 'suite',
+              header: 'Suite',
+              render: (r) => (
+                <div>
+                  <p className="font-semibold text-[var(--navy)]">{r.custodySuiteName}</p>
+                  <p className="text-xs text-[var(--muted)]">{suiteMeta[r.custodySuiteId]?.county || '—'}</p>
+                </div>
+              ),
+            },
+            {
+              id: 'force',
+              header: 'Force',
+              render: (r) => r.forceName,
+            },
+            {
+              id: 'number',
+              header: 'Number',
+              render: (r) => <span className="font-mono text-sm">{r.possiblePhoneNumber}</span>,
+            },
+            {
+              id: 'class',
+              header: 'Classification',
+              hideBelow: 'lg',
+              render: (r) => r.classification,
+            },
+            {
+              id: 'score',
+              header: 'Score',
+              render: (r) => `${r.confidenceScore} (${r.confidenceLevel})`,
+            },
+            {
+              id: 'source',
+              header: 'Source',
+              hideBelow: 'lg',
+              render: (r) => (
+                <a
+                  href={r.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-[var(--gold-link)] hover:underline"
+                >
+                  {r.sourceType}
+                </a>
+              ),
+            },
+            {
+              id: 'ai',
+              header: 'AI',
+              render: (r) => aiBadge(r) ?? '—',
+            },
+            {
+              id: 'status',
+              header: 'Status',
+              render: (r) => (
+                <span
+                  className={adminBadgeClass(
+                    r.status === 'approved' ? 'success' : r.status === 'rejected' ? 'danger' : 'warning',
+                  )}
+                >
+                  {r.status}
+                </span>
+              ),
+            },
+            {
+              id: 'actions',
+              header: 'Actions',
+              render: (r) => (
+                <div className="flex flex-col gap-1 text-xs">
+                  {r.status !== 'approved' && (
+                    <button
+                      type="button"
+                      onClick={() => act('approve', r.id)}
+                      disabled={busy !== null}
+                      className="font-semibold text-emerald-700 hover:underline disabled:opacity-50"
+                    >
+                      Approve
+                    </button>
+                  )}
+                  {r.status !== 'rejected' && (
+                    <button
+                      type="button"
+                      onClick={() => act('reject', r.id)}
+                      disabled={busy !== null}
+                      className="text-red-700 hover:underline disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                  )}
+                  <Link
+                    href={`/admin/station-contacts?force=${encodeURIComponent(r.forceName)}`}
+                    className="text-[var(--gold-link)] hover:underline"
+                  >
+                    Monitor hub
+                  </Link>
+                </div>
+              ),
+            },
+          ]}
+          rows={filtered}
+          getRowKey={(r) => r.id}
+          emptyMessage="No findings match the current filters."
+        />
+      </div>
+
+      <div className="space-y-4 lg:hidden">{filtered.map(card)}</div>
       {filtered.length === 0 && (
         <p className="text-[var(--muted)]">No findings match the current filters.</p>
       )}

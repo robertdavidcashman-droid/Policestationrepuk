@@ -13,6 +13,7 @@ import {
 } from '@/lib/seo';
 import { STATIONS_DIRECTORY_FAQS } from '@/lib/stations-seo';
 import { computeStationPhoneStats } from '@/lib/station-numbers-campaign';
+import { StationContactDisclaimer } from '@/components/StationPhone';
 import { GuideFaqs } from '@/components/StructuredGuideLayout';
 
 export const metadata = buildMetadata({
@@ -138,6 +139,10 @@ export default async function StationsDirectoryPage({ searchParams }: PageProps)
           >
             Report an updated phone number or address &rarr;
           </Link>
+        </div>
+
+        <div className="mt-10 rounded-xl border border-slate-200 bg-slate-50 p-5">
+          <StationContactDisclaimer />
         </div>
 
         <div className="mt-14 border-t border-[var(--border)] pt-10">

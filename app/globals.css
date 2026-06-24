@@ -333,6 +333,28 @@ footer .text-slate-600 {
   }
 }
 
+/* Wide directory table layout — mirrors admin-container width. */
+.directory-container {
+  width: 100%;
+  max-width: min(100%, 100rem);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--container-gutter);
+  padding-right: var(--container-gutter);
+}
+@media (min-width: 640px) {
+  .directory-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .directory-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
 /* Rep verification audit table — horizontal scroll with pinned columns */
 .admin-audit-scroll {
   overflow-x: auto;

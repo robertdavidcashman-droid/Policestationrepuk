@@ -137,15 +137,36 @@ export interface PoliceStation {
   latitude?: number | null;
   longitude?: number | null;
   custodySuite?: boolean;
+  /** Optional contact fields from automated official-page extraction or community forms. */
+  email?: string;
+  openingHours?: string;
+  custodyStatus?: 'open' | 'closed' | 'limited' | 'unknown';
+  frontCounterStatus?: 'open' | 'closed' | 'appointment_only' | 'unknown';
+  /** Secondary corroborating source URL (automated discovery or admin approval). */
+  secondarySourceUrl?: string;
   /** Merged at load from data/station-verification.json — not stored in stations.json. */
   verificationMeta?: {
     verificationStatus?: 'verified' | 'unverified' | 'partial';
     dateVerified?: string;
     sourceUrl?: string;
+    secondarySourceUrl?: string;
     fields?: Partial<
       Record<
-        'phone' | 'custodyPhone' | 'custodyPhone2' | 'address' | 'custodyStatus',
-        { status: 'verified' | 'unverified' | 'not_publicly_listed'; sourceUrl?: string; notes?: string }
+        | 'phone'
+        | 'custodyPhone'
+        | 'custodyPhone2'
+        | 'address'
+        | 'custodyStatus'
+        | 'frontCounterStatus'
+        | 'email'
+        | 'openingHours',
+        {
+          status: 'verified' | 'unverified' | 'not_publicly_listed';
+          sourceUrl?: string;
+          secondarySourceUrl?: string;
+          dateVerified?: string;
+          notes?: string;
+        }
       >
     >;
     /** Merged at request time from rep-contributed custody numbers (KV). */

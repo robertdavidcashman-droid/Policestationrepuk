@@ -13,6 +13,9 @@ import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCre
 import { FirmCoverCTA } from '@/components/FirmCoverCTA';
 import { phoneToTelHref } from '@/lib/phone';
 import { displayPhoneNumber, stationPhoneNumbers } from '@/lib/station-search';
+import { StationPhone, StationContactDisclaimer } from '@/components/StationPhone';
+import { getCustodyPublicDisplay } from '@/lib/station-contacts/publish';
+import { CUSTODY_NOT_PUBLISHED_TEXT } from '@/lib/station-contacts/types';
 import { stationPhoneEntryHint } from '@/lib/station-phone-labels';
 import { isCustodyStation } from '@/lib/custody-station';
 import {
@@ -292,6 +295,7 @@ export default async function PoliceStationPage({ params }: PageProps) {
                   .
                 </p>
                 <StationVerificationBadge station={station} />
+                <StationContactDisclaimer className="mt-3" />
                 <CustodyContributePrompt station={station} />
               </section>
 
@@ -385,6 +389,7 @@ export default async function PoliceStationPage({ params }: PageProps) {
 function StationPhoneDetail({ station }: { station: PoliceStation }) {
   const entries = stationPhoneNumbers(station);
   const custody = isCustodyStation(station);
+  const custodyDisplay = custody ? getCustodyPublicDisplay(station) : null;
   const hasCustodyLine = entries.some(
     (e) => e.label.startsWith('Custody') && e.className === 'station',
   );
@@ -412,9 +417,7 @@ function StationPhoneDetail({ station }: { station: PoliceStation }) {
           ({neHint})
         </dd>
         {custody && !hasCustodyLine && (
-          <dd className="mt-2 text-xs text-[var(--muted)]">
-            No published custody desk line — use {neNumber} and ask for custody.
-          </dd>
+          <dd className="mt-2 text-xs font-semibold text-amber-800">{CUSTODY_NOT_PUBLISHED_TEXT}</dd>
         )}
       </div>
     );
@@ -441,15 +444,17 @@ function StationPhoneDetail({ station }: { station: PoliceStation }) {
           </div>
         ))}
         {custody && !hasCustodyLine && (
+          <p className="text-xs font-semibold text-amber-800">{CUSTODY_NOT_PUBLISHED_TEXT}</p>
+        )}
+        {custodyDisplay?.published && custodyDisplay.number && (
           <p className="text-xs text-[var(--muted)]">
-            No published custody desk line — use{' '}
+            Published custody line:{' '}
             <a
-              href={phoneToTelHref(neNumber)}
+              href={phoneToTelHref(custodyDisplay.number)}
               className="font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)]"
             >
-              {neNumber}
-            </a>{' '}
-            ({neHint}) and ask for custody.
+              {custodyDisplay.number}
+            </a>
           </p>
         )}
       </dd>
