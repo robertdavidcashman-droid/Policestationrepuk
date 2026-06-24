@@ -40,7 +40,8 @@ describe('runProductionKickSteps', () => {
     const fetchFn = vi
       .fn()
       .mockResolvedValueOnce({ status: 504, text: async () => 'timeout' })
-      .mockResolvedValueOnce({ status: 200, text: async () => '{"ok":true}' });
+      .mockResolvedValueOnce({ status: 200, text: async () => '{"ok":true}' })
+      .mockResolvedValueOnce({ status: 504, text: async () => 'timeout' });
 
     const { failed, results } = await runProductionKickSteps({
       baseUrl: 'https://example.com',
@@ -50,13 +51,15 @@ describe('runProductionKickSteps', () => {
     });
 
     expect(failed).toBe(false);
-    expect(results).toHaveLength(2);
+    expect(results).toHaveLength(3);
     expect(results[0]?.ok).toBe(false);
     expect(results[0]?.optional).toBe(true);
     expect(results[1]?.ok).toBe(true);
+    expect(results[2]?.ok).toBe(false);
+    expect(results[2]?.optional).toBe(true);
   });
 
-  it('fails when enrich step is non-200', async () => {
+  it('fails when required enrich batch is non-200', async () => {
     const fetchFn = vi
       .fn()
       .mockResolvedValueOnce({ status: 200, text: async () => '{}' })
@@ -72,6 +75,14 @@ describe('runProductionKickSteps', () => {
     expect(failed).toBe(true);
     expect(results).toHaveLength(2);
     expect(results[1]?.ok).toBe(false);
+    expect(results[1]?.optional).toBe(false);
+  });
+
+  it('uses separate enrich cron calls not a combined bootstrap batch', () => {
+    const enrichSteps = DEFAULT_PRODUCTION_KICK_STEPS.filter((s) => s.path.includes('enrich'));
+    expect(enrichSteps).toHaveLength(2);
+    expect(enrichSteps.every((s) => s.path === '/api/cron/firm-outreach-enrich')).toBe(true);
+    expect(DEFAULT_PRODUCTION_KICK_STEPS.some((s) => s.path.includes('batches=2'))).toBe(false);
   });
 });
 
