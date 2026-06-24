@@ -16,6 +16,7 @@ import {
   saveStationVerification,
   stationVerificationKey,
   type FieldVerificationStatus,
+  type StationVerificationFieldKey,
 } from '@/lib/station-verification';
 import { getAllStations } from '@/lib/data';
 import type { PoliceStation } from '@/lib/types';
@@ -79,17 +80,16 @@ async function applyVerificationForOverride(
   const record = { ...(verification[key] ?? {}) };
   const fieldMap = { ...(record.fields ?? {}) };
 
-  const phoneFields: (keyof StationOverrideFields)[] = [
+  const verificationFields = [
     'phone',
     'custodyPhone',
     'custodyPhone2',
-    'nonEmergencyPhone',
-  ];
+    'address',
+  ] as const satisfies readonly StationVerificationFieldKey[];
 
-  for (const field of phoneFields) {
-    const value = fields[field];
+  for (const field of verificationFields) {
+    const value = fields[field as keyof StationOverrideFields];
     if (!value?.trim()) continue;
-    if (field === 'nonEmergencyPhone') continue;
     fieldMap[field] = {
       status: verificationStatus(opts.markVerified),
       sourceUrl: opts.sourceUrl,

@@ -136,6 +136,7 @@ function emptyRequalify() {
     scanned: 0,
     downgradedFromReady: 0,
     reconciledFromReady: 0,
+    mxDowngradedFromReady: 0,
     heldForReview: 0,
     websiteVerified: 0,
     stillReady: 0,

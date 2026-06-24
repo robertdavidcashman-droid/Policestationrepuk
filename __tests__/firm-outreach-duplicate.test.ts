@@ -95,7 +95,7 @@ describe('cronEnrichBatchSize default', () => {
     delete process.env.FIRM_OUTREACH_CRON_ENRICH_BATCH;
     vi.resetModules();
     const { cronEnrichBatchSize } = await import('@/lib/firm-outreach/constants');
-    expect(cronEnrichBatchSize()).toBe(50);
+    expect(cronEnrichBatchSize()).toBe(60);
     if (prev === undefined) delete process.env.FIRM_OUTREACH_CRON_ENRICH_BATCH;
     else process.env.FIRM_OUTREACH_CRON_ENRICH_BATCH = prev;
   });

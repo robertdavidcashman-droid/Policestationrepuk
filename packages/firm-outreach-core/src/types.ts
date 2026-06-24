@@ -213,6 +213,10 @@ export interface EnrichmentRunStats {
   elapsedMs: number;
   /** True when stopped early due to maxElapsedMs budget. */
   stoppedEarly?: boolean;
+  /** Total prospects in discovered + eligible no_email pool. */
+  poolSize?: number;
+  /** IDs scored in the sliding window this run. */
+  candidatesScanned?: number;
 }
 
 export interface OutreachRunStats {

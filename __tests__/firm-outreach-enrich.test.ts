@@ -73,7 +73,9 @@ describe('runFirmEnrichment cursor on timeout', () => {
 
     vi.doMock('@/lib/firm-outreach/storage', () => ({
       CURSOR_ENRICH: 'firmoutreach:cursor:enrich',
-      listAllProspectIds: vi.fn().mockResolvedValue(['p1']),
+      listProspectIdsByStatus: vi.fn(async (status: string) =>
+        status === 'discovered' ? ['p1'] : [],
+      ),
       getProspect: vi.fn().mockResolvedValue(prospect),
       saveProspect: vi.fn(),
       getCursor,
@@ -110,6 +112,49 @@ describe('runFirmEnrichment cursor on timeout', () => {
     expect(stats.processed).toBe(0);
     expect(stats.stoppedEarly).toBe(true);
     expect(setCursor).not.toHaveBeenCalled();
+  });
+});
+
+describe('enrichCandidateScore', () => {
+  it('prioritises LAA prospects without email and zero enrich attempts', async () => {
+    const { enrichCandidateScore } = await import('@/lib/firm-outreach/enrichment/enrich-candidates');
+    const laaNoEmail = enrichCandidateScore({
+      id: 'a',
+      firmKey: 'a',
+      firmName: 'A',
+      prospectType: 'firm',
+      campaignId: 'c',
+      sources: ['laa'],
+      priorityScore: 10,
+      status: 'discovered',
+      enrichAttempts: 0,
+      createdAt: '',
+      updatedAt: '',
+      sequenceStep: 0,
+    });
+    const archiveRetry = enrichCandidateScore({
+      id: 'b',
+      firmKey: 'b',
+      firmName: 'B',
+      prospectType: 'firm',
+      campaignId: 'c',
+      sources: ['archive'],
+      priorityScore: 10,
+      status: 'discovered',
+      enrichAttempts: 3,
+      createdAt: '',
+      updatedAt: '',
+      sequenceStep: 0,
+    });
+    expect(laaNoEmail).toBeGreaterThan(archiveRetry);
+  });
+});
+
+describe('isPlausibleOutreachEmail wixpress junk', () => {
+  it('rejects sentry.wixpress.com crawler artefacts', async () => {
+    const { isPlausibleOutreachEmail } = await import('@/lib/firm-outreach/enrichment/validator');
+    expect(isPlausibleOutreachEmail('2062d0a4929b45348643784b5cb39c36@sentry.wixpress.com')).toBe(false);
+    expect(isPlausibleOutreachEmail('info@takkandcompanymedway.co.uk')).toBe(true);
   });
 });
 

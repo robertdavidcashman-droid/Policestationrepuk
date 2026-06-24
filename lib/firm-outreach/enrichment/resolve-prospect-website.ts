@@ -7,7 +7,9 @@ import { discoverFirmWebsiteViaSerper } from './website-discovery';
  * May set status to excluded when SRA shows the org is not authorised.
  */
 export async function resolveProspectWebsite(prospect: FirmProspect): Promise<FirmProspect> {
+  let sraLookupRan = false;
   if (!prospect.regulatoryNumber || !prospect.websiteUrl) {
+    sraLookupRan = true;
     const sra = await lookupSraOrganisationByName(prospect.firmName, prospect.postcode);
     if (sra.organisation) {
       prospect.regulatoryNumber = prospect.regulatoryNumber || sra.organisation.sraNumber;
@@ -18,16 +20,21 @@ export async function resolveProspectWebsite(prospect: FirmProspect): Promise<Fi
         return prospect;
       }
     }
-    await new Promise((r) => setTimeout(r, 2000));
+    if (sraLookupRan) {
+      await new Promise((r) => setTimeout(r, 350));
+    }
   }
 
   if (!prospect.websiteUrl && prospect.status !== 'excluded') {
-    const website = await discoverFirmWebsiteViaSerper({
-      firmName: prospect.firmName,
-      town: prospect.town,
-      county: prospect.county,
-      postcode: prospect.postcode,
-    });
+    const website = await discoverFirmWebsiteViaSerper(
+      {
+        firmName: prospect.firmName,
+        town: prospect.town,
+        county: prospect.county,
+        postcode: prospect.postcode,
+      },
+      { maxQueries: 3 },
+    );
     if (website) prospect.websiteUrl = website;
   }
 

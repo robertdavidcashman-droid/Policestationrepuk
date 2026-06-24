@@ -237,3 +237,15 @@ describe('enrichment status gate', () => {
     expect(prospect.status).toBe('discovered');
   });
 });
+
+describe('isPlausibleOutreachEmail junk domains', () => {
+  it('rejects Wix Sentry crawler artefacts', async () => {
+    const { isPlausibleOutreachEmail } = await import('@/lib/firm-outreach/enrichment/validator');
+    expect(isPlausibleOutreachEmail('2062d0a4929b45348643784b5cb39c36@sentry.wixpress.com')).toBe(
+      false,
+    );
+    expect(isPlausibleOutreachEmail('605a7baede844d278b89dc95ae0a9123@sentry-next.wixpress.com')).toBe(
+      false,
+    );
+  });
+});

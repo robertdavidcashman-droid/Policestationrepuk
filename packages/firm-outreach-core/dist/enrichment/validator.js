@@ -20,6 +20,8 @@ const DISPOSABLE_DOMAINS = new Set([
 ]);
 const JUNK_EMAIL_DOMAIN_PATTERNS = [
     /sentry-next\.wixpress\.com$/i,
+    /sentry\.wixpress\.com$/i,
+    /\.wixpress\.com$/i,
     /sentry\.io$/i,
     /cloudflare\.com$/i,
     /\.(png|jpe?g|gif|webp|svg)$/i,

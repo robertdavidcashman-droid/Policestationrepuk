@@ -37,6 +37,7 @@ function absoluteUrl(base: string, path: string): string {
 
 export async function crawlEmailsForProspect(
   prospect: FirmProspect,
+  opts?: { maxPages?: number },
 ): Promise<{
   best: FirmProspectEmail | null;
   alternatives: FirmProspectEmail[];
@@ -47,15 +48,19 @@ export async function crawlEmailsForProspect(
   const allCandidates = new Set<string>();
   let combinedText = '';
 
+  const paths = opts?.maxPages
+    ? CONTACT_PATHS.slice(0, opts.maxPages)
+    : [...CONTACT_PATHS];
+
   if (websiteUrl) {
     const base = websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`;
-    for (const path of CONTACT_PATHS) {
+    for (const path of paths) {
       const url = absoluteUrl(base, path);
       const html = await fetchPage(url);
       if (!html) continue;
       combinedText += ' ' + cheerio.load(html)('body').text();
       for (const e of extractEmailsFromHtml(html)) allCandidates.add(e);
-      await new Promise((r) => setTimeout(r, 200));
+      await new Promise((r) => setTimeout(r, 120));
     }
   }
 
@@ -68,7 +73,7 @@ export async function crawlEmailsForProspect(
     }
   }
 
-  const opts = {
+  const scoreOpts = {
     prospectType: prospect.prospectType,
     websiteUrl,
     forename: prospect.forename,
@@ -79,7 +84,7 @@ export async function crawlEmailsForProspect(
   const ranked = [...allCandidates]
     .filter((address) => isPlausibleOutreachEmail(address))
     .map((address) => {
-      const score = scoreEmailCandidate(address, opts);
+      const score = scoreEmailCandidate(address, scoreOpts);
       const confidence: EmailConfidence = address.includes('@') &&
         guessEmailsForDomain(domain ?? '').includes(address)
         ? 'guessed'

@@ -39,7 +39,9 @@ describe('enrichment wires Serper website discovery before crawl', () => {
       CURSOR_ENRICH: 'firmoutreach:cursor:enrich',
       getCursor: vi.fn().mockResolvedValue(0),
       setCursor: vi.fn(),
-      listAllProspectIds: vi.fn().mockResolvedValue(['p1']),
+      listProspectIdsByStatus: vi.fn().mockImplementation(async (status: string) =>
+        status === 'discovered' ? ['p1'] : [],
+      ),
       getProspect: vi.fn().mockImplementation(async () => structuredClone(prospect)),
       saveProspect,
       isDuplicateInitialSend: vi.fn().mockResolvedValue(false),
@@ -86,6 +88,7 @@ describe('enrichment wires Serper website discovery before crawl', () => {
     }));
     vi.doMock('@/lib/firm-outreach/enrichment/validator', () => ({
       isPlausibleOutreachEmail: () => true,
+      validateEmailForSend: vi.fn().mockResolvedValue({ ok: true }),
     }));
 
     const { runFirmEnrichment } = await import('@/lib/firm-outreach/enrichment/run-enrich');
@@ -112,7 +115,7 @@ describe('enrichment wires Serper website discovery before crawl', () => {
       campaignId: 'c',
       createdAt: '',
       updatedAt: '',
-      enrichAttempts: 2,
+      enrichAttempts: 5,
     };
 
     let saved: Record<string, unknown> | undefined;
@@ -120,7 +123,9 @@ describe('enrichment wires Serper website discovery before crawl', () => {
       CURSOR_ENRICH: 'firmoutreach:cursor:enrich',
       getCursor: vi.fn().mockResolvedValue(0),
       setCursor: vi.fn(),
-      listAllProspectIds: vi.fn().mockResolvedValue(['p2']),
+      listProspectIdsByStatus: vi.fn().mockImplementation(async (status: string) =>
+        status === 'discovered' ? ['p2'] : [],
+      ),
       getProspect: vi.fn().mockImplementation(async () => structuredClone(prospect)),
       saveProspect: vi.fn(async (p: Record<string, unknown>) => {
         saved = { ...p };
@@ -156,6 +161,7 @@ describe('enrichment wires Serper website discovery before crawl', () => {
     }));
     vi.doMock('@/lib/firm-outreach/enrichment/validator', () => ({
       isPlausibleOutreachEmail: () => true,
+      validateEmailForSend: vi.fn().mockResolvedValue({ ok: true }),
     }));
 
     const { runFirmEnrichment } = await import('@/lib/firm-outreach/enrichment/run-enrich');

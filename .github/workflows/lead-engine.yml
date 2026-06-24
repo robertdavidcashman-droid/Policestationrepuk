@@ -56,3 +56,28 @@ jobs:
         with:
           path: lead_engine/data/leads.db
           key: leads-db-${{ github.run_id }}
+
+      - uses: actions/setup-node@v4
+        if: success()
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install Node dependencies (KV import)
+        if: success()
+        run: npm ci
+
+      - name: Import ready_to_send.csv into firm-outreach KV
+        if: success()
+        env:
+          KV_REST_API_URL: ${{ secrets.KV_REST_API_URL }}
+          KV_REST_API_TOKEN: ${{ secrets.KV_REST_API_TOKEN }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+        run: |
+          CSV="lead_engine/data/exports/ready_to_send.csv"
+          if [ ! -f "$CSV" ]; then
+            echo "No $CSV — skipping KV import"
+            exit 0
+          fi
+          npx tsx scripts/firm-outreach-import-lead-engine.ts --file="$CSV"

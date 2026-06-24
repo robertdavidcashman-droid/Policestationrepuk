@@ -13,7 +13,7 @@ import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCre
 import { FirmCoverCTA } from '@/components/FirmCoverCTA';
 import { phoneToTelHref } from '@/lib/phone';
 import { displayPhoneNumber, stationPhoneNumbers } from '@/lib/station-search';
-import { StationPhone, StationContactDisclaimer } from '@/components/StationPhone';
+import { StationContactDisclaimer } from '@/components/StationPhone';
 import { getCustodyPublicDisplay } from '@/lib/station-contacts/publish';
 import { CUSTODY_NOT_PUBLISHED_TEXT } from '@/lib/station-contacts/types';
 import { stationPhoneEntryHint } from '@/lib/station-phone-labels';
