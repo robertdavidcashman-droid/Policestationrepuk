@@ -38,9 +38,20 @@ jobs:
           fi
           AUTH="Authorization: Bearer ${CRON_SECRET}"
           BASE="https://policestationrepuk.org"
-          echo "Requalify ready_to_send junk rows..."
-          curl -sfS -H "$AUTH" "${BASE}/api/cron/firm-outreach-bootstrap?requalifyOnly=1" | head -c 4000
-          echo ""
-          echo "Run 2 enrich batches (limit=60)..."
-          curl -sfS -H "$AUTH" "${BASE}/api/cron/firm-outreach-bootstrap?batches=2&limit=60" | head -c 4000
-          echo ""
+          kick() {
+            local path="$1"
+            local label="$2"
+            echo "$label..."
+            local resp code body
+            resp=$(curl -sS -w "\n%{http_code}" -H "$AUTH" "${BASE}${path}")
+            code=$(echo "$resp" | tail -1)
+            body=$(echo "$resp" | sed '$d')
+            echo "$body" | head -c 4000
+            echo ""
+            if [ "$code" != "200" ]; then
+              echo "HTTP $code for ${path}"
+              exit 1
+            fi
+          }
+          kick "/api/cron/firm-outreach-bootstrap?requalifyOnly=1" "Requalify ready_to_send junk rows"
+          kick "/api/cron/firm-outreach-bootstrap?batches=2&limit=60" "Run 2 enrich batches (limit=60)"
