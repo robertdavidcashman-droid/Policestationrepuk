@@ -51,7 +51,16 @@ async function main() {
     );
     return;
   }
-  console.error('Usage: enrich [--limit=N] | send [--apply] [--limit=N] | stats');
+  if (action === 'requalify') {
+    const { requalifyAllProspects } = await import('../lib/firm-outreach/requalify-prospects.ts');
+    const { countProspectsByStatus } = await import('../lib/firm-outreach/storage.ts');
+    const countsBefore = await countProspectsByStatus();
+    const requalify = await requalifyAllProspects({ verifyWebsites: false });
+    const countsAfter = await countProspectsByStatus();
+    console.log('[firm-outreach requalify]', JSON.stringify({ requalify, countsBefore, countsAfter }, null, 2));
+    return;
+  }
+  console.error('Usage: enrich [--limit=N] | send [--apply] [--limit=N] | stats | requalify');
   process.exit(1);
 }
 

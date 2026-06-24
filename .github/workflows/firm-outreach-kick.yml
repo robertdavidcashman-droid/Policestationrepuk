@@ -1,0 +1,46 @@
+name: Firm outreach production kick
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ['CI — Next.js build']
+    types: [completed]
+    branches: [master]
+
+jobs:
+  kick:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull production env
+        run: vercel env pull .env.production --environment=production --yes --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Requalify + enrich kick on production
+        run: |
+          set -a
+          # shellcheck disable=SC1091
+          source .env.production
+          set +a
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "CRON_SECRET missing from Vercel production env — skip kick"
+            exit 0
+          fi
+          AUTH="Authorization: Bearer ${CRON_SECRET}"
+          BASE="https://policestationrepuk.org"
+          echo "Requalify ready_to_send junk rows..."
+          curl -sfS -H "$AUTH" "${BASE}/api/cron/firm-outreach-bootstrap?requalifyOnly=1" | head -c 4000
+          echo ""
+          echo "Run 2 enrich batches (limit=60)..."
+          curl -sfS -H "$AUTH" "${BASE}/api/cron/firm-outreach-bootstrap?batches=2&limit=60" | head -c 4000
+          echo ""

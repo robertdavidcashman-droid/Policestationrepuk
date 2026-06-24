@@ -141,7 +141,9 @@ Links are prefetch-safe: the email button only opens a preview; sends happen on 
 
 ## Lead engine import (RepUK)
 
-After each successful [lead engine automation](.github/workflows/lead-engine.yml) run, the workflow **automatically imports** `lead_engine/data/exports/ready_to_send.csv` into firm-outreach KV when GitHub Actions secrets `KV_REST_API_URL` / `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_*`) are configured.
+Manual import uses production KV via Vercel env pull in CI (no separate GitHub KV secrets required when `VERCEL_TOKEN` is configured).
+
+Post-deploy kick (requalify junk + 2 enrich batches) runs automatically after green CI on `master` via [firm-outreach-kick.yml](.github/workflows/firm-outreach-kick.yml).
 
 Manual import (e.g. from a downloaded artifact):
 

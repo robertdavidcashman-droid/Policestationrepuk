@@ -67,17 +67,31 @@ jobs:
         if: success()
         run: npm ci
 
-      - name: Import ready_to_send.csv into firm-outreach KV
+      - name: Install Vercel CLI
+        if: success()
+        run: npm install -g vercel@latest
+
+      - name: Pull RepUK production KV env
         if: success()
         env:
-          KV_REST_API_URL: ${{ secrets.KV_REST_API_URL }}
-          KV_REST_API_TOKEN: ${{ secrets.KV_REST_API_TOKEN }}
-          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
-          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel env pull .env.production --environment=production --yes --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Import ready_to_send.csv into firm-outreach KV
+        if: success()
         run: |
           CSV="lead_engine/data/exports/ready_to_send.csv"
           if [ ! -f "$CSV" ]; then
             echo "No $CSV — skipping KV import"
+            exit 0
+          fi
+          set -a
+          # shellcheck disable=SC1091
+          source .env.production
+          set +a
+          if [ -z "${KV_REST_API_URL:-}" ] && [ -z "${UPSTASH_REDIS_REST_URL:-}" ]; then
+            echo "KV env missing from Vercel production — skipping KV import"
             exit 0
           fi
           npx tsx scripts/firm-outreach-import-lead-engine.ts --file="$CSV"
