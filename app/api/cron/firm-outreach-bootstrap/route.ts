@@ -16,17 +16,19 @@ export async function GET(request: Request) {
 
   if (url.searchParams.get('requalifyOnly') === '1') {
     const { requalifyAllProspects } = await import('@/lib/firm-outreach/requalify-prospects');
-    const { reindexProspectStatuses } = await import('@/lib/firm-outreach/reindex-prospects');
     const { countProspectsByStatus } = await import('@/lib/firm-outreach/storage');
     const countsBefore = await countProspectsByStatus();
-    const requalify = await requalifyAllProspects({ verifyWebsites: false });
-    const reindex = await reindexProspectStatuses();
+    const requalify = await requalifyAllProspects({
+      verifyWebsites: false,
+      readyOnly: true,
+      mxCheckLimit: 50,
+      maxElapsedMs: 240_000,
+    });
     const countsAfter = await countProspectsByStatus();
     return NextResponse.json({
       ok: true,
       mode: 'requalifyOnly',
       requalify,
-      reindex,
       countsBefore,
       countsAfter,
     });

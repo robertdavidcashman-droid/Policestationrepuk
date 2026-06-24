@@ -7,7 +7,7 @@ import {
   resolveStatusWithQualification,
 } from './qualification';
 import { reconcileReadyProspectStatus } from './reconcile-ready-status';
-import { getProspect, listAllProspectIds, saveProspect } from './storage';
+import { getProspect, listAllProspectIds, listProspectIdsByStatus, saveProspect } from './storage';
 import { isPlausibleOutreachEmail, validateEmailForSend } from './enrichment/validator';
 
 export interface RequalifyResult {
@@ -18,18 +18,27 @@ export interface RequalifyResult {
   heldForReview: number;
   websiteVerified: number;
   stillReady: number;
+  stoppedEarly?: boolean;
   samples: Array<{ id: string; firmName: string; from: string; to: string; reason: string }>;
 }
 
 export async function requalifyAllProspects(opts?: {
   sampleLimit?: number;
   verifyWebsites?: boolean;
+  /** Only scan ready_to_send rows (fast path for bootstrap kick). */
+  readyOnly?: boolean;
+  maxElapsedMs?: number;
+  startedAt?: number;
   /** Max MX lookups per run (maintain cron stays within timeout). */
   mxCheckLimit?: number;
 }): Promise<RequalifyResult> {
   const sampleLimit = opts?.sampleLimit ?? 20;
   const verifyWebsites = opts?.verifyWebsites ?? true;
+  const readyOnly = opts?.readyOnly ?? false;
   const mxCheckLimit = opts?.mxCheckLimit ?? 50;
+  const started = opts?.startedAt ?? Date.now();
+  const deadline =
+    opts?.maxElapsedMs != null ? started + opts.maxElapsedMs : undefined;
   const result: RequalifyResult = {
     scanned: 0,
     downgradedFromReady: 0,
@@ -38,6 +47,7 @@ export async function requalifyAllProspects(opts?: {
     heldForReview: 0,
     websiteVerified: 0,
     stillReady: 0,
+    stoppedEarly: false,
     samples: [],
   };
 
@@ -45,9 +55,15 @@ export async function requalifyAllProspects(opts?: {
   const dscc = await ensureDsccRegisterCache();
   const registry = buildCrimeRegistry(laa, dscc?.entries ?? []);
 
-  const ids = await listAllProspectIds();
+  const ids = readyOnly
+    ? await listProspectIdsByStatus('ready_to_send')
+    : await listAllProspectIds();
   let mxChecks = 0;
   for (const id of ids) {
+    if (deadline != null && Date.now() >= deadline) {
+      result.stoppedEarly = true;
+      break;
+    }
     const p = await getProspect(id);
     if (!p) continue;
     result.scanned++;

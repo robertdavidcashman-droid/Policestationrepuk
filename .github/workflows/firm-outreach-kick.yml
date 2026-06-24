@@ -43,7 +43,7 @@ jobs:
             local label="$2"
             echo "$label..."
             local resp code body
-            resp=$(curl -sS -w "\n%{http_code}" -H "$AUTH" "${BASE}${path}")
+            resp=$(curl -sS --max-time 320 -w "\n%{http_code}" -H "$AUTH" "${BASE}${path}")
             code=$(echo "$resp" | tail -1)
             body=$(echo "$resp" | sed '$d')
             echo "$body" | head -c 4000
