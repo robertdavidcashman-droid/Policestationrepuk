@@ -85,12 +85,12 @@ export const DEFAULT_PRODUCTION_KICK_STEPS: KickStep[] = [
     optional: true,
   },
   {
-    path: '/api/cron/firm-outreach-enrich',
-    label: 'Enrich batch 1 (cron route)',
+    path: '/api/cron/firm-outreach-bootstrap?batches=1&limit=30',
+    label: 'Enrich batch 1 (bootstrap)',
   },
   {
-    path: '/api/cron/firm-outreach-enrich',
-    label: 'Enrich batch 2 (cron route)',
+    path: '/api/cron/firm-outreach-bootstrap?batches=1&limit=30',
+    label: 'Enrich batch 2 (bootstrap)',
     optional: true,
   },
 ];

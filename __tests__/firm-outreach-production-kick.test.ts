@@ -78,10 +78,9 @@ describe('runProductionKickSteps', () => {
     expect(results[1]?.optional).toBe(false);
   });
 
-  it('uses separate enrich cron calls not a combined bootstrap batch', () => {
-    const enrichSteps = DEFAULT_PRODUCTION_KICK_STEPS.filter((s) => s.path.includes('enrich'));
+  it('uses separate bootstrap enrich calls not a combined batch', () => {
+    const enrichSteps = DEFAULT_PRODUCTION_KICK_STEPS.filter((s) => s.path.includes('bootstrap') && s.path.includes('batches=1'));
     expect(enrichSteps).toHaveLength(2);
-    expect(enrichSteps.every((s) => s.path === '/api/cron/firm-outreach-enrich')).toBe(true);
     expect(DEFAULT_PRODUCTION_KICK_STEPS.some((s) => s.path.includes('batches=2'))).toBe(false);
   });
 });
