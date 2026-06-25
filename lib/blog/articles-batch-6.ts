@@ -46,6 +46,8 @@ export const ARTICLES_BATCH_6: BlogArticle[] = [
       },
     ],
     bodyMarkdown: `
+This guide explains **how to become a police station representative** in 2026 — the PSRAS accreditation route, the supervised attendances and portfolio you need, and how to pick up your first instructions once you qualify.
+
 ## Key takeaways
 
 - Becoming a police station representative means accreditation through the **PSRAS** — an assessed knowledge element, the **Critical Incidents Test**, and a **supervised portfolio**.
