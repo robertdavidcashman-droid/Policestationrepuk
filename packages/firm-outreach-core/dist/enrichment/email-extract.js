@@ -38,9 +38,19 @@ function scoreEmailCandidate(email, opts) {
             score += boost;
     }
     const siteDomain = (0, normalize_1.domainFromUrl)(opts.websiteUrl);
-    if (siteDomain && domain.endsWith(siteDomain))
+    const emailRegistrable = (0, normalize_1.registrableDomain)(domain) ?? domain;
+    const onFirmDomain = !!siteDomain &&
+        (emailRegistrable === siteDomain || domain === siteDomain || domain.endsWith(`.${siteDomain}`));
+    const isFree = shared_constants_1.FREE_EMAIL_DOMAINS.has(domain);
+    // When the firm's own website domain is known, a real contact address is on
+    // that domain (or a free provider). Anything else found on the page is a
+    // third-party footer/widget/directory email — reject it outright rather than
+    // letting it win when the firm's own address isn't on the crawled pages.
+    if (siteDomain && !onFirmDomain && !isFree)
+        return 0;
+    if (onFirmDomain)
         score += 20;
-    else if (shared_constants_1.FREE_EMAIL_DOMAINS.has(domain)) {
+    else if (isFree) {
         score -= opts.prospectType === 'firm' ? 25 : 5;
     }
     if (opts.surname && localBase.includes(opts.surname.toLowerCase().slice(0, 4))) {

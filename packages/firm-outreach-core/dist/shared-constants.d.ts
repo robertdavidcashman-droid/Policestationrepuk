@@ -2,6 +2,13 @@ export declare const CONTACT_PATHS: readonly ["/", "/contact", "/contact-us", "/
 export declare const REJECTED_EMAIL_LOCALS: Set<string>;
 export declare const PREFERRED_EMAIL_LOCALS: Record<string, number>;
 export declare const FREE_EMAIL_DOMAINS: Set<string>;
+/**
+ * Registrable domains that appear in firm website footers, badges, widgets,
+ * directories, review sites, CDNs and analytics — never a firm's own contact
+ * address. Crawled emails on these are rejected outright so we don't outreach
+ * to e.g. support@crunchbase.com or contact@thegoodsolicitorguide.com.
+ */
+export declare const NON_FIRM_EMAIL_DOMAINS: Set<string>;
 export declare const EXCLUDED_FIRM_PATTERNS: RegExp[];
 export declare const CRIMINAL_KEYWORDS: readonly ["police station", "custody", "criminal defence", "criminal defense", "duty solicitor", "legal aid crime", "crime department"];
 export declare const COMPETITOR_KEYWORDS: readonly ["police station agency", "cover agency", "rep agency"];

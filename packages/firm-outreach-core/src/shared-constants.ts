@@ -53,6 +53,53 @@ export const FREE_EMAIL_DOMAINS = new Set([
   'icloud.com',
 ]);
 
+/**
+ * Registrable domains that appear in firm website footers, badges, widgets,
+ * directories, review sites, CDNs and analytics — never a firm's own contact
+ * address. Crawled emails on these are rejected outright so we don't outreach
+ * to e.g. support@crunchbase.com or contact@thegoodsolicitorguide.com.
+ */
+export const NON_FIRM_EMAIL_DOMAINS = new Set([
+  // Legal directories / review / lead-gen sites
+  'thegoodsolicitorguide.com',
+  'threebestrated.co.uk',
+  'reviewsolicitors.co.uk',
+  'review-solicitors.co.uk',
+  'solicitors.co.uk',
+  'yell.com',
+  'yelp.com',
+  'trustpilot.com',
+  'feefo.com',
+  'legaladvice2u.co.uk',
+  'crunchbase.com',
+  'clutch.co',
+  // Site builders / hosting / CDNs / analytics / fonts
+  'wix.com',
+  'wixpress.com',
+  'squarespace.com',
+  'wordpress.com',
+  'automattic.com',
+  'godaddy.com',
+  'cloudflare.com',
+  'sentry.io',
+  'latofonts.com',
+  'fontawesome.com',
+  'googleapis.com',
+  'gstatic.com',
+  'google.com',
+  'gravatar.com',
+  'schema.org',
+  'w3.org',
+  'sentry.wixpress.com',
+  // Generic placeholders
+  'example.com',
+  'example.org',
+  'domain.com',
+  'email.com',
+  'yourdomain.com',
+  'sentry-next.wixpress.com',
+]);
+
 export const EXCLUDED_FIRM_PATTERNS = [
   /public defender service/i,
   /^pds\b/i,

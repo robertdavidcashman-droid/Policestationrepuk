@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NON_EW_POSTCODE_PREFIXES = exports.COMPETITOR_KEYWORDS = exports.CRIMINAL_KEYWORDS = exports.EXCLUDED_FIRM_PATTERNS = exports.FREE_EMAIL_DOMAINS = exports.PREFERRED_EMAIL_LOCALS = exports.REJECTED_EMAIL_LOCALS = exports.CONTACT_PATHS = void 0;
+exports.NON_EW_POSTCODE_PREFIXES = exports.COMPETITOR_KEYWORDS = exports.CRIMINAL_KEYWORDS = exports.EXCLUDED_FIRM_PATTERNS = exports.NON_FIRM_EMAIL_DOMAINS = exports.FREE_EMAIL_DOMAINS = exports.PREFERRED_EMAIL_LOCALS = exports.REJECTED_EMAIL_LOCALS = exports.CONTACT_PATHS = void 0;
 exports.createOutreachEnvHelpers = createOutreachEnvHelpers;
 exports.CONTACT_PATHS = [
     '/',
@@ -52,6 +52,52 @@ exports.FREE_EMAIL_DOMAINS = new Set([
     'yahoo.com',
     'yahoo.co.uk',
     'icloud.com',
+]);
+/**
+ * Registrable domains that appear in firm website footers, badges, widgets,
+ * directories, review sites, CDNs and analytics — never a firm's own contact
+ * address. Crawled emails on these are rejected outright so we don't outreach
+ * to e.g. support@crunchbase.com or contact@thegoodsolicitorguide.com.
+ */
+exports.NON_FIRM_EMAIL_DOMAINS = new Set([
+    // Legal directories / review / lead-gen sites
+    'thegoodsolicitorguide.com',
+    'threebestrated.co.uk',
+    'reviewsolicitors.co.uk',
+    'review-solicitors.co.uk',
+    'solicitors.co.uk',
+    'yell.com',
+    'yelp.com',
+    'trustpilot.com',
+    'feefo.com',
+    'legaladvice2u.co.uk',
+    'crunchbase.com',
+    'clutch.co',
+    // Site builders / hosting / CDNs / analytics / fonts
+    'wix.com',
+    'wixpress.com',
+    'squarespace.com',
+    'wordpress.com',
+    'automattic.com',
+    'godaddy.com',
+    'cloudflare.com',
+    'sentry.io',
+    'latofonts.com',
+    'fontawesome.com',
+    'googleapis.com',
+    'gstatic.com',
+    'google.com',
+    'gravatar.com',
+    'schema.org',
+    'w3.org',
+    'sentry.wixpress.com',
+    // Generic placeholders
+    'example.com',
+    'example.org',
+    'domain.com',
+    'email.com',
+    'yourdomain.com',
+    'sentry-next.wixpress.com',
 ]);
 exports.EXCLUDED_FIRM_PATTERNS = [
     /public defender service/i,

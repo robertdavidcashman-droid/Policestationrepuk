@@ -1,6 +1,6 @@
 import dns from 'dns/promises';
-import { FREE_EMAIL_DOMAINS } from '../shared-constants';
-import { normalizeEmail } from '../normalize';
+import { FREE_EMAIL_DOMAINS, NON_FIRM_EMAIL_DOMAINS } from '../shared-constants';
+import { normalizeEmail, registrableDomain } from '../normalize';
 
 const RFC5322 =
   /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i;
@@ -25,6 +25,15 @@ const JUNK_EMAIL_DOMAIN_PATTERNS = [
 
 const JUNK_EMAIL_LOCAL_PATTERNS = [/\.(png|jpe?g|gif|webp|svg)$/i, /\[email/i];
 
+/** True when the email's (registrable) domain is a known non-firm third party. */
+export function isNonFirmEmailDomain(email: string): boolean {
+  const domain = normalizeEmail(email).split('@')[1];
+  if (!domain) return false;
+  if (NON_FIRM_EMAIL_DOMAINS.has(domain)) return true;
+  const registrable = registrableDomain(domain);
+  return registrable ? NON_FIRM_EMAIL_DOMAINS.has(registrable) : false;
+}
+
 /** Reject obvious crawler artefacts before MX lookup. */
 export function isPlausibleOutreachEmail(email: string): boolean {
   const norm = normalizeEmail(email);
@@ -33,6 +42,7 @@ export function isPlausibleOutreachEmail(email: string): boolean {
   if (!local || !domain) return false;
   if (JUNK_EMAIL_LOCAL_PATTERNS.some((re) => re.test(local))) return false;
   if (JUNK_EMAIL_DOMAIN_PATTERNS.some((re) => re.test(domain))) return false;
+  if (isNonFirmEmailDomain(norm)) return false;
   return true;
 }
 

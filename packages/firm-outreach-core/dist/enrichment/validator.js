@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.isNonFirmEmailDomain = isNonFirmEmailDomain;
 exports.isPlausibleOutreachEmail = isPlausibleOutreachEmail;
 exports.isValidEmailFormat = isValidEmailFormat;
 exports.hasMxRecord = hasMxRecord;
@@ -29,6 +30,16 @@ const JUNK_EMAIL_DOMAIN_PATTERNS = [
     /\.gsx\.gov\.uk$/i,
 ];
 const JUNK_EMAIL_LOCAL_PATTERNS = [/\.(png|jpe?g|gif|webp|svg)$/i, /\[email/i];
+/** True when the email's (registrable) domain is a known non-firm third party. */
+function isNonFirmEmailDomain(email) {
+    const domain = (0, normalize_1.normalizeEmail)(email).split('@')[1];
+    if (!domain)
+        return false;
+    if (shared_constants_1.NON_FIRM_EMAIL_DOMAINS.has(domain))
+        return true;
+    const registrable = (0, normalize_1.registrableDomain)(domain);
+    return registrable ? shared_constants_1.NON_FIRM_EMAIL_DOMAINS.has(registrable) : false;
+}
 /** Reject obvious crawler artefacts before MX lookup. */
 function isPlausibleOutreachEmail(email) {
     const norm = (0, normalize_1.normalizeEmail)(email);
@@ -40,6 +51,8 @@ function isPlausibleOutreachEmail(email) {
     if (JUNK_EMAIL_LOCAL_PATTERNS.some((re) => re.test(local)))
         return false;
     if (JUNK_EMAIL_DOMAIN_PATTERNS.some((re) => re.test(domain)))
+        return false;
+    if (isNonFirmEmailDomain(norm))
         return false;
     return true;
 }
