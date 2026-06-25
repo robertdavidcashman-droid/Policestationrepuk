@@ -1,6 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildBufferImageAssets, resolveAbsoluteImageUrl } from '@/lib/buffer/assets';
-import { FEED_DEFAULT_IMAGES, hydratePostImagesForBuffer, loadFeedPosts } from '@/lib/buffer/feeds';
+import {
+  FEED_DEFAULT_IMAGES,
+  getContentFeeds,
+  hydratePostImagesForBuffer,
+  loadFeedPosts,
+  validateContentFeeds,
+} from '@/lib/buffer/feeds';
 import { SITE_URL } from '@/lib/seo-layer/config';
 
 describe('buffer feed loaders', () => {
@@ -115,5 +121,40 @@ describe('buffer feed loaders', () => {
     );
 
     expect(hydrated[0]?.imageUrl).toBe(FEED_DEFAULT_IMAGES.policestationagent);
+  });
+});
+
+describe('cross-site feed reconciliation (four-site SEO plan)', () => {
+  const original = process.env.BUFFER_CONTENT_FEEDS;
+  afterEach(() => {
+    if (original === undefined) delete process.env.BUFFER_CONTENT_FEEDS;
+    else process.env.BUFFER_CONTENT_FEEDS = original;
+  });
+
+  it('single-feed override schedules only policestationrepuk (no double-posting psrtrain/custodynote)', () => {
+    process.env.BUFFER_CONTENT_FEEDS = JSON.stringify([
+      { id: 'policestationrepuk', type: 'local' },
+    ]);
+    const feeds = getContentFeeds();
+    expect(feeds).toHaveLength(1);
+    expect(feeds[0].id).toBe('policestationrepuk');
+    expect(feeds.map((f) => f.id)).not.toContain('psrtrain');
+    expect(feeds.map((f) => f.id)).not.toContain('custodynote');
+  });
+
+  it('validateContentFeeds keeps a valid single override (warns on missing IDs, not an error)', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const result = validateContentFeeds([{ id: 'policestationrepuk', type: 'local' }]);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('policestationrepuk');
+    warn.mockRestore();
+  });
+
+  it('invalid JSON override falls back to the default four feeds', () => {
+    process.env.BUFFER_CONTENT_FEEDS = 'not-json';
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const feeds = getContentFeeds();
+    expect(feeds.length).toBeGreaterThanOrEqual(4);
+    warn.mockRestore();
   });
 });
