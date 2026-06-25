@@ -165,6 +165,9 @@ const BLOG_SLUG: Record<string, ContentSource[]> = {
   'how-freelance-police-station-reps-win-repeat-instructions': [SCC_2025, PSRAS],
   'what-makes-a-good-police-station-representative': [PSRAS, PACE, SRA_STANDARDS],
   'why-fast-clear-communication-matters-in-police-station-representation': [SCC_2025, PSRAS],
+  'how-to-become-police-station-representative-2026': [PSRAS, SRA_PSRAS, PACE],
+  'freelance-rep-day-rate-2026': [SI_2025_1251, SABC, SCC_2025],
+  'building-firm-panel-freelance-reps': [SCC_2025, SRA_STANDARDS, PSRAS],
 };
 
 const CRAWL_SLUG: Record<string, ContentSource[]> = {
