@@ -49,9 +49,30 @@ exports.FREE_EMAIL_DOMAINS = new Set([
     'hotmail.co.uk',
     'outlook.com',
     'live.com',
+    'live.co.uk',
+    'msn.com',
     'yahoo.com',
     'yahoo.co.uk',
     'icloud.com',
+    'me.com',
+    'mac.com',
+    'aol.com',
+    'aol.co.uk',
+    'mail.com',
+    'gmx.com',
+    'gmx.co.uk',
+    'protonmail.com',
+    'proton.me',
+    // UK ISP mailboxes commonly used by small firms — legitimate, not off-domain
+    'btconnect.com',
+    'btinternet.com',
+    'btopenworld.com',
+    'talktalk.net',
+    'tiscali.co.uk',
+    'sky.com',
+    'virginmedia.com',
+    'ntlworld.com',
+    'blueyonder.co.uk',
 ]);
 /**
  * Registrable domains that appear in firm website footers, badges, widgets,
@@ -73,6 +94,13 @@ exports.NON_FIRM_EMAIL_DOMAINS = new Set([
     'legaladvice2u.co.uk',
     'crunchbase.com',
     'clutch.co',
+    // Regulators / ombudsman / professional bodies (appear in firm footers)
+    'legalombudsman.org.uk',
+    'sra.org.uk',
+    'lawsociety.org.uk',
+    // PR / marketing / font foundries seen in crawled pages
+    'inkedpr.com',
+    'indiantypefoundry.com',
     // Site builders / hosting / CDNs / analytics / fonts
     'wix.com',
     'wixpress.com',
@@ -97,6 +125,8 @@ exports.NON_FIRM_EMAIL_DOMAINS = new Set([
     'domain.com',
     'email.com',
     'yourdomain.com',
+    'mysite.com',
+    'yoursite.com',
     'sentry-next.wixpress.com',
 ]);
 exports.EXCLUDED_FIRM_PATTERNS = [

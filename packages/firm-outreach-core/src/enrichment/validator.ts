@@ -21,6 +21,7 @@ const JUNK_EMAIL_DOMAIN_PATTERNS = [
   /\.(png|jpe?g|gif|webp|svg)$/i,
   /\.cjsm\.net$/i,
   /\.gsx\.gov\.uk$/i,
+  /(^|\.)gov\.uk$/i,
 ];
 
 const JUNK_EMAIL_LOCAL_PATTERNS = [/\.(png|jpe?g|gif|webp|svg)$/i, /\[email/i];
