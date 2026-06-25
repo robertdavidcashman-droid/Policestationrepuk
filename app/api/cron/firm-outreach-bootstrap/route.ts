@@ -14,6 +14,15 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
 
+  if (url.searchParams.get('cleanupBadEmails') === '1') {
+    const { cleanupNonFirmProspectEmails } = await import('@/lib/firm-outreach/cleanup-non-firm-emails');
+    const dryRun = url.searchParams.get('dryRun') !== '0';
+    const campaignId = url.searchParams.get('campaignId')?.trim() || undefined;
+    const allStatuses = url.searchParams.get('allStatuses') === '1';
+    const cleanup = await cleanupNonFirmProspectEmails({ dryRun, campaignId, allStatuses });
+    return NextResponse.json({ ok: true, mode: 'cleanupBadEmails', cleanup });
+  }
+
   if (url.searchParams.get('requalifyOnly') === '1') {
     const { requalifyAllProspects } = await import('@/lib/firm-outreach/requalify-prospects');
     const { countProspectsByStatus } = await import('@/lib/firm-outreach/storage');
