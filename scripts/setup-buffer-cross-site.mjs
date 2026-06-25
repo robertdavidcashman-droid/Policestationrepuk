@@ -157,7 +157,10 @@ async function syncVercelProject(project, secrets) {
 async function syncVercelEnv(secrets) {
   console.log('\n==> Step 2: push Buffer env to Vercel (production)');
   if (!secrets.BUFFER_API_KEY) {
-    throw new Error('BUFFER_API_KEY missing — add to Policestationrepuk/.env.local');
+    if (!DRY) {
+      throw new Error('BUFFER_API_KEY missing — add to Policestationrepuk/.env.local');
+    }
+    console.warn('  [dry-run] BUFFER_API_KEY not found — continuing without secret values');
   }
   for (const project of VERCEL_BUFFER_PROJECTS) {
     await syncVercelProject(project, secrets);
