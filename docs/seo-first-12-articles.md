@@ -43,7 +43,7 @@ Time matters because disclosure, interview, and decisions to charge or release o
 
 **CTA:** Arrested in Kent right now? Call for free police-station representation, 24/7.
 
-**Disclaimer:** This article is general information about the law in England & Wales and is not legal advice on any specific case. If you or someone you know has been arrested or asked to attend an interview, get advice on your own circumstances — police station legal advice is free and available 24/7.
+**Disclaimer:** This article is general information about the law in England & Wales and is not legal advice on any specific case. If you or someone you know has been arrested or asked to attend an interview, get advice on your own circumstances — police station legal advice is free and available free of charge in police custody.
 
 **Sources:**
 - PACE 1984, Code C (Detention, treatment and questioning) — GOV.UK
@@ -100,7 +100,7 @@ If you are calling on behalf of a family member, give the custody suite location
 
 **CTA:** Need someone now? Call for 24/7 Kent & Medway police-station cover.
 
-**Disclaimer:** This article is general information about the law in England & Wales and is not legal advice on any specific case. If you or someone you know has been arrested or asked to attend an interview, get advice on your own circumstances — police station legal advice is free and available 24/7.
+**Disclaimer:** This article is general information about the law in England & Wales and is not legal advice on any specific case. If you or someone you know has been arrested or asked to attend an interview, get advice on your own circumstances — police station legal advice is free and available free of charge in police custody.
 
 **Sources:**
 - PACE 1984, Code C, sections 6 (right to legal advice) — GOV.UK
@@ -116,7 +116,7 @@ If you are calling on behalf of a family member, give the custody suite location
 > 
 > General information, not legal advice.
 
-- **Facebook:** Need a solicitor at a Kent police station tonight or this weekend? Legal advice in custody is free and available 24/7. Here's how to get it.
+- **Facebook:** Need a solicitor at a Kent police station tonight or this weekend? Legal advice in custody is free and available free of charge in police custody. Here's how to get it.
 - **X/Twitter:** Can you get a solicitor at 3am in Kent custody? Yes — free legal advice in custody is 24/7. How out-of-hours cover works:
 - **Short:** Solicitor at a Kent police station at night? Free advice is 24/7.
 
@@ -155,7 +155,7 @@ Whichever route you choose, the value is the same: a trained representative who 
 
 **CTA:** Want a clear quote or free duty cover in Kent? Get in touch.
 
-**Disclaimer:** This article is general information about the law in England & Wales and is not legal advice on any specific case. If you or someone you know has been arrested or asked to attend an interview, get advice on your own circumstances — police station legal advice is free and available 24/7.
+**Disclaimer:** This article is general information about the law in England & Wales and is not legal advice on any specific case. If you or someone you know has been arrested or asked to attend an interview, get advice on your own circumstances — police station legal advice is free and available free of charge in police custody.
 
 **Sources:**
 - Legal Aid Agency — police station advice is free and non-means-tested (GOV.UK)
