@@ -47,6 +47,8 @@
     "audit:seo": "node scripts/audit/seo-audit.mjs --concurrency 8",
     "audit:blog-seo": "npx tsx scripts/audit/blog-seo.ts",
     "audit:blog-orphans": "npx tsx scripts/audit/blog-orphan-links.ts",
+    "verify:blog-ci": "npm run audit:blog-seo && npm run audit:blog-orphans && npm run validate:schema && node scripts/audit/blog-partner-utm.mjs",
+    "test:first-12": "vitest run __tests__/seo-first-12-publish.test.ts && npm run verify:blog-ci",
     "audit:cross-domain-links": "npx tsx scripts/audit/cross-domain-links.ts",
     "audit:partner-utm": "node scripts/audit/partner-utm-guard.mjs",
     "audit:blog-partner-utm": "node scripts/audit/blog-partner-utm.mjs",
