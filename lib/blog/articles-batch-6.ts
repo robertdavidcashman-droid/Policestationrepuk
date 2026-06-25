@@ -30,6 +30,7 @@ export const ARTICLES_BATCH_6: BlogArticle[] = [
       'freelance-police-station-representative-vs-duty-solicitor',
       'professional-indemnity-insurance-reps',
       'freelance-police-station-rep-career',
+      'freelance-rep-day-rate-2026',
     ],
     faqs: [
       {
@@ -133,6 +134,7 @@ For exam-focused preparation, see the partner guide on the [PSRAS exam format an
       'police-station-rep-fee-rates-2026',
       'freelance-police-station-rep-career',
       'how-freelance-police-station-reps-win-repeat-instructions',
+      'building-firm-panel-freelance-reps',
     ],
     faqs: [
       {
@@ -229,6 +231,7 @@ Clean, structured attendance notes win repeat work and make your rate easier to 
       'out-of-hours-police-station-cover-for-law-firms',
       'how-firms-can-instruct-freelance-police-station-reps',
       'how-firms-source-emergency-rep-cover',
+      'how-to-become-police-station-representative-2026',
     ],
     faqs: [
       {
