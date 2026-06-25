@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-06-11",
+  "vercelProject": "policestationrepuk-new",
+  "serperOnVercelProduction": true,
+  "serperSetSince": "9h ago (vercel env ls)",
+  "localSerperApiTest": "pass",
+  "productionCronSmoke": {
+    "ok": true,
+    "suitesScanned": 2,
+    "searchesRun": 8,
+    "findingsCreated": 2,
+    "findingsRejected": 27,
+    "pageFetchesUsed": 4,
+    "officialPagesFetched": 0,
+    "numbersExtracted": 160,
+    "elapsedMs": 11986
+  },
+  "serperLikelyActive": true,
+  "improvedPipelineLive": true
+}
