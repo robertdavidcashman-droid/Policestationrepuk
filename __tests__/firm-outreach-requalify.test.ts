@@ -46,6 +46,40 @@ describe('requalifyAllProspects', () => {
     expect(result.downgradedFromReady).toBe(0);
   });
 
+  it('promotes a qualified discovered prospect with email to ready_to_send', async () => {
+    const prospect: FirmProspect = {
+      ...baseProspect(),
+      id: 'p2',
+      status: 'discovered',
+      email: 'info@example.co.uk',
+      lastEmailAt: undefined,
+    };
+
+    const saveProspect = vi.fn();
+    vi.doMock('@/lib/dscc-register-lookup', () => ({
+      ensureDsccRegisterCache: vi.fn().mockResolvedValue({ entries: [] }),
+    }));
+    vi.doMock('@/lib/legal-directory/laa-fetch', () => ({
+      readLaaCrimeJson: vi.fn().mockReturnValue([]),
+    }));
+    vi.doMock('@/lib/firm-outreach/storage', () => ({
+      listAllProspectIds: vi.fn().mockResolvedValue(['p2']),
+      getProspect: vi.fn().mockResolvedValue(structuredClone(prospect)),
+      saveProspect,
+    }));
+    vi.doMock('@/lib/firm-outreach/crime-website-verify', () => ({
+      websiteIndicatesCrimePractice: vi.fn().mockResolvedValue(false),
+    }));
+
+    const { requalifyAllProspects } = await import('@/lib/firm-outreach/requalify-prospects');
+    const result = await requalifyAllProspects({ verifyWebsites: false });
+
+    expect(result.promotedToReady).toBe(1);
+    expect(saveProspect).toHaveBeenCalled();
+    const saved = saveProspect.mock.calls[0][0] as FirmProspect;
+    expect(saved.status).toBe('ready_to_send');
+  });
+
   it('downgrades ready_to_send when MX validation fails', async () => {
     const prospect = {
       ...baseProspect(),

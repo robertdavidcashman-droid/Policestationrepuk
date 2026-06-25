@@ -15,6 +15,7 @@ export interface RequalifyResult {
   downgradedFromReady: number;
   reconciledFromReady: number;
   mxDowngradedFromReady: number;
+  promotedToReady: number;
   heldForReview: number;
   websiteVerified: number;
   stillReady: number;
@@ -44,6 +45,7 @@ export async function requalifyAllProspects(opts?: {
     downgradedFromReady: 0,
     reconciledFromReady: 0,
     mxDowngradedFromReady: 0,
+    promotedToReady: 0,
     heldForReview: 0,
     websiteVerified: 0,
     stillReady: 0,
@@ -155,6 +157,32 @@ export async function requalifyAllProspects(opts?: {
         await saveProspect(p, prevStatus);
       }
       continue;
+    }
+
+    if (
+      (p.status === 'discovered' || p.status === 'enriched') &&
+      p.email &&
+      isPlausibleOutreachEmail(p.email) &&
+      q.qualified
+    ) {
+      const preferred = p.lastEmailAt ? 'sent' : 'ready_to_send';
+      const next = resolveStatusWithQualification(p, preferred, registry);
+      if (next === 'ready_to_send' || next === 'sent') {
+        p.status = next;
+        p.updatedAt = new Date().toISOString();
+        await saveProspect(p, prevStatus);
+        if (next === 'ready_to_send') result.promotedToReady++;
+        if (result.samples.length < sampleLimit) {
+          result.samples.push({
+            id: p.id,
+            firmName: p.firmName,
+            from: prevStatus,
+            to: p.status,
+            reason: next === 'sent' ? 'initial_send_already_recorded' : q.reason,
+          });
+        }
+        continue;
+      }
     }
 
     if (p.status === 'ready_to_send' && !q.qualified) {
