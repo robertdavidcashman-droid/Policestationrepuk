@@ -36,7 +36,8 @@ npm run buffer:verify-scheduled-images # All channels (GBP issues fatal)
 npm run buffer:verify-scheduled-gbp    # GBP channel only
 npm run buffer:repair-gbp              # Fix bad GBP posts in queue
 npm run buffer:replace-today           # Delete + reschedule today
-npm run test:buffer                    # CI suite + verify-feeds
+npm run buffer:smoke                    # Verify API key + list live channels (loads .env.local)
+node scripts/sync-buffer-env-to-sibling-sites.mjs   # Push Buffer env to psrtrain + custodynote .env.local
 ```
 
 ## Daily publish report email

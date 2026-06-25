@@ -86,6 +86,7 @@ REPUK runs the mature central scheduler: `lib/buffer/*`, cron `app/api/cron/buff
 - **Action:** make the central scheduler's feed set configurable so the operator can drop `psrtrain` and `custodynote` (and optionally `policestationagent`) once per-repo schedulers are live. The override mechanism already exists: `BUFFER_CONTENT_FEEDS` env (parsed by `getContentFeeds()`), with `validateContentFeeds()` warning on missing expected IDs.
 - **Chosen approach (no code churn):** set `BUFFER_CONTENT_FEEDS` in REPUK's Vercel env to `policestationrepuk` only (plus `policestationagent` only if PSA's own GH Action is paused). Documented in `.env.example`. This is reversible and needs no redeploy of logic.
 - **Autotest:** `__tests__/buffer-feeds.test.ts` already validates feed parsing; add a case asserting a single-feed override (`policestationrepuk`) yields exactly one feed and logs the missing-IDs warning (expected, not an error).
+- **Credentials + channel IDs:** canonical reference in `docs/buffer-cross-site-env.md`. Propagate to psrtrain/custodynote with `npm run buffer:sync-env` (reads `BUFFER_API_KEY` from this repo's `.env.local`).
 
 ## 7. Autotests (this site)
 

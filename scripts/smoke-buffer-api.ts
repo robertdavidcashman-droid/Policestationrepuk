@@ -3,11 +3,36 @@
  * Read-only Buffer API smoke test — verifies key, org, and channel IDs.
  * Usage: npm run buffer:smoke
  */
+import { existsSync, readFileSync } from 'fs';
+import { resolve } from 'path';
 import {
   getBufferApiKey,
   getBufferChannels,
   getBufferOrganizationId,
 } from '../lib/buffer/config';
+
+function loadEnvFile(filename: string) {
+  const p = resolve(process.cwd(), filename);
+  if (!existsSync(p)) return;
+  for (const line of readFileSync(p, 'utf8').split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq <= 0) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (!process.env[key]) process.env[key] = value;
+  }
+}
+
+loadEnvFile('.env.local');
+loadEnvFile('.env.vercel.production');
 
 const BUFFER_API_URL = 'https://api.buffer.com';
 
