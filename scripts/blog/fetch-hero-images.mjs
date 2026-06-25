@@ -149,6 +149,21 @@ const UNSPLASH_PHOTOS = {
     credit: 'Krists Luhaers / Unsplash',
     description: 'Row of law books lined up along a shelf',
   },
+  'accredited-reps-keep-availability-updated': {
+    id: 'photo-1673196649617-3f644ab5de74',
+    credit: 'Maria / Unsplash',
+    description: 'Analog clock and calendar on a desk beside a laptop',
+  },
+  'keep-directory-profile-useful': {
+    id: 'photo-1759752394397-3c745feb24e0',
+    credit: 'Bluestonex / Unsplash',
+    description: 'Person typing on a laptop at a wooden desk',
+  },
+  'police-station-rep-coverage-location-matters': {
+    id: 'photo-1642009071428-119813340e22',
+    credit: 'Illia Panasenko / Unsplash',
+    description: 'Map of Europe with location pins for coverage planning',
+  },
 };
 
 /** Optional Pexels topical queries used only when PEXELS_API_KEY is set. */
@@ -175,6 +190,9 @@ const PEXELS_QUERIES = {
   'handling-disclosure-police-station': 'lawyer reviewing folder documents office',
   'adverse-inference-no-comment-rep-guide': 'gavel dark background close up',
   'sentencing-act-2026-key-changes': 'law books shelf library legal',
+  'accredited-reps-keep-availability-updated': 'clock calendar desk laptop office',
+  'keep-directory-profile-useful': 'person typing laptop desk professional',
+  'police-station-rep-coverage-location-matters': 'europe map pins location planning',
 };
 
 function unsplashUrl(photoId, width) {
