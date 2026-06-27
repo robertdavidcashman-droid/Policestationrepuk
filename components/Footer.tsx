@@ -47,6 +47,10 @@ import {
 const footerLinkClassName =
   'inline-block py-0.5 text-sm leading-snug !text-[var(--footer-link)] no-underline transition-colors hover:!text-[var(--footer-link-hover)]';
 
+/** Set to the directory's Google Business Profile URL to surface the link. */
+const GOOGLE_BUSINESS_PROFILE_URL =
+  process.env.NEXT_PUBLIC_GOOGLE_BUSINESS_PROFILE_URL?.trim();
+
 function FooterLinkItem({ link }: { link: FooterLink }) {
   if (link.external) {
     return (
@@ -374,6 +378,16 @@ export function Footer() {
           >
             {FOOTER_UTILITY_RSS_LABEL}
           </Link>
+          {GOOGLE_BUSINESS_PROFILE_URL && (
+            <a
+              href={GOOGLE_BUSINESS_PROFILE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-[44px] items-center px-2 text-xs !text-[var(--footer-link)] no-underline hover:!text-[var(--footer-link-hover)]"
+            >
+              Google Business Profile
+            </a>
+          )}
           <button
             type="button"
             className="inline-flex min-h-[44px] items-center px-2 text-xs font-medium !text-[var(--footer-link)] transition-colors hover:!text-[var(--footer-link-hover)]"

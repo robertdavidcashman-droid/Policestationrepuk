@@ -52,6 +52,55 @@ test.describe('Neutrality and directory smoke — desktop', () => {
       await expect(promoted.first()).toBeVisible();
     }
   });
+
+  test('rep spotlight is fair, free and not buyable', async ({ page }) => {
+    await page.goto('/');
+    const spotlight = page.locator('#rep-spotlight-heading');
+    await expect(spotlight).toBeVisible();
+    await expect(page.getByText(/rep of the month/i).first()).toBeVisible();
+    // Neutrality guardrail: spotlight must declare it cannot be bought.
+    await expect(page.getByText(/placement cannot be bought/i)).toBeVisible();
+    await expect(page.getByText(/rotates automatically and fairly/i)).toBeVisible();
+  });
+
+  test('Kent urgent cover CTA routes to community WhatsApp neutrally', async ({ page }) => {
+    await page.goto('/directory/kent');
+    await expect(page.getByText(/need urgent cover in kent\?/i)).toBeVisible();
+    // Must be fair to all reps — no priority for any single rep.
+    await expect(page.getByText(/no rep is given priority/i)).toBeVisible();
+    const waLink = page.getByRole('link', { name: /post in the whatsapp group/i });
+    await expect(waLink).toBeVisible();
+    await expect(waLink).toHaveAttribute('href', '/WhatsApp');
+  });
+});
+
+test.describe('Lead capture and FAQ schema on high-intent pages', () => {
+  const EMAIL_PAGES = [
+    '/PoliceStationRates',
+    '/PACE',
+    '/DSCCRegistrationGuide',
+    '/HowToBecomePoliceStationRep',
+  ];
+
+  for (const path of EMAIL_PAGES) {
+    test(`email capture present on ${path}`, async ({ page }) => {
+      const res = await page.goto(path);
+      expect(res?.status()).toBeLessThan(400);
+      await expect(page.locator('input[type="email"]').first()).toBeVisible();
+    });
+  }
+
+  const FAQ_SCHEMA_PAGES = ['/DSCCRegistrationGuide', '/HowToBecomePoliceStationRep'];
+
+  for (const path of FAQ_SCHEMA_PAGES) {
+    test(`FAQPage JSON-LD present on ${path}`, async ({ page }) => {
+      await page.goto(path);
+      const ldBlocks = await page
+        .locator('script[type="application/ld+json"]')
+        .allTextContents();
+      expect(ldBlocks.join('\n')).toContain('FAQPage');
+    });
+  }
 });
 
 test.describe('Accessibility (axe — serious/critical only)', () => {

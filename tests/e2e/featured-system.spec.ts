@@ -1,5 +1,23 @@
 import { test, expect } from '@playwright/test';
 
+/**
+ * Filters out environment-only console noise so the assertion focuses on real
+ * app errors. Vercel Speed Insights / Analytics scripts are blocked by the CSP
+ * when served off-Vercel locally — that is not an application error.
+ */
+function isAppConsoleError(message: string): boolean {
+  return (
+    !message.includes('favicon') &&
+    !message.includes('404') &&
+    !message.includes('net::ERR') &&
+    !message.includes('va.vercel-scripts.com') &&
+    !message.includes('_vercel/speed-insights') &&
+    !message.includes('_vercel/insights') &&
+    !message.includes('speed-insights/script') &&
+    !message.includes('Content Security Policy')
+  );
+}
+
 test.describe('Featured System — Public Display', () => {
   test('homepage loads with featured carousel', async ({ page }) => {
     await page.goto('/');
@@ -144,9 +162,7 @@ test.describe('Featured System — Regression', () => {
     });
     await page.goto('/');
     await page.waitForTimeout(3000);
-    const criticalErrors = errors.filter(
-      (e) => !e.includes('favicon') && !e.includes('404') && !e.includes('net::ERR'),
-    );
+    const criticalErrors = errors.filter(isAppConsoleError);
     expect(criticalErrors).toHaveLength(0);
   });
 
@@ -157,9 +173,7 @@ test.describe('Featured System — Regression', () => {
     });
     await page.goto('/directory');
     await page.waitForTimeout(3000);
-    const criticalErrors = errors.filter(
-      (e) => !e.includes('favicon') && !e.includes('404') && !e.includes('net::ERR'),
-    );
+    const criticalErrors = errors.filter(isAppConsoleError);
     expect(criticalErrors).toHaveLength(0);
   });
 

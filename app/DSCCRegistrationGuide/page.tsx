@@ -2,7 +2,21 @@ import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
-import { buildMetadata } from '@/lib/seo';
+import { GuideEmailCapture } from '@/components/GuideEmailCapture';
+import { JsonLd } from '@/components/JsonLd';
+import { buildMetadata, faqPageSchema } from '@/lib/seo';
+
+/** Strip HTML tags / decode the few entities used in FAQ answers for clean JSON-LD text. */
+function faqToPlainText(value: string): string {
+  return value
+    .replace(/<[^>]+>/g, '')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .trim();
+}
 
 export const metadata = buildMetadata({
   title: 'DSCC Registration Guide — How the Duty Call Flow Works (2026)',
@@ -194,6 +208,11 @@ function SectionHeading({ id, children }: { id: string; children: React.ReactNod
 export default function DSCCRegistrationGuidePage() {
   return (
     <>
+      <JsonLd
+        data={faqPageSchema(
+          FAQS.map((faq) => ({ q: faqToPlainText(faq.q), a: faqToPlainText(faq.a) })),
+        )}
+      />
       <section className="bg-[var(--navy)] py-12 sm:py-16">
         <div className="page-container !py-0">
           <Breadcrumbs
@@ -513,6 +532,15 @@ export default function DSCCRegistrationGuidePage() {
               ))}
             </div>
           </section>
+
+          <GuideEmailCapture
+            className="mb-12"
+            title="Get the DSCC duty call-flow guide by email"
+            description="A clear summary of the call flow, ADMIN forms, and PIN allocation — useful when training new reps. No spam."
+            source="dscc-guide"
+            leadMagnet="DSCC registration & call-flow guide"
+            buttonLabel="Email me the guide"
+          />
 
           <ResolvedContentSources
             id="sources"

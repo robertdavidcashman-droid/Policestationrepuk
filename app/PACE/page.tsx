@@ -3,6 +3,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
+import { GuideEmailCapture } from '@/components/GuideEmailCapture';
 import { buildMetadata } from '@/lib/seo';
 import { PoliceStationAgentKentCta } from '@/components/PoliceStationAgentKentCta';
 
@@ -289,6 +290,15 @@ export default function PACEPage() {
           placement="pace_page"
         />
       </section>
+
+      <GuideEmailCapture
+        className="mt-10"
+        title="Get the PACE quick-reference by email"
+        description="Detention clock, review times, and caution wording on one page — keep it on your phone for custody. No spam."
+        source="pace-page"
+        leadMagnet="PACE Codes quick-reference"
+        buttonLabel="Email me the guide"
+      />
 
       <ResolvedContentSources className="mt-10" context={{ kind: 'page', path: '/PACE' }} />
     </div>

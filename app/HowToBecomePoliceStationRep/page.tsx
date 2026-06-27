@@ -4,7 +4,21 @@ import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice'
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { PsrTrainPromo } from '@/components/PsrTrainPromo';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
-import { buildMetadata } from '@/lib/seo';
+import { GuideEmailCapture } from '@/components/GuideEmailCapture';
+import { JsonLd } from '@/components/JsonLd';
+import { buildMetadata, faqPageSchema } from '@/lib/seo';
+
+/** Strip HTML tags / decode the few entities used in FAQ answers for clean JSON-LD text. */
+function faqToPlainText(value: string): string {
+  return value
+    .replace(/<[^>]+>/g, '')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .trim();
+}
 
 export const metadata = buildMetadata({
   title: 'How to Become a Police Station Representative — Complete 2026 Guide',
@@ -221,6 +235,11 @@ function SectionHeading({ id, children }: { id: string; children: React.ReactNod
 export default function HowToBecomePage() {
   return (
     <>
+      <JsonLd
+        data={faqPageSchema(
+          FAQS.map((faq) => ({ q: faqToPlainText(faq.q), a: faqToPlainText(faq.a) })),
+        )}
+      />
       <section className="bg-[var(--navy)] py-12 sm:py-16">
         <div className="page-container !py-0">
           <Breadcrumbs
@@ -657,6 +676,15 @@ export default function HowToBecomePage() {
               ))}
             </div>
           </section>
+
+          <GuideEmailCapture
+            className="mb-12"
+            title="Get the 'how to become a rep' roadmap by email"
+            description="The full route — accreditation steps, costs, timelines, and finding a supervising firm — in one summary. No spam."
+            source="become-a-rep"
+            leadMagnet="How to become a police station rep — roadmap"
+            buttonLabel="Email me the roadmap"
+          />
 
           {/* Related */}
           <section className="mb-12">

@@ -109,6 +109,27 @@ export default async function DirectoryCountyPage({ params }: PageProps) {
         <DirectoryComplianceNotice className="mb-8" />
 
         {countySlug === "kent" && (
+          <div className="mb-8 rounded-2xl border border-[var(--navy)]/15 bg-[var(--navy)]/[0.03] p-6">
+            <p className="text-sm font-bold uppercase tracking-wider text-[var(--navy)]">
+              Need urgent cover in Kent?
+            </p>
+            <p className="mt-2 text-sm text-slate-700">
+              Post your request in the community WhatsApp group — any available Kent
+              representative can pick it up. This is open to all accredited reps
+              listed here; no rep is given priority.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <Link href="/WhatsApp" className="btn-gold !text-sm no-underline">
+                Post in the WhatsApp group
+              </Link>
+              <a href="#reps" className="btn-outline !text-sm no-underline">
+                Browse Kent reps
+              </a>
+            </div>
+          </div>
+        )}
+
+        {countySlug === "kent" && (
           <div className="mb-8 rounded-2xl border-2 border-[var(--gold)]/40 bg-[var(--gold-pale)]/30 p-6">
             <AdvertisementLabel variant="gold" label="Advertisement" />
             <p className="mt-2 text-xs font-bold uppercase tracking-wider text-[var(--navy)]">
@@ -131,7 +152,7 @@ export default async function DirectoryCountyPage({ params }: PageProps) {
         <CustodyNotePagePromo variant="compact" className="mb-8" />
 
         {/* Reps grid */}
-        <section>
+        <section id="reps" className="scroll-mt-24">
           <h2 className="text-xl font-bold text-[var(--navy)] sm:text-2xl">
             Representatives in {county.name}
           </h2>

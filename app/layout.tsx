@@ -5,6 +5,7 @@ import { PromoBannerStack } from '@/components/PromoBannerStack';
 import { Footer } from '@/components/Footer';
 import { SiteWidePromoStrip } from '@/components/SiteWidePromoStrip';
 import { GoogleAnalytics } from '@/components/GoogleAnalytics';
+import { GoogleTagManager, GoogleTagManagerNoScript } from '@/components/GoogleTagManager';
 import { AnalyticsEventBinder } from '@/components/AnalyticsEventBinder';
 import { DeferredGlobalWidgets } from '@/components/DeferredGlobalWidgets';
 import { Suspense } from 'react';
@@ -111,8 +112,11 @@ export default function RootLayout({
           href="/rss.xml"
         />
         <link rel="alternate" type="text/plain" title="LLM discovery" href="/llms.txt" />
+        {/* Google Tag Manager — only injected when NEXT_PUBLIC_GTM_ID is set */}
+        <GoogleTagManager />
       </head>
       <body className="flex min-h-screen min-h-[100dvh] flex-col overflow-x-clip bg-[var(--background)] font-sans text-[var(--foreground)] antialiased">
+        <GoogleTagManagerNoScript />
         <AssistantUiProvider>
           <JsonLd data={platformLegalServiceSchema()} />
           <JsonLd data={webSiteSchema()} />

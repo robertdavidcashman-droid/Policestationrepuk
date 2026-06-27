@@ -7,6 +7,7 @@ import { ToolsForRepsSection } from '@/components/ToolsForRepsSection';
 import { HomeRecentlyJoined } from '@/components/HomeRecentlyJoined';
 import { HomeTrainingResources } from '@/components/HomeTrainingResources';
 import { HomeFeaturedCarousel } from '@/components/HomeFeaturedCarousel';
+import { RepSpotlight } from '@/components/RepSpotlight';
 import { HomeWhyChoose } from '@/components/HomeWhyChoose';
 import { HomeTestimonials } from '@/components/HomeTestimonials';
 import { HomeBlogPreview } from '@/components/HomeBlogPreview';
@@ -121,6 +122,9 @@ export default async function HomePage() {
       <HomeCommunityWhatsAppPromo />
 
       <HomeRecentlyJoined reps={reps} />
+
+      {/* Free, fairly-rotating spotlight — placement cannot be bought */}
+      <RepSpotlight reps={reps} />
 
       <div className="cv-auto">
         <LegalDirectoryPromo variant="section" />
