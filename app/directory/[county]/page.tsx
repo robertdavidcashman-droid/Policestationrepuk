@@ -10,6 +10,7 @@ import { StationCard } from '@/components/StationCard';
 import { DirectoryComplianceNotice } from '@/components/DirectoryComplianceNotice';
 import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCredentialVerificationNotice';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
+import { AdvertisementLabel } from '@/components/AdvertisementLabel';
 import { POLICESTATIONAGENT_KENT_RESOURCES_HREF } from '@/lib/policestationagent-promo';
 
 export const dynamic = 'force-static';
@@ -109,7 +110,8 @@ export default async function DirectoryCountyPage({ params }: PageProps) {
 
         {countySlug === "kent" && (
           <div className="mb-8 rounded-2xl border-2 border-[var(--gold)]/40 bg-[var(--gold-pale)]/30 p-6">
-            <p className="text-xs font-bold uppercase tracking-wider text-[var(--navy)]">
+            <AdvertisementLabel variant="gold" label="Advertisement" />
+            <p className="mt-2 text-xs font-bold uppercase tracking-wider text-[var(--navy)]">
               Kent duty solicitor resource
             </p>
             <p className="mt-2 text-sm text-slate-700">

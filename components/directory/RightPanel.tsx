@@ -6,6 +6,7 @@ import { DirectoryCard } from '@/components/DirectoryCard';
 import { JoinCTA } from '@/components/directory/JoinCTA';
 import { CustodyNoteInlineCTA } from '@/components/CustodyNoteInlineCTA';
 import { SidebarKentAgentPromo, SidebarWhatsAppPromo } from '@/components/directory/SidebarCrossPromos';
+import { AdvertisementLabel } from '@/components/AdvertisementLabel';
 
 interface RightPanelProps {
   featuredReps: Representative[];
@@ -50,6 +51,7 @@ export function RightPanel({ featuredReps, totalReps }: RightPanelProps) {
       {/* Featured spotlight */}
       {topFeatured.length > 0 && (
         <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm">
+          <AdvertisementLabel label="Featured listings (paid placement)" className="mb-2" />
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-bold text-[var(--navy)]">Featured reps</h3>
             <Link

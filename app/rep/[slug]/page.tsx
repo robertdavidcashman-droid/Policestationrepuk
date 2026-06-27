@@ -326,23 +326,31 @@ export default async function RepPage({ params }: PageProps) {
               <CustodyNotePagePromo variant="compact" className="!my-0" />
 
               {rep.websiteUrl && (
-                <a
-                  href={withSisterSiteUtm(
-                    rep.websiteUrl,
-                    rep.slug === 'robert-cashman' ? 'rep_profile_kent' : 'rep_profile',
+                <div>
+                  {rep.slug === "robert-cashman" && (
+                    <p className="mb-2 text-xs text-slate-500">
+                      This link goes to the listing owner&apos;s own commercial service — separate from
+                      PoliceStationRepUK directory listings.
+                    </p>
                   )}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`block w-full rounded-xl border py-3 text-center text-sm font-semibold no-underline hover:bg-slate-50 ${
-                    rep.slug === "robert-cashman"
-                      ? "border-[var(--gold)] bg-[var(--gold-pale)]/50 text-[var(--navy)]"
-                      : "border-slate-200 text-[var(--navy)]"
-                  }`}
-                >
-                  {rep.slug === "robert-cashman"
-                    ? "Kent duty solicitor — free resources & representation →"
-                    : "External website →"}
-                </a>
+                  <a
+                    href={withSisterSiteUtm(
+                      rep.websiteUrl,
+                      rep.slug === 'robert-cashman' ? 'rep_profile_kent' : 'rep_profile',
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`block w-full rounded-xl border py-3 text-center text-sm font-semibold no-underline hover:bg-slate-50 ${
+                      rep.slug === "robert-cashman"
+                        ? "border-[var(--gold)] bg-[var(--gold-pale)]/50 text-[var(--navy)]"
+                        : "border-slate-200 text-[var(--navy)]"
+                    }`}
+                  >
+                    {rep.slug === "robert-cashman"
+                      ? "Kent duty solicitor — free resources & representation →"
+                      : "External website →"}
+                  </a>
+                </div>
               )}
             </div>
           </div>
