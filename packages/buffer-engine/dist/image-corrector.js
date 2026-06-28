@@ -69,11 +69,12 @@ async function ensureCompliantPostImage(options) {
     try {
         const raw = await fetchImageBytes(options.sourceImageUrl, fetchFn);
         const { buffer, contentType } = await transcodeToCompliant(raw, options.preferPng ?? false);
+        // transcodeToCompliant guarantees JPEG/PNG magic bytes and <= 5MB.
+        if (buffer.length > image_url_1.BUFFER_MAX_IMAGE_BYTES || !(0, image_url_1.isJpegOrPngMagicBytes)(new Uint8Array(buffer.subarray(0, 16)))) {
+            return null;
+        }
         (0, node_fs_1.mkdirSync)((0, node_path_1.dirname)(absPath), { recursive: true });
         (0, node_fs_1.writeFileSync)(absPath, buffer);
-        const verify = await (0, image_url_1.probeBufferImageUrl)(publicUrl, fetchFn, options.siteUrl);
-        if (!verify.ok)
-            return null;
         return {
             publicUrl,
             publicPath: relPath,

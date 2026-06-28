@@ -7,6 +7,7 @@ import {
   probeBufferImageUrl,
   probeGoogleBusinessImageUrl,
 } from './image-url';
+// probeGoogleBusinessImageUrl re-exported for ensureCompliantGoogleBusinessImage below.
 import type { CorrectedImageResult } from './types';
 
 export interface ImageCorrectorOptions {
@@ -91,11 +92,14 @@ export async function ensureCompliantPostImage(
   try {
     const raw = await fetchImageBytes(options.sourceImageUrl, fetchFn);
     const { buffer, contentType } = await transcodeToCompliant(raw, options.preferPng ?? false);
+
+    // transcodeToCompliant guarantees JPEG/PNG magic bytes and <= 5MB.
+    if (buffer.length > BUFFER_MAX_IMAGE_BYTES || !isJpegOrPngMagicBytes(new Uint8Array(buffer.subarray(0, 16)))) {
+      return null;
+    }
+
     mkdirSync(dirname(absPath), { recursive: true });
     writeFileSync(absPath, buffer);
-
-    const verify = await probeBufferImageUrl(publicUrl, fetchFn, options.siteUrl);
-    if (!verify.ok) return null;
 
     return {
       publicUrl,
