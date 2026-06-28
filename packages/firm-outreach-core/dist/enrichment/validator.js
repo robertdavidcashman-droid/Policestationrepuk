@@ -53,6 +53,8 @@ function isPlausibleOutreachEmail(email) {
         return false;
     if (JUNK_EMAIL_DOMAIN_PATTERNS.some((re) => re.test(domain)))
         return false;
+    if (shared_constants_1.OPERATOR_OUTREACH_EMAILS.has(norm))
+        return false;
     if (isNonFirmEmailDomain(norm))
         return false;
     return true;

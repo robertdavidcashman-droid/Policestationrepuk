@@ -36,11 +36,25 @@ export const DIRECTORY_DOMAINS = [
   'wixsite.com',
 ] as const;
 
+/** Robert's own sites — never firm homepages; crawling them picks up directory/rep emails. */
+export const OWN_SITE_DOMAINS = [
+  'policestationrepuk.org',
+  'policestationrepuk.com',
+  'policestationagent.com',
+  'psrtrain.com',
+  'custodynote.com',
+] as const;
+
 const FIRM_NAME_STOPWORDS = new Set(['ltd', 'limited', 'llp', 'solicitors', 'solicitor', 'the']);
+
+export function isOwnSiteUrl(url: string): boolean {
+  const ul = url.toLowerCase();
+  return OWN_SITE_DOMAINS.some((d) => ul.includes(d));
+}
 
 export function isDirectoryOrSocialUrl(url: string): boolean {
   const ul = url.toLowerCase();
-  return DIRECTORY_DOMAINS.some((d) => ul.includes(d));
+  return isOwnSiteUrl(url) || DIRECTORY_DOMAINS.some((d) => ul.includes(d));
 }
 
 export function firmNameTokens(firmName: string): string[] {

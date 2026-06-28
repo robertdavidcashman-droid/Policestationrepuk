@@ -54,7 +54,8 @@ export function scoreEmailCandidate(
 
   if (onFirmDomain) score += 20;
   else if (isFree) {
-    score -= opts.prospectType === 'firm' ? 25 : 5;
+    if (opts.prospectType === 'solicitor') return 0;
+    score -= 25;
   } else if (siteDomain) {
     // Firm's own website domain is known, but this address is on neither it nor
     // a free/ISP provider — most likely a third-party address scraped from the

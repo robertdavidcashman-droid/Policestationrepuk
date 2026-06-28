@@ -74,6 +74,12 @@ export const FREE_EMAIL_DOMAINS = new Set([
   'blueyonder.co.uk',
 ]);
 
+/** Operator inboxes — must never be selected as a firm/solicitor outreach target. */
+export const OPERATOR_OUTREACH_EMAILS = new Set([
+  'robertdavidcashman@gmail.com',
+  'robertcashman@defencelegalservices.co.uk',
+]);
+
 /**
  * Registrable domains that appear in firm website footers, badges, widgets,
  * directories, review sites, CDNs and analytics — never a firm's own contact

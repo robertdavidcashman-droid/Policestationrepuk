@@ -1,4 +1,5 @@
 import { isPlausibleOutreachEmail } from './enrichment/validator';
+import { isOwnSiteUrl } from './enrichment/website-discovery';
 import { getProspect, listProspectsByStatus, saveProspect } from './storage';
 import type { FirmProspectStatus } from './types';
 
@@ -8,6 +9,7 @@ export interface CleanupNonFirmEmailsTarget {
   firmName: string;
   email: string;
   campaignId: string;
+  reason: 'bad_email' | 'own_site_website';
 }
 
 export interface CleanupNonFirmEmailsResult {
@@ -56,17 +58,21 @@ export async function cleanupNonFirmProspectEmails(opts?: {
   }
 
   for (const p of prospects) {
-    if (!p.email) continue;
     if (SKIP_STATUSES.has(p.status)) continue;
     if (campaignId && p.campaignId !== campaignId) continue;
     scanned++;
-    if (!isPlausibleOutreachEmail(p.email)) {
+
+    const ownSite = p.websiteUrl && isOwnSiteUrl(p.websiteUrl);
+    const badEmail = p.email && !isPlausibleOutreachEmail(p.email);
+
+    if (ownSite || badEmail) {
       targets.push({
         id: p.id,
         status: p.status,
         firmName: p.firmName,
-        email: p.email,
+        email: p.email ?? '',
         campaignId: p.campaignId,
+        reason: ownSite ? 'own_site_website' : 'bad_email',
       });
     }
   }
@@ -78,12 +84,18 @@ export async function cleanupNonFirmProspectEmails(opts?: {
   let reset = 0;
   for (const t of targets) {
     const p = await getProspect(t.id);
-    if (!p?.email || isPlausibleOutreachEmail(p.email)) continue;
+    if (!p) continue;
+    const stillBadEmail = p.email && !isPlausibleOutreachEmail(p.email);
+    const stillOwnSite = p.websiteUrl && isOwnSiteUrl(p.websiteUrl);
+    if (!stillBadEmail && !stillOwnSite) continue;
+
     const previousStatus = p.status;
     p.status = 'discovered';
     delete p.email;
     delete p.emailConfidence;
     delete p.emailScore;
+    delete p.alternativeEmails;
+    if (stillOwnSite) delete p.websiteUrl;
     await saveProspect(p, previousStatus);
     reset++;
   }

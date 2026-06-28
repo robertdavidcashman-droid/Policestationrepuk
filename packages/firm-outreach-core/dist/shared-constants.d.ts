@@ -2,6 +2,8 @@ export declare const CONTACT_PATHS: readonly ["/", "/contact", "/contact-us", "/
 export declare const REJECTED_EMAIL_LOCALS: Set<string>;
 export declare const PREFERRED_EMAIL_LOCALS: Record<string, number>;
 export declare const FREE_EMAIL_DOMAINS: Set<string>;
+/** Operator inboxes — must never be selected as a firm/solicitor outreach target. */
+export declare const OPERATOR_OUTREACH_EMAILS: Set<string>;
 /**
  * Registrable domains that appear in firm website footers, badges, widgets,
  * directories, review sites, CDNs and analytics — never a firm's own contact

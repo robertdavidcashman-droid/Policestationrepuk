@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NON_EW_POSTCODE_PREFIXES = exports.COMPETITOR_KEYWORDS = exports.CRIMINAL_KEYWORDS = exports.EXCLUDED_FIRM_PATTERNS = exports.NON_FIRM_EMAIL_DOMAINS = exports.FREE_EMAIL_DOMAINS = exports.PREFERRED_EMAIL_LOCALS = exports.REJECTED_EMAIL_LOCALS = exports.CONTACT_PATHS = void 0;
+exports.NON_EW_POSTCODE_PREFIXES = exports.COMPETITOR_KEYWORDS = exports.CRIMINAL_KEYWORDS = exports.EXCLUDED_FIRM_PATTERNS = exports.NON_FIRM_EMAIL_DOMAINS = exports.OPERATOR_OUTREACH_EMAILS = exports.FREE_EMAIL_DOMAINS = exports.PREFERRED_EMAIL_LOCALS = exports.REJECTED_EMAIL_LOCALS = exports.CONTACT_PATHS = void 0;
 exports.createOutreachEnvHelpers = createOutreachEnvHelpers;
 exports.CONTACT_PATHS = [
     '/',
@@ -73,6 +73,11 @@ exports.FREE_EMAIL_DOMAINS = new Set([
     'virginmedia.com',
     'ntlworld.com',
     'blueyonder.co.uk',
+]);
+/** Operator inboxes — must never be selected as a firm/solicitor outreach target. */
+exports.OPERATOR_OUTREACH_EMAILS = new Set([
+    'robertdavidcashman@gmail.com',
+    'robertcashman@defencelegalservices.co.uk',
 ]);
 /**
  * Registrable domains that appear in firm website footers, badges, widgets,

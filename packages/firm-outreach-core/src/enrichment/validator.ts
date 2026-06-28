@@ -1,5 +1,5 @@
 import dns from 'dns/promises';
-import { FREE_EMAIL_DOMAINS, NON_FIRM_EMAIL_DOMAINS } from '../shared-constants';
+import { FREE_EMAIL_DOMAINS, NON_FIRM_EMAIL_DOMAINS, OPERATOR_OUTREACH_EMAILS } from '../shared-constants';
 import { normalizeEmail, registrableDomain } from '../normalize';
 
 const RFC5322 =
@@ -43,6 +43,7 @@ export function isPlausibleOutreachEmail(email: string): boolean {
   if (!local || !domain) return false;
   if (JUNK_EMAIL_LOCAL_PATTERNS.some((re) => re.test(local))) return false;
   if (JUNK_EMAIL_DOMAIN_PATTERNS.some((re) => re.test(domain))) return false;
+  if (OPERATOR_OUTREACH_EMAILS.has(norm)) return false;
   if (isNonFirmEmailDomain(norm)) return false;
   return true;
 }
