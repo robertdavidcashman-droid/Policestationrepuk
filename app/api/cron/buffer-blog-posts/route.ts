@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sendBufferSchedulerFailureEmail, sendBufferSchedulerSkippedEmail } from '@/lib/buffer/email';
-import { runBufferBlogScheduler } from '@/lib/buffer/scheduler';
+import { runRepukBufferScheduler } from '@/lib/buffer/engine-run';
 import { isCronAuthorized } from '@/lib/cron-auth';
 import { localDateInTimezone } from '@/lib/buffer/scheduler-core';
 import { getSchedulerTimezone } from '@/lib/buffer/config';
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   const force = new URL(request.url).searchParams.get('force') === '1';
 
   try {
-    const result = await runBufferBlogScheduler(new Date(), { force });
+    const result = await runRepukBufferScheduler({ force });
     if (!result.ok) {
       const error = result.reason ?? 'Buffer scheduler failed';
       await sendBufferSchedulerFailureEmail({ error, date: result.date ?? scheduleDate });

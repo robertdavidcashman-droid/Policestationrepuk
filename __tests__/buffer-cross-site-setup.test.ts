@@ -12,11 +12,11 @@ import {
 const ROOT = path.resolve(import.meta.dirname, '..');
 
 describe('buffer cross-site config', () => {
-  it('exports org, channels, and three Vercel projects', () => {
+  it('exports org, channels, and four Vercel projects', () => {
     expect(BUFFER_ORG_ID).toMatch(/^[a-f0-9]{24}$/);
     expect(Object.keys(BUFFER_CHANNELS).length).toBeGreaterThanOrEqual(7);
-    expect(VERCEL_BUFFER_PROJECTS).toHaveLength(3);
-    expect(SIBLING_LOCAL_TARGETS).toHaveLength(2);
+    expect(VERCEL_BUFFER_PROJECTS).toHaveLength(4);
+    expect(SIBLING_LOCAL_TARGETS).toHaveLength(3);
   });
 
   it('REPUK feed reconciliation is local-only JSON', () => {
@@ -24,10 +24,11 @@ describe('buffer cross-site config', () => {
     expect(feeds).toEqual([{ id: 'policestationrepuk', type: 'local' }]);
   });
 
-  it('psrtrain and custodynote have staggered crons', () => {
+  it('psrtrain, custodynote, and psa have staggered schedule crons', () => {
     const crons = VERCEL_BUFFER_PROJECTS.filter((p) => p.cron).map((p) => p.cron);
-    expect(crons).toHaveLength(2);
-    expect(crons[0]?.schedule).not.toBe(crons[1]?.schedule);
+    expect(crons).toHaveLength(3);
+    const schedules = new Set(crons.map((c) => c?.schedule));
+    expect(schedules.size).toBe(3);
     expect(crons.every((c) => c?.path === '/api/buffer/schedule')).toBe(true);
   });
 });

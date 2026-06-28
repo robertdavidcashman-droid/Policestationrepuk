@@ -1,0 +1,1 @@
+{"version":3,"file":"selftest.d.ts","sourceRoot":"","sources":["../src/selftest.ts"],"names":[],"mappings":"AAGA,OAAO,KAAK,EAAE,mBAAmB,EAAE,cAAc,EAAE,MAAM,SAAS,CAAC;AAInE,wBAAsB,qBAAqB,CACzC,OAAO,EAAE,mBAAmB,EAC5B,OAAO,CAAC,EAAE;IAAE,GAAG,CAAC,EAAE,IAAI,CAAA;CAAE,GACvB,OAAO,CAAC,cAAc,CAAC,CAiDzB"}

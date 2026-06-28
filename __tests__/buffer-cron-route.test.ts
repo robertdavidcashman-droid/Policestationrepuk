@@ -5,8 +5,8 @@ const mockRun = vi.fn();
 const mockEmail = vi.fn();
 const mockSkippedEmail = vi.fn();
 
-vi.mock('@/lib/buffer/scheduler', () => ({
-  runBufferBlogScheduler: (...args: unknown[]) => mockRun(...args),
+vi.mock('@/lib/buffer/engine-run', () => ({
+  runRepukBufferScheduler: (...args: unknown[]) => mockRun(...args),
 }));
 
 vi.mock('@/lib/buffer/email', () => ({
@@ -46,7 +46,7 @@ describe('buffer-blog-posts cron route', () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.ok).toBe(true);
-    expect(mockRun).toHaveBeenCalledOnce();
+    expect(mockRun).toHaveBeenCalledWith({ force: false });
   });
 
   it('accepts x-cron-secret header', async () => {
@@ -56,7 +56,7 @@ describe('buffer-blog-posts cron route', () => {
       }),
     );
     expect(res.status).toBe(200);
-    expect(mockRun).toHaveBeenCalledOnce();
+    expect(mockRun).toHaveBeenCalledWith({ force: false });
   });
 
   it('returns 200 with ok false when scheduler reports failure (Resend notified)', async () => {
@@ -94,7 +94,7 @@ describe('buffer-blog-posts cron route', () => {
       }),
     );
     expect(res.status).toBe(200);
-    expect(mockRun).toHaveBeenCalledWith(expect.any(Date), { force: true });
+    expect(mockRun).toHaveBeenCalledWith({ force: true });
   });
 
   it('returns 200 with ok false when GBP preflight fails (Resend notified)', async () => {
