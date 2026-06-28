@@ -1,6 +1,10 @@
 /**
  * Fetch and parse the published LAA "Directory of legal aid providers" spreadsheet.
  * Shared by directory seeding and firm-outreach discovery.
+ *
+ * xlsx (SheetJS) has a prototype-pollution advisory (GHSA-4r6h-8v6p-xvw6).
+ * Risk here is low: we only parse trusted LAA government data, never user uploads.
+ * This module is server-only; xlsx must not be bundled into client JS.
  */
 import { readFileSync, writeFileSync, mkdirSync, statSync } from 'fs';
 import { resolve, dirname } from 'path';

@@ -152,6 +152,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "resend": "^6.9.4",
+    "xlsx": "^0.18.5",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -182,7 +183,9 @@
     "tailwindcss": "^4.0.14",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2",
-    "vitest": "^4.1.2",
-    "xlsx": "^0.18.5"
+    "vitest": "^4.1.2"
+  },
+  "overrides": {
+    "tmp": "0.2.7"
   }
 }
