@@ -88,4 +88,54 @@ describe('ensureCompliantPostImage', () => {
     });
     expect(result).toBeNull();
   });
+
+  it('falls back to the source image when the transcoded buffer path is not live', async () => {
+    const jpeg = await sharp({
+      create: { width: 1000, height: 700, channels: 3, background: '#557799' },
+    })
+      .jpeg()
+      .toBuffer();
+
+    const sourceUrl = 'https://cdn.example.com/fallback-source.jpg';
+    // The transcoded path lives under the site host; production has not yet
+    // deployed the file so a probe of it must fail.
+    let sourceHeadCalls = 0;
+    const fetchFn = (async (input: string | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      const method = (init?.method ?? 'GET').toUpperCase();
+
+      if (url.startsWith(sourceUrl)) {
+        if (method === 'HEAD') {
+          sourceHeadCalls += 1;
+          // First probe (pre-transcode) fails on content-type so we transcode;
+          // the post-write fallback probe succeeds, exercising the new branch.
+          const contentType = sourceHeadCalls === 1 ? 'application/octet-stream' : 'image/jpeg';
+          return new Response(null, {
+            status: 200,
+            headers: new Headers({ 'content-type': contentType, 'content-length': String(jpeg.length) }),
+          });
+        }
+        return new Response(jpeg, {
+          status: 200,
+          headers: new Headers({ 'content-type': 'image/jpeg', 'content-length': String(jpeg.length) }),
+        });
+      }
+
+      // The transcoded buffer path on the site host is not live yet.
+      return new Response(null, { status: 404, headers: new Headers() });
+    }) as unknown as typeof fetch;
+
+    const result = await ensureCompliantPostImage({
+      siteId: 'test',
+      siteUrl: 'https://example.com',
+      slug: 'fallback',
+      sourceImageUrl: sourceUrl,
+      publicDir,
+      fetchFn,
+    });
+
+    expect(result).not.toBeNull();
+    expect(result?.publicUrl).toBe(sourceUrl);
+    expect(result?.contentType).toBe('image/jpeg');
+  });
 });
