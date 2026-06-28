@@ -1,6 +1,5 @@
 import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import sharp from 'sharp';
 import {
   BUFFER_MAX_IMAGE_BYTES,
   isJpegOrPngMagicBytes,
@@ -9,6 +8,20 @@ import {
 } from './image-url';
 // probeGoogleBusinessImageUrl re-exported for ensureCompliantGoogleBusinessImage below.
 import type { CorrectedImageResult } from './types';
+
+/**
+ * Lazily load `sharp` only when an image actually needs transcoding.
+ *
+ * `sharp` is a native module. Importing it at module-eval time makes Next.js
+ * attempt to load its platform binary while *collecting page data* during
+ * `next build`, which fails on CI/Vercel (linux-x64) and aborts the build.
+ * Deferring the import keeps the build static-analysis safe; the binary is only
+ * required at runtime inside the scheduler cron, which never runs at build time.
+ */
+async function loadSharp() {
+  const mod = await import('sharp');
+  return (mod as unknown as { default?: typeof import('sharp') }).default ?? (mod as unknown as typeof import('sharp'));
+}
 
 export interface ImageCorrectorOptions {
   siteId: string;
@@ -33,6 +46,7 @@ async function transcodeToCompliant(
   input: Buffer,
   preferPng: boolean,
 ): Promise<{ buffer: Buffer; contentType: 'image/jpeg' | 'image/png' }> {
+  const sharp = await loadSharp();
   let quality = 82;
   let width = 1600;
 

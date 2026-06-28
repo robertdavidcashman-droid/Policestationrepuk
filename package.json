@@ -135,7 +135,7 @@
     "firm-outreach:configure-resend": "node scripts/resend-configure-webhook.mjs"
   },
   "dependencies": {
-    "@robertcashman/buffer-engine": "file:./packages/buffer-engine",
+    "@robertcashman/buffer-engine": "file:packages/buffer-engine",
     "@robertcashman/firm-outreach-core": "file:./packages/firm-outreach-core",
     "@robertcashman/seo-growth-content": "file:./packages/seo-growth-content",
     "@sentry/nextjs": "^10.58.0",

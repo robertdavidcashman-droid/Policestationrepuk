@@ -10,6 +10,10 @@ const siteBuildDate = new Date().toISOString().slice(0, 10);
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@robertcashman/firm-outreach-core'],
+  // `sharp` (used by @robertcashman/buffer-engine image correction) is a native
+  // module that must not be bundled/traced into the server build, or `next build`
+  // fails trying to load its linux-x64 binary while collecting page data.
+  serverExternalPackages: ['sharp'],
   turbopack: {
     resolveAlias: {
       '@robertcashman/firm-outreach-core': './packages/firm-outreach-core',

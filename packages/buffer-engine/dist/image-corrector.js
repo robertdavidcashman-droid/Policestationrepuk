@@ -1,15 +1,57 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ensureCompliantPostImage = ensureCompliantPostImage;
 exports.ensureCompliantGoogleBusinessImage = ensureCompliantGoogleBusinessImage;
 exports.correctedImageExists = correctedImageExists;
 const node_fs_1 = require("node:fs");
 const node_path_1 = require("node:path");
-const sharp_1 = __importDefault(require("sharp"));
 const image_url_1 = require("./image-url");
+/**
+ * Lazily load `sharp` only when an image actually needs transcoding.
+ *
+ * `sharp` is a native module. Importing it at module-eval time makes Next.js
+ * attempt to load its platform binary while *collecting page data* during
+ * `next build`, which fails on CI/Vercel (linux-x64) and aborts the build.
+ * Deferring the import keeps the build static-analysis safe; the binary is only
+ * required at runtime inside the scheduler cron, which never runs at build time.
+ */
+async function loadSharp() {
+    const mod = await Promise.resolve().then(() => __importStar(require('sharp')));
+    return mod.default ?? mod;
+}
 async function fetchImageBytes(url, fetchFn) {
     const res = await fetchFn(url, {
         redirect: 'follow',
@@ -20,10 +62,11 @@ async function fetchImageBytes(url, fetchFn) {
     return Buffer.from(await res.arrayBuffer());
 }
 async function transcodeToCompliant(input, preferPng) {
+    const sharp = await loadSharp();
     let quality = 82;
     let width = 1600;
     for (let attempt = 0; attempt < 8; attempt++) {
-        const pipeline = (0, sharp_1.default)(input).rotate().resize({ width, withoutEnlargement: true });
+        const pipeline = sharp(input).rotate().resize({ width, withoutEnlargement: true });
         const buffer = preferPng
             ? await pipeline.png({ compressionLevel: 9 }).toBuffer()
             : await pipeline.jpeg({ quality, mozjpeg: true }).toBuffer();
@@ -36,7 +79,7 @@ async function transcodeToCompliant(input, preferPng) {
         quality = Math.max(55, quality - 8);
         width = Math.max(800, Math.floor(width * 0.85));
     }
-    const buffer = await (0, sharp_1.default)(input)
+    const buffer = await sharp(input)
         .rotate()
         .resize({ width: 720, withoutEnlargement: true })
         .jpeg({ quality: 70, mozjpeg: true })
