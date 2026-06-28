@@ -1,5 +1,8 @@
 # dependencies
 /node_modules
+# Nested workspace package deps (e.g. packages/buffer-engine) — never commit;
+# committing them ships platform-specific native binaries that break Linux CI.
+**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
