@@ -125,6 +125,9 @@ function postMetadataForService(service: BufferChannelService, url: string): Rec
       },
     };
   }
+  if (service === 'facebook') {
+    return { facebook: { type: 'post' } };
+  }
   return undefined;
 }
 

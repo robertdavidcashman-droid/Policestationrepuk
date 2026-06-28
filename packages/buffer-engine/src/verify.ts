@@ -1,6 +1,6 @@
 import { listPostsInWindow } from './client';
 import { getSiteBufferEnvConfig, MIN_POSTS_PER_DAY } from './config';
-import { localDateInTimezone, addDaysToLocalDate } from './scheduler-core';
+import { localDateInTimezone, addDaysToLocalDate, timezoneOffsetForDate } from './scheduler-core';
 import type { BufferEngineAdapter, VerifyResult } from './types';
 import { runSiteBufferScheduler } from './scheduler';
 import { siteHostnameFromUrl } from './metrics';
@@ -18,8 +18,9 @@ export async function verifySiteBufferSchedule(
     return { ok: false, date: localDate, scheduledCount: 0, requiredCount: env.postsPerDay, gapFilled: 0, issues: ['BUFFER_API_KEY missing'] };
   }
 
-  const dayStart = `${localDate}T00:00:00`;
-  const dayEnd = `${addDaysToLocalDate(localDate, 1)}T00:00:00`;
+  const offset = timezoneOffsetForDate(localDate, env.timezone);
+  const dayStart = `${localDate}T00:00:00${offset}`;
+  const dayEnd = `${addDaysToLocalDate(localDate, 1)}T00:00:00${offset}`;
   const hostname = siteHostnameFromUrl(adapter.siteUrl);
 
   const scheduled = await listPostsInWindow(env.apiKey, env.organizationId, {

@@ -83,6 +83,9 @@ function postMetadataForService(service, url) {
             },
         };
     }
+    if (service === 'facebook') {
+        return { facebook: { type: 'post' } };
+    }
     return undefined;
 }
 async function createScheduledBufferPost(apiKey, input) {

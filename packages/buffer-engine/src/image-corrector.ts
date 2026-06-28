@@ -115,6 +115,19 @@ export async function ensureCompliantPostImage(
     mkdirSync(dirname(absPath), { recursive: true });
     writeFileSync(absPath, buffer);
 
+    const remoteProbe = await probeBufferImageUrl(publicUrl, fetchFn, options.siteUrl);
+    if (!remoteProbe.ok && options.sourceImageUrl?.trim()) {
+      const sourceProbe = await probeBufferImageUrl(options.sourceImageUrl, fetchFn, options.siteUrl);
+      if (sourceProbe.ok) {
+        return {
+          publicUrl: options.sourceImageUrl.trim(),
+          publicPath: relPath,
+          contentType: sourceProbe.contentType?.includes('png') ? 'image/png' : 'image/jpeg',
+          bytes: sourceProbe.contentLength ?? buffer.length,
+        };
+      }
+    }
+
     return {
       publicUrl,
       publicPath: relPath,

@@ -14,8 +14,9 @@ async function verifySiteBufferSchedule(adapter, options) {
     if (!env.apiKey) {
         return { ok: false, date: localDate, scheduledCount: 0, requiredCount: env.postsPerDay, gapFilled: 0, issues: ['BUFFER_API_KEY missing'] };
     }
-    const dayStart = `${localDate}T00:00:00`;
-    const dayEnd = `${(0, scheduler_core_1.addDaysToLocalDate)(localDate, 1)}T00:00:00`;
+    const offset = (0, scheduler_core_1.timezoneOffsetForDate)(localDate, env.timezone);
+    const dayStart = `${localDate}T00:00:00${offset}`;
+    const dayEnd = `${(0, scheduler_core_1.addDaysToLocalDate)(localDate, 1)}T00:00:00${offset}`;
     const hostname = (0, metrics_1.siteHostnameFromUrl)(adapter.siteUrl);
     const scheduled = await (0, client_1.listPostsInWindow)(env.apiKey, env.organizationId, {
         status: ['scheduled'],

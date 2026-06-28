@@ -129,7 +129,7 @@ export const VERCEL_BUFFER_PROJECTS = [
   },
   {
     site: 'policestationagent.com',
-    project: 'policestationagent',
+    project: 'web44ai',
     cwd: path.join(HOME, 'policestationagent'),
     productionUrl: 'https://www.policestationagent.com',
     env: {

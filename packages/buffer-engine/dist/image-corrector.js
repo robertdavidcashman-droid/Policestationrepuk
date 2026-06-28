@@ -118,6 +118,18 @@ async function ensureCompliantPostImage(options) {
         }
         (0, node_fs_1.mkdirSync)((0, node_path_1.dirname)(absPath), { recursive: true });
         (0, node_fs_1.writeFileSync)(absPath, buffer);
+        const remoteProbe = await (0, image_url_1.probeBufferImageUrl)(publicUrl, fetchFn, options.siteUrl);
+        if (!remoteProbe.ok && options.sourceImageUrl?.trim()) {
+            const sourceProbe = await (0, image_url_1.probeBufferImageUrl)(options.sourceImageUrl, fetchFn, options.siteUrl);
+            if (sourceProbe.ok) {
+                return {
+                    publicUrl: options.sourceImageUrl.trim(),
+                    publicPath: relPath,
+                    contentType: sourceProbe.contentType?.includes('png') ? 'image/png' : 'image/jpeg',
+                    bytes: sourceProbe.contentLength ?? buffer.length,
+                };
+            }
+        }
         return {
             publicUrl,
             publicPath: relPath,
