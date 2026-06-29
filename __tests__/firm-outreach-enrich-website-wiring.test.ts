@@ -42,6 +42,14 @@ describe('enrichment wires Serper website discovery before crawl', () => {
       listProspectIdsByStatus: vi.fn().mockImplementation(async (status: string) =>
         status === 'discovered' ? ['p1'] : [],
       ),
+      listProspectIdsByRecordStatus: vi.fn().mockImplementation(async (status: string) =>
+        status === 'discovered' ? ['p1'] : [],
+      ),
+      getProspectsByIds: vi
+        .fn()
+        .mockImplementation(async (ids: string[]) =>
+          new Map(ids.filter((id) => id === 'p1').map((id) => [id, structuredClone(prospect)])),
+        ),
       getProspect: vi.fn().mockImplementation(async () => structuredClone(prospect)),
       saveProspect,
       isDuplicateInitialSend: vi.fn().mockResolvedValue(false),
@@ -126,6 +134,14 @@ describe('enrichment wires Serper website discovery before crawl', () => {
       listProspectIdsByStatus: vi.fn().mockImplementation(async (status: string) =>
         status === 'discovered' ? ['p2'] : [],
       ),
+      listProspectIdsByRecordStatus: vi.fn().mockImplementation(async (status: string) =>
+        status === 'discovered' ? ['p2'] : [],
+      ),
+      getProspectsByIds: vi
+        .fn()
+        .mockImplementation(async (ids: string[]) =>
+          new Map(ids.filter((id) => id === 'p2').map((id) => [id, structuredClone(prospect)])),
+        ),
       getProspect: vi.fn().mockImplementation(async () => structuredClone(prospect)),
       saveProspect: vi.fn(async (p: Record<string, unknown>) => {
         saved = { ...p };
