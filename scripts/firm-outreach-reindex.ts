@@ -7,8 +7,8 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-config({ path: resolve(__dirname, '../.env.local') });
-config();
+config({ path: resolve(__dirname, '../.env.local'), override: true });
+config({ override: true });
 
 async function main() {
   const { reindexProspectStatuses } = await import('../lib/firm-outreach/reindex-prospects');

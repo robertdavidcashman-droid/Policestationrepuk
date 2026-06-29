@@ -132,7 +132,10 @@
     "firm-outreach:admin-smoke": "npx tsx scripts/firm-outreach-admin-smoke.ts",
     "firm-outreach:send-approval-email": "npx tsx scripts/firm-outreach-send-approval-email.ts",
     "firm-outreach:import-lead-engine": "npx tsx scripts/firm-outreach-import-lead-engine.ts",
-    "firm-outreach:configure-resend": "node scripts/resend-configure-webhook.mjs"
+    "firm-outreach:configure-resend": "node scripts/resend-configure-webhook.mjs",
+    "firm-outreach:enrich": "npx tsx scripts/firm-outreach-enrich.ts",
+    "firm-outreach:enrich-backfill": "npx tsx scripts/firm-outreach-enrich.ts --limit=60 --batches=10 --max-ms=270000",
+    "firm-outreach:reindex": "npx tsx scripts/firm-outreach-reindex.ts"
   },
   "dependencies": {
     "@robertcashman/buffer-engine": "file:packages/buffer-engine",

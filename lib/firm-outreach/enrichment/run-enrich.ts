@@ -7,8 +7,9 @@ import { resolveProspectWebsite } from './resolve-prospect-website';
 import {
   CURSOR_ENRICH,
   getCursor,
+  getProspectsByIds,
   isDuplicateInitialSend,
-  listProspectIdsByStatus,
+  listProspectIdsByRecordStatus,
   getProspect,
   saveProspect,
   setCursor,
@@ -16,6 +17,7 @@ import {
 import type { EnrichmentRunStats, FirmProspect } from '../types';
 import {
   enrichCandidateScore,
+  ENRICH_CONCURRENCY,
   ENRICH_SCAN_MULTIPLIER,
   MAX_ENRICH_ATTEMPTS,
   NO_EMAIL_AFTER_ATTEMPTS,
@@ -151,10 +153,10 @@ async function loadEnrichRegistry(): Promise<CrimeRegistry> {
   return buildCrimeRegistry(laa, dscc?.entries ?? []);
 }
 
-/** Load enrichable prospect IDs from status indexes (not full prospect scan). */
+/** Load enrichable prospect IDs from stored record status (not stale status indexes). */
 export async function loadEnrichPoolIds(): Promise<string[]> {
-  const discovered = await listProspectIdsByStatus('discovered');
-  const noEmail = await listProspectIdsByStatus('no_email');
+  const discovered = await listProspectIdsByRecordStatus('discovered');
+  const noEmail = await listProspectIdsByRecordStatus('no_email');
   const now = Date.now();
   const retryIds: string[] = [];
   for (const id of noEmail) {
@@ -177,11 +179,15 @@ export async function pickEnrichBatchIds(opts: {
 
   const scanCount = Math.min(poolIds.length, Math.max(limit * 2, limit * scanMultiplier));
   const start = cursor % poolIds.length;
+  const windowIds: string[] = [];
+  for (let i = 0; i < scanCount; i++) {
+    windowIds.push(poolIds[(start + i) % poolIds.length]);
+  }
+  const prospectMap = await getProspectsByIds(windowIds);
   const candidates: { id: string; score: number }[] = [];
 
-  for (let i = 0; i < scanCount; i++) {
-    const id = poolIds[(start + i) % poolIds.length];
-    const p = await getProspect(id);
+  for (const id of windowIds) {
+    const p = prospectMap.get(id);
     if (!p || !shouldEnrichProspect(p)) continue;
     candidates.push({ id, score: enrichCandidateScore(p) });
   }
@@ -220,18 +226,19 @@ export async function runFirmEnrichment(opts?: {
   let errors = 0;
   let processedCount = 0;
   let stoppedEarly = false;
+  let nextIndex = 0;
 
-  for (const id of batchIds) {
+  async function processOne(id: string): Promise<void> {
     if (opts?.maxElapsedMs != null && Date.now() - started >= opts.maxElapsedMs) {
       stoppedEarly = true;
-      break;
+      return;
     }
-
     try {
       const p = await getProspect(id);
-      if (!p || !shouldEnrichProspect(p)) continue;
+      if (!p || !shouldEnrichProspect(p)) return;
+      const prevStatus = p.status;
       const enriched = await enrichOne(p, registry);
-      await saveProspect(enriched, p.status);
+      await saveProspect(enriched, prevStatus);
       processedCount++;
       if (enriched.email) emailsFound++;
       if (enriched.status === 'ready_to_send') readyToSend++;
@@ -241,6 +248,19 @@ export async function runFirmEnrichment(opts?: {
       console.warn('[firm-outreach enrich]', id, err);
     }
   }
+
+  const workers = Array.from({ length: Math.min(ENRICH_CONCURRENCY, batchIds.length) }, async () => {
+    while (true) {
+      if (opts?.maxElapsedMs != null && Date.now() - started >= opts.maxElapsedMs) {
+        stoppedEarly = true;
+        break;
+      }
+      const i = nextIndex++;
+      if (i >= batchIds.length) break;
+      await processOne(batchIds[i]);
+    }
+  });
+  await Promise.all(workers);
 
   const advanceBy = processedCount > 0 || !stoppedEarly ? scanned : 0;
   await advanceEnrichCursor(cursor, advanceBy, poolIds.length);
@@ -261,6 +281,7 @@ export async function runFirmEnrichment(opts?: {
 export {
   shouldEnrichProspect,
   enrichCandidateScore,
+  ENRICH_CONCURRENCY,
   MAX_ENRICH_ATTEMPTS,
   NO_EMAIL_AFTER_ATTEMPTS,
   ENRICH_SCAN_MULTIPLIER,

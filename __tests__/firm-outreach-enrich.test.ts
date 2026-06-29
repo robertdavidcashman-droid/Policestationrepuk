@@ -73,9 +73,14 @@ describe('runFirmEnrichment cursor on timeout', () => {
 
     vi.doMock('@/lib/firm-outreach/storage', () => ({
       CURSOR_ENRICH: 'firmoutreach:cursor:enrich',
-      listProspectIdsByStatus: vi.fn(async (status: string) =>
+      listProspectIdsByRecordStatus: vi.fn(async (status: string) =>
         status === 'discovered' ? ['p1'] : [],
       ),
+      getProspectsByIds: vi.fn(async (ids: string[]) => {
+        const map = new Map();
+        if (ids.includes('p1')) map.set('p1', prospect);
+        return map;
+      }),
       getProspect: vi.fn().mockResolvedValue(prospect),
       saveProspect: vi.fn(),
       getCursor,
@@ -147,6 +152,33 @@ describe('enrichCandidateScore', () => {
       sequenceStep: 0,
     });
     expect(laaNoEmail).toBeGreaterThan(archiveRetry);
+  });
+
+  it('scores LAA firms above individual DSCC solicitors', async () => {
+    const { enrichCandidateScore } = await import('@/lib/firm-outreach/enrichment/enrich-candidates');
+    const base = {
+      id: 'x',
+      firmKey: 'x',
+      firmName: 'X',
+      campaignId: 'c',
+      priorityScore: 10,
+      status: 'discovered' as const,
+      enrichAttempts: 0,
+      createdAt: '',
+      updatedAt: '',
+      sequenceStep: 0,
+    };
+    const laaFirm = enrichCandidateScore({
+      ...base,
+      prospectType: 'firm',
+      sources: ['laa'],
+    });
+    const dsccSolicitor = enrichCandidateScore({
+      ...base,
+      prospectType: 'solicitor',
+      sources: ['dscc'],
+    });
+    expect(laaFirm).toBeGreaterThan(dsccSolicitor);
   });
 });
 

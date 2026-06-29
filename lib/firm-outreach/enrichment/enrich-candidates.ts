@@ -10,7 +10,13 @@ export const NO_EMAIL_AFTER_ATTEMPTS = MAX_ENRICH_ATTEMPTS;
 export const NO_EMAIL_RETRY_DAYS = 30;
 
 /** How many discovered IDs to score per run (window × batch size). */
-export const ENRICH_SCAN_MULTIPLIER = 10;
+export const ENRICH_SCAN_MULTIPLIER = 20;
+
+/** Parallel firm enrichments per cron/CLI run (HTTP-bound). */
+export const ENRICH_CONCURRENCY = Math.max(
+  1,
+  Number(process.env.FIRM_OUTREACH_ENRICH_CONCURRENCY ?? 5) || 5,
+);
 
 export function daysSinceIso(iso: string | undefined, now = Date.now()): number {
   if (!iso) return Infinity;
@@ -39,6 +45,14 @@ export function enrichCandidateScore(prospect: FirmProspect): number {
   if (prospect.sources.includes('dscc') && prospect.prospectType === 'solicitor') score += 25;
   // LAA firms missing email are the main backlog — prioritise never-tried first.
   if (prospect.sources.includes('laa') && !prospect.email) score += 50;
+  // Individual DSCC duty solicitors rarely have a findable firm inbox — deprioritise.
+  if (
+    prospect.prospectType === 'solicitor' &&
+    prospect.sources.includes('dscc') &&
+    !prospect.sources.includes('laa')
+  ) {
+    score -= 60;
+  }
   if (prospect.enrichAttempts === 0) score += 45;
   else if (prospect.enrichAttempts === 1) score += 15;
   else score -= prospect.enrichAttempts * 12;

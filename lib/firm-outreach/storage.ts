@@ -160,6 +160,18 @@ export async function listProspectIdsByStatus(status: FirmProspectStatus): Promi
   return readStringList(statusIndexKey(status));
 }
 
+/** Prospect ids whose stored record matches status (truthful; ignores stale status indexes). */
+export async function listProspectIdsByRecordStatus(status: FirmProspectStatus): Promise<string[]> {
+  if (skipKVInPrerender()) return [];
+  const ids = [...new Set(await listAllProspectIds())];
+  if (ids.length === 0) return [];
+  const map = await getProspectsByIds(ids);
+  return ids.filter((id) => {
+    const p = map.get(id);
+    return p && isActiveCampaignProspect(p) && p.status === status;
+  });
+}
+
 export async function listAllProspectIds(): Promise<string[]> {
   if (skipKVInPrerender()) return [];
   return readStringList(PROSPECT_INDEX);
@@ -173,6 +185,17 @@ export async function listProspectsByStatus(status: FirmProspectStatus, limit = 
     if (p) out.push(p);
   }
   return out;
+}
+
+/** Active-campaign prospects whose stored record matches the given status. */
+export async function listProspectsByRecordStatus(
+  status: FirmProspectStatus,
+  limit = 500,
+): Promise<FirmProspect[]> {
+  const ids = (await listProspectIdsByRecordStatus(status)).slice(0, limit);
+  if (ids.length === 0) return [];
+  const map = await getProspectsByIds(ids);
+  return ids.map((id) => map.get(id)).filter((p): p is FirmProspect => Boolean(p));
 }
 
 export async function listProspectsForFirmKey(firmKey: string): Promise<FirmProspect[]> {
@@ -526,16 +549,8 @@ export async function countProspectsByStatus(): Promise<Record<string, number>> 
   ];
   const out: Record<string, number> = {};
   for (const s of statuses) {
-    const ids = await listProspectIdsByStatus(s);
-    if (ids.length === 0) {
-      out[s] = 0;
-      continue;
-    }
-    const map = await getProspectsByIds(ids);
-    out[s] = ids.filter((id) => {
-      const p = map.get(id);
-      return p && isActiveCampaignProspect(p);
-    }).length;
+    const ids = await listProspectIdsByRecordStatus(s);
+    out[s] = ids.length;
   }
   return out;
 }
