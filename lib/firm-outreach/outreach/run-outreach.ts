@@ -14,7 +14,7 @@ import {
   incrementDailySendCount,
   isDuplicateInitialSend,
   isSuppressed,
-  listProspectsByStatus,
+  listProspectsByRecordStatus,
   listProspectsForFirmKey,
   saveProspect,
   saveSend,
@@ -90,8 +90,8 @@ export async function runFirmOutreach(opts?: {
     return stats;
   }
 
-  const ready = (await listProspectsByStatus('ready_to_send', 2000)).filter(isActiveCampaignProspect);
-  const sent = (await listProspectsByStatus('sent', 2000)).filter(isActiveCampaignProspect);
+  const ready = await listProspectsByRecordStatus('ready_to_send', 2000);
+  const sent = await listProspectsByRecordStatus('sent', 2000);
   const candidates = sortProspectsForSend([...ready, ...sent]);
   const emailsSentThisRun = new Set<string>();
 
@@ -175,28 +175,31 @@ export async function runFirmOutreach(opts?: {
       continue;
     }
 
-    const now = new Date().toISOString();
-    prospect.sequenceStep = step;
-    prospect.lastEmailAt = now;
-    prospect.status = 'sent';
-    prospect.updatedAt = now;
-    await saveProspect(prospect);
-
-    const send = createSendRecord({
-      prospectId: prospect.id,
-      firmName: prospect.firmName,
-      prospectType: prospect.prospectType,
-      email,
-      campaignId: prospect.campaignId,
-      sequenceStep: step,
-      subject: result.subject,
-    });
-    send.status = 'sent';
-    send.sentAt = now;
-    send.resendMessageId = result.messageId;
-    await saveSend(send);
-
+    // A dry-run must never persist state: previously the prospect was flipped to
+    // 'sent' and a send record written even when no email was dispatched, which
+    // silently burned prospects (marked contacted, locked out of follow-ups).
     if (!opts?.dryRun && process.env.FIRM_OUTREACH_DRY_RUN !== 'true') {
+      const now = new Date().toISOString();
+      prospect.sequenceStep = step;
+      prospect.lastEmailAt = now;
+      prospect.status = 'sent';
+      prospect.updatedAt = now;
+      await saveProspect(prospect);
+
+      const send = createSendRecord({
+        prospectId: prospect.id,
+        firmName: prospect.firmName,
+        prospectType: prospect.prospectType,
+        email,
+        campaignId: prospect.campaignId,
+        sequenceStep: step,
+        subject: result.subject,
+      });
+      send.status = 'sent';
+      send.sentAt = now;
+      send.resendMessageId = result.messageId;
+      await saveSend(send);
+
       await incrementDailySendCount(date);
     }
     emailsSentThisRun.add(normalizedEmail);
