@@ -1,5 +1,5 @@
 import { isPlausibleOutreachEmail } from './enrichment/validator';
-import { isOwnSiteUrl } from './enrichment/website-discovery';
+import { isDirectoryOrSocialUrl, isOwnSiteUrl } from './enrichment/website-discovery';
 import { getProspect, listProspectsByStatus, saveProspect } from './storage';
 import type { FirmProspectStatus } from './types';
 
@@ -9,7 +9,7 @@ export interface CleanupNonFirmEmailsTarget {
   firmName: string;
   email: string;
   campaignId: string;
-  reason: 'bad_email' | 'own_site_website';
+  reason: 'bad_email' | 'own_site_website' | 'directory_website';
 }
 
 export interface CleanupNonFirmEmailsResult {
@@ -63,16 +63,22 @@ export async function cleanupNonFirmProspectEmails(opts?: {
     scanned++;
 
     const ownSite = p.websiteUrl && isOwnSiteUrl(p.websiteUrl);
+    const directorySite =
+      p.websiteUrl && !ownSite && isDirectoryOrSocialUrl(p.websiteUrl);
     const badEmail = p.email && !isPlausibleOutreachEmail(p.email);
 
-    if (ownSite || badEmail) {
+    if (ownSite || badEmail || directorySite) {
       targets.push({
         id: p.id,
         status: p.status,
         firmName: p.firmName,
         email: p.email ?? '',
         campaignId: p.campaignId,
-        reason: ownSite ? 'own_site_website' : 'bad_email',
+        reason: ownSite
+          ? 'own_site_website'
+          : badEmail
+            ? 'bad_email'
+            : 'directory_website',
       });
     }
   }
@@ -87,7 +93,9 @@ export async function cleanupNonFirmProspectEmails(opts?: {
     if (!p) continue;
     const stillBadEmail = p.email && !isPlausibleOutreachEmail(p.email);
     const stillOwnSite = p.websiteUrl && isOwnSiteUrl(p.websiteUrl);
-    if (!stillBadEmail && !stillOwnSite) continue;
+    const stillDirectorySite =
+      p.websiteUrl && !stillOwnSite && isDirectoryOrSocialUrl(p.websiteUrl);
+    if (!stillBadEmail && !stillOwnSite && !stillDirectorySite) continue;
 
     const previousStatus = p.status;
     p.status = 'discovered';
@@ -95,7 +103,7 @@ export async function cleanupNonFirmProspectEmails(opts?: {
     delete p.emailConfidence;
     delete p.emailScore;
     delete p.alternativeEmails;
-    if (stillOwnSite) delete p.websiteUrl;
+    if (stillOwnSite || stillDirectorySite) delete p.websiteUrl;
     await saveProspect(p, previousStatus);
     reset++;
   }

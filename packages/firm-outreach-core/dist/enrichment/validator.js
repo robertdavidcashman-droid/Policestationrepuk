@@ -49,6 +49,9 @@ function isPlausibleOutreachEmail(email) {
     const [local, domain] = norm.split('@');
     if (!local || !domain)
         return false;
+    const localBase = local.split('+')[0];
+    if (shared_constants_1.REJECTED_EMAIL_LOCALS.has(localBase))
+        return false;
     if (JUNK_EMAIL_LOCAL_PATTERNS.some((re) => re.test(local)))
         return false;
     if (JUNK_EMAIL_DOMAIN_PATTERNS.some((re) => re.test(domain)))

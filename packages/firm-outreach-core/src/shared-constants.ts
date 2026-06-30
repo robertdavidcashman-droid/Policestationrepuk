@@ -19,6 +19,7 @@ export const REJECTED_EMAIL_LOCALS = new Set([
   'privacy',
   'gdpr',
   'accounts',
+  'addressaccounts',
   'billing',
   'newsletter',
   'marketing',
@@ -134,6 +135,21 @@ export const NON_FIRM_EMAIL_DOMAINS = new Set([
   'mysite.com',
   'yoursite.com',
   'sentry-next.wixpress.com',
+  // Directory / listing / scraper hosts (crawler picks up crime@ on wrong domain)
+  'tiktok.com',
+  'endole.co.uk',
+  'expertini.com',
+  'getsurrey.co.uk',
+  'smenews.digital',
+  'wheree.com',
+  'cylex-uk.co.uk',
+  'rocketreach.co',
+  'leadquest.co.uk',
+  'legal-pages.co.uk',
+  '192.com',
+  'findsolicitor.co.uk',
+  'criminaljusticehub.org.uk',
+  'docsity.com',
 ]);
 
 export const EXCLUDED_FIRM_PATTERNS = [

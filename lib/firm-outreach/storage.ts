@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { getKV, skipKVInPrerender } from '@/lib/kv';
 import { dailySendKeyForCampaign, isActiveCampaignProspect, isActiveCampaignSend, activeOutreachCampaignId } from './campaign-scope';
+import { OUTREACH_CAMPAIGN_IDS } from './site-config';
 import { emailHash, normalizeEmail } from './normalize';
 import type {
   FirmOutreachSend,
@@ -155,6 +156,15 @@ export async function getProspectByEmail(
   return getProspect(id);
 }
 
+/** Lookup prospect by email across all shared KV campaigns (RepUK + PSA). */
+export async function getProspectByEmailAnyCampaign(email: string): Promise<FirmProspect | null> {
+  for (const campaignId of OUTREACH_CAMPAIGN_IDS) {
+    const prospect = await getProspectByEmail(email, campaignId);
+    if (prospect) return prospect;
+  }
+  return null;
+}
+
 export async function listProspectIdsByStatus(status: FirmProspectStatus): Promise<string[]> {
   if (skipKVInPrerender()) return [];
   return readStringList(statusIndexKey(status));
@@ -228,6 +238,12 @@ export { CURSOR_ENRICH, CURSOR_SEND };
 export async function saveSend(send: FirmOutreachSend): Promise<void> {
   const kv = getKV();
   if (!kv) throw new Error('KV not configured');
+  if (send.status === 'sent' && !send.resendMessageId) {
+    console.warn(
+      '[firm-outreach] send saved without resendMessageId — delivery webhooks cannot match',
+      { sendId: send.id, campaignId: send.campaignId, email: send.email },
+    );
+  }
   await kv.set(sendKey(send.id), send);
   await appendIndex(SEND_INDEX, send.id);
   await appendIndex(SEND_EMAIL_INDEX + emailHash(send.email), send.id);
@@ -351,6 +367,19 @@ const SEND_STATUS_RANK: Record<FirmOutreachSendStatus, number> = {
   complained: 11,
 };
 
+function pickSendForWebhookEvent(
+  sends: FirmOutreachSend[],
+  eventType: string,
+): FirmOutreachSend | null {
+  if (sends.length === 0) return null;
+  const terminal = new Set<FirmOutreachSendStatus>(['bounced', 'complained']);
+  if (eventType === 'email.bounced' || eventType === 'email.complained') {
+    return sends.find((s) => !terminal.has(s.status)) ?? sends[0]!;
+  }
+  const openStates = new Set<FirmOutreachSendStatus>(['sent', 'delivered', 'opened']);
+  return sends.find((s) => openStates.has(s.status)) ?? sends[0]!;
+}
+
 export async function applySendWebhookEvent(opts: {
   resendMessageId?: string;
   email?: string;
@@ -364,11 +393,8 @@ export async function applySendWebhookEvent(opts: {
     send = await findSendByResendMessageId(opts.resendMessageId);
   }
   if (!send && opts.email) {
-    const prospect = await getProspectByEmail(opts.email);
-    if (prospect) {
-      const sends = await listSendsForProspect(prospect.id);
-      send = sends[0] ?? null;
-    }
+    const sends = await listSendsForEmail(opts.email);
+    send = pickSendForWebhookEvent(sends, opts.eventType);
   }
   if (!send) return null;
 

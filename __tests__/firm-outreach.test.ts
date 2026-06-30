@@ -133,6 +133,15 @@ describe('firm-outreach email extract', () => {
     expect(extractEmailsFromHtml(html)).toEqual(['info@firm.co.uk']);
     expect(isPlausibleOutreachEmail('crime@firm.cjsm.net')).toBe(false);
   });
+
+  it('rejects directory and scraper email domains from bad enrichment', () => {
+    expect(isPlausibleOutreachEmail('crime@tiktok.com')).toBe(false);
+    expect(isPlausibleOutreachEmail('crime@endole.co.uk')).toBe(false);
+    expect(isPlausibleOutreachEmail('crime@192.com')).toBe(false);
+    expect(isPlausibleOutreachEmail('crime@findsolicitor.co.uk')).toBe(false);
+    expect(isPlausibleOutreachEmail('addressaccounts@rhodescavendish.co.uk')).toBe(false);
+    expect(isPlausibleOutreachEmail('info@realcriminalfirm.co.uk')).toBe(true);
+  });
 });
 
 describe('sra org parsers', () => {

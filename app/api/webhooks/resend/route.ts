@@ -3,7 +3,7 @@ import { Resend } from 'resend';
 import {
   addSuppression,
   applySendWebhookEvent,
-  getProspectByEmail,
+  getProspect,
   saveProspect,
 } from '@/lib/firm-outreach/storage';
 
@@ -80,26 +80,23 @@ export async function POST(request: Request) {
     type === 'email.bounced' ||
     type === 'email.complained'
   ) {
+    const reason = type === 'email.complained' ? 'complaint' : 'bounce';
     for (const email of emails.length ? emails : ['']) {
-      await applySendWebhookEvent({
+      const send = await applySendWebhookEvent({
         resendMessageId,
         email: email || undefined,
         eventType: type,
         at,
       });
-    }
-  }
-
-  if (type === 'email.bounced' || type === 'email.complained') {
-    const reason = type === 'email.complained' ? 'complaint' : 'bounce';
-    for (const email of emails) {
-      await addSuppression(email, reason);
-      const prospect = await getProspectByEmail(email);
-      if (prospect) {
-        const prev = prospect.status;
-        prospect.status = reason === 'complaint' ? 'unsubscribed' : 'bounced';
-        prospect.updatedAt = new Date().toISOString();
-        await saveProspect(prospect, prev);
+      if (send && (type === 'email.bounced' || type === 'email.complained')) {
+        await addSuppression(send.email, reason);
+        const prospect = await getProspect(send.prospectId);
+        if (prospect) {
+          const prev = prospect.status;
+          prospect.status = reason === 'complaint' ? 'unsubscribed' : 'bounced';
+          prospect.updatedAt = new Date().toISOString();
+          await saveProspect(prospect, prev);
+        }
       }
     }
   }

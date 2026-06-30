@@ -7,7 +7,7 @@ import {
   scoreEmailCandidate,
 } from './email-extract';
 import { hasMxRecord, isPlausibleOutreachEmail } from './validator';
-import { isOwnSiteUrl } from './website-discovery';
+import { isOwnSiteUrl, isDirectoryOrSocialUrl } from './website-discovery';
 import type { EmailConfidence, FirmProspect, FirmProspectEmail } from '../types';
 
 const FETCH_TIMEOUT_MS = 8_000;
@@ -46,11 +46,11 @@ export async function crawlEmailsForProspect(
   regulatoryNumber?: string;
 }> {
   const websiteUrl = prospect.websiteUrl;
-  if (websiteUrl && isOwnSiteUrl(websiteUrl)) {
+  if (websiteUrl && (isOwnSiteUrl(websiteUrl) || isDirectoryOrSocialUrl(websiteUrl))) {
     return {
       best: null,
       alternatives: [],
-      websiteUrl,
+      websiteUrl: isDirectoryOrSocialUrl(websiteUrl) ? undefined : websiteUrl,
       regulatoryNumber: prospect.regulatoryNumber,
     };
   }

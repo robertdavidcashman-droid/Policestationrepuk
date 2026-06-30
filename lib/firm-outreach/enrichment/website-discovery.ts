@@ -34,6 +34,20 @@ export const DIRECTORY_DOMAINS = [
   'glassdoor.com',
   'lawdepot.com',
   'wixsite.com',
+  'endole.co.uk',
+  'expertini.com',
+  'cylex-uk.co.uk',
+  'rocketreach.co',
+  'leadquest.co.uk',
+  'legal-pages.co.uk',
+  '192.com',
+  'findsolicitor.co.uk',
+  'smenews.digital',
+  'wheree.com',
+  'getsurrey.co.uk',
+  'tiktok.com',
+  'criminaljusticehub.org.uk',
+  'docsity.com',
 ] as const;
 
 /** Robert's own sites — never firm homepages; crawling them picks up directory/rep emails. */

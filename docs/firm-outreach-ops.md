@@ -87,7 +87,9 @@ Or manually in the Resend dashboard:
 - **URL:** `https://policestationrepuk.org/api/webhooks/resend`
 - **Events:** `email.delivered`, `email.opened`, `email.clicked`, `email.bounced`, `email.complained`
 
-Updates the admin Send log with delivery/open/click/bounce status.
+Updates the admin Send log with delivery/open/click/bounce status. Webhook matching uses `resendMessageId` first, then falls back to the newest in-flight send for that email across **all** campaigns (`whatsapp_invite_v1` and `agent_cover_kent_v1`).
+
+**PSA (`policestationagent.com`):** every send path must persist `resendMessageId` from Resend (`send.resendMessageId = result.messageId`). Without it, agent-cover sends stay stuck at `sent` in KV. RepUK logs a console warning when a send is saved without it.
 
 ## Manual commands
 
@@ -97,6 +99,10 @@ npm run firm-outreach:admin-smoke
 
 # Enrich locally (large batch — run 2–3× per week while backlog is large)
 npx tsx scripts/firm-outreach-enrich.ts --limit=150
+
+# Reset bad emails / directory websites (both campaigns)
+npx tsx scripts/firm-outreach-cleanup-non-firm-emails.ts --dry-run
+CAMPAIGN_ID=agent_cover_kent_v1 npx tsx scripts/firm-outreach-cleanup-non-firm-emails.ts --apply
 
 # Import lead_engine ready_to_send.csv into KV (after npm run lead-engine:auto)
 npx tsx scripts/firm-outreach-import-lead-engine.ts --dry-run

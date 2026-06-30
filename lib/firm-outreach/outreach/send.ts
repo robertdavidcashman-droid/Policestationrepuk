@@ -59,8 +59,17 @@ export async function sendOutreachEmail(opts: {
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
       },
     });
-    const messageId =
-      result.data && 'id' in result.data ? String(result.data.id) : undefined;
+    if (result.error) {
+      const msg =
+        typeof result.error === 'object' && result.error && 'message' in result.error
+          ? String((result.error as { message: string }).message)
+          : String(result.error);
+      return { ok: false, subject, error: msg };
+    }
+    const messageId = result.data?.id ? String(result.data.id) : undefined;
+    if (!messageId) {
+      return { ok: false, subject, error: 'no_message_id_from_resend' };
+    }
     return { ok: true, messageId, subject };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
