@@ -46,7 +46,6 @@ export async function runFirmOutreachPipeline(opts?: {
   skipDigest?: boolean;
 }): Promise<FirmOutreachPipelineResult> {
   const started = Date.now();
-  let cleanup: { reset: number; targets: number } | undefined;
 
   if (!outreachEnabled()) {
     if (!opts?.skipDigest) {
@@ -67,7 +66,7 @@ export async function runFirmOutreachPipeline(opts?: {
   }
 
   const cleanupResult = await cleanupNonFirmProspectEmails({ dryRun: false });
-  cleanup = { reset: cleanupResult.reset, targets: cleanupResult.targets.length };
+  const cleanup = { reset: cleanupResult.reset, targets: cleanupResult.targets.length };
 
   let laaResult = { refreshed: false, source: 'none' as string, records: [] as unknown[] };
   let dsccCount = 0;
