@@ -127,8 +127,42 @@ describe('POST /api/register/gate — validation', () => {
     const r = await callGate({
       email: 'a@b.co',
       category: 'solicitor',
-      sraNumber: '190283',
       proofUrl: 'ftp://not-allowed',
+    });
+    expect(r.status).toBe(400);
+    expect(r.body.code).toBe('INVALID_PROOF_URL');
+  });
+
+  it('200 GATE_OK when SRA is present and proof URL is unfixable junk', async () => {
+    const r = await callGate({
+      email: 'a@b.co',
+      category: 'solicitor',
+      sraNumber: '190283',
+      proofUrl: 'not a url',
+    });
+    expect(r.status).toBe(200);
+    expect(r.body.code).toBe('GATE_OK');
+    expect(r.body.gateData).toMatchObject({ proofUrl: '' });
+  });
+
+  it('200 GATE_OK for proof-only LinkedIn URL without https://', async () => {
+    const r = await callGate({
+      email: 'a@b.co',
+      category: 'solicitor',
+      proofUrl: 'www.linkedin.com/in/foo',
+    });
+    expect(r.status).toBe(200);
+    expect(r.body.code).toBe('GATE_OK');
+    expect(r.body.gateData).toMatchObject({
+      proofUrl: 'https://www.linkedin.com/in/foo',
+    });
+  });
+
+  it('400 INVALID_PROOF_URL when proof-only and unfixable junk', async () => {
+    const r = await callGate({
+      email: 'a@b.co',
+      category: 'solicitor',
+      proofUrl: 'not a url',
     });
     expect(r.status).toBe(400);
     expect(r.body.code).toBe('INVALID_PROOF_URL');

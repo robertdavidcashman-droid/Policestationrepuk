@@ -113,12 +113,40 @@ test.describe('POST /api/register/gate — structured error codes', () => {
     expect(body.code).toBe('MISSING_EVIDENCE');
   });
 
-  test('400 INVALID_PROOF_URL for non-https proof URLs', async ({ request }) => {
+  test('400 INVALID_PROOF_URL for proof-only junk URLs', async ({ request }) => {
     const response = await request.post('/api/register/gate', {
       data: {
         email: TEST_EMAIL,
         category: 'solicitor',
-        sraNumber: '190283',
+        proofUrl: 'not a url',
+      },
+      failOnStatusCode: false,
+    });
+    expect(response.status()).toBe(400);
+    const body = await response.json();
+    expect(body.code).toBe('INVALID_PROOF_URL');
+  });
+
+  test('200 GATE_OK for LinkedIn URL without https:// protocol', async ({ request }) => {
+    const response = await request.post('/api/register/gate', {
+      data: {
+        email: `pw-linkedin-${Date.now()}@example.com`,
+        category: 'solicitor',
+        proofUrl: 'www.linkedin.com/in/mohamed-sourbah',
+      },
+      failOnStatusCode: false,
+    });
+    const body = await response.json();
+    expect(response.status()).toBe(200);
+    expect(body.code).toBe('GATE_OK');
+    expect(body.gateData?.proofUrl).toBe('https://www.linkedin.com/in/mohamed-sourbah');
+  });
+
+  test('400 INVALID_PROOF_URL for proof-only ftp URLs', async ({ request }) => {
+    const response = await request.post('/api/register/gate', {
+      data: {
+        email: TEST_EMAIL,
+        category: 'solicitor',
         proofUrl: 'ftp://example.com/me',
       },
       failOnStatusCode: false,

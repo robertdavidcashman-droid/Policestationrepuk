@@ -57,6 +57,11 @@ import {
 } from '@/lib/english-counties';
 import { checkRegulatoryDirectories } from '@/lib/regulatory-auto-pass';
 import { sendRegulatoryRegisterNoMatchAlert } from '@/lib/email';
+import {
+  INVALID_PROOF_URL_MESSAGE,
+  normalizeUserUrl,
+  resolveRegistrationProofUrl,
+} from '@/lib/normalize-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,7 +102,6 @@ interface RegistrationBody {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const URL_RE = /^https?:\/\/[^\s]+\.[^\s]+$/i;
 
 function s(v: unknown, max: number): string {
   if (typeof v !== 'string') return '';
@@ -154,13 +158,18 @@ export async function POST(request: Request) {
     const publicNotes = s(raw.publicNotes, 2000);
     const pinNumber = s(raw.pinNumber, 80);
     const sraNumber = s(raw.sraNumber, 80);
-    const proofUrl = s(raw.proofUrl, 500);
+    const rawProofUrl = s(raw.proofUrl, 500);
+    const { proofUrl, invalidProofUrl } = resolveRegistrationProofUrl({
+      rawProof: rawProofUrl,
+      pinNumber,
+      sraNumber,
+    });
     const firmName = s(raw.firmName, 200);
     const firmAddress = s(raw.firmAddress, 500);
     const firmEmail = s(raw.firmEmail, 320);
-    const websiteUrl = s(raw.websiteUrl, 500);
+    const websiteUrl = normalizeUserUrl(s(raw.websiteUrl, 500));
     const whatsappLink = s(raw.whatsappLink, 500);
-    const professionalProfileUrl = s(raw.professionalProfileUrl, 500);
+    const professionalProfileUrl = normalizeUserUrl(s(raw.professionalProfileUrl, 500));
     const languages = s(raw.languages, 300);
     const specialisms = s(raw.specialisms, 300);
     const fullPostalAddress = s(raw.fullPostalAddress, 500);
@@ -220,7 +229,10 @@ export async function POST(request: Request) {
     }
 
     // Hard rule: PSRAS reps must supply a PIN OR a proof URL.
-    // Solicitors/duty solicitors must supply an SRA number.
+    // Solicitors/duty solicitors must supply an SRA number OR proof URL.
+    if (invalidProofUrl) {
+      return NextResponse.json({ error: INVALID_PROOF_URL_MESSAGE }, { status: 400 });
+    }
     if (category === 'psras-accredited') {
       if (!pinNumber && !proofUrl) {
         return NextResponse.json(
@@ -243,24 +255,6 @@ export async function POST(request: Request) {
       }
     }
 
-    if (proofUrl && !URL_RE.test(proofUrl)) {
-      return NextResponse.json(
-        { error: 'Proof-of-accreditation URL must be a full https:// link.' },
-        { status: 400 },
-      );
-    }
-    if (websiteUrl && !URL_RE.test(websiteUrl)) {
-      return NextResponse.json(
-        { error: 'Your professional website URL must be a full https:// link.' },
-        { status: 400 },
-      );
-    }
-    if (professionalProfileUrl && !URL_RE.test(professionalProfileUrl)) {
-      return NextResponse.json(
-        { error: 'Your professional profile URL must be a full https:// link.' },
-        { status: 400 },
-      );
-    }
     if (firmEmail && !EMAIL_RE.test(firmEmail)) {
       return NextResponse.json(
         { error: 'Firm email address looks invalid.' },

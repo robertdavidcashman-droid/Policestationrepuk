@@ -4,10 +4,10 @@
  */
 
 import { countLinkLikeSegments } from '@/lib/contact-guards';
+import { normalizeUserUrl } from '@/lib/normalize-url';
 import { DESCRIPTION_MAX, MAX_LINKS_IN_DESCRIPTION } from './constants';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const URL_RE = /^https?:\/\/[^\s]+\.[^\s]+$/i;
 
 const SCRIPT_PATTERNS = [
   /<script\b/i,
@@ -54,16 +54,7 @@ export function normalizeEmail(email: string): string {
 
 export function sanitizeUrl(v: unknown, max = 500): string {
   const raw = sanitizeText(v, max);
-  if (!raw) return '';
-  const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-  if (!URL_RE.test(candidate)) return '';
-  try {
-    const u = new URL(candidate);
-    if (u.protocol !== 'http:' && u.protocol !== 'https:') return '';
-    return u.toString().slice(0, max);
-  } catch {
-    return '';
-  }
+  return normalizeUserUrl(raw, max);
 }
 
 export function containsScriptOrInjection(text: string): boolean {

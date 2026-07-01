@@ -44,6 +44,7 @@ import {
   APPLICANT_CATEGORY_VALUES,
   type ApplicantCategory,
 } from '@/lib/rep-status';
+import { normalizeUserUrl } from '@/lib/normalize-url';
 
 const PUBLIC_NOTES_MAX = 1500;
 
@@ -404,7 +405,7 @@ function GateForm({
   }
 
   const sraValid = /^\d{4,7}$/.test(gate.sraNumber.trim());
-  const proofValid = /^https?:\/\/[^\s]+\.[^\s]+$/i.test(gate.proofUrl.trim());
+  const proofValid = Boolean(normalizeUserUrl(gate.proofUrl.trim()));
 
   const submitDisabled =
     status === 'sending' ||
@@ -567,7 +568,8 @@ function GateForm({
                 className="mt-1 w-full rounded-lg border border-amber-200 bg-white px-4 py-3 text-base text-[var(--foreground)] sm:text-sm"
               />
               <p className="mt-1 text-xs text-amber-800">
-                Used for verification only — not shown publicly.
+                Used for verification only — not shown publicly. If you enter your SRA number
+                above, this field is optional.
               </p>
             </div>
           )}
@@ -583,14 +585,22 @@ function GateForm({
               id="gate-proofUrl"
               name="proofUrl"
               type="url"
-              placeholder="https://your-firm.com/team/your-name"
+              placeholder="https://www.linkedin.com/in/your-name"
               value={gate.proofUrl}
               onChange={(e) => setGate((p) => ({ ...p, proofUrl: e.target.value }))}
+              onBlur={(e) => {
+                const normalized = normalizeUserUrl(e.target.value);
+                if (normalized && normalized !== e.target.value) {
+                  setGate((p) => ({ ...p, proofUrl: normalized }));
+                }
+              }}
               className="mt-1 w-full rounded-lg border border-amber-200 bg-white px-4 py-3 text-base text-[var(--foreground)] sm:text-sm"
             />
             <p className="mt-1 text-xs text-amber-800">
-              A public page on your firm&rsquo;s site, the Law Society, or LinkedIn that confirms
-              your accreditation.
+              Optional if you already entered your PIN or SRA number. Accepted examples: your
+              LinkedIn profile, Law Society person page, or SRA register link. We add{' '}
+              <code className="text-[11px]">https://</code> automatically when you paste a link
+              without it.
             </p>
           </div>
         </fieldset>
@@ -1002,6 +1012,12 @@ function FullForm({
                 placeholder="https://"
                 value={form.websiteUrl}
                 onChange={(e) => setForm((p) => ({ ...p, websiteUrl: e.target.value }))}
+                onBlur={(e) => {
+                  const normalized = normalizeUserUrl(e.target.value);
+                  if (normalized && normalized !== e.target.value) {
+                    setForm((p) => ({ ...p, websiteUrl: normalized }));
+                  }
+                }}
                 className="mt-1 w-full rounded-lg border border-[var(--border)] bg-white px-4 py-3 text-base text-[var(--foreground)] sm:text-sm"
               />
             </div>
@@ -1016,11 +1032,17 @@ function FullForm({
                 id="professionalProfileUrl"
                 name="professionalProfileUrl"
                 type="url"
-                placeholder="https://"
+                placeholder="https://www.linkedin.com/in/your-name"
                 value={form.professionalProfileUrl}
                 onChange={(e) =>
                   setForm((p) => ({ ...p, professionalProfileUrl: e.target.value }))
                 }
+                onBlur={(e) => {
+                  const normalized = normalizeUserUrl(e.target.value);
+                  if (normalized && normalized !== e.target.value) {
+                    setForm((p) => ({ ...p, professionalProfileUrl: normalized }));
+                  }
+                }}
                 className="mt-1 w-full rounded-lg border border-[var(--border)] bg-white px-4 py-3 text-base text-[var(--foreground)] sm:text-sm"
               />
             </div>

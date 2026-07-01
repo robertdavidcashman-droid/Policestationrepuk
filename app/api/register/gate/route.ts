@@ -59,6 +59,10 @@ import {
   type ApplicantCategory,
   looksIneligible,
 } from '@/lib/rep-status';
+import {
+  INVALID_PROOF_URL_MESSAGE,
+  resolveRegistrationProofUrl,
+} from '@/lib/normalize-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,7 +77,6 @@ interface GateBody {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const URL_RE = /^https?:\/\/[^\s]+\.[^\s]+$/i;
 
 function s(v: unknown, max: number): string {
   if (typeof v !== 'string') return '';
@@ -124,8 +127,24 @@ export async function POST(request: Request) {
   const email = s(raw.email, 320).toLowerCase();
   const pinNumber = s(raw.pinNumber, 80);
   const sraNumber = s(raw.sraNumber, 80);
-  const proofUrl = s(raw.proofUrl, 500);
+  const rawProofUrl = s(raw.proofUrl, 500);
+  const { proofUrl, invalidProofUrl } = resolveRegistrationProofUrl({
+    rawProof: rawProofUrl,
+    pinNumber,
+    sraNumber,
+  });
 
+  if (invalidProofUrl) {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: 'INVALID_PROOF_URL',
+        reason: 'invalid-proof-url',
+        message: INVALID_PROOF_URL_MESSAGE,
+      },
+      { status: 400 },
+    );
+  }
   if (!email || !EMAIL_RE.test(email)) {
     return NextResponse.json(
       {
@@ -150,18 +169,6 @@ export async function POST(request: Request) {
     );
   }
   const category: ApplicantCategory = raw.category;
-
-  if (proofUrl && !URL_RE.test(proofUrl)) {
-    return NextResponse.json(
-      {
-        ok: false,
-        code: 'INVALID_PROOF_URL',
-        reason: 'invalid-proof-url',
-        message: 'Proof-of-accreditation URL must be a full https:// link.',
-      },
-      { status: 400 },
-    );
-  }
 
   // Strict evidence rules — same as the legacy /api/register handler.
   if (category === 'psras-accredited' && !pinNumber && !proofUrl) {
