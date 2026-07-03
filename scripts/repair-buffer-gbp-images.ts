@@ -17,6 +17,11 @@ import {
   getSchedulerTimezone,
 } from '../lib/buffer/config';
 import { loadAllFeedPosts } from '../lib/buffer/feeds';
+import {
+  extractArticleUrlFromText,
+  parseFeedFromArticleUrl,
+  slugFromPostText,
+} from '../lib/buffer/article-url';
 import { isDisallowedGbpAssetUrl } from '../lib/buffer/gbp-preflight';
 import { probeGoogleBusinessImageUrl } from '../lib/buffer/image-url';
 import {
@@ -46,21 +51,7 @@ function loadEnvFile(filename: string) {
 }
 
 function parseFeedFromUrl(url: string): string {
-  if (url.includes('policestationrepuk.org')) return 'policestationrepuk';
-  if (url.includes('custodynote.com')) return 'custodynote';
-  if (url.includes('policestationagent.com')) return 'policestationagent';
-  if (url.includes('psrtrain.com')) return 'psrtrain';
-  return 'unknown';
-}
-
-function slugFromPostText(text: string): string | null {
-  const urlMatch = text.match(/https?:\/\/[^\s]+/);
-  if (!urlMatch) return null;
-  try {
-    return new URL(urlMatch[0]).pathname.split('/').filter(Boolean).pop() ?? null;
-  } catch {
-    return null;
-  }
+  return parseFeedFromArticleUrl(url);
 }
 
 function sleep(ms: number): Promise<void> {
@@ -148,8 +139,7 @@ async function main() {
       }
 
       const slug = slugFromPostText(item.text);
-      const urlMatch = item.text.match(/https?:\/\/[^\s]+/);
-      const articleUrl = urlMatch?.[0] ?? '';
+      const articleUrl = extractArticleUrlFromText(item.text);
       const feedId = articleUrl ? parseFeedFromUrl(articleUrl) : 'unknown';
       const feedPost =
         slug && feedId !== 'unknown'
@@ -168,9 +158,9 @@ async function main() {
           createScheduledBufferPost(apiKey, {
             channelId: gbpChannel.id,
             channelService: 'googlebusiness',
-            text: item.text,
+            text: buildSchedulablePostTextForService(feedPost, 'googlebusiness'),
             dueAt: item.dueAt!,
-            url: articleUrl,
+            url: feedPost.url,
             imageUrl: feedPost.googleBusinessImageUrl,
             imageAlt: feedPost.imageAlt,
             feedId: feedPost.feedId,

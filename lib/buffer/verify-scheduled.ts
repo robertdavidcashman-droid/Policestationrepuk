@@ -17,6 +17,11 @@ import {
   probeGoogleBusinessImageUrl,
 } from './image-url';
 import { localDateInTimezone, timezoneOffsetForDate } from './scheduler-core';
+import {
+  extractArticleUrlFromText,
+  slugFromPostText as slugFromBufferPostText,
+  parseFeedFromArticleUrl,
+} from './article-url';
 import type { SchedulablePost } from './content-types';
 
 export interface VerifyScheduledImagesOptions {
@@ -40,21 +45,7 @@ export interface VerifyScheduledImagesResult {
 }
 
 function parseFeedFromUrl(url: string): string {
-  if (url.includes('policestationrepuk.org')) return 'policestationrepuk';
-  if (url.includes('custodynote.com')) return 'custodynote';
-  if (url.includes('policestationagent.com')) return 'policestationagent';
-  if (url.includes('psrtrain.com')) return 'psrtrain';
-  return 'unknown';
-}
-
-function slugFromPostText(text: string): string | null {
-  const urlMatch = text.match(/https?:\/\/[^\s]+/);
-  if (!urlMatch) return null;
-  try {
-    return new URL(urlMatch[0]).pathname.split('/').filter(Boolean).pop() ?? null;
-  } catch {
-    return null;
-  }
+  return parseFeedFromArticleUrl(url);
 }
 
 function findFeedPost(
@@ -118,9 +109,8 @@ export async function verifyScheduledBufferImages(
   };
 
   for (const item of scheduled) {
-    const slug = slugFromPostText(item.text);
-    const urlMatch = item.text.match(/https?:\/\/[^\s]+/);
-    const articleUrl = urlMatch?.[0] ?? '';
+    const slug = slugFromBufferPostText(item.text);
+    const articleUrl = extractArticleUrlFromText(item.text);
     const feedId = articleUrl ? parseFeedFromUrl(articleUrl) : 'unknown';
     const feedPost = slug && feedId !== 'unknown' ? findFeedPost(feedPosts, feedId, slug) : undefined;
     const imageUrl = feedPost?.imageUrl;

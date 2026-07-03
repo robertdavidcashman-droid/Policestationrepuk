@@ -1,5 +1,6 @@
 import type { BufferChannelService } from './config';
 import { buildBufferImageAssets } from './assets';
+import { stripTrailingUrlPunctuation } from './article-url';
 import { sanitizeGoogleBusinessPostText } from './google-business-text';
 import { assertBufferPostImageReady } from './image-url';
 
@@ -131,12 +132,18 @@ function postMetadataForService(
   url: string,
 ): Record<string, unknown> | undefined {
   if (service === 'googlebusiness') {
+    const link = stripTrailingUrlPunctuation(url);
+    try {
+      new URL(link);
+    } catch {
+      throw new BufferApiError(`Invalid Google Business link URL: ${url}`);
+    }
     return {
       google: {
         type: 'whats_new',
         detailsWhatsNew: {
           button: 'learn_more',
-          link: url,
+          link,
         },
       },
     };
@@ -162,7 +169,8 @@ export async function createScheduledBufferPost(
     feedId: input.feedId,
   });
 
-  const metadata = postMetadataForService(input.channelService, input.url);
+  const articleUrl = stripTrailingUrlPunctuation(input.url);
+  const metadata = postMetadataForService(input.channelService, articleUrl);
   const text =
     input.channelService === 'googlebusiness'
       ? sanitizeGoogleBusinessPostText(input.text)
