@@ -283,7 +283,6 @@ export async function runFirmEnrichment(opts?: {
     stoppedEarly: stoppedEarly || undefined,
     poolSize: poolIds.length,
     candidatesScanned: scanned,
-    campaignId,
   };
 }
 
