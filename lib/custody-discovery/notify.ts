@@ -2,6 +2,7 @@ import { markBatchNotified, saveBatch, newBatchId, type CustodyDiscoveryBatch } 
 import {
   addToDailyNotifyBucket,
   dailyNotifyDate,
+  findUnsentDailyNotifyBucket,
   getDailyNotifyBucket,
   markDailyNotifySent,
   shouldSendDailyDigest,
@@ -83,15 +84,15 @@ async function sendDailyDigestFromBucket(opts: {
   return { emailed, notifyCount: digestFindings.length, batchId: opts.batchId };
 }
 
-/** Send today's queued digest if the evening window is open and not yet sent. */
+/** Send the oldest unsent digest bucket (today first, then up to 2 prior days). */
 export async function flushPendingDailyDigest(
   now = new Date(),
   opts?: { force?: boolean },
 ): Promise<BatchNotifyResult> {
   const today = dailyNotifyDate(now);
-  const bucket = await getDailyNotifyBucket(today);
+  const pending = await findUnsentDailyNotifyBucket(now);
 
-  if (!bucket || bucket.findingIds.length === 0) {
+  if (!pending) {
     return {
       emailed: false,
       newCount: 0,
@@ -102,16 +103,7 @@ export async function flushPendingDailyDigest(
     };
   }
 
-  if (bucket.notifiedAt) {
-    return {
-      emailed: false,
-      newCount: 0,
-      notifyCount: bucket.findingIds.length,
-      belowThresholdCount: 0,
-      pendingDailyDigest: false,
-      dailyDigestDate: today,
-    };
-  }
+  const { date, bucket } = pending;
 
   if (!opts?.force && !shouldSendDailyDigest(now)) {
     return {
@@ -120,14 +112,14 @@ export async function flushPendingDailyDigest(
       notifyCount: bucket.findingIds.length,
       belowThresholdCount: 0,
       pendingDailyDigest: true,
-      dailyDigestDate: today,
+      dailyDigestDate: date,
     };
   }
 
   const { emailed, notifyCount, batchId } = await sendDailyDigestFromBucket({
-    today,
+    today: date,
     bucket,
-    batchId: `digest_${today}`,
+    batchId: `digest_${date}`,
   });
 
   return {
@@ -136,8 +128,8 @@ export async function flushPendingDailyDigest(
     newCount: 0,
     notifyCount,
     belowThresholdCount: 0,
-    pendingDailyDigest: false,
-    dailyDigestDate: today,
+    pendingDailyDigest: !emailed && bucket.findingIds.length > 0,
+    dailyDigestDate: date,
   };
 }
 

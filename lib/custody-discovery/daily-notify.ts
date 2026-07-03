@@ -23,6 +23,26 @@ export function dailyNotifyDate(now = new Date()): string {
   return localDateInTimezone(now, NOTIFY_TIMEZONE);
 }
 
+export function dailyNotifyDateDaysAgo(daysAgo: number, now = new Date()): string {
+  const ms = now.getTime() - daysAgo * 86_400_000;
+  return localDateInTimezone(new Date(ms), NOTIFY_TIMEZONE);
+}
+
+/** First unsent bucket within the lookback window (today first, then older days). */
+export async function findUnsentDailyNotifyBucket(
+  now = new Date(),
+  lookbackDays = 3,
+): Promise<{ date: string; bucket: DailyNotifyBucket } | null> {
+  for (let daysAgo = 0; daysAgo < lookbackDays; daysAgo++) {
+    const date = dailyNotifyDateDaysAgo(daysAgo, now);
+    const bucket = await getDailyNotifyBucket(date);
+    if (bucket && bucket.findingIds.length > 0 && !bucket.notifiedAt) {
+      return { date, bucket };
+    }
+  }
+  return null;
+}
+
 export function shouldSendDailyDigest(now = new Date()): boolean {
   const hour = Number(
     new Intl.DateTimeFormat('en-GB', {

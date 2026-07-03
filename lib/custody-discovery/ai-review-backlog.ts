@@ -13,7 +13,7 @@ export interface AiReviewBatchResult {
 }
 
 function aiBatchLimit(): number {
-  return Math.max(1, Number(process.env.CUSTODY_AI_BATCH_LIMIT ?? 50));
+  return Math.max(1, Number(process.env.CUSTODY_AI_BATCH_LIMIT ?? 12));
 }
 
 function isReviewable(finding: CustodyNumberFinding): boolean {

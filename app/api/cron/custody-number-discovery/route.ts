@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 export const maxDuration = 300;
 
 function aiBatchLimit(): number {
-  return Math.max(1, Number(process.env.CUSTODY_AI_BATCH_LIMIT ?? 50));
+  return Math.max(1, Number(process.env.CUSTODY_AI_BATCH_LIMIT ?? 12));
 }
 
 /**
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, mode: 'ai-review-only', aiReview });
   }
 
-  const limit = Number(url.searchParams.get('limit') || process.env.CUSTODY_DISCOVERY_BATCH_LIMIT || 25);
+  const limit = Number(url.searchParams.get('limit') || process.env.CUSTODY_DISCOVERY_BATCH_LIMIT || 10);
 
   const stations = await getAllStations();
   const suites = buildCustodySuitesFromStations(stations);

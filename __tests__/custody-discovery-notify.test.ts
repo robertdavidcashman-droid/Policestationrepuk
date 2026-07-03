@@ -18,6 +18,7 @@ vi.mock('@/lib/custody-discovery/storage', () => ({
 
 const addToDailyNotifyBucket = vi.fn();
 const getDailyNotifyBucket = vi.fn();
+const findUnsentDailyNotifyBucket = vi.fn();
 const markDailyNotifySent = vi.fn();
 const shouldSendDailyDigest = vi.fn();
 const dailyNotifyDate = vi.fn(() => '2026-06-07');
@@ -25,6 +26,7 @@ const dailyNotifyDate = vi.fn(() => '2026-06-07');
 vi.mock('@/lib/custody-discovery/daily-notify', () => ({
   addToDailyNotifyBucket: (...args: unknown[]) => addToDailyNotifyBucket(...args),
   getDailyNotifyBucket: (...args: unknown[]) => getDailyNotifyBucket(...args),
+  findUnsentDailyNotifyBucket: (...args: unknown[]) => findUnsentDailyNotifyBucket(...args),
   markDailyNotifySent: (...args: unknown[]) => markDailyNotifySent(...args),
   shouldSendDailyDigest: (...args: unknown[]) => shouldSendDailyDigest(...args),
   dailyNotifyDate: (...args: unknown[]) => dailyNotifyDate(...args),
@@ -82,6 +84,7 @@ describe('custody discovery batch notification', () => {
     vi.clearAllMocks();
     shouldSendDailyDigest.mockReturnValue(true);
     getDailyNotifyBucket.mockResolvedValue(null);
+    findUnsentDailyNotifyBucket.mockResolvedValue(null);
     addToDailyNotifyBucket.mockImplementation(async (_date, ids: string[]) => ({
       date: '2026-06-07',
       findingIds: ids,
@@ -96,13 +99,15 @@ describe('custody discovery batch notification', () => {
   });
 
   it('flushes a queued daily digest when a later run has no new findings', async () => {
-    getDailyNotifyBucket.mockResolvedValue({
+    const bucket = {
       date: '2026-06-07',
       findingIds: ['f1', 'f2'],
       suitesScanned: 10,
       conflictsFlagged: 1,
       elapsedMs: 8000,
-    });
+    };
+    getDailyNotifyBucket.mockResolvedValue(bucket);
+    findUnsentDailyNotifyBucket.mockResolvedValue({ date: '2026-06-07', bucket });
     getFinding.mockImplementation(async (id: string) => mockFinding(id, 75));
 
     const result = await notifyIfNewFindings({ newFindingIds: [], stats: baseStats });
@@ -178,13 +183,15 @@ describe('custody discovery batch notification', () => {
   });
 
   it('force-sends a queued digest before the evening window', async () => {
-    getDailyNotifyBucket.mockResolvedValue({
+    const bucket = {
       date: '2026-06-07',
       findingIds: ['f1'],
       suitesScanned: 5,
       conflictsFlagged: 0,
       elapsedMs: 5000,
-    });
+    };
+    getDailyNotifyBucket.mockResolvedValue(bucket);
+    findUnsentDailyNotifyBucket.mockResolvedValue({ date: '2026-06-07', bucket });
     getFinding.mockImplementation(async (id: string) => mockFinding(id, 75));
     shouldSendDailyDigest.mockReturnValue(false);
 

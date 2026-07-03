@@ -7,11 +7,13 @@ Automated discovery of UK police station **custody desk** telephone numbers for 
 ## Pipeline
 
 1. **Cron** — `/api/cron/custody-number-discovery` every 6 hours (`vercel.json`)
-2. **Seed** — committed `data/*-custody-numbers.json` → findings KV
-3. **Crawl** — Serper search + official force pages (parallel) + optional page fetch when snippets are weak
-4. **AI review** — GPT-4o-mini on new/backlog findings with page evidence
-5. **Admin** — `/admin/custody-number-review` manual approve/reject
-6. **Live** — approved numbers overlay onto station pages at runtime
+2. **Digest cron** — `/api/cron/custody-discovery-digest` daily at 19:00 UTC (backup if main run times out)
+3. **AI review cron** — `/api/cron/custody-discovery-ai-review` at 03:30, 09:30, 15:30 UTC
+4. **Seed** — committed `data/*-custody-numbers.json` → findings KV
+5. **Crawl** — Serper search + official force pages (parallel) + optional page fetch when snippets are weak
+6. **AI review** — GPT-4o-mini on new/backlog findings with page evidence
+7. **Admin** — `/admin/custody-number-review` manual approve/reject
+8. **Live** — approved numbers overlay onto station pages at runtime
 
 Auto-publish is **off** by default. See [Yield review](#yield-review-deferred) below.
 
@@ -22,10 +24,10 @@ Auto-publish is **off** by default. See [Yield review](#yield-review-deferred) b
 | `SERPER_API_KEY` | — | Google search for custody contact pages (required for best yield) |
 | `CRON_SECRET` | — | Cron auth |
 | `KV_REST_API_*` / `UPSTASH_*` | — | Findings + approved numbers storage |
-| `CUSTODY_DISCOVERY_BATCH_LIMIT` | `25` | Suites per cron run |
+| `CUSTODY_DISCOVERY_BATCH_LIMIT` | `10` | Suites per cron run |
 | `CUSTODY_DISCOVERY_MAX_QUERIES` | `4` | Serper queries per suite |
 | `CUSTODY_DISCOVERY_PAGE_FETCH_LIMIT` | `3` | Full page fetches per suite when snippet is weak |
-| `CUSTODY_AI_BATCH_LIMIT` | `50` | AI reviews per cron run |
+| `CUSTODY_AI_BATCH_LIMIT` | `12` | AI reviews per cron run |
 | `CUSTODY_AI_FETCH_EVIDENCE` | `true` | Fetch source pages during AI review |
 | `CUSTODY_AI_AUTO_PUBLISH` | `false` | Auto-approve high-confidence official findings |
 | `CUSTODY_AI_AUTO_REJECT` | `true` | Auto-reject obvious junk after AI review |
