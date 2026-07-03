@@ -19,6 +19,15 @@ export function autoPublishEnabled(): boolean {
   return process.env.CUSTODY_AI_AUTO_PUBLISH === 'true';
 }
 
+/** revalidatePath throws outside a Next request scope (e.g. operator tsx scripts). */
+function safeRevalidate(path: string): void {
+  try {
+    revalidatePath(path);
+  } catch {
+    /* running outside Next — ISR revalidation not needed */
+  }
+}
+
 export function autoRejectEnabled(): boolean {
   return process.env.CUSTODY_AI_AUTO_REJECT !== 'false';
 }
@@ -96,10 +105,10 @@ export async function applyAutoDecision(
           autoPublishedAt: now,
           notes,
         });
-        revalidatePath('/StationsDirectory');
-        revalidatePath('/admin/custody-number-review');
+        safeRevalidate('/StationsDirectory');
+        safeRevalidate('/admin/custody-number-review');
         if (result.approved.stationSlug) {
-          revalidatePath(`/police-station/${result.approved.stationSlug}`);
+          safeRevalidate(`/police-station/${result.approved.stationSlug}`);
         }
         return { action: 'published', reason: 'auto_publish' };
       }
