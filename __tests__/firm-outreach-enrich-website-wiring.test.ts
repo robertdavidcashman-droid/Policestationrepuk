@@ -37,6 +37,7 @@ describe('enrichment wires Serper website discovery before crawl', () => {
 
     vi.doMock('@/lib/firm-outreach/storage', () => ({
       CURSOR_ENRICH: 'firmoutreach:cursor:enrich',
+      enrichCursorKey: (campaignId: string) => `firmoutreach:cursor:enrich:${campaignId}`,
       getCursor: vi.fn().mockResolvedValue(0),
       setCursor: vi.fn(),
       listProspectIdsByStatus: vi.fn().mockImplementation(async (status: string) =>
@@ -129,6 +130,7 @@ describe('enrichment wires Serper website discovery before crawl', () => {
     let saved: Record<string, unknown> | undefined;
     vi.doMock('@/lib/firm-outreach/storage', () => ({
       CURSOR_ENRICH: 'firmoutreach:cursor:enrich',
+      enrichCursorKey: (campaignId: string) => `firmoutreach:cursor:enrich:${campaignId}`,
       getCursor: vi.fn().mockResolvedValue(0),
       setCursor: vi.fn(),
       listProspectIdsByStatus: vi.fn().mockImplementation(async (status: string) =>

@@ -3,9 +3,12 @@ import { resolve } from 'path';
 import { ensureDsccRegisterCache } from '@/lib/dscc-register-lookup';
 import { readLaaCrimeJson } from '@/lib/legal-directory/laa-fetch';
 import { listApprovedListings } from '@/lib/legal-directory/storage';
+import { AGENT_COVER_KENT_CAMPAIGN_ID } from '../campaign-scope';
 import { countyAllowlist } from '../constants';
+import { filterKentInputs } from '../kent-filter';
 import {
   archiveFirmsToInputs,
+  buildProspectForCampaign,
   buildProspectFromInput,
   dsccEntriesToInputs,
   laaRecordsToInputs,
@@ -13,6 +16,7 @@ import {
   type ArchiveLawFirm,
   type RawProspectInput,
 } from '../merge-prospects';
+import { FIRM_OUTREACH_CAMPAIGN_ID } from '../site-config';
 import { buildCrimeRegistry } from '../qualification';
 import { getProspect, saveProspect } from '../storage';
 import type { DiscoveryRunStats } from '../types';
@@ -27,16 +31,18 @@ function loadArchiveFirms(): ArchiveLawFirm[] {
   }
 }
 
-function countyAllowed(county: string | undefined): boolean {
-  const allow = countyAllowlist();
-  if (!allow?.length) return true;
+function countyAllowed(county: string | undefined, allowlist: string[] | null): boolean {
+  if (!allowlist?.length) return true;
   const c = (county ?? '').trim().toLowerCase();
   if (!c) return true;
-  return allow.some((a) => c.includes(a) || a.includes(c));
+  return allowlist.some((a) => c.includes(a) || a.includes(c));
 }
 
-function filterByCounty(inputs: RawProspectInput[]): RawProspectInput[] {
-  return inputs.filter((i) => countyAllowed(i.county));
+function filterByCounty(
+  inputs: RawProspectInput[],
+  allowlist: string[] | null,
+): RawProspectInput[] {
+  return inputs.filter((i) => countyAllowed(i.county, allowlist));
 }
 
 async function directoryInputs(): Promise<RawProspectInput[]> {
@@ -66,8 +72,17 @@ async function directoryInputs(): Promise<RawProspectInput[]> {
   }
 }
 
-export async function runFirmDiscovery(): Promise<DiscoveryRunStats> {
+export async function runFirmDiscovery(opts?: {
+  campaignId?: string;
+  countyAllowlist?: string[] | null;
+}): Promise<DiscoveryRunStats> {
   const started = Date.now();
+  const campaignId = opts?.campaignId ?? FIRM_OUTREACH_CAMPAIGN_ID;
+  const isAgentCover = campaignId === AGENT_COVER_KENT_CAMPAIGN_ID;
+  const allowlist = isAgentCover
+    ? (opts?.countyAllowlist ?? ['kent'])
+    : (opts?.countyAllowlist ?? countyAllowlist());
+
   const laa = readLaaCrimeJson();
   const archive = loadArchiveFirms();
   const dscc = await ensureDsccRegisterCache();
@@ -79,19 +94,22 @@ export async function runFirmDiscovery(): Promise<DiscoveryRunStats> {
   const crimeRegistry = buildCrimeRegistry(laa, dscc?.entries ?? []);
   const archiveInputs = archiveFirmsToInputs(archive, crimeRegistry);
 
-  const allInputs = filterByCounty([
-    ...laaRecordsToInputs(laa),
-    ...archiveInputs,
-    ...dsccInputs,
-    ...directory,
-  ]);
+  let allInputs = filterByCounty(
+    [...laaRecordsToInputs(laa), ...archiveInputs, ...dsccInputs, ...directory],
+    allowlist,
+  );
+  if (isAgentCover) {
+    allInputs = filterKentInputs(allInputs);
+  }
 
   let created = 0;
   let updated = 0;
   let excluded = 0;
 
   for (const input of allInputs) {
-    const built = buildProspectFromInput(input);
+    const built = isAgentCover
+      ? buildProspectForCampaign(campaignId, input)
+      : buildProspectFromInput(input);
     if (!built) continue;
     if (built.status === 'excluded') excluded++;
 

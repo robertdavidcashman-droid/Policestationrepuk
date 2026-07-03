@@ -1,11 +1,13 @@
 import { ensureDsccRegisterCache } from '@/lib/dscc-register-lookup';
 import { readLaaCrimeJson } from '@/lib/legal-directory/laa-fetch';
 import { enrichBatchSize } from '../constants';
+import { activeOutreachCampaignId } from '../campaign-scope';
 import { buildCrimeRegistry, resolveStatusWithQualification } from '../qualification';
 import type { CrimeRegistry } from '../qualification';
 import { resolveProspectWebsite } from './resolve-prospect-website';
 import {
   CURSOR_ENRICH,
+  enrichCursorKey,
   getCursor,
   getProspectsByIds,
   isDuplicateInitialSend,
@@ -111,7 +113,7 @@ async function enrichOne(prospect: FirmProspect, registry: CrimeRegistry): Promi
     prospect.status = resolveStatusWithQualification(prospect, 'ready_to_send', registry);
     if (
       prospect.status === 'ready_to_send' &&
-      (await isDuplicateInitialSend(prospect.email, prospect.id))
+      (await isDuplicateInitialSend(prospect.email, prospect.id, prospect.campaignId))
     ) {
       prospect.status = 'excluded';
       prospect.excludedReason = 'duplicate_email';
@@ -129,21 +131,22 @@ export async function advanceEnrichCursor(
   cursor: number,
   processedCount: number,
   poolLength: number,
+  cursorKey: string = CURSOR_ENRICH,
 ): Promise<number> {
   if (poolLength === 0) {
-    await setCursor(CURSOR_ENRICH, 0);
+    await setCursor(cursorKey, 0);
     return 0;
   }
   if (processedCount <= 0) {
     if (cursor >= poolLength) {
-      await setCursor(CURSOR_ENRICH, 0);
+      await setCursor(cursorKey, 0);
       return 0;
     }
     return cursor;
   }
   const next = cursor + processedCount;
   const wrapped = next >= poolLength ? 0 : next;
-  await setCursor(CURSOR_ENRICH, wrapped);
+  await setCursor(cursorKey, wrapped);
   return wrapped;
 }
 
@@ -154,9 +157,11 @@ async function loadEnrichRegistry(): Promise<CrimeRegistry> {
 }
 
 /** Load enrichable prospect IDs from stored record status (not stale status indexes). */
-export async function loadEnrichPoolIds(): Promise<string[]> {
-  const discovered = await listProspectIdsByRecordStatus('discovered');
-  const noEmail = await listProspectIdsByRecordStatus('no_email');
+export async function loadEnrichPoolIds(campaignId?: string): Promise<string[]> {
+  const cid = campaignId ?? activeOutreachCampaignId();
+  const opts = { campaignId: cid };
+  const discovered = await listProspectIdsByRecordStatus('discovered', opts);
+  const noEmail = await listProspectIdsByRecordStatus('no_email', opts);
   const now = Date.now();
   const retryIds: string[] = [];
   for (const id of noEmail) {
@@ -200,18 +205,21 @@ export async function pickEnrichBatchIds(opts: {
 }
 
 export async function runFirmEnrichment(opts?: {
+  campaignId?: string;
   limit?: number;
   maxElapsedMs?: number;
 }): Promise<EnrichmentRunStats> {
   const started = Date.now();
+  const campaignId = opts?.campaignId ?? activeOutreachCampaignId();
   const limit = opts?.limit ?? enrichBatchSize();
   const registry = await loadEnrichRegistry();
-  const poolIds = await loadEnrichPoolIds();
+  const poolIds = await loadEnrichPoolIds(campaignId);
 
-  let cursor = await getCursor(CURSOR_ENRICH);
+  const cursorKey = enrichCursorKey(campaignId);
+  let cursor = await getCursor(cursorKey);
   if (cursor >= poolIds.length && poolIds.length > 0) {
     cursor = 0;
-    await setCursor(CURSOR_ENRICH, 0);
+    await setCursor(cursorKey, 0);
   }
 
   const { batchIds, scanned } = await pickEnrichBatchIds({
@@ -263,7 +271,7 @@ export async function runFirmEnrichment(opts?: {
   await Promise.all(workers);
 
   const advanceBy = processedCount > 0 || !stoppedEarly ? scanned : 0;
-  await advanceEnrichCursor(cursor, advanceBy, poolIds.length);
+  await advanceEnrichCursor(cursor, advanceBy, poolIds.length, cursorKey);
 
   return {
     processed: processedCount,
@@ -275,6 +283,7 @@ export async function runFirmEnrichment(opts?: {
     stoppedEarly: stoppedEarly || undefined,
     poolSize: poolIds.length,
     candidatesScanned: scanned,
+    campaignId,
   };
 }
 

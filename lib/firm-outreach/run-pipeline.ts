@@ -1,5 +1,6 @@
 import { fetchLaaCrimeProviders } from '@/lib/legal-directory/laa-fetch';
 import { ensureDsccRegisterCache } from '@/lib/dscc-register-lookup';
+import { AGENT_COVER_KENT_CAMPAIGN_ID } from './campaign-scope';
 import { outreachEnabled, outreachSendEnabled } from './constants';
 import { cleanupNonFirmProspectEmails } from './cleanup-non-firm-emails';
 import { runFirmDiscovery } from './discovery/run-discovery';
@@ -22,8 +23,10 @@ export interface FirmOutreachPipelineResult {
   laa: { refreshed: boolean; source: string; count: number };
   dscc: { count: number; syncedAt: string | null };
   discovery: DiscoveryRunStats;
+  agentCoverDiscovery?: DiscoveryRunStats;
   requalify: Awaited<ReturnType<typeof requalifyAllProspects>>;
   enrich: EnrichmentRunStats;
+  agentCoverEnrich?: EnrichmentRunStats;
   send: OutreachRunStats;
   counts: Record<string, number>;
   elapsedMs: number;
@@ -73,8 +76,10 @@ export async function runFirmOutreachPipeline(opts?: {
   let dsccCount = 0;
   let dsccSyncedAt: string | null = null;
   let discovery = emptyDiscovery();
+  let agentCoverDiscovery: DiscoveryRunStats | undefined;
   let requalify: Awaited<ReturnType<typeof requalifyAllProspects>> = emptyRequalify();
   let enrich = emptyEnrich();
+  let agentCoverEnrich: EnrichmentRunStats | undefined;
 
   if (!opts?.skipDiscovery) {
     const forceLaa = opts?.forceLaaRefresh ?? isSundayUtc();
@@ -87,13 +92,23 @@ export async function runFirmOutreachPipeline(opts?: {
     dsccCount = dscc?.count ?? 0;
     dsccSyncedAt = dscc?.syncedAt ?? null;
     discovery = await runFirmDiscovery();
+    agentCoverDiscovery = await runFirmDiscovery({
+      campaignId: AGENT_COVER_KENT_CAMPAIGN_ID,
+      countyAllowlist: ['kent'],
+    });
     requalify = await requalifyAllProspects();
   }
 
   if (!opts?.skipEnrich) {
     const enrichLimit = opts?.enrichLimit ?? (opts?.skipSend ? 120 : 60);
+    const half = Math.max(1, Math.floor(enrichLimit / 2));
     enrich = await runFirmEnrichment({
-      limit: enrichLimit,
+      limit: half,
+      maxElapsedMs: opts?.enrichMaxElapsedMs,
+    });
+    agentCoverEnrich = await runFirmEnrichment({
+      campaignId: AGENT_COVER_KENT_CAMPAIGN_ID,
+      limit: half,
       maxElapsedMs: opts?.enrichMaxElapsedMs,
     });
   }
@@ -137,8 +152,10 @@ export async function runFirmOutreachPipeline(opts?: {
       syncedAt: dsccSyncedAt,
     },
     discovery,
+    agentCoverDiscovery,
     requalify,
     enrich,
+    agentCoverEnrich,
     send,
     counts,
     elapsedMs: Date.now() - started,

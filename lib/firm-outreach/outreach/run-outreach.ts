@@ -1,5 +1,5 @@
 import { dailySendCap, outreachSendEnabled } from '../constants';
-import { isActiveCampaignProspect } from '../campaign-scope';
+import { activeOutreachCampaignId, isCampaignProspect } from '../campaign-scope';
 import { sortProspectsForSend } from '../enrichment/scorer';
 import { validateEmailForSend } from '../enrichment/validator';
 import {
@@ -32,10 +32,13 @@ function daysSince(iso: string | undefined): number {
   return (Date.now() - Date.parse(iso)) / (1000 * 60 * 60 * 24);
 }
 
-async function firmRecentlyContacted(prospect: FirmProspect): Promise<boolean> {
+async function firmRecentlyContacted(
+  prospect: FirmProspect,
+  campaignId: string,
+): Promise<boolean> {
   const siblings = await listProspectsForFirmKey(prospect.firmKey);
   for (const s of siblings) {
-    if (s.id === prospect.id || !isActiveCampaignProspect(s)) continue;
+    if (s.id === prospect.id || !isCampaignProspect(s, campaignId)) continue;
     if (s.lastEmailAt && daysSince(s.lastEmailAt) < FIRM_SEND_COOLDOWN_DAYS) {
       return true;
     }
@@ -63,10 +66,13 @@ function nextStep(prospect: FirmProspect): number | null {
 }
 
 export async function runFirmOutreach(opts?: {
+  campaignId?: string;
   dryRun?: boolean;
   limit?: number;
 }): Promise<OutreachRunStats> {
   const started = Date.now();
+  const campaignId = opts?.campaignId ?? activeOutreachCampaignId();
+  const campaignOpts = { campaignId };
   const stats: OutreachRunStats = {
     queued: 0,
     sent: 0,
@@ -83,15 +89,15 @@ export async function runFirmOutreach(opts?: {
 
   const date = new Date().toISOString().slice(0, 10);
   const cap = opts?.limit ?? dailySendCap();
-  const alreadySent = await getDailySendCount(date);
+  const alreadySent = await getDailySendCount(date, campaignId);
   const remaining = Math.max(0, cap - alreadySent);
   if (remaining === 0) {
     stats.elapsedMs = Date.now() - started;
     return stats;
   }
 
-  const ready = await listProspectsByRecordStatus('ready_to_send', 2000);
-  const sent = await listProspectsByRecordStatus('sent', 2000);
+  const ready = await listProspectsByRecordStatus('ready_to_send', 2000, campaignOpts);
+  const sent = await listProspectsByRecordStatus('sent', 2000, campaignOpts);
   const candidates = sortProspectsForSend([...ready, ...sent]);
   const emailsSentThisRun = new Set<string>();
 
@@ -133,7 +139,7 @@ export async function runFirmOutreach(opts?: {
     if (
       step === 0 &&
       (emailsSentThisRun.has(normalizedEmail) ||
-        (await isDuplicateInitialSend(email, prospect.id)))
+        (await isDuplicateInitialSend(email, prospect.id, campaignId)))
     ) {
       stats.skipped++;
       if (prospect.status === 'ready_to_send') {
@@ -142,7 +148,7 @@ export async function runFirmOutreach(opts?: {
       continue;
     }
 
-    if (prospect.prospectType === 'solicitor' && (await firmRecentlyContacted(prospect))) {
+    if (prospect.prospectType === 'solicitor' && (await firmRecentlyContacted(prospect, campaignId))) {
       stats.skipped++;
       continue;
     }
@@ -200,7 +206,7 @@ export async function runFirmOutreach(opts?: {
       send.resendMessageId = result.messageId;
       await saveSend(send);
 
-      await incrementDailySendCount(date);
+      await incrementDailySendCount(date, campaignId);
     }
     emailsSentThisRun.add(normalizedEmail);
     stats.sent++;

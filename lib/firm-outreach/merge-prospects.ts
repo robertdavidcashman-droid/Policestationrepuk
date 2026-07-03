@@ -10,6 +10,10 @@ export const laaRecordsToInputs = core.laaRecordsToInputs;
 export const dsccEntriesToInputs = core.dsccEntriesToInputs;
 export const archiveFirmsToInputs = core.archiveFirmsToInputs;
 
+export function buildProspectForCampaign(campaignId: string, input: core.RawProspectInput) {
+  return core.buildProspectFromInput(input, campaignId);
+}
+
 export function buildProspectFromInput(input: core.RawProspectInput) {
-  return core.buildProspectFromInput(input, FIRM_OUTREACH_CAMPAIGN_ID);
+  return buildProspectForCampaign(FIRM_OUTREACH_CAMPAIGN_ID, input);
 }

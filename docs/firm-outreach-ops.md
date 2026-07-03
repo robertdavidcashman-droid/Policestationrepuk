@@ -114,6 +114,13 @@ CAMPAIGN_ID=agent_cover_kent_v1 npx tsx scripts/firm-outreach-cleanup-non-firm-e
 npx tsx scripts/firm-outreach-import-lead-engine.ts --dry-run
 npx tsx scripts/firm-outreach-import-lead-engine.ts
 
+# PSA agent-cover Kent campaign (policestationagent.com)
+npx tsx scripts/firm-outreach-build-brochure-pdf.ts
+npx tsx scripts/firm-outreach-seed-agent-cover-kent.ts --apply
+npx tsx scripts/firm-outreach-enrich.ts --campaign=agent_cover_kent_v1 --limit=150
+CAMPAIGN_ID=agent_cover_kent_v1 npx tsx scripts/firm-outreach-cleanup-non-firm-emails.ts --apply
+npx tsx scripts/firm-outreach-send.ts --campaign=agent_cover_kent_v1 --apply --limit=5
+
 # Send approval email locally
 npm run firm-outreach:send-approval-email
 

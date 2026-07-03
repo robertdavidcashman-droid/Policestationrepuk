@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { getKV, skipKVInPrerender } from '@/lib/kv';
-import { dailySendKeyForCampaign, isActiveCampaignProspect, isActiveCampaignSend, activeOutreachCampaignId } from './campaign-scope';
+import { dailySendKeyForCampaign, dailySendKeyForCampaignId, isActiveCampaignProspect, isActiveCampaignSend, isCampaignProspect, isCampaignSend, activeOutreachCampaignId } from './campaign-scope';
 import { OUTREACH_CAMPAIGN_IDS } from './site-config';
 import { emailHash, normalizeEmail } from './normalize';
 import type {
@@ -171,14 +171,18 @@ export async function listProspectIdsByStatus(status: FirmProspectStatus): Promi
 }
 
 /** Prospect ids whose stored record matches status (truthful; ignores stale status indexes). */
-export async function listProspectIdsByRecordStatus(status: FirmProspectStatus): Promise<string[]> {
+export async function listProspectIdsByRecordStatus(
+  status: FirmProspectStatus,
+  opts?: { campaignId?: string },
+): Promise<string[]> {
   if (skipKVInPrerender()) return [];
+  const campaignId = opts?.campaignId ?? activeOutreachCampaignId();
   const ids = [...new Set(await listAllProspectIds())];
   if (ids.length === 0) return [];
   const map = await getProspectsByIds(ids);
   return ids.filter((id) => {
     const p = map.get(id);
-    return p && isActiveCampaignProspect(p) && p.status === status;
+    return p && isCampaignProspect(p, campaignId) && p.status === status;
   });
 }
 
@@ -197,12 +201,13 @@ export async function listProspectsByStatus(status: FirmProspectStatus, limit = 
   return out;
 }
 
-/** Active-campaign prospects whose stored record matches the given status. */
+/** Campaign-scoped prospects whose stored record matches the given status. */
 export async function listProspectsByRecordStatus(
   status: FirmProspectStatus,
   limit = 500,
+  opts?: { campaignId?: string },
 ): Promise<FirmProspect[]> {
-  const ids = (await listProspectIdsByRecordStatus(status)).slice(0, limit);
+  const ids = (await listProspectIdsByRecordStatus(status, opts)).slice(0, limit);
   if (ids.length === 0) return [];
   const map = await getProspectsByIds(ids);
   return ids.map((id) => map.get(id)).filter((p): p is FirmProspect => Boolean(p));
@@ -220,17 +225,21 @@ export async function listProspectsForFirmKey(firmKey: string): Promise<FirmPros
   return out;
 }
 
-export async function getCursor(key: typeof CURSOR_ENRICH | typeof CURSOR_SEND): Promise<number> {
+export async function getCursor(key: string): Promise<number> {
   const kv = getKV();
   if (!kv) return 0;
   const val = await kv.get<number>(key);
   return typeof val === 'number' && val >= 0 ? val : 0;
 }
 
-export async function setCursor(key: typeof CURSOR_ENRICH | typeof CURSOR_SEND, value: number): Promise<void> {
+export async function setCursor(key: string, value: number): Promise<void> {
   const kv = getKV();
   if (!kv) return;
   await kv.set(key, value);
+}
+
+export function enrichCursorKey(campaignId: string): string {
+  return `${CURSOR_ENRICH}:${campaignId}`;
 }
 
 export { CURSOR_ENRICH, CURSOR_SEND };
@@ -341,8 +350,10 @@ export function emailHasInitialOutreachFromOtherProspect(
 export async function isDuplicateInitialSend(
   email: string,
   prospectId: string,
+  campaignId?: string,
 ): Promise<boolean> {
-  const sends = (await listSendsForEmail(email)).filter(isActiveCampaignSend);
+  const cid = campaignId ?? activeOutreachCampaignId();
+  const sends = (await listSendsForEmail(email)).filter((s) => isCampaignSend(s, cid));
   return emailHasInitialOutreachFromOtherProspect(sends, email, prospectId);
 }
 
@@ -424,17 +435,22 @@ export async function applySendWebhookEvent(opts: {
   return send;
 }
 
-export async function getDailySendCount(date: string): Promise<number> {
+export async function getDailySendCount(date: string, campaignId?: string): Promise<number> {
   const kv = getKV();
   if (!kv) return 0;
-  const n = await kv.get<number>(dailySendKey(date));
+  const key = campaignId
+    ? dailySendKeyForCampaignId(campaignId, date)
+    : dailySendKey(date);
+  const n = await kv.get<number>(key);
   return typeof n === 'number' ? n : 0;
 }
 
-export async function incrementDailySendCount(date: string): Promise<number> {
+export async function incrementDailySendCount(date: string, campaignId?: string): Promise<number> {
   const kv = getKV();
   if (!kv) return 0;
-  const key = dailySendKey(date);
+  const key = campaignId
+    ? dailySendKeyForCampaignId(campaignId, date)
+    : dailySendKey(date);
   const current = (await kv.get<number>(key)) ?? 0;
   const next = current + 1;
   await kv.set(key, next, { ex: 60 * 60 * 24 * 3 });

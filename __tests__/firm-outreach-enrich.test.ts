@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 vi.mock('@/lib/firm-outreach/storage', () => ({
   CURSOR_ENRICH: 'firmoutreach:cursor:enrich',
+  enrichCursorKey: (campaignId: string) => `firmoutreach:cursor:enrich:${campaignId}`,
   setCursor: vi.fn(),
 }));
 
@@ -73,6 +74,7 @@ describe('runFirmEnrichment cursor on timeout', () => {
 
     vi.doMock('@/lib/firm-outreach/storage', () => ({
       CURSOR_ENRICH: 'firmoutreach:cursor:enrich',
+      enrichCursorKey: (campaignId: string) => `firmoutreach:cursor:enrich:${campaignId}`,
       listProspectIdsByRecordStatus: vi.fn(async (status: string) =>
         status === 'discovered' ? ['p1'] : [],
       ),

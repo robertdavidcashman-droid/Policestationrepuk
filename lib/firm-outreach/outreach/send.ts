@@ -1,6 +1,8 @@
 import { Resend } from 'resend';
 import { SITE_URL } from '@/lib/seo-layer/config';
 import { COMMUNITY_EMAIL } from '@/lib/site-navigation';
+import { AGENT_COVER_KENT_CAMPAIGN_ID } from '../campaign-scope';
+import { loadBrochureAttachment } from '../brochure/load-attachment';
 import { buildOutreachEmailHtml, subjectForStep } from './templates';
 import { issueUnsubscribeToken } from './unsubscribe-token';
 import type { FirmProspect } from '../types';
@@ -8,6 +10,10 @@ import type { FirmProspect } from '../types';
 const FROM_EMAIL =
   process.env.FIRM_OUTREACH_FROM_EMAIL?.trim() ||
   'PoliceStationRepUK <noreply@policestationrepuk.org>';
+
+const PSA_FROM_EMAIL =
+  process.env.FIRM_OUTREACH_PSA_FROM_EMAIL?.trim() ||
+  'Police Station Agent <noreply@policestationagent.com>';
 
 let resend: Resend | null = null;
 
@@ -17,6 +23,16 @@ function getResend(): Resend | null {
   if (!key) return null;
   resend = new Resend(key);
   return resend;
+}
+
+function fromEmailForProspect(prospect: FirmProspect): string {
+  return prospect.campaignId === AGENT_COVER_KENT_CAMPAIGN_ID ? PSA_FROM_EMAIL : FROM_EMAIL;
+}
+
+function unsubscribeBaseUrl(prospect: FirmProspect): string {
+  return prospect.campaignId === AGENT_COVER_KENT_CAMPAIGN_ID
+    ? 'https://www.policestationagent.com'
+    : SITE_URL;
 }
 
 export async function sendOutreachEmail(opts: {
@@ -29,7 +45,7 @@ export async function sendOutreachEmail(opts: {
 
   const subject = subjectForStep(opts.prospect, opts.step);
   const token = issueUnsubscribeToken(email);
-  const unsubscribeUrl = `${SITE_URL}/outreach/unsubscribe/${encodeURIComponent(token)}`;
+  const unsubscribeUrl = `${unsubscribeBaseUrl(opts.prospect)}/outreach/unsubscribe/${encodeURIComponent(token)}`;
   const html = buildOutreachEmailHtml({
     prospect: opts.prospect,
     step: opts.step,
@@ -47,13 +63,22 @@ export async function sendOutreachEmail(opts: {
     return { ok: false, subject, error: 'no_resend' };
   }
 
+  const attachments =
+    opts.prospect.campaignId === AGENT_COVER_KENT_CAMPAIGN_ID && opts.step === 0
+      ? (() => {
+          const brochure = loadBrochureAttachment();
+          return brochure ? [{ filename: brochure.filename, content: brochure.content }] : undefined;
+        })()
+      : undefined;
+
   try {
     const result = await client.emails.send({
-      from: FROM_EMAIL,
+      from: fromEmailForProspect(opts.prospect),
       to: email,
       replyTo: COMMUNITY_EMAIL,
       subject,
       html,
+      attachments,
       headers: {
         'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:${COMMUNITY_EMAIL}?subject=unsubscribe>`,
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
