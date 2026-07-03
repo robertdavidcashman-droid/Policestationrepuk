@@ -5,6 +5,7 @@ import { cleanupNonFirmProspectEmails } from './cleanup-non-firm-emails';
 import { runFirmDiscovery } from './discovery/run-discovery';
 import { runFirmEnrichment } from './enrichment/run-enrich';
 import { sendDailyOutreachDigest } from './outreach/digest-email';
+import { maybeNotifyOutreachSendFailure } from './outreach/send-failure-email';
 import { runFirmOutreach } from './outreach/run-outreach';
 import { requalifyAllProspects } from './requalify-prospects';
 import { countProspectsByStatus } from './storage';
@@ -103,6 +104,13 @@ export async function runFirmOutreachPipeline(opts?: {
       : await runFirmOutreach({ limit: opts?.sendLimit });
 
   const counts = await countProspectsByStatus();
+
+  if (!opts?.skipSend) {
+    await maybeNotifyOutreachSendFailure({
+      stats: send,
+      readyToSend: counts.ready_to_send ?? 0,
+    });
+  }
 
   if (!opts?.skipDigest) {
     await sendDailyOutreachDigest({

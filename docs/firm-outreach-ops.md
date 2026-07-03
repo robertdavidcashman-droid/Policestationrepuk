@@ -19,6 +19,7 @@ Automated WhatsApp invitation emails to qualified criminal defence firms. Admin 
 | `14:30` | `/api/cron/firm-outreach-send` | Send-only top-up (no digest) |
 | `18:30` | `/api/cron/firm-outreach-send` | Send-only top-up (no digest) |
 | `17:00` | `/api/cron/firm-outreach-digest` | **Reminder** approval email if daily cap not yet reached |
+| — | `/api/cron/firm-outreach-status` | Config + queue health (monitoring) |
 
 Manual approval email (one per London day unless `--force` or reminder cron):
 
@@ -67,9 +68,10 @@ Recommended to set explicitly (otherwise code defaults apply):
 - `RESEND_WEBHOOK_SECRET` — set via `node scripts/resend-configure-webhook.mjs`
 - `FIRM_OUTREACH_CRON_ENRICH_BATCH=50`
 - `FIRM_OUTREACH_DAILY_CAP=150`
-**Production:** set `FIRM_OUTREACH_REQUIRE_APPROVAL=false` explicitly on Vercel if you want automatic sends. When the variable is **unset**, the code treats approval as **required** (`!== 'false'`).
 
-- `FIRM_OUTREACH_REQUIRE_APPROVAL=false`
+**Approval mode (default):** `FIRM_OUTREACH_REQUIRE_APPROVAL` unset means approval is **required** — you receive daily approval/reminder emails and must click **Ready to send**. Set `FIRM_OUTREACH_REQUIRE_APPROVAL=false` on Vercel for automatic sends at 09:30/14:30/18:30 UTC.
+
+- `FIRM_OUTREACH_REQUIRE_APPROVAL=false` (optional — automatic sends)
 - `SERPER_API_KEY` — resolves firm websites via Google when SRA lookup has no URL
 - `HUNTER_API_KEY` — Hunter.io fallback when website crawl finds no email
 - `FIRM_OUTREACH_PAID_DAILY_CAP=100` — Hunter lookups per day (default 100)
@@ -96,6 +98,10 @@ Updates the admin Send log with delivery/open/click/bounce status. Webhook match
 ```bash
 # Check KV queue and timing
 npm run firm-outreach:admin-smoke
+
+# Verify repo + production HTTP (set CRON_SECRET for status route)
+npm run firm-outreach:verify
+npm run firm-outreach:verify -- --url=https://policestationrepuk.org
 
 # Enrich locally (large batch — run 2–3× per week while backlog is large)
 npx tsx scripts/firm-outreach-enrich.ts --limit=150

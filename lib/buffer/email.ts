@@ -353,6 +353,119 @@ export async function sendBufferDailySuccessEmail(
   }
 }
 
+export interface BufferCrossSiteReportEmailInput {
+  date: string;
+  sites: Array<{
+    id: string;
+    hostname: string;
+    sentCount: number;
+    requiredCount: number;
+    ok: boolean;
+    issue?: string;
+  }>;
+  reason?: string;
+  adminEmail?: string;
+}
+
+export async function sendBufferCrossSiteSuccessEmail(
+  input: BufferCrossSiteReportEmailInput,
+): Promise<boolean> {
+  const to = input.adminEmail?.trim() || NOTIFY_EMAIL;
+  const subject = `[Buffer cross-site] All sites posted — ${input.date}`;
+
+  const rows = input.sites
+    .map(
+      (s) =>
+        `<tr>
+          <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(s.hostname)}</td>
+          <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${s.sentCount} / ${s.requiredCount}</td>
+          <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">OK</td>
+        </tr>`,
+    )
+    .join('');
+
+  const html = `
+    <div style="font-family:system-ui,sans-serif;color:#0f172a;max-width:720px;">
+      <h2 style="margin:0 0 12px;">Buffer cross-site report — all sites OK</h2>
+      <p style="margin:0 0 16px;line-height:1.5;">
+        Yesterday (<strong>${escapeHtml(input.date)}</strong>) every site met its daily post quota.
+      </p>
+      <table style="border-collapse:collapse;width:100%;font-size:13px;">
+        <thead><tr style="background:#f1f5f9;">
+          <th style="padding:6px 8px;text-align:left;">Site</th>
+          <th style="padding:6px 8px;text-align:left;">Sent</th>
+          <th style="padding:6px 8px;text-align:left;">Status</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+
+  const client = getResend();
+  if (!client) return false;
+  try {
+    await client.emails.send({ from: FROM_EMAIL, to, subject, html });
+    return true;
+  } catch (err) {
+    console.error('[buffer-cross-site email]', err);
+    return false;
+  }
+}
+
+export async function sendBufferCrossSiteFailureEmail(
+  input: BufferCrossSiteReportEmailInput,
+): Promise<boolean> {
+  const to = input.adminEmail?.trim() || NOTIFY_EMAIL;
+  const subject = `[Buffer cross-site] Sites below quota — ${input.date}`;
+
+  const reasonLine = input.reason
+    ? `<p style="margin:0 0 16px;padding:12px;border:1px solid #fecaca;border-radius:8px;background:#fef2f2;">${escapeHtml(input.reason)}</p>`
+    : '';
+
+  const rows = input.sites
+    .map(
+      (s) =>
+        `<tr>
+          <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(s.hostname)}</td>
+          <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${s.sentCount} / ${s.requiredCount}</td>
+          <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${s.ok ? 'OK' : escapeHtml(s.issue ?? 'below quota')}</td>
+        </tr>`,
+    )
+    .join('');
+
+  const html = `
+    <div style="font-family:system-ui,sans-serif;color:#0f172a;max-width:720px;">
+      <h2 style="margin:0 0 12px;">Buffer cross-site report — sites below quota</h2>
+      <p style="margin:0 0 16px;line-height:1.5;">
+        One or more sites did not reach their daily Buffer post quota for <strong>${escapeHtml(input.date)}</strong>.
+      </p>
+      ${reasonLine}
+      <table style="border-collapse:collapse;width:100%;font-size:13px;">
+        <thead><tr style="background:#f1f5f9;">
+          <th style="padding:6px 8px;text-align:left;">Site</th>
+          <th style="padding:6px 8px;text-align:left;">Sent</th>
+          <th style="padding:6px 8px;text-align:left;">Status</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p style="margin:16px 0 0;color:#64748b;font-size:12px;">
+        Run <code>npm run buffer:verify-cross-site</code> and check sibling
+        <code>/api/buffer/schedule</code> crons. See <code>docs/buffer-ops.md</code>.
+      </p>
+    </div>
+  `;
+
+  const client = getResend();
+  if (!client) return false;
+  try {
+    await client.emails.send({ from: FROM_EMAIL, to, subject, html });
+    return true;
+  } catch (err) {
+    console.error('[buffer-cross-site email]', err);
+    return false;
+  }
+}
+
 export async function sendBufferDailyFailureEmail(
   input: BufferDailyFailureEmailInput,
 ): Promise<boolean> {

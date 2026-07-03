@@ -10,7 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, '../.env.local') });
 config();
 
-const MAX_MS = 10_000;
+const MAX_MS = 20_000;
 
 async function main() {
   const { buildOutreachActivityReport } = await import(

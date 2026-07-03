@@ -8,6 +8,7 @@ Daily social scheduling for blog content across Twitter, LinkedIn, and Google Bu
 |----------------|-------|---------|
 | `5 5 * * *` | `/api/cron/buffer-blog-posts` | Schedule today's posts from all feeds |
 | `30 4 * * *` | `/api/cron/buffer-daily-report` | Daily email: verify yesterday's posts all sent |
+| `45 4 * * *` | `/api/cron/buffer-cross-site-report` | Cross-site email: all four properties met yesterday's quota |
 | `0 6 * * 1` | `/api/cron/buffer-health` | Weekly GBP scheduled-image verification |
 
 Auth: `Authorization: Bearer $CRON_SECRET` (or `x-cron-secret` locally).
@@ -32,6 +33,8 @@ npm run buffer:schedule              # Run scheduler once (manual)
 npm run buffer:list-today              # List today's scheduled posts
 npm run buffer:verify-feeds            # Live RSS + image ratio check
 npm run buffer:verify-posted           # Verify yesterday's run all reached sent
+npm run buffer:verify-cross-site       # Verify all four sites met yesterday's quota
+npm run buffer:gap-fill                # Gap-fill today's REPUK schedule to quota
 npm run buffer:verify-scheduled-images # All channels (GBP issues fatal)
 npm run buffer:verify-scheduled-gbp    # GBP channel only
 npm run buffer:repair-gbp              # Fix bad GBP posts in queue
