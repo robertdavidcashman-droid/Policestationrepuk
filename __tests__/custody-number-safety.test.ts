@@ -262,6 +262,7 @@ describe('AI hallucination guardrails', () => {
 const savedApproved = vi.fn();
 const savedFindings = vi.fn();
 const fetchPageTextMock = vi.fn();
+let mockApprovedMap = new Map<string, import('@/lib/custody-discovery/types').ApprovedCustodyNumber>();
 
 vi.mock('@/lib/custody-discovery/source-evidence', async (importOriginal) => {
   const mod = await importOriginal<typeof import('@/lib/custody-discovery/source-evidence')>();
@@ -284,7 +285,7 @@ vi.mock('@/lib/custody-discovery/storage', async (importOriginal) => {
       return Promise.resolve();
     },
     getFinding: async () => finding({ status: 'approved' }),
-    loadAllApprovedNumbers: async () => new Map(),
+    loadAllApprovedNumbers: async () => mockApprovedMap,
     invalidateApprovedCache: () => undefined,
   };
 });
@@ -293,6 +294,7 @@ import {
   isDueForRecheck,
   pageTextContainsNumber,
   recheckApprovedNumber,
+  sweepUnsafePublishedNumbers,
 } from '@/lib/custody-discovery/approved-recheck';
 import type { ApprovedCustodyNumber } from '@/lib/custody-discovery/types';
 
@@ -372,6 +374,50 @@ describe('approved number 90-day recheck', () => {
       approvedRecord({ sourceUrl: 'https://force.police.uk/custody.pdf' }),
     );
     expect(outcome).toBe('skipped_pdf');
+    expect(savedApproved).not.toHaveBeenCalled();
+  });
+});
+
+describe('unsafe published number sweep', () => {
+  beforeEach(() => {
+    savedApproved.mockClear();
+    savedFindings.mockClear();
+    mockApprovedMap = new Map();
+  });
+
+  it('downgrades published mobiles/premium to unverified and reopens for review', async () => {
+    mockApprovedMap.set(
+      's1',
+      approvedRecord({
+        phoneNumber: '07980 000 076',
+        normalizedPhoneNumber: '07980000076',
+      }),
+    );
+    const { flagged } = await sweepUnsafePublishedNumbers();
+    expect(flagged).toHaveLength(1);
+    expect(flagged[0].flag).toBe('mobile_number');
+    const saved = savedApproved.mock.calls[0][0] as ApprovedCustodyNumber;
+    expect(saved.verificationStatus).toBe('unverified');
+    expect(saved.publicVisible).toBe(true); // never unpublished automatically
+    expect(saved.auditLog?.at(-1)?.action).toBe('unsafe_number_flagged');
+    expect(savedFindings).toHaveBeenCalled();
+  });
+
+  it('flags each record only once and leaves safe landlines alone', async () => {
+    mockApprovedMap.set('s1', approvedRecord());
+    mockApprovedMap.set(
+      's2',
+      approvedRecord({
+        custodySuiteId: 's2',
+        phoneNumber: '0845 456 4567',
+        normalizedPhoneNumber: '08454564567',
+        auditLog: [
+          { at: '2026-07-01T00:00:00.000Z', actor: 'cron:approved-recheck', action: 'unsafe_number_flagged' },
+        ],
+      }),
+    );
+    const { flagged } = await sweepUnsafePublishedNumbers();
+    expect(flagged).toHaveLength(0);
     expect(savedApproved).not.toHaveBeenCalled();
   });
 });

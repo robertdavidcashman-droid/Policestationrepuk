@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import { runApprovedRecheckBatch } from '@/lib/custody-discovery/approved-recheck';
+import {
+  runApprovedRecheckBatch,
+  sweepUnsafePublishedNumbers,
+} from '@/lib/custody-discovery/approved-recheck';
 import { isCronAuthorized } from '@/lib/cron-auth';
 
 export const dynamic = 'force-dynamic';
@@ -23,9 +26,16 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const limitParam = Number(url.searchParams.get('limit'));
+
+  const unsafeSweep = await sweepUnsafePublishedNumbers();
   const stats = await runApprovedRecheckBatch(
     Number.isFinite(limitParam) && limitParam > 0 ? { limit: limitParam } : undefined,
   );
 
-  return NextResponse.json({ ok: true, mode: 'approved-recheck', ...stats });
+  return NextResponse.json({
+    ok: true,
+    mode: 'approved-recheck',
+    unsafeFlagged: unsafeSweep.flagged,
+    ...stats,
+  });
 }

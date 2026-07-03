@@ -125,7 +125,8 @@ export interface ApprovalAuditEntry {
     | 'recheck_source_missing'
     | 'recheck_number_missing'
     | 'recheck_conflict'
-    | 'corroborated';
+    | 'corroborated'
+    | 'unsafe_number_flagged';
   detail?: string;
 }
 

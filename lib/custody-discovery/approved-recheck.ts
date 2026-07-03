@@ -1,4 +1,5 @@
 import { normalizePhoneDigits } from '@/lib/phone-format';
+import { describeSafetyFlag, numberSafetyFlags } from './number-safety';
 import { extractPhonesFromText } from './phone';
 import { fetchPageTextFromUrl } from './source-evidence';
 import {
@@ -135,6 +136,39 @@ export async function recheckApprovedNumber(
       : 'Approved number no longer on source page.',
   );
   return conflict ? 'conflict' : 'number_missing';
+}
+
+/**
+ * Safety net for already-published data: any publicly visible number in an
+ * unsafe range (mobile / premium / emergency / invalid) is downgraded to
+ * `unverified` once and its source finding reopened for human review.
+ * Nothing is unpublished automatically.
+ */
+export async function sweepUnsafePublishedNumbers(): Promise<{
+  flagged: { suiteId: string; phoneNumber: string; flag: string }[];
+}> {
+  const approvedMap = await loadAllApprovedNumbers();
+  const flagged: { suiteId: string; phoneNumber: string; flag: string }[] = [];
+
+  for (const record of approvedMap.values()) {
+    if (!record.publicVisible) continue;
+    const flags = numberSafetyFlags(record.normalizedPhoneNumber);
+    if (flags.length === 0) continue;
+    const alreadyFlagged = record.auditLog?.some((e) => e.action === 'unsafe_number_flagged');
+    if (alreadyFlagged) continue;
+
+    const detail = flags.map((f) => describeSafetyFlag(f)).join('; ');
+    const updated = appendAuditEntry(
+      { ...record, verificationStatus: 'unverified' },
+      { actor: 'cron:approved-recheck', action: 'unsafe_number_flagged', detail },
+    );
+    await saveApprovedNumber(updated);
+    await flagSourceFindingForReview(record, `Published number is in an unsafe range: ${detail}`);
+    flagged.push({ suiteId: record.custodySuiteId, phoneNumber: record.phoneNumber, flag: flags[0] });
+  }
+
+  if (flagged.length > 0) invalidateApprovedCache();
+  return { flagged };
 }
 
 export async function runApprovedRecheckBatch(opts?: {
