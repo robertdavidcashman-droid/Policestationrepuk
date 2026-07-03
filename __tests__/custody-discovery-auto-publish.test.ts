@@ -72,9 +72,9 @@ describe('canAutoPublish gates', () => {
     if (!result.ok) expect(result.reason).toBe('weak_evidence');
   });
 
-  it('blocks non-official sources', () => {
+  it('blocks non-official sources without corroboration', () => {
     const result = canAutoPublish(finding({ sourceType: 'solicitor_site' }), review({}));
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.reason).toBe('source_not_official');
+    if (!result.ok) expect(result.reason).toBe('insufficient_corroboration');
   });
 });

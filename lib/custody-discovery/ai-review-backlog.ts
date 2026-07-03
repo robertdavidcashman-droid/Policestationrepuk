@@ -6,6 +6,7 @@ export interface AiReviewBatchResult {
   reviewed: number;
   autoPublished: number;
   autoRejected: number;
+  duplicatesClosed: number;
   held: number;
   skipped: number;
   evidenceFetchFailed: number;
@@ -20,6 +21,22 @@ function isReviewable(finding: CustodyNumberFinding): boolean {
   return finding.status === 'needs_review' || finding.status === 'new';
 }
 
+function evidenceRetryLimit(): number {
+  return Math.max(0, Number(process.env.CUSTODY_EVIDENCE_RETRY_LIMIT ?? 3));
+}
+
+/**
+ * Reviewed but blocked only because the source page fetch failed —
+ * worth re-running so a later successful fetch can unlock auto-publish.
+ */
+export function isWeakEvidenceRetryCandidate(finding: CustodyNumberFinding): boolean {
+  const review = finding.aiReview;
+  if (!review?.reviewedAt) return false;
+  if (review.recommendation === 'reject') return false;
+  if (review.evidence.source === 'page_fetch') return false;
+  return (finding.aiEvidenceRetries ?? 0) < evidenceRetryLimit();
+}
+
 export function selectFindingsNeedingAiReview(
   findings: CustodyNumberFinding[],
   limit: number,
@@ -27,14 +44,19 @@ export function selectFindingsNeedingAiReview(
 ): CustodyNumberFinding[] {
   const candidates = findings.filter((f) => {
     if (!isReviewable(f)) return false;
-    if (!opts?.force && f.aiReview?.reviewedAt) return false;
+    if (!opts?.force && f.aiReview?.reviewedAt && !isWeakEvidenceRetryCandidate(f)) return false;
     return true;
   });
 
+  // Unreviewed first, then approve-recommended fetch retries, then hold retries.
   candidates.sort((a, b) => {
-    const aHas = a.aiReview?.reviewedAt ? 1 : 0;
-    const bHas = b.aiReview?.reviewedAt ? 1 : 0;
-    if (aHas !== bHas) return aHas - bHas;
+    const rank = (f: CustodyNumberFinding) => {
+      if (!f.aiReview?.reviewedAt) return 0;
+      if (f.aiReview.recommendation === 'approve') return 1;
+      return 2;
+    };
+    const diff = rank(a) - rank(b);
+    if (diff !== 0) return diff;
     return a.updatedAt.localeCompare(b.updatedAt);
   });
 
@@ -67,6 +89,7 @@ export async function runAiReviewBatch(opts?: {
     reviewed: 0,
     autoPublished: 0,
     autoRejected: 0,
+    duplicatesClosed: 0,
     held: 0,
     skipped: 0,
     evidenceFetchFailed: 0,
@@ -74,7 +97,9 @@ export async function runAiReviewBatch(opts?: {
   };
 
   for (const target of targets) {
-    const row = await reviewFindingWithAi(target.id, { force: opts?.force });
+    // Weak-evidence retry candidates already have a review; force a fresh pass.
+    const force = opts?.force || isWeakEvidenceRetryCandidate(target);
+    const row = await reviewFindingWithAi(target.id, { force });
     if (!row) {
       result.skipped++;
       continue;
@@ -91,6 +116,7 @@ export async function runAiReviewBatch(opts?: {
 
     if (row.autoAction === 'published') result.autoPublished++;
     else if (row.autoAction === 'rejected') result.autoRejected++;
+    else if (row.autoAction === 'closed_duplicate') result.duplicatesClosed++;
     else result.held++;
   }
 
@@ -115,6 +141,7 @@ export async function runAiReviewForNewFindings(
     reviewed: newResult.reviewed + backlogResult.reviewed,
     autoPublished: newResult.autoPublished + backlogResult.autoPublished,
     autoRejected: newResult.autoRejected + backlogResult.autoRejected,
+    duplicatesClosed: newResult.duplicatesClosed + backlogResult.duplicatesClosed,
     held: newResult.held + backlogResult.held,
     skipped: newResult.skipped + backlogResult.skipped,
     evidenceFetchFailed: newResult.evidenceFetchFailed + backlogResult.evidenceFetchFailed,

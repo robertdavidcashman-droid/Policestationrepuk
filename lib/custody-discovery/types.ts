@@ -105,6 +105,8 @@ export interface CustodyNumberFinding {
   aiReview?: CustodyAiReview;
   autoPublishedAt?: string;
   autoRejectedAt?: string;
+  /** How many times AI review re-ran because the source page fetch failed. */
+  aiEvidenceRetries?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -122,7 +124,8 @@ export interface ApprovalAuditEntry {
     | 'recheck_ok'
     | 'recheck_source_missing'
     | 'recheck_number_missing'
-    | 'recheck_conflict';
+    | 'recheck_conflict'
+    | 'corroborated';
   detail?: string;
 }
 

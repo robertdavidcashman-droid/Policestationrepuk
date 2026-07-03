@@ -35,24 +35,33 @@ Auto-publish is **off** by default. See [Yield review](#yield-review-deferred) b
 | `CUSTODY_AI_AUTO_REJECT` | `true` | Auto-reject obvious junk after AI review |
 | `CUSTODY_RECHECK_DAYS` | `90` | Re-verify published numbers against source after this many days |
 | `CUSTODY_RECHECK_BATCH_LIMIT` | `20` | Approved numbers rechecked per cron run |
+| `CUSTODY_CORROBORATION_MIN_SOURCES` | `2` | Independent trusted domains required for corroborated auto-publish |
+| `CUSTODY_EVIDENCE_RETRY_LIMIT` | `3` | Max automatic re-reviews when the source page fetch fails |
 | `CUSTODY_DISCOVERY_NOTIFY_EMAIL` | — | Daily digest of new findings |
 
-### Auto-publish gates (all must pass)
+### Auto-publish gates
 
-`canAutoPublish` in `lib/custody-discovery/auto-decision.ts` — a finding auto-publishes only when **every** gate passes:
+`canAutoPublish` in `lib/custody-discovery/auto-decision.ts`. **Hard gates** that always apply, on every path:
 
 1. Number range is geographic (01/02), 03, or freephone — **mobiles, premium-rate (084/087/09/070), emergency codes, and invalid formats can never auto-publish**
-2. AI confidence ≥ 92 (`CUSTODY_AI_MIN_APPROVE_CONFIDENCE`)
-3. Rule confidence score ≥ 85
-4. Classification is `direct_custody`
-5. Official source type (official_police / police_uk / foi / pdf)
-6. Source domain is `.police.uk` or the force's own official domain
-7. No conflict flagged; never overwrites a different approved number
-8. Evidence came from a full page fetch (not a search snippet or unfetched PDF)
-9. Exact number appears in the fetched excerpt, with custody wording
-10. AI must give a substantive publish rationale
+2. Classification is `direct_custody`
+3. No conflict flagged; never overwrites a different approved number
+4. Evidence came from a full page fetch (not a search snippet or unfetched PDF)
+5. Exact number appears in the fetched excerpt, with custody wording
+6. AI must give a substantive publish rationale
 
-Everything else stays in the manual review queue. Nothing is invented: numbers only enter the pipeline via crawler extraction from fetched pages or committed official JSON, and the AI validator (`ai-review-validator.ts`) downgrades any AI approval whose excerpt does not contain the exact number.
+Then one of two paths must pass:
+
+- **Path A — official source (strictest, publishes as verified-eligible):** official source type (official_police / police_uk / foi / pdf), source domain is `.police.uk` or the force's own domain, AI confidence ≥ 92, rule score ≥ 85.
+- **Path B — multi-source corroboration (publishes as unverified):** the finding is from a trusted source type (official / police.uk / foi / pdf / pcc / local_authority) and ≥ 2 **independent trusted domains** (`CUSTODY_CORROBORATION_MIN_SOURCES`) report the **same landline** for the suite with **no trusted source disagreeing**. Thresholds scale: 2 domains → AI ≥ 75 & score ≥ 60; 3+ domains → AI ≥ 60 & score ≥ 45. Corroborated publishes always enter as `unverified` and are confirmed later by an official source or the 90-day recheck.
+
+### Automatic queue clearing (on every AI review)
+
+- **Duplicate confirmations** — a finding matching the already-published number for its suite is closed automatically; if it is a trusted source with fetched page evidence, it also bumps the published record's `lastVerifiedAt` (audit action `corroborated`).
+- **Unsafe numbers** — mobiles/premium-rate from non-official sources are auto-rejected (they can never be published); mobiles from official force sources stay in the queue for human judgement.
+- **Weak-evidence retries** — findings the AI would approve/hold but whose source page fetch failed are automatically retried on later AI cron runs, up to `CUSTODY_EVIDENCE_RETRY_LIMIT` (default 3) attempts.
+
+Nothing is invented: numbers only enter the pipeline via crawler extraction from fetched pages or committed official JSON, and the AI validator (`ai-review-validator.ts`) downgrades any AI approval whose excerpt does not contain the exact number.
 
 **Production:** ensure `SERPER_API_KEY` is set on the RepUK Vercel project. Local `vercel env pull` may omit sensitive keys.
 

@@ -9,7 +9,7 @@ export interface ReviewFindingResult {
   skipped: boolean;
   skipReason?: string;
   evidenceSource?: string;
-  autoAction?: 'published' | 'rejected' | 'queued';
+  autoAction?: 'published' | 'rejected' | 'queued' | 'closed_duplicate';
 }
 
 export async function reviewFindingWithAi(
@@ -47,9 +47,16 @@ export async function reviewFindingWithAi(
     ? finding.notes
     : [notesPrefix, finding.notes].filter(Boolean).join('\n');
 
+  const previouslyReviewed = Boolean(finding.aiReview?.reviewedAt);
+  const fetchFailedAgain = evidence.source !== 'page_fetch';
+  const aiEvidenceRetries = fetchFailedAgain
+    ? (finding.aiEvidenceRetries ?? 0) + (previouslyReviewed ? 1 : 0)
+    : 0;
+
   const updated: CustodyNumberFinding = {
     ...finding,
     aiReview: review,
+    aiEvidenceRetries,
     notes: mergedNotes,
     updatedAt: new Date().toISOString(),
   };

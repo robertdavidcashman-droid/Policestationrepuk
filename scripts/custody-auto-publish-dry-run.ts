@@ -14,7 +14,7 @@ config({ path: resolve(__dirname, '../.env.vercel.production'), quiet: true });
 config({ path: resolve(__dirname, '../.env.local'), override: true, quiet: true });
 
 async function main() {
-  const { getAllFindings, getApprovedNumber, getCustodySuite } = await import(
+  const { getAllFindings, getApprovedNumber, getCustodySuite, getFindingsForSuite } = await import(
     '../lib/custody-discovery/storage'
   );
   const { canAutoPublish } = await import('../lib/custody-discovery/auto-decision');
@@ -34,10 +34,17 @@ async function main() {
   for (const f of open) {
     const approved = await getApprovedNumber(f.custodySuiteId);
     const suite = await getCustodySuite(f.custodySuiteId);
-    const gates = canAutoPublish(f, f.aiReview!, approved?.normalizedPhoneNumber, suite?.forceDomain);
+    const suiteFindings = await getFindingsForSuite(f.custodySuiteId);
+    const gates = canAutoPublish(
+      f,
+      f.aiReview!,
+      approved?.normalizedPhoneNumber,
+      suite?.forceDomain,
+      suiteFindings,
+    );
     const label = `${f.custodySuiteName} (${f.forceName}) ${f.possiblePhoneNumber} · score ${f.confidenceScore} · AI ${f.aiReview!.aiConfidence}% · ${f.sourceDomain}`;
     if (gates.ok) {
-      wouldPublish.push(label);
+      wouldPublish.push(`[${gates.path}] ${label}`);
     } else {
       const list = blocked.get(gates.reason) ?? [];
       list.push(label);

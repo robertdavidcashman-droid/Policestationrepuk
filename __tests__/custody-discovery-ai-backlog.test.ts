@@ -90,8 +90,17 @@ describe('selectFindingsNeedingAiReview', () => {
     },
   ];
 
-  it('prioritises unreviewed findings', () => {
+  it('prioritises unreviewed findings, then weak-evidence retries', () => {
     const picked = selectFindingsNeedingAiReview(rows, 5);
+    // 'b' was reviewed but its page fetch failed — kept as a retry candidate.
+    expect(picked).toHaveLength(2);
+    expect(picked[0].id).toBe('a');
+    expect(picked[1].id).toBe('b');
+  });
+
+  it('drops retry candidates once the retry budget is spent', () => {
+    const exhausted = rows.map((r) => (r.id === 'b' ? { ...r, aiEvidenceRetries: 3 } : r));
+    const picked = selectFindingsNeedingAiReview(exhausted, 5);
     expect(picked).toHaveLength(1);
     expect(picked[0].id).toBe('a');
   });

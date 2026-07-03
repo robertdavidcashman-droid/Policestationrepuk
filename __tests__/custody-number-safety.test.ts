@@ -200,7 +200,7 @@ describe('canAutoPublish hard gates', () => {
     });
     const result = canAutoPublish(thirdParty, review());
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.reason).toBe('source_not_official');
+    if (!result.ok) expect(result.reason).toBe('insufficient_corroboration');
   });
 
   it('never overwrites a different approved number', () => {
