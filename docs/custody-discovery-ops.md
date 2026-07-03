@@ -7,13 +7,14 @@ Automated discovery of UK police station **custody desk** telephone numbers for 
 ## Pipeline
 
 1. **Cron** — `/api/cron/custody-number-discovery` every 6 hours (`vercel.json`)
-2. **Digest cron** — `/api/cron/custody-discovery-digest` daily at 19:00 UTC (backup if main run times out)
-3. **AI review cron** — `/api/cron/custody-discovery-ai-review` at 03:30, 09:30, 15:30 UTC
-4. **Seed** — committed `data/*-custody-numbers.json` → findings KV
-5. **Crawl** — Serper search + official force pages (parallel) + optional page fetch when snippets are weak
-6. **AI review** — GPT-4o-mini on new/backlog findings with page evidence
-7. **Admin** — `/admin/custody-number-review` manual approve/reject
-8. **Live** — approved numbers overlay onto station pages at runtime
+2. **Digest cron** — `/api/cron/custody-discovery-digest` daily at 19:00 UTC (new findings from today's crawl)
+3. **Outstanding digest cron** — `/api/cron/custody-discovery-outstanding` daily at 19:15 UTC (full backlog needing approve/reject)
+4. **AI review cron** — `/api/cron/custody-discovery-ai-review` at 03:30, 09:30, 15:30 UTC
+5. **Seed** — committed `data/*-custody-numbers.json` → findings KV
+6. **Crawl** — Serper search + official force pages (parallel) + optional page fetch when snippets are weak
+7. **AI review** — GPT-4o-mini on new/backlog findings with page evidence
+8. **Admin** — `/admin/custody-number-review` manual approve/reject
+9. **Live** — approved numbers overlay onto station pages at runtime
 
 Auto-publish is **off** by default. See [Yield review](#yield-review-deferred) below.
 
@@ -74,6 +75,15 @@ Pre-change baseline (2026-06-11): [`data/reports/custody-discovery-baseline-2026
 curl -sS -H "Authorization: Bearer $CRON_SECRET" \
   "https://policestationrepuk.org/api/cron/custody-number-discovery?limit=3" | jq
 ```
+
+### Force outstanding backlog digest
+
+```bash
+curl -sS -H "Authorization: Bearer $CRON_SECRET" \
+  "https://policestationrepuk.org/api/cron/custody-discovery-outstanding?force=1" | jq
+```
+
+Sends a daily summary of **all** open findings (AI approve / hold / reject counts + priority queue), not just today's new discoveries.
 
 ## Weekly official fetch (GitHub Actions)
 

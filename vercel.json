@@ -57,6 +57,10 @@
       "schedule": "0 19 * * *"
     },
     {
+      "path": "/api/cron/custody-discovery-outstanding",
+      "schedule": "15 19 * * *"
+    },
+    {
       "path": "/api/cron/custody-discovery-ai-review",
       "schedule": "30 3,9,15 * * *"
     },
