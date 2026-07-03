@@ -34,6 +34,8 @@ Auto-publish is **off** by default. See [Yield review](#yield-review-deferred) b
 | `CUSTODY_AI_AUTO_PUBLISH` | `false` | Auto-approve high-confidence official findings |
 | `CUSTODY_AI_AUTO_REJECT` | `true` | Auto-reject AI reject (≥85%) and hold cross-ref rejects |
 | `CUSTODY_AI_MIN_REJECT_CONFIDENCE` | `85` | Minimum AI confidence to auto-reject on AI "reject" recommendation |
+| `CUSTODY_AI_LOW_REJECT_CONFIDENCE` | `40` | Lower tier: auto-reject junk/untrusted sources at this confidence |
+| `CUSTODY_AI_REP_REJECT_CONFIDENCE` | `50` | (Unused — rep directories auto-reject at any AI reject confidence) |
 | `CUSTODY_RECHECK_DAYS` | `90` | Re-verify published numbers against source after this many days |
 | `CUSTODY_RECHECK_BATCH_LIMIT` | `20` | Approved numbers rechecked per cron run |
 | `CUSTODY_CORROBORATION_MIN_SOURCES` | `2` | Independent trusted domains required for corroborated auto-publish |
@@ -59,7 +61,7 @@ Then one of two paths must pass:
 ### Automatic queue clearing (on every AI review)
 
 - **Deterministic reject** — generic/switchboard/101/emergency numbers (`isGenericCustodyNumber`, `switchboard`, `general_101` classifications) are auto-rejected immediately; no manual review needed.
-- **Broad AI reject** — when AI recommends `reject` at ≥ `CUSTODY_AI_MIN_REJECT_CONFIDENCE` (default 85), auto-reject unless `conflictReason` is set (conflicts stay in manual queue).
+- **Broad AI reject** — when AI recommends `reject` at ≥ `CUSTODY_AI_MIN_REJECT_CONFIDENCE` (default 85), auto-reject unless `conflictReason` is set. Rep/self directories (policestationreps.com, policestationrepuk.org) auto-reject at **any** AI reject confidence. Other untrusted sources auto-reject at ≥40%. Official/trusted sources below 85% stay in manual queue.
 - **Hold cross-reference** — AI `hold` findings are cross-checked against sibling findings and force-wide published patterns (`lib/custody-discovery/hold-resolver.ts`):
   - 2+ trusted domains agree + page evidence → auto-publish (corroborated, unverified)
   - Rep-directory / untrusted-only → auto-reject

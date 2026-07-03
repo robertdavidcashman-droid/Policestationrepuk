@@ -161,7 +161,7 @@ vi.mock('@/lib/custody-discovery/storage', async (importOriginal) => {
   };
 });
 
-import { applyAutoDecision } from '@/lib/custody-discovery/auto-decision';
+import { applyAutoDecision, shouldAutoRejectAiFinding } from '@/lib/custody-discovery/auto-decision';
 
 beforeEach(() => {
   savedFindings.mockClear();
@@ -229,5 +229,49 @@ describe('applyAutoDecision broad reject', () => {
     );
     expect(result.action).toBe('rejected');
     expect(result.reason).toBe('deterministic_switchboard');
+  });
+});
+
+describe('shouldAutoRejectAiFinding low-confidence tier', () => {
+  it('auto-rejects rep directory at any AI reject confidence', () => {
+    const gate = shouldAutoRejectAiFinding(
+      finding({ sourceDomain: 'policestationreps.com', sourceType: 'unknown' }),
+      { ...holdReview(), recommendation: 'reject', aiConfidence: 20 },
+    );
+    expect(gate.reject).toBe(true);
+    if (gate.reject) expect(gate.reason).toBe('auto_reject_rep_directory');
+  });
+
+  it('does not auto-reject low confidence from official police source', () => {
+    const gate = shouldAutoRejectAiFinding(
+      finding({
+        sourceType: 'official_police',
+        sourceDomain: 'kent.police.uk',
+        classification: 'unknown',
+      }),
+      { ...holdReview(), recommendation: 'reject', aiConfidence: 75 },
+    );
+    expect(gate.reject).toBe(false);
+  });
+
+  it('auto-rejects unknown third-party at 40%+ AI reject', () => {
+    const gate = shouldAutoRejectAiFinding(
+      finding({
+        sourceType: 'unknown',
+        sourceDomain: 'mindwisenv.org',
+        classification: 'direct_custody',
+      }),
+      { ...holdReview(), recommendation: 'reject', aiConfidence: 45 },
+    );
+    expect(gate.reject).toBe(true);
+    if (gate.reject) expect(gate.reason).toBe('auto_reject_untrusted_source');
+  });
+
+  it('does not auto-reject when conflict is flagged', () => {
+    const gate = shouldAutoRejectAiFinding(
+      finding({ sourceDomain: 'policestationreps.com', conflictReason: 'possible_conflict' }),
+      { ...holdReview(), recommendation: 'reject', aiConfidence: 95 },
+    );
+    expect(gate.reject).toBe(false);
   });
 });

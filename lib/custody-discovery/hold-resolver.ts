@@ -39,9 +39,13 @@ const REP_DIRECTORY_DOMAINS = [
   'policestationrep.com',
 ];
 
-function isRepDirectory(finding: CustodyNumberFinding): boolean {
+export function isRepDirectoryFinding(finding: CustodyNumberFinding): boolean {
   const domain = finding.sourceDomain.toLowerCase();
   return REP_DIRECTORY_DOMAINS.some((d) => domain === d || domain.endsWith(`.${d}`));
+}
+
+function isRepDirectory(finding: CustodyNumberFinding): boolean {
+  return isRepDirectoryFinding(finding);
 }
 
 function openSiblingFindings(suiteFindings: CustodyNumberFinding[]): CustodyNumberFinding[] {
