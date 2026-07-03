@@ -70,6 +70,12 @@ export interface CustodyAiReview {
   reviewedAt: string;
 }
 
+export type NumberSafetyFlag =
+  | 'mobile_number'
+  | 'premium_rate'
+  | 'emergency_number'
+  | 'invalid_length';
+
 export interface CustodyNumberFinding {
   id: string;
   custodySuiteId: string;
@@ -78,6 +84,10 @@ export interface CustodyNumberFinding {
   policeStationName: string;
   possiblePhoneNumber: string;
   normalizedPhoneNumber: string;
+  /** E.164 format (+44…) where derivable. */
+  e164?: string | null;
+  /** UK number-range safety flags (mobile / premium-rate / etc.). */
+  numberFlags?: NumberSafetyFlag[];
   sourceTitle: string;
   sourceUrl: string;
   sourceDomain: string;
@@ -101,12 +111,29 @@ export interface CustodyNumberFinding {
 
 export type DiscoveryVerificationStatus = 'unverified' | 'verified';
 
+export interface ApprovalAuditEntry {
+  at: string;
+  actor: string;
+  action:
+    | 'approved'
+    | 'auto_approved'
+    | 'rejected'
+    | 'marked_verified'
+    | 'recheck_ok'
+    | 'recheck_source_missing'
+    | 'recheck_number_missing'
+    | 'recheck_conflict';
+  detail?: string;
+}
+
 export interface ApprovedCustodyNumber {
   id: string;
   custodySuiteId: string;
   stationSlug?: string;
   phoneNumber: string;
   normalizedPhoneNumber: string;
+  /** E.164 format (+44…) where derivable. */
+  e164?: string | null;
   sourceFindingId: string;
   sourceUrl: string;
   approvedBy: string;
@@ -116,6 +143,7 @@ export interface ApprovedCustodyNumber {
   verificationStatus: DiscoveryVerificationStatus;
   publicVisible: boolean;
   notes: string;
+  auditLog?: ApprovalAuditEntry[];
 }
 
 export interface SearchResult {

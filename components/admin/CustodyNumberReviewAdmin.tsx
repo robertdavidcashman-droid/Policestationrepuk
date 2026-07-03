@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { CustodyNumberFinding } from '@/lib/custody-discovery/types';
 import { NOTIFY_MIN_CONFIDENCE_SCORE } from '@/lib/custody-discovery/confidence';
+import { describeSafetyFlag, numberSafetyFlags } from '@/lib/custody-discovery/number-safety';
 import { isOfficialSourceType } from '@/lib/custody-discovery/source-type';
 import {
   AdminWideTable,
@@ -21,7 +22,15 @@ type FilterKey =
   | 'conflicts'
   | 'awaiting_ai'
   | 'ai_reviewed'
-  | 'needs_human';
+  | 'needs_human'
+  | 'auto_approved'
+  | 'flagged_number';
+
+function findingSafetyFlags(r: CustodyNumberFinding): ReturnType<typeof numberSafetyFlags> {
+  return r.numberFlags?.length
+    ? (r.numberFlags as ReturnType<typeof numberSafetyFlags>)
+    : numberSafetyFlags(r.normalizedPhoneNumber);
+}
 
 export function CustodyNumberReviewAdmin({
   initialFindings,
@@ -111,6 +120,8 @@ export function CustodyNumberReviewAdmin({
         weakEvidence;
       if (!needsHuman) return false;
     }
+    if (filter === 'auto_approved' && !r.autoPublishedAt) return false;
+    if (filter === 'flagged_number' && findingSafetyFlags(r).length === 0) return false;
     if (forceFilter && r.forceName !== forceFilter) return false;
     if (countyFilter && (suiteMeta[r.custodySuiteId]?.county || '') !== countyFilter) return false;
     if (suiteFilter && !r.custodySuiteName.toLowerCase().includes(suiteFilter.toLowerCase())) return false;
@@ -233,6 +244,30 @@ export function CustodyNumberReviewAdmin({
     );
   }
 
+  function safetyBadges(r: CustodyNumberFinding) {
+    const flags = findingSafetyFlags(r);
+    if (flags.length === 0) return null;
+    return (
+      <span className="inline-flex flex-wrap gap-1">
+        {flags.map((flag) => (
+          <span
+            key={flag}
+            title={describeSafetyFlag(flag)}
+            className="inline-block rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-900"
+          >
+            {flag === 'mobile_number'
+              ? 'Mobile'
+              : flag === 'premium_rate'
+                ? 'Premium rate'
+                : flag === 'emergency_number'
+                  ? 'Emergency/short code'
+                  : 'Invalid format'}
+          </span>
+        ))}
+      </span>
+    );
+  }
+
   function aiBadge(r: CustodyNumberFinding) {
     const ai = r.aiReview;
     if (!ai) return null;
@@ -307,8 +342,16 @@ export function CustodyNumberReviewAdmin({
             <p className="text-xs text-[var(--muted)]">
               {r.forceName} · {county} · {r.status} · score {r.confidenceScore} ({r.confidenceLevel})
             </p>
-            <div className="mt-1">{aiBadge(r)}</div>
-            <p className="mt-2 font-mono text-lg text-[var(--navy)]">{r.possiblePhoneNumber}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              {aiBadge(r)}
+              {safetyBadges(r)}
+            </div>
+            <p className="mt-2 font-mono text-lg text-[var(--navy)]">
+              {r.possiblePhoneNumber}
+              {r.e164 && (
+                <span className="ml-2 text-xs font-normal text-[var(--muted)]">{r.e164}</span>
+              )}
+            </p>
             <p className="mt-1 text-sm text-[var(--muted)]">
               Classification: <strong>{r.classification}</strong> · Source: {r.sourceType}
               {r.conflictReason ? ` · ${r.conflictReason}` : ''}
@@ -481,6 +524,8 @@ export function CustodyNumberReviewAdmin({
             ['low', 'Low confidence'],
             ['official', 'Official sources'],
             ['conflicts', 'Conflicts'],
+            ['auto_approved', 'Auto-approved'],
+            ['flagged_number', 'Flagged numbers'],
             ['all', 'All'],
           ] as const
         ).map(([key, label]) => (

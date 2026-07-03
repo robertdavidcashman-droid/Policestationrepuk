@@ -7,6 +7,8 @@ import {
 } from './confidence';
 import { classifyPhoneNumber } from './classify';
 import { hashSourceEvidence } from './hash';
+import { numberSafetyFlags } from './number-safety';
+import { toE164Uk } from '@/lib/phone-format';
 import {
   extractPhonesFromText,
   hasCustodyWordingNear,
@@ -221,6 +223,8 @@ export async function processSearchHit(
     policeStationName: suite.policeStationName,
     possiblePhoneNumber: phone.display,
     normalizedPhoneNumber: phone.normalized,
+    e164: toE164Uk(phone.normalized),
+    numberFlags: numberSafetyFlags(phone.normalized),
     sourceTitle: title,
     sourceUrl: url,
     sourceDomain,

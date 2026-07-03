@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import { SITE_URL } from '@/lib/seo-layer/config';
 import { issueAccessToken } from './admin-access-token';
 import type { CustodyDiscoveryBatch } from './batch';
+import { describeSafetyFlag, numberSafetyFlags } from './number-safety';
 import type { OutstandingActionHint, OutstandingReviewItem, OutstandingReviewSummary } from './outstanding-queue';
 import type { CustodyNumberFinding } from './types';
 
@@ -172,11 +173,15 @@ function formatOutstandingRows(items: OutstandingReviewItem[]): string {
         ai?.recommendation === 'approve'
           ? ai.whyPublish
           : ai?.whyNot || ai?.whyPublish || '';
+      const safetyFlags = f.numberFlags?.length
+        ? f.numberFlags
+        : numberSafetyFlags(f.normalizedPhoneNumber);
       return `
     <div style="margin:0 0 16px;padding:12px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;">
       <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${actionHintColor(hint)};">${escapeHtml(actionHintLabel(hint))}</p>
       <p style="margin:0 0 6px;font-weight:600;">${escapeHtml(f.custodySuiteName)} · ${escapeHtml(f.forceName)}</p>
       <p style="margin:0 0 6px;font-family:monospace;">${escapeHtml(f.possiblePhoneNumber)} · score ${f.confidenceScore} (${escapeHtml(f.confidenceLevel)})${ai ? ` · AI ${ai.aiConfidence}%` : ''}</p>
+      ${safetyFlags.map((flag) => `<p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#991b1b;">⚠ ${escapeHtml(describeSafetyFlag(flag))}</p>`).join('')}
       ${f.conflictReason ? `<p style="margin:0 0 6px;font-size:12px;color:#b45309;"><strong>Conflict:</strong> ${escapeHtml(f.conflictReason)}</p>` : ''}
       <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#475569;">Section: ${escapeHtml(section)}</p>
       <blockquote style="margin:0 0 8px;padding:8px 12px;border-left:3px solid #cbd5e1;background:#fff;font-size:12px;color:#334155;line-height:1.5;">${formatEvidenceQuote(excerpt)}</blockquote>
@@ -224,6 +229,7 @@ export async function sendCustodyOutstandingDigestEmail(opts: {
         waiting for approve or reject. Nothing publishes until you decide.
       </p>
       <ul style="margin:0 0 20px;padding-left:20px;line-height:1.6;">
+        ${summary.autoPublishedLast24h > 0 ? `<li><strong>Auto-approved by AI (last 24h):</strong> ${summary.autoPublishedLast24h} — no action needed</li>` : ''}
         <li><strong>AI recommends approve:</strong> ${summary.aiApprove}${summary.officialAiApprove > 0 ? ` (${summary.officialAiApprove} from official sources)` : ''}</li>
         <li><strong>Needs your review (AI hold):</strong> ${summary.aiHold}</li>
         <li><strong>AI recommends reject:</strong> ${summary.aiReject}</li>

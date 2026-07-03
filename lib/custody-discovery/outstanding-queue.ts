@@ -23,6 +23,8 @@ export interface OutstandingReviewSummary {
   aiReject: number;
   conflicts: number;
   officialAiApprove: number;
+  /** Findings auto-published by the AI reviewer in the last 24 hours. */
+  autoPublishedLast24h: number;
   /** Sorted actionable items (AI-reviewed, still open). */
   items: OutstandingReviewItem[];
 }
@@ -72,6 +74,10 @@ export function buildOutstandingReviewSummary(
     (f) =>
       f.aiReview?.recommendation === 'approve' && isOfficialSourceType(f.sourceType),
   ).length;
+  const dayAgo = Date.now() - 86_400_000;
+  const autoPublishedLast24h = findings.filter(
+    (f) => f.autoPublishedAt && Date.parse(f.autoPublishedAt) >= dayAgo,
+  ).length;
 
   const items: OutstandingReviewItem[] = open
     .filter((f) => Boolean(f.aiReview?.reviewedAt))
@@ -91,6 +97,7 @@ export function buildOutstandingReviewSummary(
     aiReject,
     conflicts,
     officialAiApprove,
+    autoPublishedLast24h,
     items,
   };
 }

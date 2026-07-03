@@ -10,7 +10,8 @@ Automated discovery of UK police station **custody desk** telephone numbers for 
 2. **Digest cron** — `/api/cron/custody-discovery-digest` daily at 19:00 UTC (new findings from today's crawl)
 3. **Outstanding digest cron** — `/api/cron/custody-discovery-outstanding` daily at 19:15 UTC (full backlog needing approve/reject)
 4. **AI review cron** — `/api/cron/custody-discovery-ai-review` at 03:30, 09:30, 15:30 UTC
-5. **Seed** — committed `data/*-custody-numbers.json` → findings KV
+5. **Approved recheck cron** — `/api/cron/custody-approved-recheck` daily at 02:45 UTC (re-verifies published numbers against their source every 90 days; failures downgrade to unverified and reopen for review — never deleted)
+6. **Seed** — committed `data/*-custody-numbers.json` → findings KV
 6. **Crawl** — Serper search + official force pages (parallel) + optional page fetch when snippets are weak
 7. **AI review** — GPT-4o-mini on new/backlog findings with page evidence
 8. **Admin** — `/admin/custody-number-review` manual approve/reject
@@ -32,7 +33,26 @@ Auto-publish is **off** by default. See [Yield review](#yield-review-deferred) b
 | `CUSTODY_AI_FETCH_EVIDENCE` | `true` | Fetch source pages during AI review |
 | `CUSTODY_AI_AUTO_PUBLISH` | `false` | Auto-approve high-confidence official findings |
 | `CUSTODY_AI_AUTO_REJECT` | `true` | Auto-reject obvious junk after AI review |
+| `CUSTODY_RECHECK_DAYS` | `90` | Re-verify published numbers against source after this many days |
+| `CUSTODY_RECHECK_BATCH_LIMIT` | `20` | Approved numbers rechecked per cron run |
 | `CUSTODY_DISCOVERY_NOTIFY_EMAIL` | — | Daily digest of new findings |
+
+### Auto-publish gates (all must pass)
+
+`canAutoPublish` in `lib/custody-discovery/auto-decision.ts` — a finding auto-publishes only when **every** gate passes:
+
+1. Number range is geographic (01/02), 03, or freephone — **mobiles, premium-rate (084/087/09/070), emergency codes, and invalid formats can never auto-publish**
+2. AI confidence ≥ 92 (`CUSTODY_AI_MIN_APPROVE_CONFIDENCE`)
+3. Rule confidence score ≥ 85
+4. Classification is `direct_custody`
+5. Official source type (official_police / police_uk / foi / pdf)
+6. Source domain is `.police.uk` or the force's own official domain
+7. No conflict flagged; never overwrites a different approved number
+8. Evidence came from a full page fetch (not a search snippet or unfetched PDF)
+9. Exact number appears in the fetched excerpt, with custody wording
+10. AI must give a substantive publish rationale
+
+Everything else stays in the manual review queue. Nothing is invented: numbers only enter the pipeline via crawler extraction from fetched pages or committed official JSON, and the AI validator (`ai-review-validator.ts`) downgrades any AI approval whose excerpt does not contain the exact number.
 
 **Production:** ensure `SERPER_API_KEY` is set on the RepUK Vercel project. Local `vercel env pull` may omit sensitive keys.
 

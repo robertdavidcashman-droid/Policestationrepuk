@@ -222,6 +222,18 @@ export async function loadAllApprovedNumbers(): Promise<Map<string, ApprovedCust
 }
 
 import { resolveApprovalVerificationStatus } from './verification';
+import { toE164Uk } from '@/lib/phone-format';
+import type { ApprovalAuditEntry } from './types';
+
+const AUDIT_LOG_MAX_ENTRIES = 50;
+
+export function appendAuditEntry(
+  record: ApprovedCustodyNumber,
+  entry: Omit<ApprovalAuditEntry, 'at'>,
+): ApprovedCustodyNumber {
+  const auditLog = [...(record.auditLog ?? []), { ...entry, at: new Date().toISOString() }];
+  return { ...record, auditLog: auditLog.slice(-AUDIT_LOG_MAX_ENTRIES) };
+}
 
 export async function approveFinding(
   findingId: string,
@@ -242,21 +254,30 @@ export async function approveFinding(
   await saveFinding(approvedFinding);
 
   const suite = await getCustodySuite(finding.custodySuiteId);
-  const approved: ApprovedCustodyNumber = {
-    id: newId('acn'),
-    custodySuiteId: finding.custodySuiteId,
-    stationSlug: suite?.stationSlug,
-    phoneNumber: finding.possiblePhoneNumber,
-    normalizedPhoneNumber: finding.normalizedPhoneNumber,
-    sourceFindingId: finding.id,
-    sourceUrl: finding.sourceUrl,
-    approvedBy,
-    approvedAt: now,
-    lastVerifiedAt: verificationStatus === 'verified' ? now : '',
-    verificationStatus,
-    publicVisible: true,
-    notes: opts?.notes ?? '',
-  };
+  const isAi = approvedBy === 'ai-reviewer';
+  const approved: ApprovedCustodyNumber = appendAuditEntry(
+    {
+      id: newId('acn'),
+      custodySuiteId: finding.custodySuiteId,
+      stationSlug: suite?.stationSlug,
+      phoneNumber: finding.possiblePhoneNumber,
+      normalizedPhoneNumber: finding.normalizedPhoneNumber,
+      e164: finding.e164 ?? toE164Uk(finding.normalizedPhoneNumber),
+      sourceFindingId: finding.id,
+      sourceUrl: finding.sourceUrl,
+      approvedBy,
+      approvedAt: now,
+      lastVerifiedAt: verificationStatus === 'verified' ? now : '',
+      verificationStatus,
+      publicVisible: true,
+      notes: opts?.notes ?? '',
+    },
+    {
+      actor: approvedBy,
+      action: isAi ? 'auto_approved' : 'approved',
+      detail: `source: ${finding.sourceUrl} · score ${finding.confidenceScore} (${finding.confidenceLevel}) · ${finding.sourceType}`,
+    },
+  );
   await saveApprovedNumber(approved);
   invalidateApprovedCache();
   return { finding: approvedFinding, approved };
@@ -269,12 +290,15 @@ export async function markApprovedAsVerified(
   const approved = await getApprovedNumber(custodySuiteId);
   if (!approved) return null;
   const now = new Date().toISOString();
-  const updated: ApprovedCustodyNumber = {
-    ...approved,
-    verificationStatus: 'verified',
-    lastVerifiedAt: now,
-    notes: approved.notes || `Marked verified by ${verifiedBy}`,
-  };
+  const updated: ApprovedCustodyNumber = appendAuditEntry(
+    {
+      ...approved,
+      verificationStatus: 'verified',
+      lastVerifiedAt: now,
+      notes: approved.notes || `Marked verified by ${verifiedBy}`,
+    },
+    { actor: verifiedBy, action: 'marked_verified' },
+  );
   await saveApprovedNumber(updated);
   invalidateApprovedCache();
   return updated;

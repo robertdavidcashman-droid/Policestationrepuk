@@ -44,6 +44,15 @@ export function formatPhoneUk(value: string): string {
   return trimmed;
 }
 
+/** Convert a UK number to E.164 (+44…) where possible; null if not a valid UK format. */
+export function toE164Uk(value: string): string | null {
+  const digits = normalizePhoneDigits(value);
+  if (!digits) return null;
+  if (digits === '101') return null; // short code, no E.164 form
+  if (/^0\d{9,10}$/.test(digits)) return `+44${digits.slice(1)}`;
+  return null;
+}
+
 export function phonesEquivalent(a: string, b: string): boolean {
   const da = normalizePhoneDigits(a);
   const db = normalizePhoneDigits(b);

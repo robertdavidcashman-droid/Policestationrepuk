@@ -1,6 +1,7 @@
 import { revalidatePath } from 'next/cache';
 import { formatAiReviewNotes } from './ai-review';
 import type { CustodyAiReview, CustodyNumberFinding } from './types';
+import { isAutoPublishableRange, numberSafetyFlags } from './number-safety';
 import {
   evidenceContainsPhone,
   evidenceHasCustodyWording,
@@ -9,6 +10,7 @@ import { isOfficialSourceType } from './source-type';
 import {
   approveFinding,
   getApprovedNumber,
+  getCustodySuite,
   rejectFinding,
   saveFinding,
 } from './storage';
@@ -73,7 +75,13 @@ export async function applyAutoDecision(
 
   if (review.recommendation === 'approve' && autoPublishEnabled()) {
     const approved = await getApprovedNumber(finding.custodySuiteId);
-    const gates = canAutoPublish(finding, review, approved?.normalizedPhoneNumber);
+    const suite = await getCustodySuite(finding.custodySuiteId);
+    const gates = canAutoPublish(
+      finding,
+      review,
+      approved?.normalizedPhoneNumber,
+      suite?.forceDomain,
+    );
     if (gates.ok) {
       const notes = formatAiReviewNotes(review);
       const result = await approveFinding(finding.id, 'ai-reviewer', {
@@ -103,22 +111,48 @@ export async function applyAutoDecision(
   return { action: 'queued', reason: 'needs_human' };
 }
 
+/** Auto-publish rule score floor (spec: >= 85 with an official source). */
+const AUTO_PUBLISH_MIN_RULE_SCORE = 85;
+
+function sourceDomainIsOfficialForForce(
+  sourceDomain: string,
+  forceDomain?: string,
+): boolean {
+  const src = sourceDomain.toLowerCase().replace(/^www\./, '');
+  if (!src) return false;
+  if (src === 'police.uk' || src.endsWith('.police.uk')) return true;
+  if (forceDomain) {
+    const force = forceDomain.toLowerCase().replace(/^www\./, '');
+    if (force && (src === force || src.endsWith(`.${force}`))) return true;
+  }
+  return false;
+}
+
 function canAutoPublish(
   finding: CustodyNumberFinding,
   review: CustodyAiReview,
   approvedNormalized?: string,
+  forceDomain?: string,
 ): { ok: true } | { ok: false; reason: string } {
+  // Never auto-publish mobiles, premium-rate, emergency, or invalid ranges.
+  if (!isAutoPublishableRange(finding.normalizedPhoneNumber)) {
+    const flags = finding.numberFlags ?? numberSafetyFlags(finding.normalizedPhoneNumber);
+    return { ok: false, reason: flags[0] ?? 'number_range_not_publishable' };
+  }
   if (review.aiConfidence < minApproveConfidence()) {
     return { ok: false, reason: 'ai_confidence_low' };
   }
   if (finding.classification !== 'direct_custody') {
     return { ok: false, reason: 'not_direct_custody' };
   }
-  if (finding.confidenceScore < 80) {
+  if (finding.confidenceScore < AUTO_PUBLISH_MIN_RULE_SCORE) {
     return { ok: false, reason: 'rule_score_low' };
   }
   if (!isOfficialSourceType(finding.sourceType)) {
     return { ok: false, reason: 'source_not_official' };
+  }
+  if (!sourceDomainIsOfficialForForce(finding.sourceDomain, forceDomain)) {
+    return { ok: false, reason: 'source_domain_not_official' };
   }
   if (finding.conflictReason) {
     return { ok: false, reason: 'conflict' };
