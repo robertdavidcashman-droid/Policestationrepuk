@@ -7,6 +7,11 @@ import {
   isTrustedCorroboratingSource,
   minCorroboratingSources,
 } from './corroboration';
+import {
+  deterministicRejectReason,
+  isDeterministicRejectNumber,
+  resolveHoldFinding,
+} from './hold-resolver';
 import { isAutoPublishableRange, numberSafetyFlags } from './number-safety';
 import {
   evidenceContainsPhone,
@@ -19,6 +24,7 @@ import {
   getApprovedNumber,
   getCustodySuite,
   getFindingsForSuite,
+  loadAllApprovedNumbers,
   rejectFinding,
   saveApprovedNumber,
   saveFinding,
@@ -46,7 +52,7 @@ function minApproveConfidence(): number {
 }
 
 function minRejectConfidence(): number {
-  return Number(process.env.CUSTODY_AI_MIN_REJECT_CONFIDENCE ?? 90);
+  return Number(process.env.CUSTODY_AI_MIN_REJECT_CONFIDENCE ?? 85);
 }
 
 export interface AutoDecisionResult {
@@ -54,11 +60,48 @@ export interface AutoDecisionResult {
   reason?: string;
 }
 
+async function countForcePublishedSameNumber(
+  forceName: string,
+  normalizedPhone: string,
+): Promise<number> {
+  const approvedMap = await loadAllApprovedNumbers();
+  let count = 0;
+  for (const [suiteId, record] of approvedMap) {
+    if (!record.publicVisible) continue;
+    if (record.normalizedPhoneNumber !== normalizedPhone) continue;
+    const suite = await getCustodySuite(suiteId);
+    if (suite?.forceName === forceName) count++;
+  }
+  return count;
+}
+
 /** Findings whose number range can never be published from a non-official source. */
 function isUnsafeNonOfficialNumber(finding: CustodyNumberFinding): boolean {
   const flags = finding.numberFlags ?? numberSafetyFlags(finding.normalizedPhoneNumber);
   const unsafe = flags.includes('mobile_number') || flags.includes('premium_rate');
   return unsafe && !isOfficialSourceType(finding.sourceType);
+}
+
+async function autoRejectFinding(
+  finding: CustodyNumberFinding,
+  review: CustodyAiReview,
+  reason: string,
+  note: string,
+): Promise<AutoDecisionResult> {
+  const now = new Date().toISOString();
+  const notes = [`[Auto ${now.slice(0, 10)}] ${note}`, formatAiReviewNotes(review)]
+    .filter(Boolean)
+    .join('\n');
+  await rejectFinding(finding.id, notes);
+  await saveFinding({
+    ...finding,
+    aiReview: review,
+    autoRejectedAt: now,
+    notes,
+    status: 'rejected',
+    updatedAt: now,
+  });
+  return { action: 'rejected', reason };
 }
 
 /**
@@ -101,6 +144,79 @@ async function closeDuplicateConfirmation(
   }
 }
 
+/** Hold reviews lack whyPublish — synthesise one for corroborated auto-publish. */
+function reviewForCorroboratedPublish(
+  finding: CustodyNumberFinding,
+  review: CustodyAiReview,
+): CustodyAiReview {
+  const whyPublish =
+    review.whyPublish && review.whyPublish.length >= 40
+      ? review.whyPublish
+      : `Cross-reference: ${review.whyNot || `Multiple trusted sources agree this is the ${finding.custodySuiteName} custody desk line.`}`.slice(
+          0,
+          400,
+        );
+  return {
+    ...review,
+    recommendation: 'approve',
+    aiConfidence: Math.max(review.aiConfidence, 60),
+    whyPublish,
+  };
+}
+
+async function tryAutoPublish(
+  finding: CustodyNumberFinding,
+  review: CustodyAiReview,
+  existingApproved: Awaited<ReturnType<typeof getApprovedNumber>>,
+  pathLabel: 'hold_corroborated' | 'approve',
+): Promise<AutoDecisionResult> {
+  const suite = await getCustodySuite(finding.custodySuiteId);
+  const suiteFindings = await getFindingsForSuite(finding.custodySuiteId);
+  const gates = canAutoPublish(
+    finding,
+    review,
+    existingApproved?.normalizedPhoneNumber,
+    suite?.forceDomain,
+    suiteFindings,
+  );
+  if (!gates.ok) {
+    return { action: 'queued', reason: gates.reason };
+  }
+
+  const pathNote =
+    gates.path === 'corroborated' || pathLabel === 'hold_corroborated'
+      ? '[Auto-published via hold cross-reference / multi-source corroboration]'
+      : '[Auto-published via official source]';
+  const notes = [pathNote, formatAiReviewNotes(review)].join('\n');
+  const result = await approveFinding(finding.id, 'ai-reviewer', {
+    notes,
+    markVerified:
+      gates.path === 'official' &&
+      review.publishVerified &&
+      finding.confidenceScore >= 80,
+  });
+  if (!result) {
+    return { action: 'queued', reason: 'approve_failed' };
+  }
+
+  const now = new Date().toISOString();
+  await saveFinding({
+    ...result.finding,
+    aiReview: review,
+    autoPublishedAt: now,
+    notes,
+  });
+  safeRevalidate('/StationsDirectory');
+  safeRevalidate('/admin/custody-number-review');
+  if (result.approved.stationSlug) {
+    safeRevalidate(`/police-station/${result.approved.stationSlug}`);
+  }
+  return {
+    action: 'published',
+    reason: pathLabel === 'hold_corroborated' ? 'auto_publish_hold_corroborated' : `auto_publish_${gates.path}`,
+  };
+}
+
 export async function applyAutoDecision(
   finding: CustodyNumberFinding,
   review: CustodyAiReview,
@@ -109,8 +225,8 @@ export async function applyAutoDecision(
     return { action: 'queued', reason: 'already_finalized' };
   }
 
-  // A finding that repeats the already-published number needs no human time.
   const existingApproved = await getApprovedNumber(finding.custodySuiteId);
+
   if (
     existingApproved?.publicVisible &&
     existingApproved.normalizedPhoneNumber === finding.normalizedPhoneNumber
@@ -119,96 +235,102 @@ export async function applyAutoDecision(
     return { action: 'closed_duplicate', reason: 'confirms_published_number' };
   }
 
-  // Mobiles/premium-rate from non-official sources can never publish — clear them.
   if (autoRejectEnabled() && isUnsafeNonOfficialNumber(finding)) {
-    const now = new Date().toISOString();
-    const notes = [
-      `[Auto ${now.slice(0, 10)}] Mobile/premium-rate number from a non-official source — never publishable.`,
-      formatAiReviewNotes(review),
-    ].join('\n');
-    await rejectFinding(finding.id, notes);
-    await saveFinding({
-      ...finding,
-      aiReview: review,
-      autoRejectedAt: now,
-      notes,
-      status: 'rejected',
-      updatedAt: now,
-    });
-    return { action: 'rejected', reason: 'unsafe_number_non_official' };
+    return autoRejectFinding(
+      finding,
+      review,
+      'unsafe_number_non_official',
+      'Mobile/premium-rate number from a non-official source — never publishable.',
+    );
+  }
+
+  if (autoRejectEnabled() && isDeterministicRejectNumber(finding)) {
+    const kind = deterministicRejectReason(finding);
+    return autoRejectFinding(
+      finding,
+      review,
+      `deterministic_${kind}`,
+      `Generic/switchboard/emergency number (${kind}) — not a custody desk line.`,
+    );
+  }
+
+  // Conflicts never auto-publish or auto-reject — human review only.
+  if (finding.conflictReason) {
+    return { action: 'queued', reason: 'conflict' };
   }
 
   if (review.recommendation === 'reject' && autoRejectEnabled()) {
-    const junkClasses = new Set([
-      'switchboard',
-      'general_101',
-      'solicitor_office',
-      'victim_witness',
-      'irrelevant',
-    ]);
-    if (
-      review.aiConfidence >= minRejectConfidence() &&
-      junkClasses.has(finding.classification) &&
-      finding.confidenceScore < 50 &&
-      !finding.conflictReason
-    ) {
-      const notes = formatAiReviewNotes(review);
-      await rejectFinding(finding.id, notes);
-      const now = new Date().toISOString();
-      await saveFinding({
-        ...finding,
-        aiReview: review,
-        autoRejectedAt: now,
-        notes,
-        status: 'rejected',
-        updatedAt: now,
-      });
-      return { action: 'rejected', reason: 'auto_reject_junk' };
+    if (review.aiConfidence >= minRejectConfidence()) {
+      return autoRejectFinding(
+        finding,
+        review,
+        'auto_reject_ai',
+        `AI reject (${review.aiConfidence}%) — not a publishable custody desk line.`,
+      );
     }
   }
 
   if (review.recommendation === 'approve' && autoPublishEnabled()) {
-    const suite = await getCustodySuite(finding.custodySuiteId);
+    return tryAutoPublish(finding, review, existingApproved, 'approve');
+  }
+
+  if (review.recommendation === 'hold') {
     const suiteFindings = await getFindingsForSuite(finding.custodySuiteId);
-    const gates = canAutoPublish(
-      finding,
-      review,
-      existingApproved?.normalizedPhoneNumber,
-      suite?.forceDomain,
-      suiteFindings,
+    const forceCount = await countForcePublishedSameNumber(
+      finding.forceName,
+      finding.normalizedPhoneNumber,
     );
-    if (gates.ok) {
-      const pathNote =
-        gates.path === 'corroborated'
-          ? '[Auto-published via multi-source corroboration]'
-          : '[Auto-published via official source]';
-      const notes = [pathNote, formatAiReviewNotes(review)].join('\n');
-      const result = await approveFinding(finding.id, 'ai-reviewer', {
-        notes,
-        // Corroborated publishes stay 'unverified' until an official-domain source confirms.
-        markVerified:
-          gates.path === 'official' &&
-          review.publishVerified &&
-          finding.confidenceScore >= 80,
-      });
-      if (result) {
+    const resolution = resolveHoldFinding(finding, review, {
+      suiteFindings,
+      approvedNormalized: existingApproved?.normalizedPhoneNumber,
+      forceSameNumberPublishedCount: forceCount,
+    });
+
+    switch (resolution.outcome) {
+      case 'close_duplicate':
+        await closeDuplicateConfirmation(finding, review);
+        return { action: 'closed_duplicate', reason: 'confirms_published_number' };
+
+      case 'reject_force_switchboard':
+      case 'reject_untrusted_only':
+        if (!autoRejectEnabled()) {
+          return { action: 'queued', reason: resolution.outcome };
+        }
+        return autoRejectFinding(
+          finding,
+          review,
+          resolution.outcome,
+          resolution.detail ?? resolution.outcome,
+        );
+
+      case 'flag_conflict': {
         const now = new Date().toISOString();
         await saveFinding({
-          ...result.finding,
+          ...finding,
           aiReview: review,
-          autoPublishedAt: now,
-          notes,
+          conflictReason: 'possible_conflict',
+          notes: [`[Auto ${now.slice(0, 10)}] ${resolution.detail}`, finding.notes]
+            .filter(Boolean)
+            .join('\n'),
+          updatedAt: now,
         });
-        safeRevalidate('/StationsDirectory');
-        safeRevalidate('/admin/custody-number-review');
-        if (result.approved.stationSlug) {
-          safeRevalidate(`/police-station/${result.approved.stationSlug}`);
-        }
-        return { action: 'published', reason: `auto_publish_${gates.path}` };
+        return { action: 'queued', reason: 'hold_crossref_conflict' };
       }
-      return { action: 'queued', reason: 'approve_failed' };
+
+      case 'publish_corroborated':
+        if (!autoPublishEnabled()) {
+          return { action: 'queued', reason: 'hold_corroborated_publish_disabled' };
+        }
+        return tryAutoPublish(
+          finding,
+          reviewForCorroboratedPublish(finding, review),
+          existingApproved,
+          'hold_corroborated',
+        );
+
+      default:
+        return { action: 'queued', reason: 'needs_human' };
     }
-    return { action: 'queued', reason: gates.reason };
   }
 
   return { action: 'queued', reason: 'needs_human' };
@@ -235,11 +357,6 @@ export type AutoPublishGateResult =
   | { ok: true; path: 'official' | 'corroborated' }
   | { ok: false; reason: string };
 
-/**
- * Non-negotiable deterministic gates shared by both publish paths.
- * These are the anti-hallucination core: safe landline range, custody
- * classification, exact number present in fetched page text, no conflicts.
- */
 function hardGates(
   finding: CustodyNumberFinding,
   review: CustodyAiReview,
@@ -283,7 +400,6 @@ function canAutoPublish(
   const hard = hardGates(finding, review, approvedNormalized);
   if (!hard.ok) return hard;
 
-  // Path A — single official source on the force's own domain (strictest).
   const officialPath =
     isOfficialSourceType(finding.sourceType) &&
     sourceDomainIsOfficialForForce(finding.sourceDomain, forceDomain) &&
@@ -291,7 +407,6 @@ function canAutoPublish(
     finding.confidenceScore >= AUTO_PUBLISH_MIN_RULE_SCORE;
   if (officialPath) return { ok: true, path: 'official' };
 
-  // Path B — multiple independent trusted domains agree on the same landline.
   if (isTrustedCorroboratingSource(finding)) {
     const corroboration = assessCorroboration(finding, suiteFindings);
     if (corroboration.conflictingTrustedNumbers.length > 0) {
@@ -307,7 +422,6 @@ function canAutoPublish(
     }
   }
 
-  // Neither path — report the most useful blocking reason.
   if (!isOfficialSourceType(finding.sourceType)) {
     return { ok: false, reason: 'insufficient_corroboration' };
   }
@@ -321,3 +435,16 @@ function canAutoPublish(
 }
 
 export { canAutoPublish };
+
+/**
+ * Re-run auto-decision gates on an existing finding (backlog cleanup).
+ * Uses the stored aiReview without re-fetching source pages.
+ */
+export async function reapplyAutoDecision(
+  finding: CustodyNumberFinding,
+): Promise<AutoDecisionResult> {
+  if (!finding.aiReview?.reviewedAt) {
+    return { action: 'queued', reason: 'no_ai_review' };
+  }
+  return applyAutoDecision(finding, finding.aiReview);
+}

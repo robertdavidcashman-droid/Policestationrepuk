@@ -32,7 +32,8 @@ Auto-publish is **off** by default. See [Yield review](#yield-review-deferred) b
 | `CUSTODY_AI_BATCH_LIMIT` | `12` | AI reviews per cron run |
 | `CUSTODY_AI_FETCH_EVIDENCE` | `true` | Fetch source pages during AI review |
 | `CUSTODY_AI_AUTO_PUBLISH` | `false` | Auto-approve high-confidence official findings |
-| `CUSTODY_AI_AUTO_REJECT` | `true` | Auto-reject obvious junk after AI review |
+| `CUSTODY_AI_AUTO_REJECT` | `true` | Auto-reject AI reject (≥85%) and hold cross-ref rejects |
+| `CUSTODY_AI_MIN_REJECT_CONFIDENCE` | `85` | Minimum AI confidence to auto-reject on AI "reject" recommendation |
 | `CUSTODY_RECHECK_DAYS` | `90` | Re-verify published numbers against source after this many days |
 | `CUSTODY_RECHECK_BATCH_LIMIT` | `20` | Approved numbers rechecked per cron run |
 | `CUSTODY_CORROBORATION_MIN_SOURCES` | `2` | Independent trusted domains required for corroborated auto-publish |
@@ -57,9 +58,19 @@ Then one of two paths must pass:
 
 ### Automatic queue clearing (on every AI review)
 
-- **Duplicate confirmations** — a finding matching the already-published number for its suite is closed automatically; if it is a trusted source with fetched page evidence, it also bumps the published record's `lastVerifiedAt` (audit action `corroborated`).
-- **Unsafe numbers** — mobiles/premium-rate from non-official sources are auto-rejected (they can never be published); mobiles from official force sources stay in the queue for human judgement.
-- **Weak-evidence retries** — findings the AI would approve/hold but whose source page fetch failed are automatically retried on later AI cron runs, up to `CUSTODY_EVIDENCE_RETRY_LIMIT` (default 3) attempts.
+- **Deterministic reject** — generic/switchboard/101/emergency numbers (`isGenericCustodyNumber`, `switchboard`, `general_101` classifications) are auto-rejected immediately; no manual review needed.
+- **Broad AI reject** — when AI recommends `reject` at ≥ `CUSTODY_AI_MIN_REJECT_CONFIDENCE` (default 85), auto-reject unless `conflictReason` is set (conflicts stay in manual queue).
+- **Hold cross-reference** — AI `hold` findings are cross-checked against sibling findings and force-wide published patterns (`lib/custody-discovery/hold-resolver.ts`):
+  - 2+ trusted domains agree + page evidence → auto-publish (corroborated, unverified)
+  - Rep-directory / untrusted-only → auto-reject
+  - Number on ≥3 force suites → auto-reject as force switchboard
+  - Trusted sources disagree → flag conflict (never auto-publish)
+  - Unresolved → manual queue
+- **Duplicate confirmations** — a finding matching the already-published number for its suite is closed automatically; trusted page evidence bumps `lastVerifiedAt`.
+- **Unsafe numbers** — mobiles/premium-rate from non-official sources are auto-rejected.
+- **Weak-evidence retries** — page-fetch failures retried up to `CUSTODY_EVIDENCE_RETRY_LIMIT` (default 3).
+
+**Conflicts never auto-publish or auto-reject** — they always need your decision in the admin panel.
 
 Nothing is invented: numbers only enter the pipeline via crawler extraction from fetched pages or committed official JSON, and the AI validator (`ai-review-validator.ts`) downgrades any AI approval whose excerpt does not contain the exact number.
 
@@ -83,6 +94,12 @@ npx tsx scripts/fetch-devon-cornwall-custody.ts --write
 
 # Merge official JSON into stations.json
 npx tsx scripts/seed-official-custody.ts --write
+
+# Dry-run backlog auto-decision (hold cross-ref + broad AI reject)
+npx tsx scripts/custody-resolve-hold-backlog.ts --dry-run
+
+# Apply backlog cleanup to production KV
+npx tsx scripts/custody-resolve-hold-backlog.ts
 ```
 
 ## Metrics and baseline
