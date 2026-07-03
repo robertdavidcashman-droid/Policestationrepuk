@@ -187,25 +187,26 @@ describe('applyAutoDecision broad reject', () => {
       },
     );
     expect(result.action).toBe('rejected');
-    expect(result.reason).toBe('auto_reject_ai');
+    expect(result.reason).toBe('auto_reject_rep_directory');
   });
 
-  it('does not auto-reject AI reject when confidence is below threshold', async () => {
+  it('auto-rejects AI reject at any confidence', async () => {
     const result = await applyAutoDecision(
       finding(),
       { ...holdReview(), recommendation: 'reject', aiConfidence: 70 },
     );
-    expect(result.action).toBe('queued');
+    expect(result.action).toBe('rejected');
+    expect(result.reason).toBe('auto_reject_ai');
   });
 
-  it('does not auto-reject conflict findings even when AI says reject', async () => {
+  it('auto-rejects conflict findings when AI says reject', async () => {
     const result = await applyAutoDecision(
       finding({ conflictReason: 'possible_conflict' }),
       { ...holdReview(), recommendation: 'reject', aiConfidence: 95 },
     );
-    expect(result.action).toBe('queued');
-    expect(result.reason).toBe('conflict');
-    expect(rejectedIds).not.toHaveBeenCalled();
+    expect(result.action).toBe('rejected');
+    expect(result.reason).toBe('auto_reject_ai');
+    expect(rejectedIds).toHaveBeenCalled();
   });
 
   it('deterministically rejects 101 regardless of AI recommendation', async () => {
@@ -242,7 +243,7 @@ describe('shouldAutoRejectAiFinding low-confidence tier', () => {
     if (gate.reject) expect(gate.reason).toBe('auto_reject_rep_directory');
   });
 
-  it('does not auto-reject low confidence from official police source', () => {
+  it('auto-rejects official police source at any AI reject confidence', () => {
     const gate = shouldAutoRejectAiFinding(
       finding({
         sourceType: 'official_police',
@@ -251,10 +252,11 @@ describe('shouldAutoRejectAiFinding low-confidence tier', () => {
       }),
       { ...holdReview(), recommendation: 'reject', aiConfidence: 75 },
     );
-    expect(gate.reject).toBe(false);
+    expect(gate.reject).toBe(true);
+    if (gate.reject) expect(gate.reason).toBe('auto_reject_ai');
   });
 
-  it('auto-rejects unknown third-party at 40%+ AI reject', () => {
+  it('auto-rejects unknown third-party at any AI reject confidence', () => {
     const gate = shouldAutoRejectAiFinding(
       finding({
         sourceType: 'unknown',
@@ -264,14 +266,15 @@ describe('shouldAutoRejectAiFinding low-confidence tier', () => {
       { ...holdReview(), recommendation: 'reject', aiConfidence: 45 },
     );
     expect(gate.reject).toBe(true);
-    if (gate.reject) expect(gate.reason).toBe('auto_reject_untrusted_source');
+    if (gate.reject) expect(gate.reason).toBe('auto_reject_ai');
   });
 
-  it('does not auto-reject when conflict is flagged', () => {
+  it('auto-rejects when conflict is flagged', () => {
     const gate = shouldAutoRejectAiFinding(
       finding({ sourceDomain: 'policestationreps.com', conflictReason: 'possible_conflict' }),
       { ...holdReview(), recommendation: 'reject', aiConfidence: 95 },
     );
-    expect(gate.reject).toBe(false);
+    expect(gate.reject).toBe(true);
+    if (gate.reject) expect(gate.reason).toBe('auto_reject_rep_directory');
   });
 });

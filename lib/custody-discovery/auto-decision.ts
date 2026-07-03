@@ -52,49 +52,17 @@ function minApproveConfidence(): number {
   return Number(process.env.CUSTODY_AI_MIN_APPROVE_CONFIDENCE ?? 92);
 }
 
-function minRejectConfidence(): number {
-  return Number(process.env.CUSTODY_AI_MIN_REJECT_CONFIDENCE ?? 85);
-}
-
-function minLowRejectConfidence(): number {
-  return Number(process.env.CUSTODY_AI_LOW_REJECT_CONFIDENCE ?? 40);
-}
-
-function minRepDirectoryRejectConfidence(): number {
-  return Number(process.env.CUSTODY_AI_REP_REJECT_CONFIDENCE ?? 50);
-}
-
-const JUNK_CLASSIFICATIONS = new Set([
-  'switchboard',
-  'general_101',
-  'solicitor_office',
-  'victim_witness',
-  'irrelevant',
-]);
-
 /**
- * Whether an AI "reject" should auto-clear without manual review.
- * High confidence (≥85): always. Lower confidence only on safe patterns
- * (rep directories, junk classifications, untrusted sources) — never on
- * official/trusted sources where a wrong reject would drop a real number.
+ * Auto-reject whenever AI recommends reject. Conflicts still block
+ * auto-publish but do not block clearing reject recommendations from the queue.
  */
 export function shouldAutoRejectAiFinding(
   finding: CustodyNumberFinding,
   review: CustodyAiReview,
 ): { reject: true; reason: string; note: string } | { reject: false } {
   if (review.recommendation !== 'reject') return { reject: false };
-  if (finding.conflictReason) return { reject: false };
 
   const conf = review.aiConfidence;
-
-  if (conf >= minRejectConfidence()) {
-    return {
-      reject: true,
-      reason: 'auto_reject_ai',
-      note: `AI reject (${conf}%) — not a publishable custody desk line.`,
-    };
-  }
-
   if (isRepDirectoryFinding(finding)) {
     return {
       reject: true,
@@ -103,27 +71,11 @@ export function shouldAutoRejectAiFinding(
     };
   }
 
-  if (JUNK_CLASSIFICATIONS.has(finding.classification) && conf >= minLowRejectConfidence()) {
-    return {
-      reject: true,
-      reason: 'auto_reject_junk_classification',
-      note: `AI reject (${conf}%) — classified as ${finding.classification}.`,
-    };
-  }
-
-  if (
-    conf >= minLowRejectConfidence() &&
-    (finding.sourceType === 'solicitor_site' ||
-      (finding.sourceType === 'unknown' && !isTrustedCorroboratingSource(finding)))
-  ) {
-    return {
-      reject: true,
-      reason: 'auto_reject_untrusted_source',
-      note: `AI reject (${conf}%) from untrusted source (${finding.sourceType}).`,
-    };
-  }
-
-  return { reject: false };
+  return {
+    reject: true,
+    reason: 'auto_reject_ai',
+    note: `AI reject (${conf}%) — not a publishable custody desk line.`,
+  };
 }
 
 export interface AutoDecisionResult {
@@ -325,16 +277,16 @@ export async function applyAutoDecision(
     );
   }
 
-  // Conflicts never auto-publish or auto-reject — human review only.
-  if (finding.conflictReason) {
-    return { action: 'queued', reason: 'conflict' };
-  }
-
   if (review.recommendation === 'reject' && autoRejectEnabled()) {
     const rejectGate = shouldAutoRejectAiFinding(finding, review);
     if (rejectGate.reject) {
       return autoRejectFinding(finding, review, rejectGate.reason, rejectGate.note);
     }
+  }
+
+  // Conflicts never auto-publish or auto-hold-resolve to publish — human review only.
+  if (finding.conflictReason) {
+    return { action: 'queued', reason: 'conflict' };
   }
 
   if (review.recommendation === 'approve' && autoPublishEnabled()) {
