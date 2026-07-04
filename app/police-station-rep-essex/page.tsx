@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { buildMetadata } from '@/lib/seo';
 import { PillarSeoLayout } from '@/components/PillarSeoLayout';
+import { StationNumbersPromo } from '@/components/StationNumbersPromo';
 
 export const metadata = buildMetadata({
   title: 'Police Station Rep Essex — Custody Suite Cover',
@@ -92,6 +93,9 @@ export default function PoliceStationRepEssexPage() {
         custody for a firm. <strong className="text-[var(--navy)]">PoliceStationRepUK</strong> is a directory helping
         firms find people who provide that attendance.
       </p>
+      <div className="not-prose mt-8">
+        <StationNumbersPromo variant="section" countyFilter="Essex" />
+      </div>
     </PillarSeoLayout>
   );
 }

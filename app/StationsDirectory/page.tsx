@@ -12,7 +12,7 @@ import {
   stationDirectoryItemListSchema,
 } from '@/lib/seo';
 import { STATIONS_DIRECTORY_FAQS } from '@/lib/stations-seo';
-import { computeStationPhoneStats } from '@/lib/station-numbers-campaign';
+import { buildStationPhonePublicStats } from '@/lib/station-phone-stats-server';
 import { StationContactDisclaimer } from '@/components/StationPhone';
 import { GuideFaqs } from '@/components/StructuredGuideLayout';
 
@@ -42,7 +42,7 @@ export default async function StationsDirectoryPage({ searchParams }: PageProps)
     stations.map((s) => [s.slug, countRepsForStation(s, reps, stations)]),
   );
   const stationListSample = stations.map((s) => ({ name: s.name, slug: s.slug }));
-  const stats = computeStationPhoneStats(stations);
+  const stats = buildStationPhonePublicStats(stations);
 
   return (
     <>

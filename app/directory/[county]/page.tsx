@@ -10,6 +10,7 @@ import { StationCard } from '@/components/StationCard';
 import { DirectoryComplianceNotice } from '@/components/DirectoryComplianceNotice';
 import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCredentialVerificationNotice';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
+import { StationNumbersPromo } from '@/components/StationNumbersPromo';
 import { AdvertisementLabel } from '@/components/AdvertisementLabel';
 import { POLICESTATIONAGENT_KENT_RESOURCES_HREF } from '@/lib/policestationagent-promo';
 
@@ -191,6 +192,10 @@ export default async function DirectoryCountyPage({ params }: PageProps) {
             </div>
           )}
         </section>
+
+        <div className="mt-12">
+          <StationNumbersPromo variant="section" countyFilter={county.name} />
+        </div>
 
         <section className="mt-10 rounded-2xl border border-slate-200 bg-slate-50/90 p-6 sm:p-8">
           <h2 className="text-lg font-bold text-[var(--navy)]">More ways to search {county.name}</h2>

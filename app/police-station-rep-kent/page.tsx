@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { buildMetadata } from '@/lib/seo';
 import { PillarSeoLayout } from '@/components/PillarSeoLayout';
+import { StationNumbersPromo } from '@/components/StationNumbersPromo';
 
 export const metadata = buildMetadata({
   title: 'Police Station Rep Kent — Accredited Directory',
@@ -106,6 +107,9 @@ export default function PoliceStationRepKentPage() {
         high-intent county page. <strong className="text-[var(--navy)]">User:</strong> criminal defence firms seeking
         custody attendance.
       </p>
+      <div className="not-prose mt-8">
+        <StationNumbersPromo variant="section" countyFilter="Kent" />
+      </div>
     </PillarSeoLayout>
   );
 }

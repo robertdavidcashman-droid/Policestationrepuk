@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { buildMetadata } from '@/lib/seo';
 import { PillarSeoLayout } from '@/components/PillarSeoLayout';
+import { StationNumbersPromo } from '@/components/StationNumbersPromo';
 
 export const metadata = buildMetadata({
   title: 'Police Station Rep Cover for Firms | How Firms Source Reps',
@@ -105,6 +106,9 @@ export default function CriminalSolicitorPoliceStationPage() {
         </Link>{' '}
         (accredited reps).
       </p>
+      <div className="not-prose mt-8">
+        <StationNumbersPromo variant="section" />
+      </div>
     </PillarSeoLayout>
   );
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { StationsDataContributeCta } from '@/components/StationsDataContributeCta';
+import { stationDirectoryHref } from '@/lib/station-directory-links';
 import type { StationPhonePublicStats } from '@/lib/station-phone-stats-server';
 
 type Variant = 'section' | 'sidebar' | 'inline';
@@ -12,16 +13,6 @@ interface StationNumbersPromoProps {
   className?: string;
 }
 
-function directoryHref(countyFilter?: string, forceFilter?: string): string {
-  if (countyFilter) {
-    return `/StationsDirectory?county=${encodeURIComponent(countyFilter)}`;
-  }
-  if (forceFilter) {
-    return `/StationsDirectory?force=${encodeURIComponent(forceFilter)}`;
-  }
-  return '/StationsDirectory';
-}
-
 export function StationNumbersPromo({
   variant = 'section',
   stats,
@@ -29,7 +20,7 @@ export function StationNumbersPromo({
   forceFilter,
   className = '',
 }: StationNumbersPromoProps) {
-  const href = directoryHref(countyFilter, forceFilter);
+  const href = stationDirectoryHref(countyFilter, forceFilter);
   const statsLine =
     stats && stats.total > 0
       ? `${stats.directLine} direct lines · ${stats.total} stations${stats.verifiedCustodyCount ? ` · ${stats.verifiedCustodyCount} verified custody` : ''}`

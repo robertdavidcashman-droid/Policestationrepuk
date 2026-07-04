@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AnalyticsEvents } from '@/lib/analytics';
+import { buildStationsDirectorySearchUrl } from '@/lib/station-directory-links';
 import type { StationPhonePublicStats } from '@/lib/station-phone-stats-server';
 
 interface HomeStationSearchProps {
@@ -19,7 +20,7 @@ export function HomeStationSearch({ stats }: HomeStationSearchProps) {
     const trimmed = query.trim();
     if (trimmed) {
       AnalyticsEvents.directorySearch(`station:${trimmed}`);
-      router.push(`/StationsDirectory?q=${encodeURIComponent(trimmed)}`);
+      router.push(buildStationsDirectorySearchUrl(trimmed));
     } else {
       router.push('/StationsDirectory');
     }
@@ -72,6 +73,9 @@ export function HomeStationSearch({ stats }: HomeStationSearchProps) {
             </Link>
             <Link href="/UpdateStation" className="btn-outline w-full sm:w-auto">
               Report a number
+            </Link>
+            <Link href="/contribute-custody-numbers" className="btn-outline w-full sm:w-auto">
+              Contribute custody numbers
             </Link>
           </div>
         </div>
