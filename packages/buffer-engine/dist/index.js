@@ -27,6 +27,7 @@ __exportStar(require("./client"), exports);
 __exportStar(require("./gbp-preflight"), exports);
 __exportStar(require("./scheduler"), exports);
 __exportStar(require("./verify"), exports);
+__exportStar(require("./reconcile"), exports);
 __exportStar(require("./selftest"), exports);
 __exportStar(require("./assets"), exports);
 __exportStar(require("./google-business-text"), exports);

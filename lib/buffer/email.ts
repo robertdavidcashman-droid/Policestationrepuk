@@ -164,8 +164,9 @@ export async function sendBufferSchedulerFailureEmail(
       </p>
       ${partialHtml}
       <p style="margin:0;color:#64748b;font-size:12px;line-height:1.5;">
-        Check Vercel cron logs for <code>/api/cron/buffer-blog-posts</code>, confirm
-        <code>BUFFER_API_KEY</code> and Buffer channel connections, then retry manually if needed.
+        Reconcile with Buffer before retrying. Check Vercel cron logs for
+        <code>/api/cron/buffer-blog-posts</code>, confirm <code>BUFFER_API_KEY</code> and channel connections.
+        Run <code>npm run buffer:list-today</code> to see posts already scheduled for today.
       </p>
     </div>
   `;
@@ -292,7 +293,7 @@ export async function sendBufferDailySuccessEmail(
   input: BufferDailySuccessEmailInput,
 ): Promise<boolean> {
   const to = input.adminEmail?.trim() || NOTIFY_EMAIL;
-  const subject = `[Buffer daily] All posts sent — ${input.date}`;
+  const subject = `[Buffer daily] RepUK run — all sent — ${input.date}`;
 
   const feedSummary = Object.entries(input.feedCounts)
     .map(([feed, count]) => `<li>${escapeHtml(feed)}: ${escapeHtml(String(count))}</li>`)
@@ -313,10 +314,15 @@ export async function sendBufferDailySuccessEmail(
 
   const html = `
     <div style="font-family:system-ui,sans-serif;color:#0f172a;max-width:720px;">
-      <h2 style="margin:0 0 12px;">Buffer daily report — all posts sent</h2>
+      <h2 style="margin:0 0 12px;">Buffer daily report — RepUK scheduler run OK</h2>
       <p style="margin:0 0 16px;line-height:1.5;">
-        Scheduler run for <strong>${escapeHtml(input.date)}</strong> (Europe/London):
+        <strong>policestationrepuk.org</strong> KV scheduler run for
+        <strong>${escapeHtml(input.date)}</strong> (Europe/London):
         <strong>${escapeHtml(String(input.sent))}</strong> / ${escapeHtml(String(input.total))} posts published successfully.
+      </p>
+      <p style="margin:0 0 16px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;font-size:13px;line-height:1.5;color:#475569;">
+        This verifies only the RepUK scheduler KV run. Cross-site quota (all four properties) is reported separately
+        by the cross-site cron at 04:45 UTC.
       </p>
       <p style="margin:0 0 8px;"><strong>By feed:</strong></p>
       <ul style="margin:0 0 16px;padding-left:20px;line-height:1.6;">${feedSummary}</ul>
@@ -438,6 +444,11 @@ export async function sendBufferCrossSiteFailureEmail(
       <h2 style="margin:0 0 12px;">Buffer cross-site report — sites below quota</h2>
       <p style="margin:0 0 16px;line-height:1.5;">
         One or more sites did not reach their daily Buffer post quota for <strong>${escapeHtml(input.date)}</strong>.
+        Counts are from Buffer API <code>sent</code> posts whose link URL matches each site hostname.
+      </p>
+      <p style="margin:0 0 16px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;font-size:13px;line-height:1.5;color:#475569;">
+        This is independent of the RepUK daily report (which only verifies the policestationrepuk.org KV scheduler run).
+        A site below quota here does not mean RepUK posts failed — check that site&apos;s own scheduler cron.
       </p>
       ${reasonLine}
       <table style="border-collapse:collapse;width:100%;font-size:13px;">

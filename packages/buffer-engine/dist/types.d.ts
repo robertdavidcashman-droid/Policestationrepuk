@@ -104,6 +104,10 @@ export interface ScheduleOptions {
 export interface ScheduleResult {
     ok: boolean;
     skipped?: boolean;
+    /** True when Buffer already had enough posts and no new scheduling was needed. */
+    reconciled?: boolean;
+    /** Posts already present in Buffer for this day when reconciled. */
+    scheduledInBuffer?: number;
     reason?: string;
     date?: string;
     dryRun?: boolean;

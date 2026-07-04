@@ -22,6 +22,7 @@ import type {
   SiteBufferEnvConfig,
 } from './types';
 import { pickBanditSchedulablePosts, computePoolCoverage } from './bandit';
+import { countSitePostsInBufferForDay } from './reconcile';
 import { ensureCompliantPostImage } from './image-corrector';
 import { hydratePostImagesForBuffer } from './image-url';
 import {
@@ -176,6 +177,19 @@ export async function runSiteBufferScheduler(
   }
 
   if (picked.length === 0) {
+    const reconciled = await tryReconcileExistingSchedule(
+      envConfig,
+      adapter,
+      localDate,
+      targetCount,
+      kv,
+    );
+    if (reconciled) {
+      console.info(
+        `[buffer-engine:${adapter.siteId}] Reconciled day ${localDate}: ${reconciled.reason}`,
+      );
+      return reconciled;
+    }
     return {
       ok: false,
       reason: `No posts after cooldown (pool ${rawPosts.length}, cooldown ${feedCooldown}d)`,
@@ -342,6 +356,19 @@ export async function runSiteBufferScheduler(
   }
 
   if (created.length === 0) {
+    const reconciled = await tryReconcileExistingSchedule(
+      envConfig,
+      adapter,
+      localDate,
+      targetCount,
+      kv,
+    );
+    if (reconciled) {
+      console.info(
+        `[buffer-engine:${adapter.siteId}] Reconciled after schedule failures for ${localDate}: ${reconciled.reason}`,
+      );
+      return reconciled;
+    }
     return { ok: false, reason: 'All schedule attempts failed', date: localDate, errors };
   }
 
@@ -384,4 +411,61 @@ async function createScheduledBufferPostWithRetry(
     }
   }
   throw lastError;
+}
+
+/**
+ * Before reporting failure, check KV run record and Buffer API for posts already
+ * scheduled for this day — cooldown exhaustion is not a failure when the day is covered.
+ */
+async function tryReconcileExistingSchedule(
+  envConfig: SiteBufferEnvConfig,
+  adapter: BufferEngineAdapter,
+  localDate: string,
+  targetCount: number,
+  kv: import('./types').BufferKV | null,
+): Promise<ScheduleResult | null> {
+  const apiKey = envConfig.apiKey;
+  if (!apiKey) return null;
+
+  const existingRun = await getSchedulerRunForDate(kv, adapter.siteId, localDate);
+  if (existingRun && existingRun.postIds.length >= targetCount) {
+    return {
+      ok: true,
+      skipped: true,
+      reason: 'Already scheduled for this date',
+      date: localDate,
+      posts: existingRun.slugs.map((slug, i) => ({
+        postId: existingRun.postIds[i] ?? '',
+        slug,
+        feedId: existingRun.feedIds?.[i] ?? adapter.siteId,
+        channelId: existingRun.channels[i] ?? '',
+        channelService: '',
+        dueAt: existingRun.dueAts[i] ?? null,
+        title: slug,
+      })),
+    };
+  }
+
+  const channelIds = envConfig.channels.map((c) => c.id);
+  const bufferCount = await countSitePostsInBufferForDay(
+    apiKey,
+    envConfig.organizationId,
+    adapter.siteUrl,
+    localDate,
+    envConfig.timezone,
+    channelIds,
+  );
+
+  if (bufferCount.count >= targetCount) {
+    return {
+      ok: true,
+      skipped: true,
+      reconciled: true,
+      scheduledInBuffer: bufferCount.count,
+      reason: `Buffer already has ${bufferCount.count}/${targetCount} posts scheduled for today (cooldown exhausted)`,
+      date: localDate,
+    };
+  }
+
+  return null;
 }

@@ -149,6 +149,66 @@ describe('runSiteBufferScheduler', () => {
     expect(createdPosts).toHaveLength(0);
     expect(result.posts?.length).toBeGreaterThanOrEqual(5);
   });
+
+  it('reconciles when cooldown exhausted but Buffer already has enough posts', async () => {
+    const kv = makeKV();
+    const posts = makePosts(10);
+    const adapter = makeAdapter(kv, posts);
+    const now = new Date('2026-07-04T05:00:00Z');
+
+    await kv.set(
+      'buffer-engine:recent-slugs:testsite',
+      posts.map((p) => ({ slug: p.slug, feedId: 'testsite', scheduledAt: now.toISOString() })),
+    );
+
+    const listPosts = Array.from({ length: 5 }, (_, i) => ({
+      id: `buf-${i}`,
+      text: `Read https://testsite.com/blog/post-${i}`,
+      status: 'scheduled',
+      dueAt: '2026-07-04T10:00:00+01:00',
+      sentAt: null,
+      createdAt: now.toISOString(),
+      channelId: 'b'.repeat(24),
+      channelService: 'twitter',
+    }));
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+        const url = typeof input === 'string' ? input : input.toString();
+        const method = (init?.method ?? 'GET').toUpperCase();
+        if (url.startsWith('https://api.buffer.com')) {
+          const body = JSON.parse((init?.body as string) ?? '{}');
+          if (/ListPosts|posts\(/.test(body.query ?? '')) {
+            return Response.json({
+              data: {
+                posts: {
+                  edges: listPosts.map((node) => ({ node })),
+                  pageInfo: { hasNextPage: false, endCursor: null },
+                },
+              },
+            });
+          }
+          if (/createPost/.test(body.query)) {
+            throw new Error('createPost should not be called when reconciled');
+          }
+        }
+        const headers = new Headers({
+          'content-type': 'image/jpeg',
+          'content-length': String(jpegBytes.length),
+        });
+        if (method === 'HEAD') return new Response(null, { status: 200, headers });
+        return new Response(jpegBytes, { status: 200, headers });
+      }) as unknown as typeof fetch,
+    );
+
+    const result = await runSiteBufferScheduler(adapter, { now });
+    expect(result.ok).toBe(true);
+    expect(result.skipped).toBe(true);
+    expect(result.reconciled).toBe(true);
+    expect(result.scheduledInBuffer).toBe(5);
+    expect(createdPosts).toHaveLength(0);
+  });
 });
 
 describe('verifySiteBufferSchedule', () => {

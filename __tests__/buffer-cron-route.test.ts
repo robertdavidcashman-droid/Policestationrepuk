@@ -3,7 +3,8 @@ import { GET } from '@/app/api/cron/buffer-blog-posts/route';
 
 const mockRun = vi.fn();
 const mockEmail = vi.fn();
-const mockSkippedEmail = vi.fn();
+const mockWasFailureSent = vi.fn();
+const mockMarkFailureSent = vi.fn();
 
 vi.mock('@/lib/buffer/engine-run', () => ({
   runRepukBufferScheduler: (...args: unknown[]) => mockRun(...args),
@@ -11,7 +12,12 @@ vi.mock('@/lib/buffer/engine-run', () => ({
 
 vi.mock('@/lib/buffer/email', () => ({
   sendBufferSchedulerFailureEmail: (...args: unknown[]) => mockEmail(...args),
-  sendBufferSchedulerSkippedEmail: (...args: unknown[]) => mockSkippedEmail(...args),
+}));
+
+vi.mock('@/lib/buffer/scheduler-notification-digest', () => ({
+  wasSchedulerFailureEmailSent: (...args: unknown[]) => mockWasFailureSent(...args),
+  markSchedulerFailureEmailSent: (...args: unknown[]) => mockMarkFailureSent(...args),
+  schedulerFailureErrorKey: (error: string) => error.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
 }));
 
 const ENV = process.env;
@@ -20,6 +26,8 @@ describe('buffer-blog-posts cron route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env = { ...ENV, CRON_SECRET: 'cron-test-secret' };
+    mockWasFailureSent.mockResolvedValue(false);
+    mockMarkFailureSent.mockResolvedValue(undefined);
     mockRun.mockResolvedValue({
       ok: true,
       date: '2026-06-08',
@@ -117,7 +125,7 @@ describe('buffer-blog-posts cron route', () => {
     );
   });
 
-  it('returns skipped response with ok true when already scheduled', async () => {
+  it('returns skipped response without email when already scheduled', async () => {
     mockRun.mockResolvedValue({
       ok: true,
       skipped: true,
@@ -135,8 +143,39 @@ describe('buffer-blog-posts cron route', () => {
     expect(json.ok).toBe(true);
     expect(json.skipped).toBe(true);
     expect(json.reason).toMatch(/already scheduled/i);
-    expect(mockSkippedEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ reason: 'Already scheduled for this date', postCount: 1 }),
+    expect(mockEmail).not.toHaveBeenCalled();
+  });
+
+  it('does not send failure email when reconciled after cooldown exhaustion', async () => {
+    mockRun.mockResolvedValue({
+      ok: true,
+      skipped: true,
+      reconciled: true,
+      scheduledInBuffer: 5,
+      reason: 'Buffer already has 5/5 posts scheduled for today (cooldown exhausted)',
+      date: '2026-07-04',
+    });
+    const res = await GET(
+      new Request('http://localhost/api/cron/buffer-blog-posts', {
+        headers: { authorization: 'Bearer cron-test-secret' },
+      }),
     );
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(json.reconciled).toBe(true);
+    expect(mockEmail).not.toHaveBeenCalled();
+  });
+
+  it('suppresses duplicate failure email for same date and error', async () => {
+    mockWasFailureSent.mockResolvedValue(true);
+    mockRun.mockResolvedValue({ ok: false, reason: 'BUFFER_API_KEY is not configured' });
+    const res = await GET(
+      new Request('http://localhost/api/cron/buffer-blog-posts', {
+        headers: { authorization: 'Bearer cron-test-secret' },
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(mockEmail).not.toHaveBeenCalled();
   });
 });

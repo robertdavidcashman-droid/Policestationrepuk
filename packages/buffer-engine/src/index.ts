@@ -11,6 +11,7 @@ export * from './client';
 export * from './gbp-preflight';
 export * from './scheduler';
 export * from './verify';
+export * from './reconcile';
 export * from './selftest';
 export * from './assets';
 export * from './google-business-text';
