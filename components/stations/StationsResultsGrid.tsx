@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import type { PoliceStation } from '@/lib/types';
 import type { ScoredStation } from '@/lib/station-search';
 import { StationContactDisclaimer } from '@/components/StationPhone';
 import { StationDirectoryCard } from '@/components/stations/StationDirectoryCard';
