@@ -13,8 +13,8 @@ export const metadata = buildMetadata({
   path: `${LEGAL_DIRECTORY_BASE}/categories`,
 });
 
-/** ISR: refresh per-category listing counts hourly. */
-export const revalidate = 3600;
+/** KV-backed listing counts; must not use static ISR (DYNAMIC_SERVER_USAGE). */
+export const dynamic = 'force-dynamic';
 
 export default async function CategoriesIndexPage() {
   const approved = await listApprovedListings();

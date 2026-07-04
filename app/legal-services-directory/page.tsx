@@ -18,8 +18,8 @@ export const metadata = buildMetadata({
   path: LEGAL_DIRECTORY_BASE,
 });
 
-/** ISR: refresh category counts / featured block hourly without per-request rendering. */
-export const revalidate = 3600;
+/** KV-backed listing counts; must not use static ISR (DYNAMIC_SERVER_USAGE). */
+export const dynamic = 'force-dynamic';
 
 const FAQ = [
   {

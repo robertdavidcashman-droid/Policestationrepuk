@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { mkdirSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
+import { tryWriteProjectJson } from '@/lib/server-data-write';
 import { getAllFindings } from '@/lib/custody-discovery/storage';
 import { getAllStations } from '@/lib/data';
 import { getPendingStationUpdates } from '@/lib/station-overrides';
@@ -61,17 +60,16 @@ export async function GET(request: Request) {
     stations: summaries,
   };
 
-  if (writeReport) {
-    const date = overview.generatedAt.slice(0, 10);
-    const dir = resolve(process.cwd(), 'data/reports');
-    mkdirSync(dir, { recursive: true });
-    const path = resolve(dir, `station-contact-health-${date}.json`);
-    writeFileSync(path, JSON.stringify(snapshot, null, 2) + '\n');
-  }
+  const wroteReport =
+    writeReport &&
+    tryWriteProjectJson(
+      `data/reports/station-contact-health-${overview.generatedAt.slice(0, 10)}.json`,
+      snapshot,
+    );
 
   return NextResponse.json({
     ok: true,
-    wroteReport: writeReport,
+    wroteReport,
     overview,
   });
 }

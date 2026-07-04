@@ -6,8 +6,9 @@
  * Risk here is low: we only parse trusted LAA government data, never user uploads.
  * This module is server-only; xlsx must not be bundled into client JS.
  */
-import { readFileSync, writeFileSync, mkdirSync, statSync } from 'fs';
-import { resolve, dirname } from 'path';
+import { readFileSync, statSync } from 'fs';
+import { resolve, relative } from 'path';
+import { tryWriteProjectJson } from '@/lib/server-data-write';
 import * as cheerio from 'cheerio';
 import * as XLSX from 'xlsx';
 import { dedupeLaaProviderRecords } from './laa-dedupe';
@@ -178,8 +179,7 @@ export async function fetchLaaCrimeProviders(opts?: {
   const wb = await downloadLaaWorkbook({ url: opts?.url, localFile: opts?.localFile });
   const records = parseLaaCrimeRecords(wb, opts?.limit ?? 0);
 
-  mkdirSync(dirname(writePath), { recursive: true });
-  writeFileSync(writePath, JSON.stringify(records, null, 2));
+  tryWriteProjectJson(relative(process.cwd(), writePath), records);
 
   return { records, refreshed: true, source: 'govuk' };
 }
