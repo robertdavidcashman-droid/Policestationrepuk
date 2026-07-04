@@ -1,7 +1,13 @@
 import { existsSync, readFileSync, statSync } from 'fs';
 import { resolve } from 'path';
 import { BROCHURE_PUBLIC_PATH, loadBrochureAttachment } from './brochure/load-attachment';
-import { FIRM_OUTREACH_CAMPAIGN_ID } from './constants';
+import { AGENT_COVER_KENT_CAMPAIGN_ID } from './campaign-scope';
+import {
+  DEFAULT_PSA_FROM_FALLBACK,
+  resolveFromAddressForCampaign,
+  VERIFIED_FALLBACK_DOMAIN,
+} from './outreach/from-address';
+import { FIRM_OUTREACH_CAMPAIGN_ID } from './site-config';
 import { buildOutreachEmailHtml, subjectForStep } from './outreach/templates';
 import type { FirmProspect } from './types';
 
@@ -83,6 +89,22 @@ export function checkBrochureLoadsAsAttachment(): RepoCheckResult {
     name: 'brochure_attachment_loads',
     ok,
     detail: ok ? attachment!.filename : 'loadBrochureAttachment returned null',
+  };
+}
+
+export function checkPsaFromAddressFallback(): RepoCheckResult {
+  const unverified = new Set<string>([VERIFIED_FALLBACK_DOMAIN]);
+  const resolved = resolveFromAddressForCampaign(AGENT_COVER_KENT_CAMPAIGN_ID, unverified);
+  const ok =
+    resolved.usedFallback &&
+    resolved.from === DEFAULT_PSA_FROM_FALLBACK &&
+    resolved.domain === VERIFIED_FALLBACK_DOMAIN;
+  return {
+    name: 'psa_from_address_verified_fallback',
+    ok,
+    detail: ok
+      ? resolved.from
+      : `Expected PSA fallback via ${VERIFIED_FALLBACK_DOMAIN}, got ${resolved.from}`,
   };
 }
 
@@ -195,6 +217,7 @@ export function runRepoChecks(rootDir = process.cwd()): RepoCheckResult[] {
     checkBrochureExists(),
     checkBrochureMinSize(),
     checkBrochureLoadsAsAttachment(),
+    checkPsaFromAddressFallback(),
     ...checkOutreachTemplates(),
     ...checkVercelCronConfig(vercelJson),
     ...checkCronRouteFilesExist(rootDir),

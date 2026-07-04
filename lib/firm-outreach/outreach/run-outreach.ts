@@ -21,6 +21,7 @@ import {
 } from '../storage';
 import type { FirmProspect, OutreachRunStats } from '../types';
 import { normalizeEmail } from '../normalize';
+import { assertOutreachSendReady } from './from-address';
 import { sendOutreachEmail } from './send';
 
 const FOLLOWUP_DAY_1 = 7;
@@ -85,6 +86,16 @@ export async function runFirmOutreach(opts?: {
   if (!outreachSendEnabled()) {
     stats.elapsedMs = Date.now() - started;
     return stats;
+  }
+
+  if (!opts?.dryRun && process.env.FIRM_OUTREACH_DRY_RUN !== 'true') {
+    const preflight = await assertOutreachSendReady(campaignId);
+    if (!preflight.ok) {
+      console.error('[firm-outreach] send preflight failed:', preflight.reason);
+      stats.errors = 1;
+      stats.elapsedMs = Date.now() - started;
+      return stats;
+    }
   }
 
   const date = new Date().toISOString().slice(0, 10);

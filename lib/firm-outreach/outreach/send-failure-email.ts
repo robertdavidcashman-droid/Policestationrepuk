@@ -77,13 +77,22 @@ export async function maybeNotifyOutreachSendFailure(opts: {
   stats: OutreachRunStats;
   readyToSend: number;
   skipped?: boolean;
+  reason?: string;
 }): Promise<void> {
   if (opts.skipped) return;
+  if (opts.reason) {
+    await sendOutreachSendFailureEmail({
+      stats: opts.stats,
+      readyToSend: opts.readyToSend,
+      reason: opts.reason,
+    });
+    return;
+  }
   if (opts.stats.errors > 0) {
     await sendOutreachSendFailureEmail({
       stats: opts.stats,
       readyToSend: opts.readyToSend,
-      reason: `${opts.stats.errors} send error(s) during the outreach cron run.`,
+      reason: `${opts.stats.errors} send error(s) during the outreach cron run. Check Resend domain verification and /api/cron/firm-outreach-status.`,
     });
     return;
   }

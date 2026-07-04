@@ -17,7 +17,11 @@ export async function GET(request: Request) {
   const { report } = await buildOutreachActivityReport();
 
   return NextResponse.json({
-    ok: config.kvConfigured && config.resendConfigured && config.outreachEnabled,
+    ok:
+      config.kvConfigured &&
+      config.resendConfigured &&
+      config.outreachEnabled &&
+      config.sendHealthy !== false,
     date: new Date().toISOString().slice(0, 10),
     config: {
       ...config,

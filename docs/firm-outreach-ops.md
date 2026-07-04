@@ -93,6 +93,25 @@ Updates the admin Send log with delivery/open/click/bounce status. Webhook match
 
 **PSA (`policestationagent.com`):** every send path must persist `resendMessageId` from Resend (`send.resendMessageId = result.messageId`). Without it, agent-cover sends stay stuck at `sent` in KV. RepUK logs a console warning when a send is saved without it.
 
+## Resend sending domains
+
+Outreach uses Resend. Only **verified** domains can send.
+
+| Campaign | Preferred from | Until PSA domain verified |
+|----------|----------------|---------------------------|
+| `whatsapp_invite_v1` | `FIRM_OUTREACH_FROM_EMAIL` or `PoliceStationRepUK <noreply@policestationrepuk.org>` | — |
+| `agent_cover_kent_v1` | `FIRM_OUTREACH_PSA_FROM_EMAIL` or `Police Station Agent <noreply@policestationagent.com>` | **Auto-fallback** to `Police Station Agent <noreply@policestationrepuk.org>` |
+
+**Permanent auto-fix:** before each batch, the send path resolves from-address against Resend verified domains. If `policestationagent.com` is not verified, PSA emails send from the verified RepUK domain automatically (content and links remain PSA). On a Resend domain error, the send retries once with the verified fallback.
+
+**Verify PSA domain (optional):** Resend dashboard → Domains → add `policestationagent.com` (DNS records). Then set on Vercel:
+
+```bash
+FIRM_OUTREACH_PSA_FROM_EMAIL=Police Station Agent <noreply@policestationagent.com>
+```
+
+**Health check:** `GET /api/cron/firm-outreach-status` (with `CRON_SECRET`) reports `sendHealthy`, `sendBlockers`, and `campaignSendHealth` per campaign.
+
 ## Manual commands
 
 ```bash

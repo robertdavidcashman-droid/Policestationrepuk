@@ -6,6 +6,7 @@ import { cleanupNonFirmProspectEmails } from './cleanup-non-firm-emails';
 import { runFirmDiscovery } from './discovery/run-discovery';
 import { runFirmEnrichment } from './enrichment/run-enrich';
 import { sendDailyOutreachDigest } from './outreach/digest-email';
+import { getOutreachSendHealth } from './outreach/from-address';
 import { maybeNotifyOutreachSendFailure } from './outreach/send-failure-email';
 import { runFirmOutreach } from './outreach/run-outreach';
 import { requalifyAllProspects } from './requalify-prospects';
@@ -121,10 +122,19 @@ export async function runFirmOutreachPipeline(opts?: {
   const counts = await countProspectsByStatus();
 
   if (!opts?.skipSend) {
-    await maybeNotifyOutreachSendFailure({
-      stats: send,
-      readyToSend: counts.ready_to_send ?? 0,
-    });
+    const sendHealth = await getOutreachSendHealth();
+    if (!sendHealth.sendHealthy) {
+      await maybeNotifyOutreachSendFailure({
+        stats: send,
+        readyToSend: counts.ready_to_send ?? 0,
+        reason: `Outreach send config unhealthy: ${sendHealth.sendBlockers.join('; ')}. PSA may use RepUK from-address until policestationagent.com is verified on Resend.`,
+      });
+    } else {
+      await maybeNotifyOutreachSendFailure({
+        stats: send,
+        readyToSend: counts.ready_to_send ?? 0,
+      });
+    }
   }
 
   if (!opts?.skipDigest) {
