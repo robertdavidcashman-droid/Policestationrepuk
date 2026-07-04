@@ -14,10 +14,6 @@ import { getCustodyPublicDisplay } from '@/lib/station-contacts/publish';
 import { isCustodyStation } from '@/lib/custody-station';
 import type { StationsViewMode } from '@/components/stations/stations-filter-types';
 
-function custodyStation(s: PoliceStation): boolean {
-  return Boolean(s.isCustodyStation || s.custodySuite);
-}
-
 export interface StationsResultsGridProps {
   shown: number;
   isFlat: boolean;
@@ -197,7 +193,7 @@ export function buildStationTableColumns(): AdminWideTableColumn<ScoredStation>[
         const pub = getCustodyPublicDisplay(s);
         return pub.published ? (
           <span className="font-mono text-xs">{pub.number ?? s.custodyPhone}</span>
-        ) : custodyStation(s) ? (
+        ) : isCustodyStation(s) ? (
           <span className="text-xs text-amber-800">Not published</span>
         ) : (
           '—'
@@ -210,7 +206,7 @@ export function buildStationTableColumns(): AdminWideTableColumn<ScoredStation>[
       render: (s) => {
         const pub = getCustodyPublicDisplay(s);
         if (pub.published) return <span className={adminBadgeClass('success')}>Custody published</span>;
-        if (custodyStation(s)) return <span className={adminBadgeClass('warning')}>Custody missing</span>;
+        if (isCustodyStation(s)) return <span className={adminBadgeClass('warning')}>Custody missing</span>;
         return <span className={adminBadgeClass('neutral')}>Standard</span>;
       },
     },
