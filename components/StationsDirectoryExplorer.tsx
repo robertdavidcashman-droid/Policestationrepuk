@@ -690,9 +690,6 @@ function StationDirectoryCard({
           {station.forceName || station.county}
         </p>
       )}
-      {!indexable && (
-        <p className="mt-2 text-xs text-[var(--muted)]">Details unavailable</p>
-      )}
       <StationPhone station={station} link />
     </>
   );

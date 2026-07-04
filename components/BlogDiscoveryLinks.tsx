@@ -40,6 +40,14 @@ export function BlogDiscoveryLinks({ categories }: BlogDiscoveryLinksProps) {
         </li>
         <li>
           <Link
+            href="/StationsDirectory"
+            className="inline-flex font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)] hover:underline"
+          >
+            Station phone numbers →
+          </Link>
+        </li>
+        <li>
+          <Link
             href="/Blog"
             className="inline-flex font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)] hover:underline"
           >

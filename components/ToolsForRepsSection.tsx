@@ -127,6 +127,13 @@ export function ToolsForRepsSection() {
 
           <div className="lg:col-span-7">
             <h3 className="text-sm font-bold uppercase tracking-wide text-[var(--muted)]">More tools &amp; guides</h3>
+            <Link
+              href="/StationsDirectory"
+              className="mt-4 flex min-h-[44px] items-center rounded-lg border-2 border-[var(--gold)]/40 bg-[var(--gold-pale)] px-4 py-3 text-sm font-bold text-[var(--navy)] shadow-sm no-underline transition-colors hover:border-[var(--gold)]"
+            >
+              Station phone numbers directory
+              <span className="ml-auto text-xs text-[var(--muted)]">→</span>
+            </Link>
             <ul className="mt-4 grid gap-2 sm:grid-cols-2">
               {rest.map((link) => (
                 <li key={`${link.href}-${link.label}`}>

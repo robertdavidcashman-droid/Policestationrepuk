@@ -6,6 +6,7 @@ import { DirectoryCard } from '@/components/DirectoryCard';
 import { JoinCTA } from '@/components/directory/JoinCTA';
 import { CustodyNoteInlineCTA } from '@/components/CustodyNoteInlineCTA';
 import { SidebarKentAgentPromo, SidebarWhatsAppPromo } from '@/components/directory/SidebarCrossPromos';
+import { StationNumbersPromo } from '@/components/StationNumbersPromo';
 import { AdvertisementLabel } from '@/components/AdvertisementLabel';
 
 interface RightPanelProps {
@@ -43,6 +44,8 @@ export function RightPanel({ featuredReps, totalReps }: RightPanelProps) {
       </div>
 
       <CustodyNoteInlineCTA variant="compact" />
+
+      <StationNumbersPromo variant="sidebar" />
 
       <SidebarKentAgentPromo />
 

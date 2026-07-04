@@ -4,6 +4,7 @@ import type { CountySeoPage } from '@/lib/county-seo-pages';
 import { DirectoryCard } from '@/components/DirectoryCard';
 import { StationCard } from '@/components/StationCard';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { StationNumbersPromo } from '@/components/StationNumbersPromo';
 
 interface CountySeoTemplateProps {
   page: CountySeoPage;
@@ -107,6 +108,10 @@ export function CountySeoTemplate({ page, reps, stations }: CountySeoTemplatePro
             </div>
           )}
         </section>
+
+        <div className="mt-12">
+          <StationNumbersPromo variant="section" countyFilter={page.countyName} />
+        </div>
 
         {/* Why use this directory */}
         <section className="mt-12 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] sm:p-8">

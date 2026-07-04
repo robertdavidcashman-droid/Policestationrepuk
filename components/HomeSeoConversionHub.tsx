@@ -152,6 +152,9 @@ export function HomeSeoConversionHub() {
               <Link href="/search" className="btn-outline inline-flex justify-center !text-sm">
                 Advanced search
               </Link>
+              <Link href="/StationsDirectory" className="btn-outline inline-flex justify-center !text-sm">
+                Station phone numbers
+              </Link>
               <Link
                 href="/Register"
                 className="btn-outline inline-flex justify-center !text-sm"
@@ -172,7 +175,11 @@ export function HomeSeoConversionHub() {
               Coverage across England &amp; Wales
             </h2>
             <p className="mt-2 text-sm text-[var(--muted)]">
-              Browse representatives by region — select a county to see available reps and local custody suites.
+              Browse representatives by region — and use our{' '}
+              <Link href="/StationsDirectory" className="font-semibold text-[var(--navy)] underline">
+                station phone directory
+              </Link>{' '}
+              for custody desk lines and main numbers.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
               {COVERAGE_LINKS.map((l) => (

@@ -13,10 +13,10 @@ import { HomeTestimonials } from '@/components/HomeTestimonials';
 import { HomeBlogPreview } from '@/components/HomeBlogPreview';
 import { HomeRegisterCta } from '@/components/HomeRegisterCta';
 import { HomeQuickSearch } from '@/components/HomeQuickSearch';
+import { HomeStationSearch } from '@/components/HomeStationSearch';
 import { HomeTopLocations } from '@/components/HomeTopLocations';
 import { HomeCommunityWhatsAppPromo } from '@/components/HomeCommunityWhatsAppPromo';
 import { HomeKentSpotlight } from '@/components/HomeKentSpotlight';
-import { HomePhoneNumbers } from '@/components/HomePhoneNumbers';
 import { HomeAIAssistant } from '@/components/HomeAIAssistant';
 import { HomeSeoConversionHub } from '@/components/HomeSeoConversionHub';
 import { HomeHomepageFaq } from '@/components/HomeHomepageFaq';
@@ -32,6 +32,7 @@ import {
 } from '@/lib/seo';
 import { HOMEPAGE_FAQS } from '@/lib/homepage-faqs';
 import { selectTopCountiesForHomepage } from '@/lib/home-top-locations';
+import { getStationPhonePublicStats } from '@/lib/station-phone-stats-server';
 import { SITE_NAME, SITE_URL, socialPreviewImageUrl } from '@/lib/seo-layer/config';
 
 export const metadata: Metadata = {
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Find a Police Station Rep — UK Representative Directory',
     description:
-      'Free UK directory of accredited police station representatives. Search by county, station, or name. 300+ reps, 894 stations listed.',
+      'Free UK directory of accredited police station representatives and station telephone numbers. Search reps by county or station; report updated custody desk numbers.',
     url: SITE_URL,
     type: 'website',
     siteName: SITE_NAME,
@@ -59,7 +60,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Find a Police Station Rep — UK Directory',
-    description: 'Free directory of police station representatives across England & Wales. 300+ reps, 894 stations.',
+    description: 'Free directory of police station reps and station phone numbers across England & Wales.',
     images: [socialPreviewImageUrl()],
   },
 };
@@ -71,12 +72,15 @@ const MARKETING_REPS_DISPLAY = 300;
 const MARKETING_STATIONS_DISPLAY = 500;
 
 export default async function HomePage() {
-  const [reps, counties, featuredReps] = await Promise.all([
+  const [reps, counties, featuredReps, phoneStats] = await Promise.all([
     getAllReps(),
     getAllCounties(),
     getFeaturedRepsSorted(),
+    getStationPhonePublicStats(),
   ]);
   const topCountiesForLinks = selectTopCountiesForHomepage(counties, reps, 12);
+  const directLinesDisplay =
+    phoneStats.directLine >= 100 ? `${Math.floor(phoneStats.directLine / 50) * 50}+` : String(phoneStats.directLine);
 
   return (
     <>
@@ -86,6 +90,10 @@ export default async function HomePage() {
 
       <HomeHero />
 
+      <div className="cv-auto">
+        <HomeStationSearch stats={phoneStats} />
+      </div>
+
       {/* Trust stats strip */}
       <section className="border-b border-[var(--border)] bg-white py-8 sm:py-10" aria-label="Site statistics">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
@@ -93,8 +101,8 @@ export default async function HomePage() {
             {[
               { value: `${MARKETING_REPS_DISPLAY}+`, label: 'Registered Reps' },
               { value: `${MARKETING_STATIONS_DISPLAY}+`, label: 'Stations Listed' },
+              { value: directLinesDisplay, label: 'Direct Lines' },
               { value: String(UK_FORCES_COUNT), label: 'Police Forces' },
-              { value: 'Since 2016', label: 'Established' },
             ].map((s) => (
               <div key={s.label}>
                 <p className="text-2xl font-extrabold leading-none text-[var(--navy)] sm:text-3xl">{s.value}</p>
@@ -169,10 +177,6 @@ export default async function HomePage() {
 
       <div className="cv-auto">
         <HomeHomepageFaq />
-      </div>
-
-      <div className="cv-auto">
-        <HomePhoneNumbers />
       </div>
 
       <div className="cv-auto">

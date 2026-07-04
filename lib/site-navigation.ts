@@ -22,6 +22,7 @@ function footerLinksToNav(links: readonly FooterLink[]): HeaderNavLink[] {
 export const HEADER_NAV_PRIMARY: HeaderNavLink[] = [
   { href: '/', text: 'Home' },
   { href: '/directory', text: 'Find a Rep' },
+  { href: '/StationsDirectory', text: 'Station Numbers' },
   { href: '/CustodyNote', text: 'Custody Note' },
 ];
 
