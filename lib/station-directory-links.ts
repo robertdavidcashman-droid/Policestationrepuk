@@ -1,7 +1,7 @@
 export function buildStationsDirectorySearchUrl(query: string): string {
   const trimmed = query.trim();
   return trimmed
-    ? `/StationsDirectory?q=${encodeURIComponent(trimmed)}`
+    ? `/StationsDirectory?q=${encodeURIComponent(trimmed)}#directory-search`
     : '/StationsDirectory';
 }
 

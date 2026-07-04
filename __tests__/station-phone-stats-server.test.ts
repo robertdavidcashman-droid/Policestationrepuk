@@ -27,9 +27,9 @@ describe('buildStationPhonePublicStats', () => {
 });
 
 describe('StationsDirectoryExplorer card copy', () => {
-  it('does not include Details unavailable in source', async () => {
+  it('does not include Details unavailable in card component', async () => {
     const fs = await import('node:fs/promises');
-    const source = await fs.readFile('components/StationsDirectoryExplorer.tsx', 'utf-8');
+    const source = await fs.readFile('components/stations/StationDirectoryCard.tsx', 'utf-8');
     expect(source).not.toContain('Details unavailable');
   });
 });

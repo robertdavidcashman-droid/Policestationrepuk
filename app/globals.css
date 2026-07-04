@@ -61,6 +61,7 @@
   --safe-area-right: env(safe-area-inset-right, 0px);
   --header-compact-height: 2.5rem;
   --header-touch-compact: 2.25rem;
+  --site-chrome-offset: 3.5rem;
   --chrome-touch-drawer: 2.75rem;
   --cookie-bar-height: 2.75rem;
   --fab-size: 3.5rem;
@@ -330,6 +331,22 @@ footer .text-slate-600 {
     padding-right: 2rem;
     padding-top: 3rem;
     padding-bottom: 3rem;
+  }
+}
+
+@media (min-width: 640px) {
+  :root {
+    --site-chrome-offset: 4rem;
+  }
+}
+
+.scroll-mt-station-results {
+  scroll-margin-top: calc(var(--site-chrome-offset) + 3.5rem);
+}
+
+@media (min-width: 1024px) {
+  .scroll-mt-station-results {
+    scroll-margin-top: calc(var(--site-chrome-offset) + 1rem);
   }
 }
 
