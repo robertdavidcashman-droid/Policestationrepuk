@@ -48,12 +48,13 @@ export function selectFindingsNeedingAiReview(
     return true;
   });
 
-  // Unreviewed first, then approve-recommended fetch retries, then hold retries.
+  // Unreviewed first, then snippet-only (retry fetch), then approve retries, then hold.
   candidates.sort((a, b) => {
     const rank = (f: CustodyNumberFinding) => {
       if (!f.aiReview?.reviewedAt) return 0;
-      if (f.aiReview.recommendation === 'approve') return 1;
-      return 2;
+      if (f.aiReview.evidence.source !== 'page_fetch') return 1;
+      if (f.aiReview.recommendation === 'approve') return 2;
+      return 3;
     };
     const diff = rank(a) - rank(b);
     if (diff !== 0) return diff;

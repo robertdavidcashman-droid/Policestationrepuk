@@ -37,7 +37,7 @@ export default async function CustodyNumberReviewPage({
           active="custody-discovery"
           adminEmail={email}
           title="Custody number discovery review"
-          description="Autonomous web search findings with source evidence. Approve only when the source link and snippet clearly support a direct custody desk line. Nothing publishes without your approval."
+          description="Autonomous web search findings with source evidence. High-confidence official numbers and corroborated multi-source matches auto-publish; junk, rep directories, and conflicts are auto-cleared where safe. Review anything still flagged here."
         >
           <CustodyNumberReviewAdmin
             initialFindings={findings}

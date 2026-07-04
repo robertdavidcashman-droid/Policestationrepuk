@@ -8,6 +8,11 @@ import {
   minCorroboratingSources,
 } from './corroboration';
 import {
+  pickConflictWinner,
+  scoreConflictCandidate,
+  type SuiteConflictResolution,
+} from './conflict-resolver';
+import {
   deterministicRejectReason,
   isDeterministicRejectNumber,
   isRepDirectoryFinding,
@@ -29,6 +34,7 @@ import {
   rejectFinding,
   saveApprovedNumber,
   saveFinding,
+  getFinding,
 } from './storage';
 
 export function autoPublishEnabled(): boolean {
@@ -46,6 +52,25 @@ function safeRevalidate(path: string): void {
 
 export function autoRejectEnabled(): boolean {
   return process.env.CUSTODY_AI_AUTO_REJECT !== 'false';
+}
+
+export function autoConflictResolveEnabled(): boolean {
+  return process.env.CUSTODY_AI_AUTO_RESOLVE_CONFLICTS !== 'false';
+}
+
+function evidenceRetryLimit(): number {
+  return Math.max(0, Number(process.env.CUSTODY_EVIDENCE_RETRY_LIMIT ?? 3));
+}
+
+/** Snippet-only or unfetched PDF — not enough to publish; reject unless still retrying. */
+export function shouldAutoRejectWeakEvidence(
+  finding: CustodyNumberFinding,
+  review: CustodyAiReview,
+): boolean {
+  if (review.evidence.source === 'page_fetch') return false;
+  if (review.recommendation === 'approve') return true;
+  if (isRepDirectoryFinding(finding)) return true;
+  return (finding.aiEvidenceRetries ?? 0) >= evidenceRetryLimit();
 }
 
 function minApproveConfidence(): number {
@@ -125,6 +150,16 @@ async function autoRejectFinding(
     updatedAt: now,
   });
   return { action: 'rejected', reason };
+}
+
+/** Exported for conflict resolution and queue reprocessing. */
+export async function autoRejectWithReason(
+  finding: CustodyNumberFinding,
+  review: CustodyAiReview,
+  reason: string,
+  note: string,
+): Promise<AutoDecisionResult> {
+  return autoRejectFinding(finding, review, reason, note);
 }
 
 /**
@@ -240,6 +275,18 @@ async function tryAutoPublish(
   };
 }
 
+/** Exported for conflict resolution. */
+export async function autoPublishEligibleFinding(
+  finding: CustodyNumberFinding,
+  review: CustodyAiReview,
+  pathLabel: 'hold_corroborated' | 'approve',
+): Promise<AutoDecisionResult> {
+  const existingApproved = await getApprovedNumber(finding.custodySuiteId);
+  const reviewForPublish =
+    pathLabel === 'hold_corroborated' ? reviewForCorroboratedPublish(finding, review) : review;
+  return tryAutoPublish(finding, reviewForPublish, existingApproved, pathLabel);
+}
+
 export async function applyAutoDecision(
   finding: CustodyNumberFinding,
   review: CustodyAiReview,
@@ -284,7 +331,44 @@ export async function applyAutoDecision(
     }
   }
 
-  // Conflicts never auto-publish or auto-hold-resolve to publish — human review only.
+  if (
+    autoRejectEnabled() &&
+    isRepDirectoryFinding(finding) &&
+    review.recommendation !== 'reject'
+  ) {
+    return autoRejectFinding(
+      finding,
+      review,
+      'auto_reject_rep_directory',
+      `Rep/self directory (${finding.sourceDomain}) — not an authoritative custody source.`,
+    );
+  }
+
+  if (autoRejectEnabled() && shouldAutoRejectWeakEvidence(finding, review)) {
+    return autoRejectFinding(
+      finding,
+      review,
+      'auto_reject_weak_evidence',
+      'Insufficient page evidence (search snippet or unfetched PDF) — cannot verify number on source.',
+    );
+  }
+
+  if (finding.conflictReason && autoConflictResolveEnabled()) {
+    const resolution = await resolveSuiteConflicts(finding.custodySuiteId);
+    const refreshed = (await getFinding(finding.id)) ?? finding;
+    if (refreshed.status === 'rejected') {
+      return { action: 'rejected', reason: 'conflict_loser' };
+    }
+    if (refreshed.status === 'approved' || refreshed.autoPublishedAt) {
+      return { action: 'published', reason: 'conflict_winner' };
+    }
+    if (resolution.action === 'published' && resolution.winningFindingId === finding.id) {
+      return { action: 'published', reason: 'conflict_winner' };
+    }
+    finding = refreshed;
+    review = refreshed.aiReview ?? review;
+  }
+
   if (finding.conflictReason) {
     return { action: 'queued', reason: 'conflict' };
   }
@@ -454,6 +538,137 @@ function canAutoPublish(
 }
 
 export { canAutoPublish };
+
+/**
+ * Pick a publishable winner when sources disagree, publish unverified, reject losers.
+ */
+export async function resolveSuiteConflicts(
+  custodySuiteId: string,
+): Promise<SuiteConflictResolution> {
+  if (!autoConflictResolveEnabled() || !autoPublishEnabled()) {
+    return { action: 'none', rejectedCount: 0, reason: 'disabled' };
+  }
+
+  const suite = await getCustodySuite(custodySuiteId);
+  const suiteFindings = await getFindingsForSuite(custodySuiteId);
+  const approved = await getApprovedNumber(custodySuiteId);
+  const open = suiteFindings.filter(
+    (f) =>
+      (f.status === 'needs_review' || f.status === 'new') && f.aiReview?.reviewedAt,
+  );
+
+  if (open.length === 0) {
+    return { action: 'none', rejectedCount: 0, reason: 'no_open_findings' };
+  }
+
+  const distinctNumbers = new Set(open.map((f) => f.normalizedPhoneNumber));
+  const hasConflict = open.some((f) => f.conflictReason) || distinctNumbers.size > 1;
+  if (!hasConflict) {
+    return { action: 'none', rejectedCount: 0, reason: 'no_conflict' };
+  }
+
+  const candidates: Array<{
+    finding: CustodyNumberFinding;
+    review: CustodyAiReview;
+    score: number;
+  }> = [];
+
+  for (const f of open) {
+    const review = f.aiReview;
+    if (!review) continue;
+    const score = scoreConflictCandidate(
+      f,
+      review,
+      suiteFindings,
+      suite?.forceDomain,
+      approved?.normalizedPhoneNumber,
+    );
+    if (score === null) continue;
+    candidates.push({ finding: f, review, score });
+  }
+
+  const winner = pickConflictWinner(candidates);
+  if (!winner) {
+    if (autoRejectEnabled()) {
+      let rejectedCount = 0;
+      for (const f of open) {
+        if (!isRepDirectoryFinding(f)) continue;
+        await autoRejectFinding(
+          f,
+          f.aiReview!,
+          'auto_reject_rep_directory_conflict',
+          'Rep/self directory source — not authoritative for conflict resolution.',
+        );
+        rejectedCount++;
+      }
+      if (rejectedCount > 0) {
+        return { action: 'rejected_only', rejectedCount, reason: 'rep_directory_cleared' };
+      }
+    }
+    return { action: 'none', rejectedCount: 0, reason: 'no_publishable_winner' };
+  }
+
+  const gates = canAutoPublish(
+    { ...winner.finding, conflictReason: undefined },
+    winner.review,
+    approved?.normalizedPhoneNumber,
+    suite?.forceDomain,
+    suiteFindings,
+  );
+  if (!gates.ok) {
+    return { action: 'none', rejectedCount: 0, reason: gates.reason };
+  }
+
+  const winningNumber = winner.finding.normalizedPhoneNumber;
+  let rejectedCount = 0;
+
+  for (const f of open) {
+    if (f.id === winner.finding.id) continue;
+    if (f.normalizedPhoneNumber === winningNumber) {
+      await saveFinding({
+        ...f,
+        conflictReason: undefined,
+        updatedAt: new Date().toISOString(),
+      });
+      continue;
+    }
+    if (!autoRejectEnabled()) continue;
+    await autoRejectFinding(
+      f,
+      f.aiReview!,
+      'auto_reject_conflict_loser',
+      `Conflict resolution: published ${winner.finding.possiblePhoneNumber} from ${winner.finding.sourceDomain}.`,
+    );
+    rejectedCount++;
+  }
+
+  await saveFinding({
+    ...winner.finding,
+    conflictReason: undefined,
+    updatedAt: new Date().toISOString(),
+  });
+
+  const publishResult = await autoPublishEligibleFinding(
+    { ...winner.finding, conflictReason: undefined },
+    winner.review,
+    gates.path === 'corroborated' ? 'hold_corroborated' : 'approve',
+  );
+
+  if (publishResult.action !== 'published') {
+    return {
+      action: 'rejected_only',
+      rejectedCount,
+      reason: publishResult.reason ?? 'publish_failed',
+    };
+  }
+
+  return {
+    action: 'published',
+    winningFindingId: winner.finding.id,
+    rejectedCount,
+    reason: 'conflict_winner_published',
+  };
+}
 
 /**
  * Re-run auto-decision gates on an existing finding (backlog cleanup).
