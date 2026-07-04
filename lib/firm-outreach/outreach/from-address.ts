@@ -43,15 +43,11 @@ export type ResendDomainLister = () => Promise<{
 }>;
 
 function normalizeDomainRecords(
-  data: ResendDomainLister extends () => Promise<infer R>
-    ? R extends { data?: infer D }
-      ? D
-      : never
-    : never,
+  data: ResendDomainRecord[] | { data?: ResendDomainRecord[] } | null | undefined,
 ): ResendDomainRecord[] {
   if (Array.isArray(data)) return data;
-  if (data && typeof data === 'object' && Array.isArray((data as { data?: ResendDomainRecord[] }).data)) {
-    return (data as { data: ResendDomainRecord[] }).data;
+  if (data && typeof data === 'object' && Array.isArray(data.data)) {
+    return data.data;
   }
   return [];
 }
