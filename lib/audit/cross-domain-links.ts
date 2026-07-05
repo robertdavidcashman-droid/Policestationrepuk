@@ -41,7 +41,12 @@ export interface CrossDomainLinksAuditResult {
   ok: boolean;
   issueCount: number;
   issues: string[];
+  /** Issues on sites this repo is expected to control in CI (excludes partner-only drift). */
+  blockingIssueCount: number;
+  blockingIssues: string[];
 }
+
+const CI_BLOCKING_SITE_IDS = new Set(['policestationrepuk', 'policestationagent']);
 
 function decodeHref(href: string): string {
   return href.replace(/&amp;/g, '&');
@@ -104,5 +109,15 @@ export async function auditCrossDomainLinks(): Promise<CrossDomainLinksAuditResu
     }
   }
 
-  return { ok: issues.length === 0, issueCount: issues.length, issues };
+  const blockingIssues = issues.filter((issue) =>
+    [...CI_BLOCKING_SITE_IDS].some((siteId) => issue.startsWith(`${siteId}:`)),
+  );
+
+  return {
+    ok: blockingIssues.length === 0,
+    issueCount: issues.length,
+    issues,
+    blockingIssueCount: blockingIssues.length,
+    blockingIssues,
+  };
 }
