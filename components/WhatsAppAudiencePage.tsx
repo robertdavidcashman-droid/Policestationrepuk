@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { CommunityEligibilityCallout } from '@/components/CommunityEligibilityCallout';
 import { JsonLd } from '@/components/JsonLd';
+import { FORUM_PATH } from '@/lib/community-messaging';
 import {
   WHATSAPP_AUDIENCE_LIST,
   WHATSAPP_AUDIENCE_PAGES,
@@ -146,6 +148,22 @@ export function WhatsAppAudiencePage({ audienceId }: { audienceId: WhatsAppAudie
             </a>
           </div>
         </section>
+
+        {audienceId === 'reps' && (
+          <div className="mb-12">
+            <CommunityEligibilityCallout />
+          </div>
+        )}
+
+        {'forumAlternative' in page && page.forumAlternative && audienceId === 'reps' && (
+          <p className="mb-12 text-sm leading-relaxed text-[var(--muted)]">
+            {page.forumAlternative}{' '}
+            <Link href={FORUM_PATH} className="font-semibold text-[var(--navy)] underline">
+              Community forum
+            </Link>
+            .
+          </p>
+        )}
 
         {others.length > 0 && (
           <section className="mb-12">

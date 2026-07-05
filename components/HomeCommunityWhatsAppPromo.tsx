@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CommunityEligibilityCallout } from '@/components/CommunityEligibilityCallout';
 import {
   WHATSAPP_FIRM_JOIN_URL,
   WHATSAPP_JOIN_URL,
@@ -81,9 +82,13 @@ export function HomeCommunityWhatsAppPromo() {
           <article className="flex flex-col rounded-[var(--radius-lg)] border border-emerald-800/40 bg-emerald-950/40 p-5 sm:p-7">
             <h3 className="text-base font-bold text-white sm:text-lg">Accredited reps</h3>
             <p className="mt-3 flex-1 text-sm leading-relaxed text-emerald-100/80">
-              The same group includes reps who respond to firm requests and share peer support. You must hold
-              PSRAS accreditation (or equivalent) before we add you.
+              The same group includes reps who respond to firm requests and share peer support. You must be{' '}
+              <strong className="text-white">fully accredited</strong> (PSRAS, LCCSA, CLSA or equivalent — not in
+              training) before we add you. Proof is required; unverified requests are declined.
             </p>
+            <div className="mt-4">
+              <CommunityEligibilityCallout variant="compact" />
+            </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <a
                 href={WHATSAPP_JOIN_URL}

@@ -18,7 +18,8 @@ import {
   CONTACT_PHONE_DISPLAY,
   CONTACT_WHATSAPP_HREF,
 } from '@/lib/contact-constants';
-import { WHATSAPP_JOIN_URL, WHATSAPP_JOIN_PHONE } from '@/lib/site-navigation';
+import { WHATSAPP_BANNER_QUALIFICATION } from '@/lib/community-messaging';
+import { WHATSAPP_JOIN_PHONE, WHATSAPP_JOIN_URL } from '@/lib/site-navigation';
 import {
   PSRTRAIN_CTA,
   PSRTRAIN_FREE_TESTING_NOTE,
@@ -149,9 +150,9 @@ export function SiteWidePromoStrip() {
             <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Community</p>
             <h2 className="mt-1 text-base font-extrabold">WhatsApp group</h2>
             <p className="mt-2 flex-1 text-xs leading-relaxed text-emerald-100/90">
-              One group for accredited reps &amp; criminal defence firms. Text{' '}
-              <span className="font-semibold text-white">{WHATSAPP_JOIN_PHONE}</span> to request access — verified
-              before you join.
+              One group for fully accredited reps &amp; verified firms. Text{' '}
+              <span className="font-semibold text-white">{WHATSAPP_JOIN_PHONE}</span> —{' '}
+              {WHATSAPP_BANNER_QUALIFICATION.toLowerCase()}.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <a

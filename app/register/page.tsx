@@ -78,6 +78,16 @@ export default function RegisterPage() {
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
               <div className="rounded-[var(--radius-lg)] border border-amber-300 bg-amber-50 p-6">
+                <h2 className="text-base font-bold text-amber-900">Why accreditation matters</h2>
+                <p className="mt-3 text-sm leading-relaxed text-amber-800">
+                  Police station attendance under legal aid must be carried out by fully accredited representatives.
+                  If you are not fully accredited, instructing firms <strong>cannot claim legal aid</strong> for your
+                  attendance and <strong>you will not be paid</strong> for that work. Do not register here unless you
+                  meet the eligibility criteria below — the same rule applies to the WhatsApp group.
+                </p>
+              </div>
+
+              <div className="mt-6 rounded-[var(--radius-lg)] border border-amber-300 bg-amber-50 p-6">
                 <h2 className="text-base font-bold text-amber-900">How this works</h2>
                 <ol className="mt-3 space-y-2 text-sm leading-relaxed text-amber-800">
                   <li>

@@ -102,6 +102,28 @@ test.describe('Public entry points', () => {
     const res = await page.goto('https://policestationrepuk.com/', { waitUntil: 'commit' });
     expect(page.url()).toContain('policestationrepuk.org');
   });
+
+  test('/Forum loads with community channel guidance', async ({ page }) => {
+    const res = await page.goto('/Forum');
+    expect(res?.status()).toBe(200);
+    await expect(page.getByRole('heading', { name: /community forum|community & advice/i }).first()).toBeVisible();
+    await expect(page.getByText(/fully accredited|fully qualified/i).first()).toBeVisible();
+    await expect(page.getByRole('link', { name: /community forum|facebook group/i }).first()).toBeVisible();
+    await expect(page.getByText(/posting jobs on facebook/i).first()).toBeVisible();
+  });
+
+  test('/WhatsApp shows eligibility callout and forum alternative', async ({ page }) => {
+    const res = await page.goto('/WhatsApp');
+    expect(res?.status()).toBe(200);
+    await expect(page.getByText(/fully accredited only|who can join/i).first()).toBeVisible();
+    await expect(page.getByRole('link', { name: /community forum/i }).first()).toHaveAttribute('href', '/Forum');
+  });
+
+  test('/forum redirects to /Forum', async ({ page }) => {
+    const res = await page.goto('/forum', { waitUntil: 'commit' });
+    expect(res?.status()).toBeLessThan(400);
+    expect(page.url()).toMatch(/\/Forum\/?$/i);
+  });
 });
 
 test.describe('Join form renders correctly', () => {

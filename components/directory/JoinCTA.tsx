@@ -69,7 +69,8 @@ export function JoinCTA({ variant = 'inline', totalReps, countyName }: JoinCTAPr
         <h3 className="text-sm font-extrabold text-white">Get more police station work</h3>
         <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
           {totalReps ? `${totalReps} verified reps listed. ` : ''}Fully accredited PSRAS reps,
-          duty solicitors and solicitors only. Free to list &mdash; with automatic verification.
+          duty solicitors and solicitors only. Do not register unless fully accredited — same rule as WhatsApp.
+          Free to list &mdash; with automatic verification.
         </p>
         <Link
           href="/register"
@@ -95,8 +96,8 @@ export function JoinCTA({ variant = 'inline', totalReps, countyName }: JoinCTAPr
       <div className="min-w-0">
         <p className="text-sm font-extrabold text-white">Accredited reps welcome</p>
         <p className="mt-1 text-xs leading-relaxed text-slate-300">
-          Free to list. Fully accredited PSRAS reps, duty solicitors and solicitors with
-          verifiable details go live immediately.
+          Free to list. Fully accredited PSRAS reps, duty solicitors and solicitors only — do not register unless
+          fully accredited (same rule as WhatsApp).
         </p>
       </div>
       <div className="mt-3 flex shrink-0 gap-2 sm:mt-0">

@@ -22,7 +22,11 @@ export const FAQ_PAGE_FAQS = [
   },
   {
     q: 'How does the WhatsApp group work?',
-    a: "Our WhatsApp group is restricted to accredited police station representatives only. To join, you must provide proof of PSRAS accreditation (Police Station Register status via an SCC firm — probationary or accredited) or other verification listed on the Join page. Once verified, you'll receive urgent cover requests from solicitor firms posted in real time. Join via the WhatsApp page.",
+    a: "The WhatsApp group is for fully accredited police station reps and verified criminal defence firms/solicitors only. You must provide proof of accreditation (PSRAS, LCCSA, CLSA or equivalent — not in training). Instructing firms cannot claim legal aid for non-accredited reps and you will not be paid for that work. Once verified, you'll receive cover requests in real time. Not fully qualified? Use the community forum at /Forum. Join via the WhatsApp page.",
+  },
+  {
+    q: 'Is the Facebook group verified like WhatsApp?',
+    a: 'No. The Facebook group is open to all and we do not verify members or check accreditation. If you post a job or cover request there, you must confirm yourself that anyone who accepts is fully accredited before instructing them — non-accredited attendance cannot be billed under legal aid. The WhatsApp group is verified and continually checked. See /Forum for the full comparison.',
   },
   {
     q: 'Who operates PoliceStationRepUK?',
@@ -35,6 +39,7 @@ export const FAQ_PAGE_FAQS = [
 ] as const;
 
 export const FAQ_PAGE_QUICK_LINKS = [
+  { href: '/Forum', label: 'Community Forum' },
   { href: '/HowToBecomePoliceStationRep', label: 'How to Become a Rep' },
   { href: '/GetWork', label: 'Get Work as a Rep' },
   { href: '/directory', label: 'Reps Directory' },

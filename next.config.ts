@@ -433,6 +433,7 @@ const nextConfig: NextConfig = {
       { source: "/SEOStrategy", destination: "/", permanent: false },
       { source: "/SendablePost", destination: "/Blog", permanent: false },
       { source: "/ForumPost", destination: "/Forum", permanent: false },
+      { source: "/forum", destination: "/Forum", permanent: true },
 
       // Additional legacy content paths
       { source: "/importance-of-early-legal-advice", destination: "/InterviewUnderCaution", permanent: true },

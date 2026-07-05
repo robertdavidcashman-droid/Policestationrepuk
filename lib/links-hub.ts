@@ -3,10 +3,12 @@ import { PSRTRAIN_HOME_HREF, PSRTRAIN_TRAINING_HREF } from '@/lib/psrtrain-promo
 import { POLICESTATIONAGENT_HOME_HREF } from '@/lib/policestationagent-promo';
 import { SITE_URL } from '@/lib/seo-layer/config';
 import {
+  FACEBOOK_GROUP_URL,
   WHATSAPP_JOIN_URL,
   WHATSAPP_PAGE_FIRMS,
   WHATSAPP_PAGE_REPS,
 } from '@/lib/site-navigation';
+import { FORUM_PATH } from '@/lib/community-messaging';
 import { GO_COUNTY_LABELS } from '@/lib/short-links';
 
 export type LinksHubItem = {
@@ -120,19 +122,30 @@ export const LINKS_HUB_SECTIONS: LinksHubSection[] = [
     title: 'Community',
     items: [
       {
+        href: FORUM_PATH,
+        label: 'Community forum',
+        description: 'Advice, networking, and open chat — trainees welcome.',
+      },
+      {
+        href: FACEBOOK_GROUP_URL,
+        label: 'Facebook group',
+        description: 'Open advice and chat — no accreditation checks; verify reps yourself if posting jobs.',
+        external: true,
+      },
+      {
         href: WHATSAPP_PAGE_REPS,
         label: 'Join WhatsApp — reps',
-        description: 'Urgent cover requests and peer support.',
+        description: 'Fully accredited reps only — proof required before invite.',
       },
       {
         href: WHATSAPP_PAGE_FIRMS,
         label: 'Join WhatsApp — firms',
-        description: 'Criminal defence firms seeking cover.',
+        description: 'Verified criminal defence firms seeking cover.',
       },
       {
         href: WHATSAPP_JOIN_URL,
-        label: 'WhatsApp — open chat',
-        description: 'Direct join link with pre-filled message.',
+        label: 'WhatsApp — text to join',
+        description: 'Direct join link with pre-filled message (fully accredited only).',
         external: true,
       },
       {

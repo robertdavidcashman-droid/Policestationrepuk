@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { CommunityEligibilityCallout } from '@/components/CommunityEligibilityCallout';
 import { buildMetadata } from '@/lib/seo';
 import {
   WHATSAPP_JOIN_URL,
@@ -11,9 +12,9 @@ import {
 } from '@/lib/site-navigation';
 
 export const metadata = buildMetadata({
-  title: 'WhatsApp Group — Reps & Criminal Defence Firms',
+  title: 'WhatsApp Group — Fully Accredited Reps & Verified Firms',
   description:
-    'Join the PoliceStationRepUK WhatsApp group — one community for accredited police station reps and verified criminal defence firms. Real-time cover requests, networking, and peer support. Free to join.',
+    'Join the PoliceStationRepUK WhatsApp group — fully accredited police station reps and verified criminal defence firms only. Proof required. Not qualified? Use the community forum.',
   path: '/WhatsApp',
 });
 
@@ -55,7 +56,7 @@ const JOIN_STEPS = [
   {
     step: 2,
     title: 'We verify you',
-    desc: 'Reps may be asked for accreditation proof. Firms may be checked against public records. We may follow up by email if needed.',
+    desc: 'Reps may be asked for proof of full accreditation. Firms may be checked against public records. Requests without adequate proof are declined.',
   },
   {
     step: 3,
@@ -103,10 +104,14 @@ export default function WhatsAppPage() {
             PoliceStationRepUK WhatsApp group
           </h1>
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-slate-300">
-            One WhatsApp community for <strong className="text-white">accredited police station reps</strong>,{' '}
+            One WhatsApp community for <strong className="text-white">fully accredited police station reps</strong>,{' '}
             <strong className="text-white">criminal defence solicitors</strong>, and{' '}
-            <strong className="text-white">criminal defence firms</strong> across England &amp; Wales — cover requests,
-            networking, and peer support. Free; members are verified before being added.
+            <strong className="text-white">criminal defence firms</strong> across England &amp; Wales. Proof of
+            accreditation is required — members are verified before being added. Not fully qualified?{' '}
+            <Link href="/Forum" className="font-semibold text-emerald-300 underline hover:text-white">
+              Use the community forum
+            </Link>
+            .
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
@@ -132,6 +137,10 @@ export default function WhatsAppPage() {
       </section>
 
       <div className="page-container">
+        <div className="mb-10 mt-8">
+          <CommunityEligibilityCallout />
+        </div>
+
         {/* Features */}
         <div className="mb-14 grid gap-5 sm:grid-cols-2">
           {FEATURES.map((f) => (

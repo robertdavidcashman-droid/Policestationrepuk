@@ -41,7 +41,7 @@ export const COMMUNITY_EMAIL = 'robertcashman@defencelegalservices.co.uk';
 export const WHATSAPP_JOIN_PHONE = '07535 494446';
 /** Single community group for accredited reps and verified criminal defence firms (same chat). */
 export const WHATSAPP_JOIN_URL =
-  'https://wa.me/447535494446?text=Hi%2C%20I%27d%20like%20to%20join%20the%20PoliceStationRepUK%20WhatsApp%20group%20(reps%20and%20firms).%20My%20name%20is%20';
+  'https://wa.me/447535494446?text=Hi%2C%20I%27d%20like%20to%20join%20the%20PoliceStationRepUK%20WhatsApp%20group%20as%20a%20fully%20accredited%20rep.%20My%20name%20is%20%0AAccreditation%20(PSRAS%2FLCCSA%2FCLSA)%3A%20%0AAreas%20I%20cover%3A%20';
 /** Pre-filled message when a criminal defence firm requests to join (same group as WHATSAPP_JOIN_URL). */
 export const WHATSAPP_FIRM_JOIN_URL =
   'https://wa.me/447535494446?text=Hi%2C%20we%20are%20a%20criminal%20defence%20firm%20and%20would%20like%20to%20join%20the%20PoliceStationRepUK%20WhatsApp%20group%20for%20police%20station%20cover.%20Firm%20name%3A%20';

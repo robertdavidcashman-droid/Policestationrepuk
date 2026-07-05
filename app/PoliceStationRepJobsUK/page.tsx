@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { CommunityEligibilityCallout } from '@/components/CommunityEligibilityCallout';
 import { DirectoryComplianceNotice } from '@/components/DirectoryComplianceNotice';
 import { buildMetadata } from '@/lib/seo';
 
@@ -138,7 +139,8 @@ export default function PoliceStationRepJobsUKPage() {
       </section>
 
       {/* CTA */}
-      <div className="rounded-[var(--radius-lg)] bg-[var(--navy)] p-8 text-center">
+      <CommunityEligibilityCallout variant="compact" />
+      <div className="mt-6 rounded-[var(--radius-lg)] bg-[var(--navy)] p-8 text-center">
         <h2 className="text-h2 text-white">Start Getting Work Today</h2>
         <p className="mt-3 text-slate-300">
           Register your free profile, join the WhatsApp group, and start receiving instructions

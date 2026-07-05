@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { CommunityEligibilityCallout } from '@/components/CommunityEligibilityCallout';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
 import { buildMetadata } from '@/lib/seo';
@@ -626,7 +627,8 @@ export default function GetWorkPage() {
           />
 
           {/* CTA */}
-          <div className="rounded-[var(--radius-lg)] bg-[var(--navy)] p-8 text-center">
+          <CommunityEligibilityCallout variant="compact" />
+          <div className="mt-6 rounded-[var(--radius-lg)] bg-[var(--navy)] p-8 text-center">
             <h2 className="text-h2 text-white">Ready to get started?</h2>
             <p className="mt-3 text-slate-300">
               Register your free profile today and start receiving work enquiries from criminal

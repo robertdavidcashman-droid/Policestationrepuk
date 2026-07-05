@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export function HomeWhyChoose() {
   const features = [
     {
@@ -46,7 +48,15 @@ export function HomeWhyChoose() {
         </svg>
       ),
       title: 'Active Community',
-      body: 'WhatsApp groups, a professional forum, and a blog with practical guidance for freelance reps and criminal defence firms.',
+      body: (
+        <>
+          WhatsApp groups (fully accredited only), our{' '}
+          <Link href="/Forum" className="font-semibold text-[var(--navy)] underline">
+            community forum
+          </Link>
+          , and a blog with practical guidance for freelance reps and criminal defence firms.
+        </>
+      ),
     },
     {
       icon: (
@@ -82,7 +92,7 @@ export function HomeWhyChoose() {
                 {f.icon}
               </div>
               <h3 className="mt-4 text-base font-bold text-[var(--navy)]">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">{f.body}</p>
+              <div className="mt-2 text-sm leading-relaxed text-[var(--muted)]">{f.body}</div>
             </div>
           ))}
         </div>

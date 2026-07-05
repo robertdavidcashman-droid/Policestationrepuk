@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { WHATSAPP_BANNER_QUALIFICATION } from '@/lib/community-messaging';
 import {
   WHATSAPP_PAGE_FIRMS,
   WHATSAPP_PAGE_REPS,
@@ -28,7 +29,7 @@ export function WhatsAppCommunityBanner() {
             <span className="hidden sm:inline">
               Join the PoliceStationRepUK WhatsApp group — cover, networking &amp; peer support.{' '}
             </span>
-            <span className="font-normal text-emerald-100/85">Free · verified members</span>
+            <span className="font-normal text-emerald-100/85">{WHATSAPP_BANNER_QUALIFICATION}</span>
           </p>
 
           <nav

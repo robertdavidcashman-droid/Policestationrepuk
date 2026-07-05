@@ -1,4 +1,9 @@
 import {
+  FORUM_ALTERNATIVE_REPS,
+  WHATSAPP_JOIN_STEP_DECLINED,
+  WHATSAPP_JOIN_STEP_PROOF,
+} from '@/lib/community-messaging';
+import {
   WHATSAPP_FIRM_JOIN_URL,
   WHATSAPP_JOIN_PHONE,
   WHATSAPP_JOIN_URL,
@@ -15,10 +20,10 @@ export const WHATSAPP_AUDIENCE_PAGES = {
     joinUrl: WHATSAPP_JOIN_URL,
     seoTitle: 'Join WhatsApp — Police Station Reps',
     seoDescription:
-      'Join the PoliceStationRepUK WhatsApp group as an accredited police station representative. Real-time cover requests from criminal defence firms across England and Wales. Free to join.',
-    headline: 'Join the WhatsApp group as a police station rep',
+      'Join the PoliceStationRepUK WhatsApp group as a fully accredited police station representative. Proof required. Real-time cover from criminal defence firms. Not qualified? Use the community forum.',
+    headline: 'Join the WhatsApp group as a fully accredited police station rep',
     intro:
-      'One verified group for accredited police station representatives and criminal defence professionals. Firms post urgent custody cover — you respond in real time.',
+      'One verified group for fully accredited police station representatives and criminal defence professionals. Firms post urgent custody cover — you respond in real time. Not in training; proof of accreditation required.',
     benefits: [
       'See police station cover requests from firms as they are posted',
       'Respond quickly for evenings, weekends, and bank holidays',
@@ -26,10 +31,12 @@ export const WHATSAPP_AUDIENCE_PAGES = {
       'Free — no agency fees; you agree terms directly with the instructing firm',
     ],
     joinSteps: [
-      'Text us on WhatsApp (button below) with your name, accreditation (PSRAS / LCCSA / CLSA or equivalent), and areas you cover.',
-      'We verify your accreditation details.',
+      'Text us on WhatsApp (button below) with your name, full accreditation (PSRAS / LCCSA / CLSA or equivalent), and areas you cover.',
+      WHATSAPP_JOIN_STEP_PROOF,
       'You receive a WhatsApp invite — accept it to join the same group as firms and other reps.',
+      WHATSAPP_JOIN_STEP_DECLINED,
     ],
+    forumAlternative: FORUM_ALTERNATIVE_REPS,
     cta: 'Join on WhatsApp as a rep',
     related: [
       { href: '/register', label: 'List your profile in the directory' },
@@ -109,6 +116,7 @@ export const WHATSAPP_AUDIENCE_PAGES = {
     benefits: readonly string[];
     joinSteps: readonly string[];
     cta: string;
+    forumAlternative?: string;
     related: readonly { href: string; label: string }[];
   }
 >;
