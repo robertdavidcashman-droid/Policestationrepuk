@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.STATUS_LOOKUP_DELAY_MS = exports.BufferApiError = void 0;
+exports.metricsFromPostMetricArray = metricsFromPostMetricArray;
 exports.createScheduledBufferPost = createScheduledBufferPost;
 exports.listPostsInWindow = listPostsInWindow;
 exports.getBufferPostById = getBufferPostById;
@@ -74,6 +75,34 @@ async function bufferGraphql(apiKey, query, variables) {
     }
     throw lastError ?? new BufferApiError('Buffer API request failed after retries');
 }
+/** Map Buffer PostMetric[] (type/value) to legacy flat counters used by the bandit. */
+function metricsFromPostMetricArray(metrics) {
+    const out = { clicks: 0, impressions: 0, reactions: 0, comments: 0 };
+    for (const metric of metrics ?? []) {
+        const value = metric.value ?? 0;
+        switch (metric.type) {
+            case 'clicks':
+            case 'link_clicks':
+                out.clicks += value;
+                break;
+            case 'impressions':
+            case 'views':
+                out.impressions += value;
+                break;
+            case 'reactions':
+            case 'likes':
+                out.reactions += value;
+                break;
+            case 'comments':
+            case 'replies':
+                out.comments += value;
+                break;
+            default:
+                break;
+        }
+    }
+    return out;
+}
 function postMetadataForService(service, url) {
     if (service === 'googlebusiness') {
         return {
@@ -138,10 +167,8 @@ async function listPostsInWindow(apiKey, organizationId, input) {
     const metricsFragment = input.includeMetrics
         ? `
       metrics {
-        clicks
-        impressions
-        reactions
-        comments
+        type
+        value
       }
     `
         : '';
@@ -173,12 +200,13 @@ async function listPostsInWindow(apiKey, organizationId, input) {
         });
         for (const edge of data.posts.edges) {
             const node = edge.node;
+            const parsed = metricsFromPostMetricArray(node.metrics);
             posts.push({
                 ...node,
-                clicks: node.metrics?.clicks ?? 0,
-                impressions: node.metrics?.impressions ?? 0,
-                reactions: node.metrics?.reactions ?? 0,
-                comments: node.metrics?.comments ?? 0,
+                clicks: parsed.clicks,
+                impressions: parsed.impressions,
+                reactions: parsed.reactions,
+                comments: parsed.comments,
             });
         }
         after = data.posts.pageInfo.hasNextPage ? (data.posts.pageInfo.endCursor ?? undefined) : undefined;

@@ -116,6 +116,45 @@ export interface BufferPostWithMetrics {
   comments?: number;
 }
 
+type BufferPostMetric = {
+  type: string;
+  value: number;
+};
+
+/** Map Buffer PostMetric[] (type/value) to legacy flat counters used by the bandit. */
+export function metricsFromPostMetricArray(metrics?: BufferPostMetric[]): {
+  clicks: number;
+  impressions: number;
+  reactions: number;
+  comments: number;
+} {
+  const out = { clicks: 0, impressions: 0, reactions: 0, comments: 0 };
+  for (const metric of metrics ?? []) {
+    const value = metric.value ?? 0;
+    switch (metric.type) {
+      case 'clicks':
+      case 'link_clicks':
+        out.clicks += value;
+        break;
+      case 'impressions':
+      case 'views':
+        out.impressions += value;
+        break;
+      case 'reactions':
+      case 'likes':
+        out.reactions += value;
+        break;
+      case 'comments':
+      case 'replies':
+        out.comments += value;
+        break;
+      default:
+        break;
+    }
+  }
+  return out;
+}
+
 function postMetadataForService(service: BufferChannelService, url: string): Record<string, unknown> | undefined {
   if (service === 'googlebusiness') {
     return {
@@ -220,10 +259,8 @@ export async function listPostsInWindow(
   const metricsFragment = input.includeMetrics
     ? `
       metrics {
-        clicks
-        impressions
-        reactions
-        comments
+        type
+        value
       }
     `
     : '';
@@ -233,7 +270,7 @@ export async function listPostsInWindow(
       posts: {
         edges: Array<{
           node: BufferPostWithMetrics & {
-            metrics?: { clicks?: number; impressions?: number; reactions?: number; comments?: number };
+            metrics?: BufferPostMetric[];
           };
         }>;
         pageInfo: { hasNextPage: boolean; endCursor: string | null };
@@ -270,12 +307,13 @@ export async function listPostsInWindow(
 
     for (const edge of data.posts.edges) {
       const node = edge.node;
+      const parsed = metricsFromPostMetricArray(node.metrics);
       posts.push({
         ...node,
-        clicks: node.metrics?.clicks ?? 0,
-        impressions: node.metrics?.impressions ?? 0,
-        reactions: node.metrics?.reactions ?? 0,
-        comments: node.metrics?.comments ?? 0,
+        clicks: parsed.clicks,
+        impressions: parsed.impressions,
+        reactions: parsed.reactions,
+        comments: parsed.comments,
       });
     }
 

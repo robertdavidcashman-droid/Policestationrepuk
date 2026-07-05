@@ -32,6 +32,17 @@ export interface BufferPostWithMetrics {
     reactions?: number;
     comments?: number;
 }
+type BufferPostMetric = {
+    type: string;
+    value: number;
+};
+/** Map Buffer PostMetric[] (type/value) to legacy flat counters used by the bandit. */
+export declare function metricsFromPostMetricArray(metrics?: BufferPostMetric[]): {
+    clicks: number;
+    impressions: number;
+    reactions: number;
+    comments: number;
+};
 export declare function createScheduledBufferPost(apiKey: string, input: {
     channelId: string;
     channelService: BufferChannelService;

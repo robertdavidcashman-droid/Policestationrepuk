@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import sharp from 'sharp';
-import { createScheduledBufferPost } from './client';
+import { createScheduledBufferPost, metricsFromPostMetricArray } from './client';
 import type { BufferChannelService } from './types';
 
 let jpegBytes: Buffer;
@@ -82,5 +82,18 @@ describe('createScheduledBufferPost metadata', () => {
     expect(createdInputs).toHaveLength(1);
     const input = createdInputs[0] as { metadata?: unknown };
     expect(input.metadata).toBeUndefined();
+  });
+});
+
+describe('metricsFromPostMetricArray', () => {
+  it('maps Buffer PostMetric type/value pairs to legacy counters', () => {
+    expect(
+      metricsFromPostMetricArray([
+        { type: 'clicks', value: 3 },
+        { type: 'impressions', value: 40 },
+        { type: 'reactions', value: 5 },
+        { type: 'comments', value: 2 },
+      ]),
+    ).toEqual({ clicks: 3, impressions: 40, reactions: 5, comments: 2 });
   });
 });
