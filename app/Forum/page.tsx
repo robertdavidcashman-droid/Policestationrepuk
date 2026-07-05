@@ -5,11 +5,12 @@ import {
   DIRECTORY_ELIGIBILITY_REPS,
   FACEBOOK_JOB_POSTING_WARNING,
   FORUM_ALTERNATIVE_REPS,
-  FORUM_PATH,
+  FORUM_JOIN_HELP_INTRO,
   LAA_PAYMENT_REPS,
   WHATSAPP_REP_ELIGIBILITY,
 } from '@/lib/community-messaging';
-import { FACEBOOK_GROUP_URL } from '@/lib/site-navigation';
+import { COMMUNITY_EMAIL, FACEBOOK_GROUP_URL } from '@/lib/site-navigation';
+import { SUPPORT_MAILTO_HREF } from '@/lib/site-contact';
 
 export const metadata = buildMetadata({
   title: 'Community Forum for Police Station Representatives',
@@ -178,6 +179,55 @@ export default function ForumPage() {
               WhatsApp join guide &rarr;
             </Link>
           </div>
+        </section>
+
+        <section
+          className="mb-14 rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-slate-50 p-6 sm:p-8"
+          aria-labelledby="forum-join-help-heading"
+        >
+          <h2 id="forum-join-help-heading" className="text-h2 text-[var(--navy)]">
+            Need help joining?
+          </h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[var(--muted)]">
+            {FORUM_JOIN_HELP_INTRO}
+          </p>
+          <ul className="mt-4 max-w-3xl space-y-3 text-sm leading-relaxed text-[var(--muted)]">
+            <li>
+              <strong className="text-[var(--navy)]">Facebook group:</strong> log into Facebook first, then use the
+              join button on the group page. If the group is private, wait for a Facebook admin to approve you — we
+              cannot approve Facebook memberships from this site.
+            </li>
+            <li>
+              <strong className="text-[var(--navy)]">Not fully accredited?</strong> use the Facebook group above for
+              advice — do not apply for WhatsApp until you are fully qualified.
+            </li>
+            <li>
+              <strong className="text-[var(--navy)]">WhatsApp invite not received?</strong> see the{' '}
+              <Link href="/WhatsApp" className="font-semibold text-[var(--navy)] underline">
+                WhatsApp join guide
+              </Link>{' '}
+              and email{' '}
+              <a href={`mailto:${COMMUNITY_EMAIL}`} className="font-semibold text-[var(--navy)] underline">
+                {COMMUNITY_EMAIL}
+              </a>{' '}
+              with proof of full accreditation.
+            </li>
+            <li>
+              <strong className="text-[var(--navy)]">Directory or website issue?</strong>{' '}
+              <Link href="/FAQ" className="font-semibold text-[var(--navy)] underline">
+                Help &amp; FAQ
+              </Link>
+              ,{' '}
+              <Link href="/Contact" className="font-semibold text-[var(--navy)] underline">
+                Contact
+              </Link>
+              , or{' '}
+              <a href={SUPPORT_MAILTO_HREF} className="font-semibold text-[var(--navy)] underline">
+                email support
+              </a>
+              .
+            </li>
+          </ul>
         </section>
 
         <section className="mb-14">

@@ -44,3 +44,7 @@ export const WHATSAPP_JOIN_STEP_PROOF =
 
 export const WHATSAPP_JOIN_STEP_DECLINED =
   'Requests without adequate proof of full accreditation are declined — use the community forum for advice if you are still qualifying.';
+
+/** Short help copy for /Forum “Need help joining?” section. */
+export const FORUM_JOIN_HELP_INTRO =
+  'There is no separate sign-up on this website — the Facebook group is where open community chat happens. WhatsApp is verified separately.';

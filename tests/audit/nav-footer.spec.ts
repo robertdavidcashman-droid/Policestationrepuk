@@ -67,6 +67,13 @@ test.describe('Header and footer link integrity', () => {
     expect(broken).toEqual([]);
   });
 
+  test('Facebook group footer link is reachable', async ({ request }) => {
+    const { checkFacebookGroupUrl } = await import('../../lib/community-health');
+    const { FACEBOOK_GROUP_URL } = await import('../../lib/site-navigation');
+    const result = await checkFacebookGroupUrl(FACEBOOK_GROUP_URL, request.fetch.bind(request));
+    expect(result.ok, result.issue ?? 'Facebook group URL unreachable').toBe(true);
+  });
+
   test('mobile menu links match desktop link targets', async ({ page, baseURL }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');

@@ -29,6 +29,10 @@ export const FAQ_PAGE_FAQS = [
     a: 'No. The Facebook group is open to all and we do not verify members or check accreditation. If you post a job or cover request there, you must confirm yourself that anyone who accepts is fully accredited before instructing them — non-accredited attendance cannot be billed under legal aid. The WhatsApp group is verified and continually checked. See /Forum for the full comparison.',
   },
   {
+    q: "I can't join the Facebook group — what should I do?",
+    a: 'You need a Facebook account and must be logged in to Facebook before the Join button appears. If the group is private, an admin must approve your request — we cannot approve Facebook memberships from this site. For WhatsApp invite problems (fully accredited reps only), see /WhatsApp or email robertcashman@defencelegalservices.co.uk with proof of accreditation. For directory or website issues, use /Contact or /FAQ.',
+  },
+  {
     q: 'Who operates PoliceStationRepUK?',
     a: 'PoliceStationRepUK is operated by Defence Legal Services Ltd, an independent directory service. We are not affiliated with The Law Society, SRA, LCCSA, CLSA, the Legal Ombudsman, any UK police force, or any government body. We cannot provide legal advice or access case management systems.',
   },
