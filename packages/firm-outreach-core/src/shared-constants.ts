@@ -203,6 +203,7 @@ export interface OutreachLimitsDefaults {
   dailyCap?: number;
   enrichBatch?: number;
   cronEnrichBatch?: number;
+  cronSendBatch?: number;
   enrichMaxMs?: number;
   paidDailyCap?: number;
   countyAllowlist?: string[] | null;
@@ -237,6 +238,11 @@ export function createOutreachEnvHelpers(defaults: OutreachLimitsDefaults = {}) 
     cronEnrichBatchSize(): number {
       return (
         Number(process.env.FIRM_OUTREACH_CRON_ENRICH_BATCH ?? defaults.cronEnrichBatch ?? 10) || 10
+      );
+    },
+    cronSendBatchSize(): number {
+      return (
+        Number(process.env.FIRM_OUTREACH_CRON_SEND_BATCH ?? defaults.cronSendBatch ?? 25) || 25
       );
     },
     enrichMaxElapsedMs(): number {

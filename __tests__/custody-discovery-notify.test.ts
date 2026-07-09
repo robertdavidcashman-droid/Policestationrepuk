@@ -79,9 +79,12 @@ function mockFinding(id: string, confidenceScore: number) {
   };
 }
 
+const ENV = process.env;
+
 describe('custody discovery batch notification', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env = { ...ENV, CUSTODY_AI_AUTO_PUBLISH: 'false' };
     shouldSendDailyDigest.mockReturnValue(true);
     getDailyNotifyBucket.mockResolvedValue(null);
     findUnsentDailyNotifyBucket.mockResolvedValue(null);
@@ -96,6 +99,7 @@ describe('custody discovery batch notification', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    process.env = { ...ENV };
   });
 
   it('flushes a queued daily digest when a later run has no new findings', async () => {

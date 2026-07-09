@@ -1,3 +1,4 @@
+import { autoPublishEnabled } from './auto-decision';
 import { sendCustodyOutstandingDigestEmail } from './email';
 import {
   markOutstandingDigestSent,
@@ -23,6 +24,10 @@ export async function sendDailyOutstandingDigest(opts?: {
   now?: Date;
 }): Promise<OutstandingDigestResult> {
   const date = outstandingDigestDate(opts?.now);
+
+  if (autoPublishEnabled()) {
+    return { sent: false, reason: 'auto_publish_mode', date };
+  }
 
   if (!opts?.force && (await wasOutstandingDigestSent(date))) {
     return { sent: false, reason: 'already_sent_today', date };

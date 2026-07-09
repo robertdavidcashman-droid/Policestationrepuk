@@ -38,7 +38,7 @@ import {
 } from './storage';
 
 export function autoPublishEnabled(): boolean {
-  return process.env.CUSTODY_AI_AUTO_PUBLISH === 'true';
+  return process.env.CUSTODY_AI_AUTO_PUBLISH !== 'false';
 }
 
 /** revalidatePath throws outside a Next request scope (e.g. operator tsx scripts). */

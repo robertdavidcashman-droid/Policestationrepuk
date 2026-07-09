@@ -1,7 +1,8 @@
-import { dailySendCap, outreachSendEnabled } from '../constants';
+import { isTransientResendError } from '@robertcashman/firm-outreach-core';
 import { activeOutreachCampaignId, isCampaignProspect } from '../campaign-scope';
+import { dailySendCap, outreachSendEnabled } from '../constants';
 import { sortProspectsForSend } from '../enrichment/scorer';
-import { validateEmailForSend } from '../enrichment/validator';
+import { isPlausibleOutreachEmail, validateEmailForSend } from '../enrichment/validator';
 import {
   qualifyProspectForOutreach,
   resolveStatusWithQualification,
@@ -11,22 +12,36 @@ import {
   createSendRecord,
   excludeProspectDuplicateEmail,
   getDailySendCount,
+  getGlobalResendQuotaRemaining,
   incrementDailySendCount,
+  incrementResendSendCount,
   isDuplicateInitialSend,
   isSuppressed,
   listProspectsByRecordStatus,
   listProspectsForFirmKey,
+  saveOutreachRunLog,
   saveProspect,
   saveSend,
 } from '../storage';
 import type { FirmProspect, OutreachRunStats } from '../types';
 import { normalizeEmail } from '../normalize';
-import { assertOutreachSendReady } from './from-address';
+import {
+  buildOutreachRunLog,
+  initExtendedRunStats,
+  recordFailure,
+  recordSkip,
+} from './run-log';
 import { sendOutreachEmail } from './send';
 
 const FOLLOWUP_DAY_1 = 7;
 const FOLLOWUP_DAY_2 = 21;
 const FIRM_SEND_COOLDOWN_DAYS = 90;
+const MAX_CANDIDATE_SCAN = 500;
+
+/** Prospects in ready/sent were MX-checked at enrich/requalify; skip DNS on send ticks. */
+function emailPrevalidatedForSend(prospect: FirmProspect): boolean {
+  return prospect.status === 'ready_to_send' || prospect.status === 'sent';
+}
 
 function daysSince(iso: string | undefined): number {
   if (!iso) return Infinity;
@@ -66,163 +81,248 @@ function nextStep(prospect: FirmProspect): number | null {
   return null;
 }
 
+async function persistRunLog(opts: {
+  campaignId: string;
+  startedAt: string;
+  dryRun: boolean;
+  stats: OutreachRunStats;
+  dailyCap: number;
+  sentTodayBefore: number;
+  resendQuotaRemaining: number;
+}): Promise<void> {
+  if (opts.dryRun || process.env.FIRM_OUTREACH_DRY_RUN === 'true') return;
+  await saveOutreachRunLog(
+    buildOutreachRunLog({
+      campaignId: opts.campaignId,
+      startedAt: opts.startedAt,
+      dryRun: opts.dryRun,
+      stats: opts.stats,
+      dailyCap: opts.dailyCap,
+      sentTodayBefore: opts.sentTodayBefore,
+      resendQuotaRemaining: opts.resendQuotaRemaining,
+    }),
+  );
+}
+
 export async function runFirmOutreach(opts?: {
   campaignId?: string;
   dryRun?: boolean;
   limit?: number;
 }): Promise<OutreachRunStats> {
+  const startedAt = new Date().toISOString();
   const started = Date.now();
   const campaignId = opts?.campaignId ?? activeOutreachCampaignId();
   const campaignOpts = { campaignId };
-  const stats: OutreachRunStats = {
+  const stats = initExtendedRunStats({
     queued: 0,
     sent: 0,
     skipped: 0,
     suppressed: 0,
     errors: 0,
     elapsedMs: 0,
+  });
+
+  const finish = async (resendQuotaRemaining: number, sentTodayBefore: number, cap: number) => {
+    stats.elapsedMs = Date.now() - started;
+    stats.resendQuotaRemaining = resendQuotaRemaining;
+    await persistRunLog({
+      campaignId,
+      startedAt,
+      dryRun: Boolean(opts?.dryRun),
+      stats,
+      dailyCap: cap,
+      sentTodayBefore,
+      resendQuotaRemaining,
+    });
+    if (stats.sent > 0 || stats.errors > 0) {
+      const { refreshProspectStatusSnapshotCache } = await import('../storage');
+      await refreshProspectStatusSnapshotCache();
+    }
+    return stats;
   };
 
   if (!outreachSendEnabled()) {
-    stats.elapsedMs = Date.now() - started;
-    return stats;
-  }
-
-  if (!opts?.dryRun && process.env.FIRM_OUTREACH_DRY_RUN !== 'true') {
-    const preflight = await assertOutreachSendReady(campaignId);
-    if (!preflight.ok) {
-      console.error('[firm-outreach] send preflight failed:', preflight.reason);
-      stats.errors = 1;
-      stats.elapsedMs = Date.now() - started;
-      return stats;
-    }
+    recordSkip(stats, 'send_disabled');
+    return finish(0, 0, dailySendCap());
   }
 
   const date = new Date().toISOString().slice(0, 10);
   const cap = opts?.limit ?? dailySendCap();
   const alreadySent = await getDailySendCount(date, campaignId);
   const remaining = Math.max(0, cap - alreadySent);
+  const globalQuota = await getGlobalResendQuotaRemaining(date);
+
   if (remaining === 0) {
-    stats.elapsedMs = Date.now() - started;
-    return stats;
+    recordSkip(stats, 'daily_cap');
+    return finish(globalQuota, alreadySent, cap);
+  }
+  if (!opts?.dryRun && globalQuota <= 0) {
+    recordSkip(stats, 'resend_quota');
+    return finish(0, alreadySent, cap);
   }
 
-  const ready = await listProspectsByRecordStatus('ready_to_send', 2000, campaignOpts);
-  const sent = await listProspectsByRecordStatus('sent', 2000, campaignOpts);
+  const ready = await listProspectsByRecordStatus(
+    'ready_to_send',
+    Math.min(MAX_CANDIDATE_SCAN, Math.max(remaining * 5, 50)),
+    campaignOpts,
+  );
+  const sent = await listProspectsByRecordStatus(
+    'sent',
+    Math.min(MAX_CANDIDATE_SCAN, Math.max(remaining * 5, 50)),
+    campaignOpts,
+  );
   const candidates = sortProspectsForSend([...ready, ...sent]);
   const emailsSentThisRun = new Set<string>();
+  let resendQuota = globalQuota;
 
   for (const prospect of candidates) {
     if (stats.sent >= remaining) break;
-
-    const step = nextStep(prospect);
-    if (step === null) {
-      stats.skipped++;
-      continue;
+    if (!opts?.dryRun && resendQuota <= 0) {
+      recordSkip(stats, 'resend_quota');
+      break;
     }
 
-    const email = prospect.email?.trim();
-    if (!email) {
-      stats.skipped++;
-      continue;
-    }
+    try {
+      const step = nextStep(prospect);
+      if (step === null) {
+        recordSkip(stats, 'no_step');
+        continue;
+      }
 
-    const normalizedEmail = normalizeEmail(email);
+      const email = prospect.email?.trim();
+      if (!email) {
+        recordSkip(stats, 'no_email');
+        continue;
+      }
 
-    const qualification = qualifyProspectForOutreach(prospect);
-    if (!qualification.qualified) {
-      stats.skipped++;
-      if (prospect.status === 'ready_to_send') {
-        prospect.status = resolveStatusWithQualification(prospect, 'ready_to_send');
-        prospect.updatedAt = new Date().toISOString();
+      const normalizedEmail = normalizeEmail(email);
+
+      const qualification = qualifyProspectForOutreach(prospect);
+      if (!qualification.qualified) {
+        recordSkip(stats, 'not_qualified');
+        if (prospect.status === 'ready_to_send') {
+          prospect.status = resolveStatusWithQualification(prospect, 'ready_to_send');
+          prospect.updatedAt = new Date().toISOString();
+          await saveProspect(prospect);
+        }
+        continue;
+      }
+
+      if (await isSuppressed(email)) {
+        stats.suppressed++;
+        stats.attempted = (stats.attempted ?? 0) + 1;
+        prospect.status = 'unsubscribed';
         await saveProspect(prospect);
+        continue;
       }
-      continue;
-    }
 
-    if (await isSuppressed(email)) {
-      stats.suppressed++;
-      prospect.status = 'unsubscribed';
-      await saveProspect(prospect);
-      continue;
-    }
-
-    if (
-      step === 0 &&
-      (emailsSentThisRun.has(normalizedEmail) ||
-        (await isDuplicateInitialSend(email, prospect.id, campaignId)))
-    ) {
-      stats.skipped++;
-      if (prospect.status === 'ready_to_send') {
-        await excludeProspectDuplicateEmail(prospect);
+      if (
+        step === 0 &&
+        (emailsSentThisRun.has(normalizedEmail) ||
+          (await isDuplicateInitialSend(email, prospect.id, campaignId)))
+      ) {
+        recordSkip(stats, 'duplicate');
+        if (prospect.status === 'ready_to_send') {
+          await excludeProspectDuplicateEmail(prospect);
+        }
+        continue;
       }
-      continue;
-    }
 
-    if (prospect.prospectType === 'solicitor' && (await firmRecentlyContacted(prospect, campaignId))) {
-      stats.skipped++;
-      continue;
-    }
-
-    const validation = await validateEmailForSend(email);
-    if (!validation.ok) {
-      stats.skipped++;
-      if (prospect.status === 'ready_to_send') {
-        prospect.status = validation.reason === 'no_mx' ? 'no_email' : 'discovered';
-        prospect.updatedAt = new Date().toISOString();
-        await saveProspect(prospect);
+      if (prospect.prospectType === 'solicitor' && (await firmRecentlyContacted(prospect, campaignId))) {
+        recordSkip(stats, 'firm_cooldown');
+        continue;
       }
-      continue;
-    }
 
-    stats.queued++;
-    const result = await sendOutreachEmail({
-      prospect,
-      step,
-      dryRun: opts?.dryRun,
-    });
-
-    if (!result.ok) {
-      stats.errors++;
-      if (result.error?.includes('bounce')) {
-        await addSuppression(email, 'bounce');
-        prospect.status = 'bounced';
-        await saveProspect(prospect);
+      if (emailPrevalidatedForSend(prospect)) {
+        if (!isPlausibleOutreachEmail(email)) {
+          recordSkip(stats, 'mx_invalid');
+          continue;
+        }
+      } else {
+        const validation = await validateEmailForSend(email);
+        if (!validation.ok) {
+          recordSkip(stats, 'mx_invalid');
+          if (prospect.status === 'ready_to_send') {
+            prospect.status = validation.reason === 'no_mx' ? 'no_email' : 'discovered';
+            prospect.updatedAt = new Date().toISOString();
+            await saveProspect(prospect);
+          }
+          continue;
+        }
       }
-      continue;
-    }
 
-    // A dry-run must never persist state: previously the prospect was flipped to
-    // 'sent' and a send record written even when no email was dispatched, which
-    // silently burned prospects (marked contacted, locked out of follow-ups).
-    if (!opts?.dryRun && process.env.FIRM_OUTREACH_DRY_RUN !== 'true') {
-      const now = new Date().toISOString();
-      prospect.sequenceStep = step;
-      prospect.lastEmailAt = now;
-      prospect.status = 'sent';
-      prospect.updatedAt = now;
-      await saveProspect(prospect);
+      stats.queued++;
+      stats.attempted = (stats.attempted ?? 0) + 1;
 
-      const send = createSendRecord({
-        prospectId: prospect.id,
-        firmName: prospect.firmName,
-        prospectType: prospect.prospectType,
-        email,
-        campaignId: prospect.campaignId,
-        sequenceStep: step,
-        subject: result.subject,
+      const result = await sendOutreachEmail({
+        prospect,
+        step,
+        dryRun: opts?.dryRun,
       });
-      send.status = 'sent';
-      send.sentAt = now;
-      send.resendMessageId = result.messageId;
-      await saveSend(send);
 
-      await incrementDailySendCount(date, campaignId);
+      if (!result.ok) {
+        const transient = isTransientResendError(result.error);
+        recordFailure(stats, {
+          email,
+          firmName: prospect.firmName,
+          prospectId: prospect.id,
+          reason: result.error ?? 'resend_error',
+          transient,
+        });
+        if (result.error?.includes('bounce')) {
+          await addSuppression(email, 'bounce');
+          prospect.status = 'bounced';
+          await saveProspect(prospect);
+        } else if (!transient && prospect.status === 'ready_to_send') {
+          const prev = prospect.status;
+          prospect.status = 'excluded';
+          prospect.excludedReason = 'send_failed';
+          prospect.updatedAt = new Date().toISOString();
+          await saveProspect(prospect, prev);
+        }
+        continue;
+      }
+
+      if (!opts?.dryRun && process.env.FIRM_OUTREACH_DRY_RUN !== 'true') {
+        const now = new Date().toISOString();
+        prospect.sequenceStep = step;
+        prospect.lastEmailAt = now;
+        prospect.status = 'sent';
+        prospect.updatedAt = now;
+        await saveProspect(prospect);
+
+        const send = createSendRecord({
+          prospectId: prospect.id,
+          firmName: prospect.firmName,
+          prospectType: prospect.prospectType,
+          email,
+          campaignId: prospect.campaignId,
+          sequenceStep: step,
+          subject: result.subject,
+        });
+        send.status = 'sent';
+        send.sentAt = now;
+        send.resendMessageId = result.messageId;
+        await saveSend(send);
+
+        await incrementDailySendCount(date, campaignId);
+        await incrementResendSendCount(date);
+        resendQuota = Math.max(0, resendQuota - 1);
+      }
+      emailsSentThisRun.add(normalizedEmail);
+      stats.sent++;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      recordFailure(stats, {
+        email: prospect.email ?? '',
+        firmName: prospect.firmName,
+        prospectId: prospect.id,
+        reason: msg,
+        transient: isTransientResendError(msg),
+      });
     }
-    emailsSentThisRun.add(normalizedEmail);
-    stats.sent++;
   }
 
-  stats.elapsedMs = Date.now() - started;
-  return stats;
+  const finalQuota = await getGlobalResendQuotaRemaining(date);
+  return finish(finalQuota, alreadySent, cap);
 }

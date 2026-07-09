@@ -20,6 +20,7 @@ export async function GET(request: Request) {
     skipDiscovery: true,
     skipSend: true,
     skipDigest: true,
+    skipCleanup: true,
     enrichLimit: cronEnrichBatchSize(),
     enrichMaxElapsedMs: enrichMaxElapsedMs(),
   });

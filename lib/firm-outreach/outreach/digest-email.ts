@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { dailySendCap } from '../constants';
+import { activeOutreachCampaignId } from '../campaign-scope';
 import { getDailySendCount } from '../storage';
 import type {
   DiscoveryRunStats,
@@ -9,6 +10,7 @@ import type {
   OutreachRunStats,
 } from '../types';
 import { buildOutreachActivityReport } from './activity-report';
+import { repukFromAddress } from './from-address';
 import {
   markOutreachDigestSent,
   outreachDigestDate,
@@ -21,7 +23,7 @@ const NOTIFY_EMAIL =
   process.env.OWNER_EMAIL?.trim() ||
   'robertdavidcashman@gmail.com';
 
-const FROM_EMAIL = 'PoliceStationRepUK <noreply@policestationrepuk.org>';
+const FROM_EMAIL = repukFromAddress();
 const READY_QUEUE_LIMIT = 50;
 const RECEIPTS_LIMIT = 50;
 
@@ -132,12 +134,13 @@ export async function sendDailyOutreachDigest(opts?: {
   };
 }): Promise<DailyOutreachDigestResult> {
   const date = outreachDigestDate();
-  if (!opts?.force && (await wasOutreachDigestSent(date))) {
+  const campaignId = activeOutreachCampaignId();
+  if (!opts?.force && (await wasOutreachDigestSent(date, campaignId))) {
     return { sent: false, reason: 'already_sent_today', date };
   }
 
   const cap = dailySendCap();
-  const sentTodayKv = await getDailySendCount(new Date().toISOString().slice(0, 10));
+  const sentTodayKv = await getDailySendCount(new Date().toISOString().slice(0, 10), campaignId);
   const { report } = await buildOutreachActivityReport();
   const startOfUtcDay = Date.UTC(
     new Date().getUTCFullYear(),
@@ -216,7 +219,7 @@ export async function sendDailyOutreachDigest(opts?: {
 
   try {
     await client.emails.send({ from: FROM_EMAIL, to: NOTIFY_EMAIL, subject, html });
-    await markOutreachDigestSent(date);
+    await markOutreachDigestSent(date, campaignId);
     return { sent: true, date };
   } catch (err) {
     console.warn('[firm-outreach digest]', err);

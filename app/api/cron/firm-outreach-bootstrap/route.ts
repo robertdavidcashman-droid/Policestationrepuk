@@ -14,6 +14,20 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
 
+  if (url.searchParams.get('dryRunPreview') === '1') {
+    const { buildOutreachDryRunPreview } = await import('@/lib/firm-outreach/dry-run-preview');
+    const limit = Number(url.searchParams.get('limit') || 25) || 25;
+    const preview = await buildOutreachDryRunPreview({ limit });
+    return NextResponse.json({ ok: true, mode: 'dryRunPreview', preview });
+  }
+
+  if (url.searchParams.get('sendDryRun') === '1') {
+    const { runFirmOutreach } = await import('@/lib/firm-outreach/outreach/run-outreach');
+    const limit = Number(url.searchParams.get('limit') || 5) || 5;
+    const send = await runFirmOutreach({ dryRun: true, limit });
+    return NextResponse.json({ ok: true, mode: 'sendDryRun', send });
+  }
+
   if (url.searchParams.get('cleanupBadEmails') === '1') {
     const { cleanupNonFirmProspectEmails } = await import('@/lib/firm-outreach/cleanup-non-firm-emails');
     const dryRun = url.searchParams.get('dryRun') !== '0';

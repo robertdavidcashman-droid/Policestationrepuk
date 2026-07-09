@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { outreachSendEnabled } from '@/lib/firm-outreach/constants';
+import { cronSendBatchSize, dailySendCap, outreachSendEnabled } from '@/lib/firm-outreach/constants';
 import { buildOutreachActivityReport } from '@/lib/firm-outreach/outreach/activity-report';
 import { sendOutreachSendConfirmationEmail } from '@/lib/firm-outreach/outreach/send-confirmation-email';
 import {
@@ -66,7 +66,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const stats = await runFirmOutreach();
+    const sendLimit = Math.min(dailySendCap(), cronSendBatchSize() * 2);
+    const stats = await runFirmOutreach({ limit: sendLimit });
     const { report } = await buildOutreachActivityReport();
     const startOfUtcDay = Date.UTC(
       new Date().getUTCFullYear(),

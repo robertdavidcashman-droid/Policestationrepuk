@@ -219,6 +219,9 @@ function createOutreachEnvHelpers(defaults = {}) {
         cronEnrichBatchSize() {
             return (Number(process.env.FIRM_OUTREACH_CRON_ENRICH_BATCH ?? defaults.cronEnrichBatch ?? 10) || 10);
         },
+        cronSendBatchSize() {
+            return (Number(process.env.FIRM_OUTREACH_CRON_SEND_BATCH ?? defaults.cronSendBatch ?? 25) || 25);
+        },
         enrichMaxElapsedMs() {
             return (Number(process.env.FIRM_OUTREACH_ENRICH_MAX_MS ?? defaults.enrichMaxMs ?? 90000) || 90000);
         },

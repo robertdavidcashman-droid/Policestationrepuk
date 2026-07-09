@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { autoPublishEnabled } from '@/lib/custody-discovery/auto-decision';
+import { sendDailyAutoApproveDigest } from '@/lib/custody-discovery/auto-approve-digest';
 import { flushPendingDailyDigest } from '@/lib/custody-discovery/notify';
 import { isCronAuthorized } from '@/lib/cron-auth';
 
@@ -15,6 +17,14 @@ export const maxDuration = 60;
 export async function GET(request: Request) {
   if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const url = new URL(request.url);
+  const force = url.searchParams.get('force') === '1';
+
+  if (autoPublishEnabled()) {
+    const result = await sendDailyAutoApproveDigest({ force });
+    return NextResponse.json({ ok: true, mode: 'auto-approve-digest', ...result });
   }
 
   const notification = await flushPendingDailyDigest(new Date(), { force: true });

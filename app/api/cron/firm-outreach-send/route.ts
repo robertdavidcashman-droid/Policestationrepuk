@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
+import { validateOutreachEnv } from '@robertcashman/firm-outreach-core';
 import { isCronAuthorized } from '@/lib/cron-auth';
+import { cronSendBatchSize } from '@/lib/firm-outreach/constants';
 import { runFirmOutreachPipeline } from '@/lib/firm-outreach/run-pipeline';
 
 export const dynamic = 'force-dynamic';
@@ -12,12 +14,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const envCheck = validateOutreachEnv({ requireCronSecret: true });
+  if (!envCheck.ok) {
+    return NextResponse.json({ ok: false, error: 'outreach_env_invalid', errors: envCheck.errors }, { status: 500 });
+  }
+
   const url = new URL(request.url);
-  const sendLimit = Number(url.searchParams.get('limit') || 0) || undefined;
+  const paramLimit = Number(url.searchParams.get('limit') || 0);
+  const sendLimit = paramLimit > 0 ? paramLimit : cronSendBatchSize();
   const result = await runFirmOutreachPipeline({
     skipDiscovery: true,
     skipEnrich: true,
     skipDigest: true,
+    skipCleanup: true,
+    skipCounts: true,
     sendLimit,
   });
   return NextResponse.json({ ok: true, mode: 'send-only', ...result });

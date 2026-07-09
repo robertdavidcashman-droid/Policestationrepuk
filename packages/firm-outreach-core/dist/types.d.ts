@@ -163,11 +163,15 @@ export interface DiscoveryRunStats {
     updated: number;
     excluded: number;
     elapsedMs: number;
+    /** True when stopped early due to maxElapsedMs budget. */
+    stoppedEarly?: boolean;
 }
 export interface EnrichmentRunStats {
     processed: number;
     emailsFound: number;
     readyToSend: number;
+    /** Prospects re-read from KV with status ready_to_send after save. */
+    persistedReady?: number;
     noEmail: number;
     errors: number;
     elapsedMs: number;
@@ -185,5 +189,16 @@ export interface OutreachRunStats {
     suppressed: number;
     errors: number;
     elapsedMs: number;
+    attempted?: number;
+    failed?: number;
+    skipReasons?: Partial<Record<string, number>>;
+    failures?: Array<{
+        email: string;
+        firmName?: string;
+        prospectId?: string;
+        reason: string;
+        transient?: boolean;
+    }>;
+    resendQuotaRemaining?: number;
 }
 //# sourceMappingURL=types.d.ts.map

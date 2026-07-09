@@ -20,6 +20,7 @@ export interface OutreachLimitsDefaults {
     dailyCap?: number;
     enrichBatch?: number;
     cronEnrichBatch?: number;
+    cronSendBatch?: number;
     enrichMaxMs?: number;
     paidDailyCap?: number;
     countyAllowlist?: string[] | null;
@@ -32,6 +33,7 @@ export declare function createOutreachEnvHelpers(defaults?: OutreachLimitsDefaul
     dailySendCap(): number;
     enrichBatchSize(): number;
     cronEnrichBatchSize(): number;
+    cronSendBatchSize(): number;
     enrichMaxElapsedMs(): number;
     paidDailyCap(): number;
     countyAllowlist(): string[] | null;

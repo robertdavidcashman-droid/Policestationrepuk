@@ -1,4 +1,5 @@
 import { markBatchNotified, saveBatch, newBatchId, type CustodyDiscoveryBatch } from './batch';
+import { autoPublishEnabled } from './auto-decision';
 import {
   addToDailyNotifyBucket,
   dailyNotifyDate,
@@ -53,6 +54,12 @@ async function sendDailyDigestFromBucket(opts: {
 
   if (digestFindings.length === 0) {
     return { emailed: false, notifyCount: 0, batchId: opts.batchId };
+  }
+
+  if (autoPublishEnabled()) {
+    await markBatchNotified(opts.batchId);
+    await markDailyNotifySent(opts.today);
+    return { emailed: false, notifyCount: digestFindings.length, batchId: opts.batchId };
   }
 
   const digestBatch: CustodyDiscoveryBatch = {

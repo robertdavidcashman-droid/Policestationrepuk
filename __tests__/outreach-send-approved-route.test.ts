@@ -28,6 +28,8 @@ vi.mock('@/lib/firm-outreach/outreach/send-confirmation-email', () => ({
 
 vi.mock('@/lib/firm-outreach/constants', () => ({
   outreachSendEnabled: () => true,
+  dailySendCap: () => 150,
+  cronSendBatchSize: () => 25,
 }));
 
 const ENV = process.env;
@@ -86,7 +88,7 @@ describe('outreach send-approved route', () => {
     );
     expect(res.status).toBe(303);
     expect(res.headers.get('location')).toContain('sent=5');
-    expect(mockRunOutreach).toHaveBeenCalledOnce();
+    expect(mockRunOutreach).toHaveBeenCalledWith({ limit: 50 });
     expect(mockConfirmEmail).toHaveBeenCalledOnce();
     expect(mockFinalize).toHaveBeenCalledOnce();
     expect(mockRelease).not.toHaveBeenCalled();

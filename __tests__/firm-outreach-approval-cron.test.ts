@@ -39,7 +39,7 @@ describe('firm-outreach approval crons', () => {
       expect(res.status).toBe(401);
     });
 
-    it('sends approval email without auto-send when approval required', async () => {
+    it('sends approval email without running the heavy pipeline', async () => {
       const res = await fullGet(
         new Request('http://localhost/api/cron/firm-outreach-pipeline/full', {
           headers: { authorization: 'Bearer cron-test' },
@@ -48,9 +48,7 @@ describe('firm-outreach approval crons', () => {
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.mode).toBe('approval-only');
-      expect(mockPipeline).toHaveBeenCalledWith(
-        expect.objectContaining({ skipSend: true, skipDigest: true }),
-      );
+      expect(mockPipeline).not.toHaveBeenCalled();
       expect(mockApprovalEmail).toHaveBeenCalledOnce();
     });
 

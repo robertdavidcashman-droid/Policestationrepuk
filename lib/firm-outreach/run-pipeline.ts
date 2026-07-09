@@ -49,6 +49,10 @@ export async function runFirmOutreachPipeline(opts?: {
   /** Skip LAA/DSCC refresh, discovery, and requalify (enrich-only or send-only crons). */
   skipDiscovery?: boolean;
   skipDigest?: boolean;
+  /** Skip the full ready/sent prospect cleanup scan (send/enrich ticks). */
+  skipCleanup?: boolean;
+  /** Skip per-status KV count scan (send-only ticks). */
+  skipCounts?: boolean;
 }): Promise<FirmOutreachPipelineResult> {
   const started = Date.now();
 
@@ -70,7 +74,9 @@ export async function runFirmOutreachPipeline(opts?: {
     };
   }
 
-  const cleanupResult = await cleanupNonFirmProspectEmails({ dryRun: false });
+  const cleanupResult = opts?.skipCleanup
+    ? { reset: 0, targets: [] as Awaited<ReturnType<typeof cleanupNonFirmProspectEmails>>['targets'] }
+    : await cleanupNonFirmProspectEmails({ dryRun: false });
   const cleanup = { reset: cleanupResult.reset, targets: cleanupResult.targets.length };
 
   let laaResult = { refreshed: false, source: 'none' as string, records: [] as unknown[] };
@@ -102,14 +108,14 @@ export async function runFirmOutreachPipeline(opts?: {
 
   if (!opts?.skipEnrich) {
     const enrichLimit = opts?.enrichLimit ?? (opts?.skipSend ? 120 : 60);
-    const half = Math.max(1, Math.floor(enrichLimit / 2));
     enrich = await runFirmEnrichment({
-      limit: half,
+      limit: enrichLimit,
       maxElapsedMs: opts?.enrichMaxElapsedMs,
     });
+    const kentLimit = Math.min(15, Math.max(1, Math.floor(enrichLimit / 4)));
     agentCoverEnrich = await runFirmEnrichment({
       campaignId: AGENT_COVER_KENT_CAMPAIGN_ID,
-      limit: half,
+      limit: kentLimit,
       maxElapsedMs: opts?.enrichMaxElapsedMs,
     });
   }
@@ -119,9 +125,9 @@ export async function runFirmOutreachPipeline(opts?: {
       ? emptySend()
       : await runFirmOutreach({ limit: opts?.sendLimit });
 
-  const counts = await countProspectsByStatus();
+  const counts = opts?.skipCounts ? {} : await countProspectsByStatus();
 
-  if (!opts?.skipSend) {
+  if (!opts?.skipSend && !opts?.skipCounts) {
     const sendHealth = await getOutreachSendHealth();
     if (!sendHealth.sendHealthy) {
       await maybeNotifyOutreachSendFailure({

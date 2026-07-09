@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
 import { getKV } from '@/lib/kv';
 import { dailySendCap, outreachPaused, outreachSendEnabled } from '@/lib/firm-outreach/constants';
+import { getOutreachConfigStatus } from '@/lib/firm-outreach/config-status';
 import {
   activityReportToCsv,
   buildExcludedProspectsView,
@@ -128,11 +129,16 @@ export async function GET(request: Request) {
     }
 
     const summaryView = await getCachedOutreachSummaryView(refresh);
+    const config = await getOutreachConfigStatus();
+    const { getOutreachOpsStatus } = await import('@/lib/firm-outreach/ops-status');
+    const ops = await getOutreachOpsStatus();
     return NextResponse.json({
       ok: true,
       kvConfigured: true,
       view: 'summary',
       ...baseMeta(),
+      config,
+      ops,
       counts: summaryView.prospectCounts,
       generatedAt: summaryView.generatedAt,
       summary: summaryView.summary,

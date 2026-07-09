@@ -1,4 +1,9 @@
 import crypto from 'crypto';
+import {
+  resendQuotaKey,
+  resendQuotaRemaining as calcResendQuotaRemaining,
+  type OutreachRunLog,
+} from '@robertcashman/firm-outreach-core';
 import { getKV, skipKVInPrerender } from '@/lib/kv';
 import { dailySendKeyForCampaign, dailySendKeyForCampaignId, isActiveCampaignProspect, isActiveCampaignSend, isCampaignProspect, isCampaignSend, activeOutreachCampaignId } from './campaign-scope';
 import { OUTREACH_CAMPAIGN_IDS } from './site-config';
@@ -30,6 +35,8 @@ const SUPPRESSION_PREFIX = 'firmoutreach:suppression:';
 const CURSOR_ENRICH = 'firmoutreach:cursor:enrich';
 const CURSOR_SEND = 'firmoutreach:cursor:send';
 const PAID_DAILY_PREFIX = 'firmoutreach:paid:';
+const RUNLOG_PREFIX = 'firmoutreach:runlog:';
+const RUNLOG_LATEST_PREFIX = 'firmoutreach:runlog:latest:';
 
 function prospectKey(id: string): string {
   return `${PROSPECT_PREFIX}${id}`;
@@ -595,4 +602,48 @@ export async function countProspectsByStatus(): Promise<Record<string, number>> 
     out[s] = ids.length;
   }
   return out;
+}
+
+export async function getResendSendCount(date: string): Promise<number> {
+  const kv = getKV();
+  if (!kv) return 0;
+  const n = await kv.get<number>(resendQuotaKey(date));
+  return typeof n === 'number' ? n : 0;
+}
+
+export async function incrementResendSendCount(date: string): Promise<number> {
+  const kv = getKV();
+  if (!kv) return 0;
+  const key = resendQuotaKey(date);
+  const current = (await kv.get<number>(key)) ?? 0;
+  const next = current + 1;
+  await kv.set(key, next, { ex: 60 * 60 * 24 * 3 });
+  return next;
+}
+
+export async function getGlobalResendQuotaRemaining(date: string): Promise<number> {
+  const count = await getResendSendCount(date);
+  return calcResendQuotaRemaining(count);
+}
+
+export async function saveOutreachRunLog(log: OutreachRunLog): Promise<void> {
+  const kv = getKV();
+  if (!kv) return;
+  const key = `${RUNLOG_PREFIX}${log.campaignId}:${log.startedAt}`;
+  await kv.set(key, log, { ex: 60 * 60 * 24 * 14 });
+  await kv.set(`${RUNLOG_LATEST_PREFIX}${log.campaignId}`, log, {
+    ex: 60 * 60 * 24 * 3,
+  });
+}
+
+export async function getLatestOutreachRunLog(
+  campaignId: string,
+): Promise<OutreachRunLog | null> {
+  const kv = getKV();
+  if (!kv) return null;
+  return (await kv.get<OutreachRunLog>(`${RUNLOG_LATEST_PREFIX}${campaignId}`)) ?? null;
+}
+
+export async function refreshProspectStatusSnapshotCache(): Promise<void> {
+  // REPUK uses index scans; no snapshot cache — no-op for run-outreach parity.
 }

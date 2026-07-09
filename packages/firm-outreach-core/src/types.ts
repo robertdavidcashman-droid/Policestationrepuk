@@ -202,12 +202,16 @@ export interface DiscoveryRunStats {
   updated: number;
   excluded: number;
   elapsedMs: number;
+  /** True when stopped early due to maxElapsedMs budget. */
+  stoppedEarly?: boolean;
 }
 
 export interface EnrichmentRunStats {
   processed: number;
   emailsFound: number;
   readyToSend: number;
+  /** Prospects re-read from KV with status ready_to_send after save. */
+  persistedReady?: number;
   noEmail: number;
   errors: number;
   elapsedMs: number;
@@ -226,4 +230,34 @@ export interface OutreachRunStats {
   suppressed: number;
   errors: number;
   elapsedMs: number;
+  /** Prospects evaluated (send attempted or skipped with reason). */
+  attempted?: number;
+  failed?: number;
+  skipReasons?: Partial<
+    Record<
+      | 'no_step'
+      | 'no_email'
+      | 'not_qualified'
+      | 'suppressed'
+      | 'duplicate'
+      | 'firm_cooldown'
+      | 'mx_invalid'
+      | 'resend_quota'
+      | 'daily_cap'
+      | 'send_disabled'
+      | 'resend_error'
+      | 'transient_resend_error'
+      | 'permanent_resend_error'
+      | 'no_resend',
+      number
+    >
+  >;
+  failures?: Array<{
+    email: string;
+    firmName?: string;
+    prospectId?: string;
+    reason: string;
+    transient?: boolean;
+  }>;
+  resendQuotaRemaining?: number;
 }
