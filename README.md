@@ -78,12 +78,12 @@ County URLs are implemented via Next.js rewrites: `/police-station-representativ
 
 Live traffic for **policestationrepuk.org** is served from **Vercel**. The blog and all app routes come from the **latest successful production deployment** of this GitHub repo — not from a separate CMS.
 
-1. **Vercel → Project → Settings → Git**: confirm the connected repository is **`robertcashman-bit/Policestationrepuk`** and the **Production Branch** is **`master`** or **`main`** (this repo keeps both branches aligned).
+1. **Vercel → Project → Settings → Git**: confirm the connected repository is **`robertdavidcashman-droid/Policestationrepuk`** and the **Production Branch** is **`master`** or **`main`** (this repo keeps both branches aligned).
 2. **Deployments**: if a build fails, Vercel keeps serving the previous deployment — the public site can then look “stuck” on old HTML (e.g. an old blog index). Fix the build error and redeploy.
 3. **GitHub Actions**: workflow **CI — Next.js build** runs `npm ci && npm run build` on every push to `master`/`main` so breakages are visible under the **Actions** tab.
 4. **Optional deploy hook**: Vercel → **Settings → Git → Deploy Hooks** → create a hook for **Production**. Add the hook URL as repository secret **`VERCEL_DEPLOY_HOOK`**. Pushes will then POST that hook after CI (see `.github/workflows/vercel-deploy-hook.yml`).
 5. **Connect Git from CLI** (same machine as `vercel login`): from the repo root run  
-   `npx vercel git connect https://github.com/robertcashman-bit/Policestationrepuk.git`  
+   `npx vercel git connect https://github.com/robertdavidcashman-droid/Policestationrepuk.git`  
    so this project deploys on every push without relying on manual `vercel deploy`.
 
 ## Legacy URLs & GSC migration
