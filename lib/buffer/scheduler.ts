@@ -9,6 +9,7 @@ import {
   getSchedulerNightWindow,
   getSchedulerTimezone,
   resolveFeedSchedule,
+  type BufferChannelService,
 } from './config';
 import { getContentFeeds, loadAllFeedPosts } from './feeds';
 import {
@@ -280,6 +281,12 @@ export async function runBufferBlogScheduler(
   const created: BufferSchedulerResult['posts'] = [];
   const newRecent: RecentSlugEntry[] = [];
   const usedPostKeys = new Set<string>();
+  const scheduleFailures: Array<{
+    feedId: string;
+    slug: string;
+    channelService: string;
+    error: string;
+  }> = [];
 
   const gbpPosts = toSchedule
     .filter((item) => channelOrder[item.channelIndex % channelOrder.length]!.service === 'googlebusiness')
@@ -295,29 +302,31 @@ export async function runBufferBlogScheduler(
     };
   }
 
-  try {
-    for (const item of toSchedule) {
-      const channel = channelOrder[item.channelIndex % channelOrder.length]!;
-      let post = item.post;
-      let createdPost: Awaited<ReturnType<typeof createScheduledBufferPost>> | null = null;
+  for (const item of toSchedule) {
+    const channel = channelOrder[item.channelIndex % channelOrder.length]!;
+    let post = item.post;
+    let createdPost: Awaited<ReturnType<typeof createScheduledBufferPost>> | null = null;
 
+    try {
       for (let attempt = 0; attempt < 12; attempt++) {
         const text = buildSchedulablePostTextForService(post, channel.service);
-        const imageUrlForChannel =
-          channel.service === 'googlebusiness'
-            ? (post.googleBusinessImageUrl ?? post.imageUrl)
-            : post.imageUrl;
-        try {
-          createdPost = await createScheduledBufferPostWithRetry(apiKey, {
+        let imageUrlForPost = imageUrlForChannel(post, channel.service);
+        let triedWithoutImage = imageUrlForPost === undefined;
+
+        const tryCreate = async (imageUrl?: string) =>
+          createScheduledBufferPostWithRetry(apiKey, {
             channelId: channel.id,
             channelService: channel.service,
             text,
             dueAt: item.dueAt,
             url: post.url,
-            imageUrl: imageUrlForChannel,
+            imageUrl,
             imageAlt: post.imageAlt,
             feedId: post.feedId,
           });
+
+        try {
+          createdPost = await tryCreate(imageUrlForPost);
           break;
         } catch (err) {
           const message = err instanceof Error ? err.message : '';
@@ -325,10 +334,27 @@ export async function runBufferBlogScheduler(
             /posted that one recently|already got this one scheduled|not able to post the same thing twice/i.test(
               message,
             );
-          const imageRejected =
-            /file size limit|unsupported content-type|image exceeds|image validation failed|image too large|non-raster image path|requires a blog image url|google business requires|no google business compatible|magic-byte check failed|gbp preflight failed|cannot contain phone numbers/i.test(
-              message,
-            );
+          const imageRejected = isBufferMediaError(message);
+
+          if (
+            imageRejected &&
+            channel.service === 'twitter' &&
+            imageUrlForPost &&
+            !triedWithoutImage
+          ) {
+            imageUrlForPost = undefined;
+            triedWithoutImage = true;
+            try {
+              createdPost = await tryCreate(undefined);
+              break;
+            } catch (retryErr) {
+              const retryMsg = retryErr instanceof Error ? retryErr.message : '';
+              if (!isBufferMediaError(retryMsg) && !duplicate) {
+                throw retryErr;
+              }
+            }
+          }
+
           if ((!duplicate && !imageRejected) || attempt >= 11) {
             throw err;
           }
@@ -370,18 +396,36 @@ export async function runBufferBlogScheduler(
         feedId: post.feedId,
         scheduledAt: now.toISOString(),
       });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Buffer schedule failed';
+      scheduleFailures.push({
+        feedId: post.feedId,
+        slug: post.slug,
+        channelService: channel.service,
+        error: message,
+      });
+      console.warn(
+        `[buffer:scheduler] Skipped ${post.feedId}/${post.slug} on ${channel.service}: ${message}`,
+      );
     }
-  } catch (err) {
-    const partial = created.map((p) => ({
-      slug: p.slug,
-      feedId: p.feedId,
-      channelService: p.channelService,
-      dueAt: p.dueAt,
-    }));
-    const message = err instanceof Error ? err.message : 'Buffer scheduler failed';
-    const wrapped = new Error(message) as Error & { partialPosts?: typeof partial };
-    wrapped.partialPosts = partial;
-    throw wrapped;
+  }
+
+  if (created.length === 0) {
+    const detail =
+      scheduleFailures.length > 0
+        ? scheduleFailures.map((f) => `${f.feedId}/${f.slug}@${f.channelService}`).join('; ')
+        : 'no posts scheduled';
+    return {
+      ok: false,
+      reason: `No posts could be scheduled — ${detail}`,
+      date: localDate,
+    };
+  }
+
+  if (scheduleFailures.length > 0) {
+    console.warn(
+      `[buffer:scheduler] Partial schedule: ${created.length} ok, ${scheduleFailures.length} failed`,
+    );
   }
 
   const record: SchedulerRunRecord = {
@@ -406,6 +450,26 @@ export async function runBufferBlogScheduler(
 
 function poolTooSmall(pool: SchedulablePost[], required: number): boolean {
   return pool.length < required;
+}
+
+function isBufferMediaError(message: string): boolean {
+  return /file size limit|unsupported content-type|image exceeds|image validation failed|image too large|non-raster image path|requires a blog image url|google business requires|no google business compatible|magic-byte check failed|gbp preflight failed|cannot contain phone numbers|issue with the attached media|connection timing out|file being too large|attached media or link/i.test(
+    message,
+  );
+}
+
+/** Twitter/X: link-preview only for cross-site RSS — external images often fail Buffer publish. */
+function imageUrlForChannel(
+  post: SchedulablePost,
+  service: BufferChannelService,
+): string | undefined {
+  if (service === 'googlebusiness') {
+    return post.googleBusinessImageUrl ?? post.imageUrl;
+  }
+  if (service === 'twitter' && post.feedId !== 'policestationrepuk') {
+    return undefined;
+  }
+  return post.imageUrl;
 }
 
 async function createScheduledBufferPostWithRetry(

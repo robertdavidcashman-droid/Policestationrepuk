@@ -6,12 +6,14 @@ import {
 import { addDaysToLocalDate, localDateInTimezone, timezoneOffsetForDate } from './scheduler-core';
 import { getBufferApiKey, getBufferOrganizationId, getSchedulerTimezone } from './config';
 import { CROSS_SITE_BUFFER_TARGETS, type CrossSiteBufferTarget } from './cross-site-sites';
+import { getSchedulerRunForDate } from './scheduler-storage';
 
 export interface CrossSiteSiteReport {
   id: string;
   hostname: string;
   sentCount: number;
   requiredCount: number;
+  scheduledCount?: number;
   ok: boolean;
   issue?: string;
 }
@@ -22,6 +24,13 @@ export interface CrossSiteBufferReport {
   reason?: 'missing_api_key';
   sites: CrossSiteSiteReport[];
   problems: CrossSiteSiteReport[];
+  feedBreakdown?: Array<{
+    feedId: string;
+    hostname: string;
+    scheduledCount: number;
+    sentCount: number;
+    requiredCount: number;
+  }>;
 }
 
 export function countSiteSentPosts(
@@ -92,11 +101,42 @@ export async function verifyCrossSiteBufferPosts(
 
   const problems = sites.filter((s) => !s.ok);
 
+  const schedulerRun = await getSchedulerRunForDate(yesterday);
+  const scheduledByFeed = new Map<string, number>();
+  if (schedulerRun?.feedIds) {
+    for (const feedId of schedulerRun.feedIds) {
+      scheduledByFeed.set(feedId, (scheduledByFeed.get(feedId) ?? 0) + 1);
+    }
+  }
+
+  const feedBreakdown = targets.map((target) => {
+    const required = target.requiredPostsPerDay ?? MIN_POSTS_PER_DAY;
+    const sentCount = countSiteSentPosts(sent, target.hostname);
+    return {
+      feedId: target.id,
+      hostname: target.hostname,
+      scheduledCount: scheduledByFeed.get(target.id) ?? 0,
+      sentCount,
+      requiredCount: required,
+    };
+  });
+
+  for (const site of sites) {
+    const breakdown = feedBreakdown.find((f) => f.feedId === site.id);
+    if (breakdown) {
+      site.scheduledCount = breakdown.scheduledCount;
+      if (!site.ok && breakdown.scheduledCount < site.requiredCount) {
+        site.issue = `${site.issue ?? 'below quota'}; scheduled ${breakdown.scheduledCount}/${site.requiredCount}`;
+      }
+    }
+  }
+
   return {
     ok: problems.length === 0,
     date: yesterday,
     sites,
     problems,
+    feedBreakdown,
   };
 }
 

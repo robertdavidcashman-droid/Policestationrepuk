@@ -15,6 +15,7 @@ run_step() {
   "$@"
 }
 
+run_step "npm run lint" npm run lint
 run_step "npm run build" npm run build
 run_step "Vitest unit tests" npm test
 run_step "Firm outreach approval tests" npm run test:firm-outreach:ci

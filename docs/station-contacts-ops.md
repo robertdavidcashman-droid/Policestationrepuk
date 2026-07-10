@@ -56,7 +56,7 @@ Weekly Playwright fetch: [`.github/workflows/custody-official-fetch.yml`](../.gi
 - **Community updates:** `/admin/station-updates` — approve `/UpdateStation` submissions
 - **Custody tips:** `/admin/custody-tips` — rep crowdsource consensus
 
-`CUSTODY_AI_AUTO_PUBLISH` stays **`false`** — discovery is automatic; publish is manual only.
+`CUSTODY_AI_AUTO_PUBLISH` defaults **ON** (unset or any value except `false`) — high-confidence official findings auto-publish after AI review. Set `CUSTODY_AI_AUTO_PUBLISH=false` only to revert to manual approval emails.
 
 ## Publish gate
 
@@ -102,7 +102,7 @@ Same as custody discovery — see [custody-discovery-ops.md](./custody-discovery
 
 | Variable | Default | Notes |
 |----------|---------|-------|
-| `CUSTODY_AI_AUTO_PUBLISH` | `false` | Must stay off |
+| `CUSTODY_AI_AUTO_PUBLISH` | ON (default) | Auto-approve high-confidence official findings; set `false` for manual-only |
 | `CUSTODY_AI_AUTO_REJECT` | `true` | Junk auto-rejected after AI review |
 | `SERPER_API_KEY` | — | Required for best crawl yield |
 | `CRON_SECRET` | — | Cron auth |

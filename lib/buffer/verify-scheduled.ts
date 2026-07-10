@@ -24,6 +24,18 @@ import {
 } from './article-url';
 import type { SchedulablePost } from './content-types';
 
+const REPUK_HOSTS = new Set(['policestationrepuk.org', 'www.policestationrepuk.org']);
+
+function isExternalImageHost(imageUrl: string, feedId: string): boolean {
+  if (feedId === 'policestationrepuk') return false;
+  try {
+    const host = new URL(imageUrl).hostname.replace(/^www\./, '');
+    return !REPUK_HOSTS.has(host);
+  } catch {
+    return true;
+  }
+}
+
 export interface VerifyScheduledImagesOptions {
   /** When true, only validate Google Business posts; non-GBP issues become warnings. */
   googleBusinessOnly?: boolean;
@@ -129,6 +141,15 @@ export async function verifyScheduledBufferImages(
     };
 
     const isGoogleBusiness = item.channelService === 'googlebusiness';
+    const isTwitter = item.channelService === 'twitter';
+
+    if (isTwitter && item.hasImage && imageUrl?.trim() && isExternalImageHost(imageUrl, feedId)) {
+      pushIssue(
+        row,
+        'Twitter cross-site post has external-domain image attached (use link preview only)',
+        false,
+      );
+    }
 
     if (!item.hasImage) {
       pushIssue(

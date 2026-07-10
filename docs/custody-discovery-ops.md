@@ -31,7 +31,7 @@ Auto-publish is **off** by default. See [Yield review](#yield-review-deferred) b
 | `CUSTODY_DISCOVERY_PAGE_FETCH_LIMIT` | `3` | Full page fetches per suite when snippet is weak |
 | `CUSTODY_AI_BATCH_LIMIT` | `12` | AI reviews per cron run |
 | `CUSTODY_AI_FETCH_EVIDENCE` | `true` | Fetch source pages during AI review |
-| `CUSTODY_AI_AUTO_PUBLISH` | `false` | Auto-approve high-confidence official findings |
+| `CUSTODY_AI_AUTO_PUBLISH` | ON (default) | Auto-approve high-confidence official findings; set `false` for manual-only |
 | `CUSTODY_AI_AUTO_REJECT` | `true` | Auto-reject AI reject (≥85%) and hold cross-ref rejects |
 | `CUSTODY_AI_MIN_REJECT_CONFIDENCE` | `85` | Minimum AI confidence to auto-reject on AI "reject" recommendation |
 | `CUSTODY_AI_LOW_REJECT_CONFIDENCE` | `40` | Lower tier: auto-reject junk/untrusted sources at this confidence |
@@ -159,7 +159,7 @@ Checklist ([`data/reports/custody-discovery-yield-review-checklist.md`](../data/
 1. Run `custody-status.ts` — compare `suitesStillMissingNumber` and `openQueue` to baseline
 2. Sample 20 recent `needs_review` findings — manual precision audit
 3. Check cron logs for `pageFetchesUsed` and `findingsCreated` trend
-4. If official + `page_fetch` findings exceed **~70% precision**, consider `CUSTODY_AI_AUTO_PUBLISH=true` (official sources only; existing gates in `auto-decision.ts`)
+4. Auto-publish is **on by default** after deploy — rep-directory junk and low-confidence HOLD findings auto-reject; official corroborated findings auto-publish. Set `CUSTODY_AI_AUTO_PUBLISH=false` only to restore manual batch approval emails.
 
 ## Admin
 

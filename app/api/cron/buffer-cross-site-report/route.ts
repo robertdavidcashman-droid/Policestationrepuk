@@ -64,6 +64,7 @@ export async function GET(request: Request) {
     await sendBufferCrossSiteFailureEmail({
       date: report.date,
       sites: report.sites,
+      feedBreakdown: report.feedBreakdown,
     });
     await markCrossSiteDigestSent(verifyDate);
     return NextResponse.json(

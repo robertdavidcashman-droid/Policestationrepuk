@@ -366,8 +366,16 @@ export interface BufferCrossSiteReportEmailInput {
     hostname: string;
     sentCount: number;
     requiredCount: number;
+    scheduledCount?: number;
     ok: boolean;
     issue?: string;
+  }>;
+  feedBreakdown?: Array<{
+    feedId: string;
+    hostname: string;
+    scheduledCount: number;
+    sentCount: number;
+    requiredCount: number;
   }>;
   reason?: string;
   adminEmail?: string;
@@ -428,12 +436,38 @@ export async function sendBufferCrossSiteFailureEmail(
     ? `<p style="margin:0 0 16px;padding:12px;border:1px solid #fecaca;border-radius:8px;background:#fef2f2;">${escapeHtml(input.reason)}</p>`
     : '';
 
+  const breakdownHtml =
+    input.feedBreakdown && input.feedBreakdown.length > 0
+      ? `<p style="margin:0 0 8px;"><strong>Scheduled vs sent (RepUK scheduler KV + Buffer API):</strong></p>
+         <table style="border-collapse:collapse;width:100%;font-size:13px;margin:0 0 16px;">
+           <thead><tr style="background:#f1f5f9;">
+             <th style="padding:6px 8px;text-align:left;">Site</th>
+             <th style="padding:6px 8px;text-align:left;">Scheduled</th>
+             <th style="padding:6px 8px;text-align:left;">Sent</th>
+             <th style="padding:6px 8px;text-align:left;">Required</th>
+           </tr></thead>
+           <tbody>
+             ${input.feedBreakdown
+               .map(
+                 (f) =>
+                   `<tr>
+                     <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(f.hostname)}</td>
+                     <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${f.scheduledCount}</td>
+                     <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${f.sentCount}</td>
+                     <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${f.requiredCount}</td>
+                   </tr>`,
+               )
+               .join('')}
+           </tbody>
+         </table>`
+      : '';
+
   const rows = input.sites
     .map(
       (s) =>
         `<tr>
           <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(s.hostname)}</td>
-          <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${s.sentCount} / ${s.requiredCount}</td>
+          <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${s.sentCount} / ${s.requiredCount}${s.scheduledCount != null ? ` (sched ${s.scheduledCount})` : ''}</td>
           <td style="padding:4px 8px;border-bottom:1px solid #e2e8f0;">${s.ok ? 'OK' : escapeHtml(s.issue ?? 'below quota')}</td>
         </tr>`,
     )
@@ -451,6 +485,7 @@ export async function sendBufferCrossSiteFailureEmail(
         A site below quota here does not mean RepUK posts failed — check that site&apos;s own scheduler cron.
       </p>
       ${reasonLine}
+      ${breakdownHtml}
       <table style="border-collapse:collapse;width:100%;font-size:13px;">
         <thead><tr style="background:#f1f5f9;">
           <th style="padding:6px 8px;text-align:left;">Site</th>

@@ -1,5 +1,6 @@
 import { markBatchNotified, saveBatch, newBatchId, type CustodyDiscoveryBatch } from './batch';
 import { autoPublishEnabled } from './auto-decision';
+import { isRepDirectoryFinding } from './hold-resolver';
 import {
   addToDailyNotifyBucket,
   dailyNotifyDate,
@@ -38,7 +39,8 @@ async function loadQualifyingFindings(ids: string[]): Promise<CustodyNumberFindi
   )
     .filter((f): f is CustodyNumberFinding => Boolean(f))
     .filter((f) => meetsNotifyConfidenceThreshold(f.confidenceScore))
-    .filter((f) => Boolean(f.aiReview?.reviewedAt));
+    .filter((f) => Boolean(f.aiReview?.reviewedAt))
+    .filter((f) => !isRepDirectoryFinding(f));
 }
 
 async function sendDailyDigestFromBucket(opts: {
@@ -151,7 +153,9 @@ export async function notifyIfNewFindings(input: BatchNotifyInput): Promise<Batc
     await Promise.all(input.newFindingIds.map((id) => getFinding(id)))
   ).filter((f): f is CustodyNumberFinding => Boolean(f));
 
-  const qualifying = findings.filter((f) => meetsNotifyConfidenceThreshold(f.confidenceScore));
+  const qualifying = findings
+    .filter((f) => meetsNotifyConfidenceThreshold(f.confidenceScore))
+    .filter((f) => !isRepDirectoryFinding(f));
   const belowThresholdCount = findings.length - qualifying.length;
 
   const batch: CustodyDiscoveryBatch = {

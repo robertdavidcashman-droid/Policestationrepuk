@@ -51,11 +51,12 @@ const baseStats = {
   elapsedMs: 5000,
 };
 
-function mockFinding(id: string, confidenceScore: number) {
+function mockFinding(id: string, confidenceScore: number, overrides: Record<string, unknown> = {}) {
   return {
     id,
     custodySuiteName: 'Test Suite',
     possiblePhoneNumber: '01634 123 456',
+    sourceDomain: 'example.com',
     confidenceScore,
     confidenceLevel: confidenceScore > 50 ? 'medium' : 'low',
     aiReview: {
@@ -76,6 +77,7 @@ function mockFinding(id: string, confidenceScore: number) {
       model: 'gpt-4o-mini',
       reviewedAt: '2026-06-07T10:00:00.000Z',
     },
+    ...overrides,
   };
 }
 
@@ -239,5 +241,41 @@ describe('custody discovery batch notification', () => {
 
     expect(result.emailed).toBe(false);
     expect(sendCustodyDiscoveryBatchEmail).not.toHaveBeenCalled();
+  });
+
+  it('never emails rep-directory findings even when manual approval is enabled', async () => {
+    getFinding.mockImplementation(async (id: string) =>
+      mockFinding(id, 75, {
+        sourceDomain: 'policestationreps.com',
+        aiReview: {
+          recommendation: 'hold' as const,
+          aiConfidence: 40,
+          whyPublish: '',
+          whyNot: 'Rep directory listing.',
+          evidence: {
+            quote: 'Call 0845 switchboard',
+            section: 'Contact',
+            sourceUrl: 'https://policestationreps.com/station',
+            sourceTitle: 'Rep directory',
+            source: 'page_fetch' as const,
+            fetchedAt: '2026-06-07T10:00:00.000Z',
+          },
+          publishVerified: false,
+          flags: [],
+          model: 'gpt-4o-mini',
+          reviewedAt: '2026-06-07T10:00:00.000Z',
+        },
+      }),
+    );
+
+    const result = await notifyIfNewFindings({
+      newFindingIds: ['rep1', 'rep2'],
+      stats: baseStats,
+    });
+
+    expect(result.emailed).toBe(false);
+    expect(result.notifyCount).toBe(0);
+    expect(sendCustodyDiscoveryBatchEmail).not.toHaveBeenCalled();
+    expect(addToDailyNotifyBucket).not.toHaveBeenCalled();
   });
 });

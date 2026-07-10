@@ -139,11 +139,19 @@ describe('runBufferBlogScheduler integration', () => {
     expect(feedIds.filter((id) => id === 'custodynote')).toHaveLength(5);
 
     for (const call of mockCreate.mock.calls) {
-      const input = call[1] as { text: string; dueAt: string; imageUrl?: string; channelService: string };
+      const input = call[1] as {
+        text: string;
+        dueAt: string;
+        imageUrl?: string;
+        channelService: string;
+        feedId: string;
+      };
       expect(input.dueAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00[+-]\d{2}:\d{2}$/);
       expect(input.text).toContain('https://example.com/');
       if (input.channelService === 'googlebusiness') {
         expect(input.imageUrl).toMatch(/\/images\/buffer\/gbp\/.*-default\.jpg$/);
+      } else if (input.channelService === 'twitter' && input.feedId !== 'policestationrepuk') {
+        expect(input.imageUrl).toBeUndefined();
       } else {
         expect(input.imageUrl).toMatch(/^https:\/\/example.com\//);
       }
