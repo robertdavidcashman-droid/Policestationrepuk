@@ -1,9 +1,9 @@
 import { bumpSkipReason, createEmptySkipReasons } from '@robertcashman/firm-outreach-core';
-import { activeOutreachCampaignId, isCampaignProspect } from '../campaign-scope';
-import { dailySendCap } from '../constants';
-import { sortProspectsForSend } from '../enrichment/scorer';
-import { validateEmailForSend } from '../enrichment/validator';
-import { qualifyProspectForOutreach } from '../qualification';
+import { activeOutreachCampaignId, isCampaignProspect } from './campaign-scope';
+import { dailySendCap } from './constants';
+import { sortProspectsForSend } from './enrichment/scorer';
+import { validateEmailForSend } from './enrichment/validator';
+import { qualifyProspectForOutreach } from './qualification';
 import {
   getDailySendCount,
   getGlobalResendQuotaRemaining,
@@ -11,9 +11,9 @@ import {
   isSuppressed,
   listProspectsByRecordStatus,
   listProspectsForFirmKey,
-} from '../storage';
-import type { FirmProspect } from '../types';
-import { normalizeEmail } from '../normalize';
+} from './storage';
+import type { FirmProspect } from './types';
+import { normalizeEmail } from './normalize';
 
 const FOLLOWUP_DAY_1 = 7;
 const FOLLOWUP_DAY_2 = 21;
