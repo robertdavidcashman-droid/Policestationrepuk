@@ -102,6 +102,6 @@ describe('sendDailyOutreachDigest', () => {
         html: expect.stringContaining('crime@alpha.co.uk'),
       }),
     );
-    expect(mockMarkSent).toHaveBeenCalledWith('2026-06-11');
+    expect(mockMarkSent).toHaveBeenCalledWith('2026-06-11', 'whatsapp_invite_v1');
   });
 });

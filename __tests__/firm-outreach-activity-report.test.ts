@@ -348,6 +348,28 @@ describe('GET /api/admin/firm-outreach', () => {
       outreachPaused: () => false,
       outreachSendEnabled: () => true,
     }));
+    vi.doMock('@/lib/firm-outreach/config-status', () => ({
+      getOutreachConfigStatus: vi.fn().mockResolvedValue({
+        kvConfigured: true,
+        resendConfigured: true,
+        outreachEnabled: true,
+        sendAllowed: true,
+        sendHealthy: true,
+        sendBlockers: [],
+        campaignSendHealth: [],
+        effectivePaused: false,
+      }),
+    }));
+    vi.doMock('@/lib/firm-outreach/ops-status', () => ({
+      getOutreachOpsStatus: vi.fn().mockResolvedValue({
+        runLog: null,
+        resendSendCount: 0,
+        resendQuotaRemaining: 100,
+        perSiteDigestSent: false,
+        latestFailures: [],
+        config: {},
+      }),
+    }));
 
     const { GET } = await import('@/app/api/admin/firm-outreach/route');
     const res = await GET(new Request('http://localhost/api/admin/firm-outreach'));
@@ -383,6 +405,28 @@ describe('GET /api/admin/firm-outreach', () => {
       dailySendCap: () => 30,
       outreachPaused: () => false,
       outreachSendEnabled: () => true,
+    }));
+    vi.doMock('@/lib/firm-outreach/config-status', () => ({
+      getOutreachConfigStatus: vi.fn().mockResolvedValue({
+        kvConfigured: true,
+        resendConfigured: true,
+        outreachEnabled: true,
+        sendAllowed: true,
+        sendHealthy: true,
+        sendBlockers: [],
+        campaignSendHealth: [],
+        effectivePaused: false,
+      }),
+    }));
+    vi.doMock('@/lib/firm-outreach/ops-status', () => ({
+      getOutreachOpsStatus: vi.fn().mockResolvedValue({
+        runLog: null,
+        resendSendCount: 0,
+        resendQuotaRemaining: 100,
+        perSiteDigestSent: false,
+        latestFailures: [],
+        config: {},
+      }),
     }));
 
     const { GET } = await import('@/app/api/admin/firm-outreach/route');
