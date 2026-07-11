@@ -1,9 +1,8 @@
 import { Resend } from 'resend';
 import type { OutreachRunStats } from '../types';
+import { operatorNotifyFromAddress } from './from-address';
 import { outreachNotifyEmail } from './notify-recipient';
 import { outreachApprovalDate } from './send-approval-token';
-
-const FROM_EMAIL = 'PoliceStationRepUK <noreply@policestationrepuk.org>';
 
 let resend: Resend | null = null;
 
@@ -64,7 +63,7 @@ export async function sendOutreachSendFailureEmail(
   }
 
   try {
-    await client.emails.send({ from: FROM_EMAIL, to, subject, html });
+    await client.emails.send({ from: operatorNotifyFromAddress(), to, subject, html });
     return true;
   } catch (err) {
     console.warn('[firm-outreach send-failure]', err);

@@ -26,7 +26,14 @@ vi.mock('@/lib/firm-outreach/outreach/daily-digest', () => ({
 
 vi.mock('resend', () => ({
   Resend: vi.fn(function ResendMock() {
-    return { emails: { send: (...args: unknown[]) => mockResendSend(...args) } };
+    return {
+      domains: {
+        list: vi.fn().mockResolvedValue({
+          data: [{ name: 'policestationrepuk.org', status: 'verified' }],
+        }),
+      },
+      emails: { send: (...args: unknown[]) => mockResendSend(...args) },
+    };
   }),
 }));
 
@@ -102,9 +109,10 @@ describe('sendDailyOutreachDigest', () => {
     expect(result.sent).toBe(true);
     expect(mockResendSend).toHaveBeenCalledWith(
       expect.objectContaining({
+        from: 'PoliceStationRepUK <noreply@policestationrepuk.org>',
         to: 'robertdavidcashman@gmail.com',
         subject: expect.stringContaining('sent today'),
-        html: expect.stringContaining('crime@alpha.co.uk'),
+        html: expect.stringMatching(/Send domain health/),
       }),
     );
     expect(mockMarkSent).toHaveBeenCalledWith('2026-06-11', 'whatsapp_invite_v1');

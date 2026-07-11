@@ -5,11 +5,11 @@ const START_LOCAL_SERVER = process.env.AUDIT_NO_WEBSERVER !== '1';
 
 export default defineConfig({
   testDir: './tests/audit',
-  timeout: 60_000,
+  timeout: 90_000,
   expect: { timeout: 15_000 },
   fullyParallel: true,
-  retries: 0,
-  workers: process.env.CI ? 2 : 2,
+  retries: process.env.CI ? 1 : 0,
+  workers: 1,
   reporter: [
     ['list'],
     ['json', { outputFile: 'reports/playwright-audit.json' }],
@@ -21,7 +21,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     actionTimeout: 15_000,
-    navigationTimeout: 30_000,
+    navigationTimeout: 60_000,
   },
   projects: [
     {

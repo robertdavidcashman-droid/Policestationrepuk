@@ -10,7 +10,7 @@ import type {
   OutreachRunStats,
 } from '../types';
 import { buildOutreachActivityReport } from './activity-report';
-import { repukFromAddress } from './from-address';
+import { getOutreachSendHealth, operatorNotifyFromAddress } from './from-address';
 import {
   markOutreachDigestSent,
   outreachDigestDate,
@@ -26,7 +26,6 @@ const NOTIFY_EMAIL =
   process.env.OWNER_EMAIL?.trim() ||
   'robertdavidcashman@gmail.com';
 
-const FROM_EMAIL = repukFromAddress();
 const READY_QUEUE_LIMIT = 50;
 const RECEIPTS_LIMIT = 50;
 
@@ -120,6 +119,37 @@ function renderReceiptsTable(rows: OutreachActivityRow[]): string {
   `;
 }
 
+async function renderSendHealthSection(): Promise<string> {
+  const health = await getOutreachSendHealth();
+  const campaignRows = health.campaigns
+    .map((c) => {
+      const flags = [
+        c.domainVerified ? 'domain verified' : 'domain NOT verified',
+        c.usedFallbackDefault ? 'PSA using RepUK from until policestationagent.com verified' : null,
+      ]
+        .filter(Boolean)
+        .join('; ');
+      return `<li><strong>${escapeHtml(c.campaignId)}</strong>: ${escapeHtml(c.from)} (${escapeHtml(flags)})</li>`;
+    })
+    .join('');
+  const blockers =
+    health.sendBlockers.length > 0
+      ? `<p style="margin:0 0 8px;padding:10px;border:1px solid #fecaca;border-radius:8px;background:#fef2f2;color:#991b1b;">
+          ${escapeHtml(health.sendBlockers.join('; '))}
+        </p>`
+      : '';
+  const status = health.sendHealthy
+    ? '<p style="margin:0 0 8px;color:#166534;">Send config healthy.</p>'
+    : '<p style="margin:0 0 8px;color:#991b1b;">Send config unhealthy — check Resend domains.</p>';
+
+  return `
+    <h3>Send domain health</h3>
+    ${status}
+    ${blockers}
+    <ul style="margin:0 0 16px;padding-left:20px;line-height:1.6;font-size:13px;">${campaignRows}</ul>
+  `;
+}
+
 export interface DailyOutreachDigestResult {
   sent: boolean;
   reason?: string;
@@ -180,6 +210,8 @@ export async function sendDailyOutreachDigest(opts?: {
     `
     : '';
 
+  const sendHealthSection = await renderSendHealthSection();
+
   const countRows = [
     ['ready_to_send', report.summary.readyToSend],
     ['discovered', report.summary.discovered],
@@ -202,6 +234,7 @@ export async function sendDailyOutreachDigest(opts?: {
         <li><strong>Sent last 7 days:</strong> ${report.summary.sentLast7Days}</li>
       </ul>
       ${pipelineSection}
+      ${sendHealthSection}
       <h3>Ready to send queue</h3>
       ${renderQueueTable(report.readyToSendProspects)}
       <h3>Today's send receipts</h3>
@@ -225,7 +258,7 @@ export async function sendDailyOutreachDigest(opts?: {
   }
 
   try {
-    await client.emails.send({ from: FROM_EMAIL, to: NOTIFY_EMAIL, subject, html });
+    await client.emails.send({ from: operatorNotifyFromAddress(), to: NOTIFY_EMAIL, subject, html });
     await markOutreachDigestSent(date, campaignId);
     return { sent: true, date };
   } catch (err) {

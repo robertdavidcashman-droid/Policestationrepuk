@@ -39,11 +39,34 @@ export async function checkFacebookGroupUrl(
       signal: AbortSignal.timeout(25_000),
     });
 
-    const finalUrl = res.url;
     const status = res.status;
+    const rawUrl = (res as unknown as { url?: string | (() => string) }).url;
+    const finalUrl = typeof rawUrl === 'function' ? String(rawUrl()) : String(rawUrl ?? '');
 
     if (status >= 404) {
       return { ok: false, status, finalUrl, issue: `HTTP ${status}` };
+    }
+
+    const finalHost = (() => {
+      try {
+        return new URL(finalUrl).hostname.toLowerCase();
+      } catch {
+        return '';
+      }
+    })();
+
+    if (!finalHost.endsWith('facebook.com')) {
+      return {
+        ok: false,
+        status,
+        finalUrl,
+        issue: 'Redirected away from Facebook',
+      };
+    }
+
+    // Unauthenticated fetches often land on login/checkpoint — that still proves the group URL is valid.
+    if (/\/login(?:\.php)?|\/checkpoint\//i.test(finalUrl)) {
+      return { ok: true, status, finalUrl };
     }
 
     const slugNeedle = `/groups/${slug}`.toLowerCase();

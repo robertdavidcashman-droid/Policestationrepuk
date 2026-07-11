@@ -41,6 +41,10 @@ const grep = args.find((a) => a.startsWith('--grep='));
 const playwrightArgs = ['playwright', 'test', '--config=playwright.audit.config.ts'];
 if (grep) playwrightArgs.push(`--grep`, grep.slice('--grep='.length));
 
+console.log('› Ensuring Playwright browsers (chromium, webkit)...');
+const install = await run('npx', ['playwright', 'install', 'chromium', 'webkit']);
+if (install !== 0) process.exit(install);
+
 console.log('› Running Playwright audit suite...');
 const audit = await run('npx', playwrightArgs);
 console.log('› Aggregating site audit report...');

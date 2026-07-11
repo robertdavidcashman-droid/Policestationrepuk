@@ -15,6 +15,7 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || `http://127.0.0.1:${
 const STRIP = [
   'VERCEL',
   'VERCEL_ENV',
+  'NEXT_PUBLIC_VERCEL_ENV',
   'KV_REST_API_URL',
   'KV_REST_API_TOKEN',
   'UPSTASH_REDIS_REST_URL',

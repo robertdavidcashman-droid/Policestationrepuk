@@ -80,6 +80,11 @@ export async function runProductionKickSteps(opts: {
 
 export const DEFAULT_PRODUCTION_KICK_STEPS: KickStep[] = [
   {
+    path: '/api/cron/firm-outreach-status',
+    label: 'Outreach send health (status)',
+    optional: true,
+  },
+  {
     path: '/api/cron/firm-outreach-bootstrap?requalifyOnly=1',
     label: 'Requalify ready_to_send junk rows',
     optional: true,

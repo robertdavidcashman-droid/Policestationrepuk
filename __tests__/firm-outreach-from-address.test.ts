@@ -4,6 +4,7 @@ import {
   clearVerifiedDomainsCache,
   DEFAULT_PSA_FROM_FALLBACK,
   isDomainNotVerifiedError,
+  operatorNotifyFromAddress,
   parseFromAddressDomain,
   resolveFromAddressForCampaign,
   VERIFIED_FALLBACK_DOMAIN,
@@ -66,6 +67,15 @@ describe('from-address resolution', () => {
     const resolved = resolveFromAddressForCampaign(FIRM_OUTREACH_CAMPAIGN_ID, verified);
     expect(resolved.usedFallback).toBe(false);
     expect(resolved.domain).toBe(VERIFIED_FALLBACK_DOMAIN);
+  });
+
+  it('uses operator notify from on RepUK domain', () => {
+    expect(parseFromAddressDomain(operatorNotifyFromAddress())).toBe(VERIFIED_FALLBACK_DOMAIN);
+  });
+
+  it('respects FIRM_OUTREACH_FROM_EMAIL for operator notify from', () => {
+    process.env.FIRM_OUTREACH_FROM_EMAIL = 'Custom RepUK <ops@policestationrepuk.org>';
+    expect(operatorNotifyFromAddress()).toBe('Custom RepUK <ops@policestationrepuk.org>');
   });
 
   it('normalizes nested Resend domain list payloads', async () => {

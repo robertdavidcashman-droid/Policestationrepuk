@@ -4,6 +4,9 @@ import { BROCHURE_PUBLIC_PATH, loadBrochureAttachment } from './brochure/load-at
 import { AGENT_COVER_KENT_CAMPAIGN_ID } from './campaign-scope';
 import {
   DEFAULT_PSA_FROM_FALLBACK,
+  getOutreachSendHealth,
+  operatorNotifyFromAddress,
+  parseFromAddressDomain,
   resolveFromAddressForCampaign,
   VERIFIED_FALLBACK_DOMAIN,
 } from './outreach/from-address';
@@ -106,6 +109,66 @@ export function checkPsaFromAddressFallback(): RepoCheckResult {
       ? resolved.from
       : `Expected PSA fallback via ${VERIFIED_FALLBACK_DOMAIN}, got ${resolved.from}`,
   };
+}
+
+export function checkOperatorNotifyFromAddress(): RepoCheckResult {
+  const from = operatorNotifyFromAddress();
+  const domain = parseFromAddressDomain(from);
+  const ok = Boolean(domain && from.includes('@'));
+  return {
+    name: 'operator_notify_from_address',
+    ok,
+    detail: ok ? `${from} (${domain})` : `Invalid operator from: ${from}`,
+  };
+}
+
+export async function runSendHealthChecks(): Promise<RepoCheckResult[]> {
+  if (!process.env.RESEND_API_KEY?.trim()) {
+    return [
+      {
+        name: 'send_health_resend_live',
+        ok: true,
+        detail: 'skipped — RESEND_API_KEY not set locally',
+      },
+    ];
+  }
+
+  const health = await getOutreachSendHealth();
+  const results: RepoCheckResult[] = [
+    {
+      name: 'send_health_repuk_domain_verified',
+      ok: health.verifiedDomains.includes(VERIFIED_FALLBACK_DOMAIN),
+      detail: health.verifiedDomains.join(', ') || 'none',
+    },
+    {
+      name: 'send_health_campaigns_configured',
+      ok: health.campaigns.length === 2,
+      detail: `count=${health.campaigns.length}`,
+    },
+    {
+      name: 'send_health_both_campaigns_can_send',
+      ok: health.campaigns.every((c) => c.canSend),
+      detail: health.campaigns
+        .map((c) => `${c.campaignId}:${c.canSend ? 'ok' : c.blockers.join(',')}`)
+        .join('; '),
+    },
+    {
+      name: 'send_health_overall',
+      ok: health.sendHealthy,
+      detail: health.sendBlockers.join('; ') || 'healthy',
+    },
+  ];
+
+  const psa = health.campaigns.find((c) => c.campaignId === AGENT_COVER_KENT_CAMPAIGN_ID);
+  results.push({
+    name: 'send_health_psa_campaign_present',
+    ok: Boolean(psa),
+    detail: psa
+      ? `${psa.from}${psa.usedFallbackDefault ? ' (RepUK fallback active)' : ''}`
+      : 'missing PSA campaign',
+  });
+
+  return results;
 }
 
 export function checkOutreachTemplates(): RepoCheckResult[] {
@@ -218,6 +281,7 @@ export function runRepoChecks(rootDir = process.cwd()): RepoCheckResult[] {
     checkBrochureMinSize(),
     checkBrochureLoadsAsAttachment(),
     checkPsaFromAddressFallback(),
+    checkOperatorNotifyFromAddress(),
     ...checkOutreachTemplates(),
     ...checkVercelCronConfig(vercelJson),
     ...checkCronRouteFilesExist(rootDir),
@@ -283,10 +347,27 @@ export async function runHttpChecks(
         status: 404,
         detail: 'status route not deployed yet (skip)',
       });
+      results.push({
+        name: 'cron_status_send_health',
+        ok: true,
+        status: 404,
+        detail: 'status route not deployed yet (skip)',
+      });
     } else {
       type StatusPayload = {
         ok?: boolean;
-        config?: { sendAllowed?: boolean; resendConfigured?: boolean };
+        config?: {
+          sendAllowed?: boolean;
+          resendConfigured?: boolean;
+          sendHealthy?: boolean;
+          sendBlockers?: string[];
+          campaignSendHealth?: Array<{
+            campaignId: string;
+            canSend: boolean;
+            from: string;
+            usedFallbackDefault?: boolean;
+          }>;
+        };
       };
       let payload: StatusPayload | null = null;
       try {
@@ -294,13 +375,31 @@ export async function runHttpChecks(
       } catch {
         payload = null;
       }
+      const campaigns = payload?.config?.campaignSendHealth ?? [];
+      const psaCampaign = campaigns.find((c) => c.campaignId === AGENT_COVER_KENT_CAMPAIGN_ID);
+      const repukCampaign = campaigns.find((c) => c.campaignId === FIRM_OUTREACH_CAMPAIGN_ID);
+      const campaignsOk =
+        campaigns.length >= 2 &&
+        Boolean(repukCampaign?.canSend) &&
+        Boolean(psaCampaign?.canSend);
       results.push({
         name: 'cron_status_authenticated',
         ok: statusRes.status === 200 && payload?.ok === true,
         status: statusRes.status,
         detail: payload?.config
-          ? `sendAllowed=${payload.config.sendAllowed} resendConfigured=${payload.config.resendConfigured}`
+          ? `sendAllowed=${payload.config.sendAllowed} resendConfigured=${payload.config.resendConfigured} sendHealthy=${payload.config.sendHealthy}`
           : undefined,
+      });
+      results.push({
+        name: 'cron_status_send_health',
+        ok: statusRes.status === 200 && payload?.config?.sendHealthy === true && campaignsOk,
+        status: statusRes.status,
+        detail: campaigns
+          .map(
+            (c) =>
+              `${c.campaignId}:${c.canSend ? 'ok' : 'blocked'}${c.usedFallbackDefault ? '(fallback)' : ''}`,
+          )
+          .join('; '),
       });
     }
   }

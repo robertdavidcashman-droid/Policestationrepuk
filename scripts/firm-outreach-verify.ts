@@ -9,6 +9,7 @@ import { resolve } from 'node:path';
 import {
   runHttpChecks,
   runRepoChecks,
+  runSendHealthChecks,
   summarizeResults,
 } from '../lib/firm-outreach/verify-checks';
 
@@ -45,6 +46,13 @@ async function main() {
     console.log(r.ok ? '  OK' : '  FAIL', r.name, r.detail ?? '');
   }
 
+  const sendHealthResults = await runSendHealthChecks();
+  const sendHealthSummary = summarizeResults(sendHealthResults);
+  console.log('\n==> Send health checks (Resend live when API key set)');
+  for (const r of sendHealthResults) {
+    console.log(r.ok ? '  OK' : '  FAIL', r.name, r.detail ?? '');
+  }
+
   console.log('\n==> HTTP checks against', baseUrl);
   const httpResults = await runHttpChecks(baseUrl, {
     cronSecret: process.env.CRON_SECRET,
@@ -54,8 +62,8 @@ async function main() {
     console.log(r.ok ? '  OK' : '  FAIL', r.name, r.status ?? '', r.detail ?? '');
   }
 
-  const totalFailed = repoSummary.failed + httpSummary.failed;
-  console.log('\nSummary:', repoSummary.passed + httpSummary.passed, 'passed,', totalFailed, 'failed');
+  const totalFailed = repoSummary.failed + sendHealthSummary.failed + httpSummary.failed;
+  console.log('\nSummary:', repoSummary.passed + sendHealthSummary.passed + httpSummary.passed, 'passed,', totalFailed, 'failed');
   process.exit(totalFailed > 0 ? 1 : 0);
 }
 

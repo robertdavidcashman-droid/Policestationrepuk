@@ -39,6 +39,7 @@ describe('runProductionKickSteps', () => {
   it('continues when optional requalify step fails', async () => {
     const fetchFn = vi
       .fn()
+      .mockResolvedValueOnce({ status: 200, text: async () => '{"ok":true}' })
       .mockResolvedValueOnce({ status: 504, text: async () => 'timeout' })
       .mockResolvedValueOnce({ status: 200, text: async () => '{"ok":true}' })
       .mockResolvedValueOnce({ status: 504, text: async () => 'timeout' });
@@ -51,17 +52,24 @@ describe('runProductionKickSteps', () => {
     });
 
     expect(failed).toBe(false);
-    expect(results).toHaveLength(3);
-    expect(results[0]?.ok).toBe(false);
-    expect(results[0]?.optional).toBe(true);
-    expect(results[1]?.ok).toBe(true);
-    expect(results[2]?.ok).toBe(false);
-    expect(results[2]?.optional).toBe(true);
+    expect(results).toHaveLength(4);
+    expect(results[0]?.ok).toBe(true);
+    expect(results[1]?.ok).toBe(false);
+    expect(results[1]?.optional).toBe(true);
+    expect(results[2]?.ok).toBe(true);
+    expect(results[3]?.ok).toBe(false);
+    expect(results[3]?.optional).toBe(true);
+  });
+
+  it('starts with optional outreach status health check', () => {
+    expect(DEFAULT_PRODUCTION_KICK_STEPS[0]?.path).toBe('/api/cron/firm-outreach-status');
+    expect(DEFAULT_PRODUCTION_KICK_STEPS[0]?.optional).toBe(true);
   });
 
   it('fails when required enrich batch is non-200', async () => {
     const fetchFn = vi
       .fn()
+      .mockResolvedValueOnce({ status: 200, text: async () => '{"ok":true}' })
       .mockResolvedValueOnce({ status: 200, text: async () => '{}' })
       .mockResolvedValueOnce({ status: 504, text: async () => 'timeout' });
 
@@ -73,9 +81,9 @@ describe('runProductionKickSteps', () => {
     });
 
     expect(failed).toBe(true);
-    expect(results).toHaveLength(2);
-    expect(results[1]?.ok).toBe(false);
-    expect(results[1]?.optional).toBe(false);
+    expect(results).toHaveLength(3);
+    expect(results[2]?.ok).toBe(false);
+    expect(results[2]?.optional).toBe(false);
   });
 
   it('uses separate bootstrap enrich calls not a combined batch', () => {

@@ -28,6 +28,11 @@ export function repukFromAddress(): string {
   return process.env.FIRM_OUTREACH_FROM_EMAIL?.trim() || DEFAULT_REPUK_FROM;
 }
 
+/** Operator notification emails (digest, approval, failure alerts) always use the RepUK verified domain. */
+export function operatorNotifyFromAddress(): string {
+  return repukFromAddress();
+}
+
 export function psaPreferredFromAddress(): string {
   return process.env.FIRM_OUTREACH_PSA_FROM_EMAIL?.trim() || DEFAULT_PSA_FROM_PREFERRED;
 }

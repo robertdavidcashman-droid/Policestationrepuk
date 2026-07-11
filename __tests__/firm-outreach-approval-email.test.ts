@@ -67,6 +67,7 @@ describe('sendOutreachApprovalRequestEmail', () => {
     expect(result.sent).toBe(true);
     expect(mockResendSend).toHaveBeenCalledWith(
       expect.objectContaining({
+        from: 'PoliceStationRepUK <noreply@policestationrepuk.org>',
         to: 'robertdavidcashman@gmail.com',
         subject: expect.stringContaining('ready to send'),
         html: expect.stringMatching(/send-approve\/11111111-1111-4111-8111-111111111111/),

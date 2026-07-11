@@ -9,20 +9,18 @@ describe('vercelWebAnalyticsEnabled', () => {
   });
 
   it('is disabled for local next start', () => {
-    process.env.VERCEL = '1';
-    process.env.VERCEL_ENV = 'development';
+    delete process.env.NEXT_PUBLIC_VERCEL_ENV;
     expect(vercelWebAnalyticsEnabled()).toBe(false);
   });
 
   it('is enabled only on Vercel production', () => {
-    process.env.VERCEL = '1';
-    process.env.VERCEL_ENV = 'production';
+    process.env.NEXT_PUBLIC_VERCEL_ENV = 'production';
     expect(vercelWebAnalyticsEnabled()).toBe(true);
   });
 
-  it('is disabled when VERCEL is unset', () => {
-    delete process.env.VERCEL;
-    process.env.VERCEL_ENV = 'production';
+  it('is disabled during audit isolation', () => {
+    process.env.NEXT_PUBLIC_VERCEL_ENV = 'production';
+    process.env.DISABLE_KV_FOR_AUDIT = '1';
     expect(vercelWebAnalyticsEnabled()).toBe(false);
   });
 });

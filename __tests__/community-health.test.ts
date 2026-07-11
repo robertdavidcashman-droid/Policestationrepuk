@@ -32,6 +32,20 @@ describe('checkFacebookGroupUrl', () => {
     expect(result.status).toBe(200);
   });
 
+  it('supports Playwright APIResponse url() method', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      status: 200,
+      url: () => 'https://www.facebook.com/groups/policestationrepuk',
+    });
+
+    const result = await checkFacebookGroupUrl(
+      'https://www.facebook.com/groups/policestationrepuk',
+      fetchImpl as unknown as typeof fetch,
+    );
+
+    expect(result.ok).toBe(true);
+  });
+
   it('fails on 404', async () => {
     const fetchImpl = vi.fn().mockResolvedValue({
       status: 404,
@@ -58,7 +72,21 @@ describe('checkFacebookGroupUrl', () => {
       fetchImpl as unknown as typeof fetch,
     );
 
+    expect(result.ok).toBe(true);
+  });
+
+  it('fails when redirected off Facebook', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      status: 200,
+      url: 'https://example.com/nope',
+    });
+
+    const result = await checkFacebookGroupUrl(
+      'https://www.facebook.com/groups/policestationrepuk',
+      fetchImpl as unknown as typeof fetch,
+    );
+
     expect(result.ok).toBe(false);
-    expect(result.issue).toMatch(/redirected/i);
+    expect(result.issue).toMatch(/facebook/i);
   });
 });

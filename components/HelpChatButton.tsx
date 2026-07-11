@@ -52,12 +52,15 @@ export function HelpChatButton() {
           onClick={() => setOpen(!open)}
           aria-label="Open AI assistant"
           aria-expanded={open}
-          className={`relative flex items-center gap-2 rounded-full bg-[var(--gold)] py-2 pl-3 pr-3 text-[var(--ink)] shadow-lg transition-all hover:bg-[var(--gold-hover)] hover:shadow-xl sm:pr-4 ${
-            showHint && !open ? 'ring-2 ring-[var(--navy)] ring-offset-2 animate-pulse' : ''
+          style={{ backgroundColor: '#1e3a8a', color: '#ffffff' }}
+          className={`relative flex items-center gap-2 rounded-full py-2 pl-3 pr-3 shadow-lg transition-colors hover:bg-[#1d4ed8] hover:shadow-xl sm:pr-4 ${
+            showHint && !open ? 'ring-2 ring-[#facc15] ring-offset-2' : ''
           }`}
         >
           <SparkleIcon />
-          <span className="text-sm font-bold uppercase tracking-wide text-[var(--ink)]">Ask AI</span>
+          <span className="text-sm font-bold uppercase tracking-wide" style={{ color: '#ffffff' }}>
+            Ask AI
+          </span>
         </button>
       </div>
 

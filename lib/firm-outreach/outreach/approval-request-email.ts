@@ -3,6 +3,7 @@ import { dailySendCap } from '../constants';
 import { getDailySendCount } from '../storage';
 import { SITE_URL } from '@/lib/seo-layer/config';
 import { buildOutreachActivityReport } from './activity-report';
+import { operatorNotifyFromAddress } from './from-address';
 import { outreachNotifyEmail } from './notify-recipient';
 import {
   issueSendApprovalToken,
@@ -10,8 +11,6 @@ import {
   outreachApprovalDate,
   wasOutreachApprovalEmailSent,
 } from './send-approval-token';
-
-const FROM_EMAIL = 'PoliceStationRepUK <noreply@policestationrepuk.org>';
 
 let resend: Resend | null = null;
 
@@ -115,7 +114,7 @@ export async function sendOutreachApprovalRequestEmail(opts?: {
   }
 
   try {
-    await client.emails.send({ from: FROM_EMAIL, to, subject, html });
+    await client.emails.send({ from: operatorNotifyFromAddress(), to, subject, html });
     if (!opts?.reminder) {
       await markOutreachApprovalEmailSent(date);
     }

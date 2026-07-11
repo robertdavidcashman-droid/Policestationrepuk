@@ -69,8 +69,8 @@ test.describe('Header and footer link integrity', () => {
     expect(broken).toEqual([]);
   });
 
-  test('Facebook group footer link is reachable', async ({ request }) => {
-    const result = await checkFacebookGroupUrl(FACEBOOK_GROUP_URL, request.fetch.bind(request));
+  test('Facebook group footer link is reachable', async () => {
+    const result = await checkFacebookGroupUrl(FACEBOOK_GROUP_URL);
     expect(result.ok, result.issue ?? 'Facebook group URL unreachable').toBe(true);
   });
 

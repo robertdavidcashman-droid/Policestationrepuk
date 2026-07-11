@@ -4,6 +4,8 @@ import { CORE_PAGES } from './helpers/routes';
 const IGNORED_CONSOLE_PATTERNS: RegExp[] = [
   /Failed to load resource:.*favicon/i,
   /Failed to load resource:.*_vercel\/(speed-insights|insights)/i,
+  // Chromium omits the URL in generic 404 console messages; network listener catches real asset failures.
+  /Failed to load resource:.*status of 404/i,
   /Refused to execute script from .*_vercel\/(speed-insights|insights)/i,
   /Tracking Prevention/i,
   /Stripe\.js/i,
