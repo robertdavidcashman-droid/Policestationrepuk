@@ -41,7 +41,7 @@ jobs:
             echo "Invalid SHA format: $SHA (expected 40-char hex)"
             exit 1
           fi
-          echo "value=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
           echo "Target SHA: ${SHA}"
 
       - name: Verify CI and Site audit passed for SHA
