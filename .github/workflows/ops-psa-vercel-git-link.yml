@@ -12,15 +12,6 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_PROJECT_ID: prj_XvBhew2OZV8JYpI2dNHDTD6P05Ai
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: robertdavidcashman-droid/policestationagent
-          ref: main
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
@@ -47,10 +38,17 @@ jobs:
           echo "$resp"
           echo "$resp" | tail -1 | grep -qE 'HTTP (200|201)' || exit 1
 
-      - name: Pull project settings and deploy production
+      - name: Trigger production deploy from policestationagent main
+        env:
+          PSA_REPO_ID: "1114666936"
         run: |
-          vercel pull --yes --environment=production --token="${VERCEL_TOKEN}"
-          vercel deploy --prod --yes --token="${VERCEL_TOKEN}"
+          resp=$(curl -sS -w "\nHTTP %{http_code}\n" -X POST \
+            "https://api.vercel.com/v13/deployments?teamId=${VERCEL_ORG_ID}" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"name\":\"web44ai\",\"project\":\"${VERCEL_PROJECT_ID}\",\"target\":\"production\",\"gitSource\":{\"type\":\"github\",\"repoId\":${PSA_REPO_ID},\"ref\":\"main\"}}")
+          echo "$resp"
+          echo "$resp" | tail -1 | grep -qE 'HTTP (200|201)' || exit 1
 
       - name: Verify latest deployment repo
         run: |
