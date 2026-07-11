@@ -37,25 +37,18 @@ export default defineConfig({
   ...(START_LOCAL_SERVER
     ? {
         webServer: {
-          command: 'npm run start -- --port 3100',
+          command: 'node scripts/audit-web-server.mjs',
           url: BASE_URL,
           reuseExistingServer: false,
           timeout: 180_000,
           stdout: 'pipe',
           stderr: 'pipe',
           env: {
-            NODE_ENV: 'production',
             PORT: '3100',
             NEXT_PUBLIC_SITE_URL: BASE_URL,
             LEGACY_REPS_PUBLIC: '1',
             CRON_SECRET: process.env.CRON_SECRET || 'ci-smoke-placeholder-not-for-production',
-            // Isolate audit from production KV / Vercel runtime flags on developer machines.
-            VERCEL: '',
-            VERCEL_ENV: '',
-            KV_REST_API_URL: '',
-            KV_REST_API_TOKEN: '',
-            UPSTASH_REDIS_REST_URL: '',
-            UPSTASH_REDIS_REST_TOKEN: '',
+            DISABLE_KV_FOR_AUDIT: '1',
           },
         },
       }

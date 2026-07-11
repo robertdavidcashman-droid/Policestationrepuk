@@ -23,22 +23,37 @@ const isTest = process.env.NODE_ENV === 'test' || !!process.env.VITEST;
 // Only hard-fail in a genuine production server runtime.
 const shouldFailFast = isProduction && !isBuildPhase && !isTest;
 
+/** Treat empty env strings as unset so audit/shell can strip optional vars safely. */
+function optionalNonEmptyString() {
+  return z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().min(1).optional(),
+  );
+}
+
+function optionalUrl() {
+  return z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().url().optional(),
+  );
+}
+
 /** Optional/recommended vars — schema documents shape; absence only warns. */
 const envSchema = z.object({
   // Supabase (public) — optional, but if used both must be present.
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
+  NEXT_PUBLIC_SUPABASE_URL: optionalUrl(),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalNonEmptyString(),
   // Upstash / Vercel KV — either pair enables KV-backed data.
-  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
-  UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
-  KV_REST_API_URL: z.string().url().optional(),
-  KV_REST_API_TOKEN: z.string().min(1).optional(),
+  UPSTASH_REDIS_REST_URL: optionalUrl(),
+  UPSTASH_REDIS_REST_TOKEN: optionalNonEmptyString(),
+  KV_REST_API_URL: optionalUrl(),
+  KV_REST_API_TOKEN: optionalNonEmptyString(),
   // Transactional email.
-  RESEND_API_KEY: z.string().min(1).optional(),
+  RESEND_API_KEY: optionalNonEmptyString(),
   // Cron / privileged endpoint auth.
-  CRON_SECRET: z.string().min(1).optional(),
+  CRON_SECRET: optionalNonEmptyString(),
   // Canonical site URL (has a safe default in lib/seo-layer/config).
-  NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
+  NEXT_PUBLIC_SITE_URL: optionalUrl(),
 });
 
 let validated = false;

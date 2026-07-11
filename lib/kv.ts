@@ -20,6 +20,7 @@ function envOrAlt(primary: string | undefined, alt: string | undefined): string 
 }
 
 export function getKV(): Redis | null {
+  if (process.env.DISABLE_KV_FOR_AUDIT === '1') return null;
   if (_redis) return _redis;
   const url = envOrAlt(process.env.UPSTASH_REDIS_REST_URL, process.env.KV_REST_API_URL);
   const token = envOrAlt(process.env.UPSTASH_REDIS_REST_TOKEN, process.env.KV_REST_API_TOKEN);
