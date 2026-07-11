@@ -129,8 +129,12 @@ export function AccountDashboard({ userEmail, isAdmin = false }: { userEmail: st
       if (res.ok) {
         const data = await res.json();
         setFeaturedInfo(data);
+      } else {
+        console.warn('[Account] featured status unavailable:', res.status);
       }
-    } catch { /* non-critical */ }
+    } catch (err) {
+      console.warn('[Account] could not load featured status:', err);
+    }
   }, []);
 
   useEffect(() => { loadProfile(); loadFeatured(); }, [loadProfile, loadFeatured]);

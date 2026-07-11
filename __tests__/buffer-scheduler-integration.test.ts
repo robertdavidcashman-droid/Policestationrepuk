@@ -7,6 +7,8 @@ const mockGetRun = vi.fn();
 const mockSaveRun = vi.fn();
 const mockGetRecent = vi.fn();
 const mockSaveRecent = vi.fn();
+const mockClaimLock = vi.fn();
+const mockReleaseLock = vi.fn();
 const mockLoadAll = vi.fn();
 const mockGetContentFeeds = vi.fn();
 
@@ -23,6 +25,8 @@ vi.mock('@/lib/buffer/scheduler-storage', () => ({
   saveSchedulerRun: (...args: unknown[]) => mockSaveRun(...args),
   getRecentSlugEntries: (...args: unknown[]) => mockGetRecent(...args),
   saveRecentSlugEntries: (...args: unknown[]) => mockSaveRecent(...args),
+  claimSchedulerRunLock: (...args: unknown[]) => mockClaimLock(...args),
+  releaseSchedulerRunLock: (...args: unknown[]) => mockReleaseLock(...args),
 }));
 
 vi.mock('@/lib/buffer/feeds', () => ({
@@ -58,6 +62,8 @@ describe('runBufferBlogScheduler integration', () => {
       BUFFER_SCHEDULER_COOLDOWN_DAYS: '14',
     };
     mockGetRun.mockResolvedValue(null);
+    mockClaimLock.mockResolvedValue(true);
+    mockReleaseLock.mockResolvedValue(undefined);
     mockGetRecent.mockResolvedValue([]);
     mockGetContentFeeds.mockReturnValue([
       { id: 'policestationrepuk', type: 'local' },
@@ -269,5 +275,15 @@ describe('runBufferBlogScheduler integration', () => {
     for (const post of result.posts ?? []) {
       expect(post.slug).not.toBe('policestationrepuk-post-1');
     }
+  });
+
+  it('skips when another scheduler run holds the lock', async () => {
+    mockClaimLock.mockResolvedValue(false);
+    mockGetRun.mockResolvedValue(null);
+
+    const result = await runBufferBlogScheduler(new Date('2026-06-08T05:00:00Z'));
+    expect(result.skipped).toBe(true);
+    expect(result.reason).toMatch(/in progress/i);
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 });

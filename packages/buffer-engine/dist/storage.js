@@ -1,5 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.claimSchedulerRun = claimSchedulerRun;
+exports.releaseSchedulerRunLock = releaseSchedulerRunLock;
 exports.getSchedulerRunForDate = getSchedulerRunForDate;
 exports.saveSchedulerRun = saveSchedulerRun;
 exports.deleteSchedulerRunForDate = deleteSchedulerRunForDate;
@@ -9,8 +11,23 @@ exports.getSlugEngagementStats = getSlugEngagementStats;
 exports.saveSlugEngagementStats = saveSlugEngagementStats;
 exports.mergeSlugStats = mergeSlugStats;
 const RUN_KEY = (siteId, date) => `buffer-engine:run:${siteId}:${date}`;
+const LOCK_KEY = (siteId, date) => `buffer-engine:lock:${siteId}:${date}`;
 const RECENT_KEY = (siteId) => `buffer-engine:recent-slugs:${siteId}`;
 const STATS_KEY = (siteId) => `buffer-engine:slug-stats:${siteId}`;
+async function claimSchedulerRun(kv, siteId, date, ttlSeconds = 7200) {
+    if (!kv)
+        return true;
+    const result = await kv.set(LOCK_KEY(siteId, date), new Date().toISOString(), {
+        ex: ttlSeconds,
+        nx: true,
+    });
+    return result === 'OK';
+}
+async function releaseSchedulerRunLock(kv, siteId, date) {
+    if (!kv?.del)
+        return;
+    await kv.del(LOCK_KEY(siteId, date));
+}
 async function getSchedulerRunForDate(kv, siteId, date) {
     if (!kv)
         return null;

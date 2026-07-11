@@ -18,7 +18,7 @@ import {
   type PhonePickContext,
 } from './phone';
 import { fetchOfficialSources } from './official-pages';
-import { searchForSuite, type SearchProvider } from './search';
+import { searchForSuite, isSearchQueryError, type SearchProvider } from './search';
 import { fetchPageTextFromUrl } from './source-evidence';
 import { detectSourceType, extractDomain } from './source-type';
 import {
@@ -269,10 +269,15 @@ export async function crawlCustodySuite(
   const maxQueries = options.maxQueries ?? defaultMaxSearchQueries();
   const pickOpts = phonePickContext(suite);
 
-  const [serperResults, officialResults] = await Promise.all([
+  const [serperOutcome, officialResults] = await Promise.all([
     searchForSuite(suite, options.searchProvider, maxQueries),
     fetchOfficialSources(suite),
   ]);
+
+  if (isSearchQueryError(serperOutcome)) {
+    throw new Error(serperOutcome.reason);
+  }
+  const serperResults = serperOutcome;
 
   const results = mergeSearchResults(serperResults, officialResults);
   const pageTextCache = await buildPageTextCache(

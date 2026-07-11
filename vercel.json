@@ -145,7 +145,7 @@
       "schedule": "30 9 * * *"
     },
     {
-      "path": "/api/cron/firm-outreach-kick",
+      "path": "/api/cron/firm-outreach-bootstrap",
       "schedule": "15 9 * * *"
     },
     {

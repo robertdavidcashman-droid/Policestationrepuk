@@ -1,3 +1,4 @@
+import { claimKey } from '@/lib/kv-atomic';
 import { getKV } from '@/lib/kv';
 import type { RecentSlugEntry } from './scheduler-core';
 
@@ -5,7 +6,20 @@ import type { RecentSlugEntry } from './scheduler-core';
 export const BUFFER_SCHEDULER_SITE_ID = 'policestationrepuk';
 
 const RUN_KEY = (date: string) => `buffer-engine:run:${BUFFER_SCHEDULER_SITE_ID}:${date}`;
+const LOCK_KEY = (date: string) => `buffer-engine:lock:${BUFFER_SCHEDULER_SITE_ID}:${date}`;
 const RECENT_SLUGS_KEY = `buffer-engine:recent-slugs:${BUFFER_SCHEDULER_SITE_ID}`;
+
+const SCHEDULER_LOCK_TTL_SECONDS = 7200;
+
+export async function claimSchedulerRunLock(date: string): Promise<boolean> {
+  return claimKey(LOCK_KEY(date), SCHEDULER_LOCK_TTL_SECONDS);
+}
+
+export async function releaseSchedulerRunLock(date: string): Promise<void> {
+  const kv = getKV();
+  if (!kv) return;
+  await kv.del(LOCK_KEY(date));
+}
 
 export interface SchedulerRunRecord {
   date: string;

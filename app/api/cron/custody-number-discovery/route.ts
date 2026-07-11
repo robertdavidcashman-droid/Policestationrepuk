@@ -7,6 +7,8 @@ import { buildCustodySuitesFromStations } from '@/lib/custody-discovery/suites';
 import { bootstrapCustodySuites } from '@/lib/custody-discovery/storage';
 import { getAllStations } from '@/lib/data';
 import { isCronAuthorized } from '@/lib/cron-auth';
+import { saveCronRunLog } from '@/lib/cron-run-log';
+import { validateCustodyEnv } from '@/lib/pipeline-env';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -48,6 +50,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, mode: 'ai-review-only', aiReview });
   }
 
+  const envCheck = validateCustodyEnv();
+  if (!envCheck.ok) {
+    return NextResponse.json(
+      { ok: false, error: 'custody_env_invalid', errors: envCheck.errors },
+      { status: 500 },
+    );
+  }
+
+  const startedAt = new Date().toISOString();
+  const t0 = Date.now();
+
   const limit = Number(url.searchParams.get('limit') || process.env.CUSTODY_DISCOVERY_BATCH_LIMIT || 10);
 
   const stations = await getAllStations();
@@ -64,6 +77,19 @@ export async function GET(request: Request) {
     stats,
     seededCreated: seeded.created,
     forceDigest,
+  });
+
+  await saveCronRunLog({
+    jobName: 'custody-number-discovery',
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    durationMs: Date.now() - t0,
+    outcome: 'success',
+    counts: {
+      suitesScanned: stats.suitesScanned,
+      findingsCreated: stats.findingsCreated,
+      findingsUpdated: stats.findingsUpdated,
+    },
   });
 
   return NextResponse.json({

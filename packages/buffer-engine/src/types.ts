@@ -46,7 +46,7 @@ export interface SchedulerRunRecord {
 /** Minimal KV adapter — Upstash Redis or compatible. */
 export interface BufferKV {
   get<T>(key: string): Promise<T | null>;
-  set(key: string, value: unknown, options?: { ex?: number }): Promise<unknown>;
+  set(key: string, value: unknown, options?: { ex?: number; nx?: boolean }): Promise<unknown>;
   del?(key: string): Promise<unknown>;
 }
 

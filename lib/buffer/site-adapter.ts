@@ -14,7 +14,16 @@ function kvAdapter(): BufferKV | null {
   return {
     get: (key) => redis.get(key),
     set: (key, value, options) =>
-      redis.set(key, value, options?.ex != null ? { ex: options.ex } : undefined),
+      redis.set(
+        key,
+        value,
+        options
+          ? {
+              ...(options.ex != null ? { ex: options.ex } : {}),
+              ...(options.nx ? { nx: true } : {}),
+            }
+          : undefined,
+      ),
     del: (key) => redis.del(key),
   };
 }

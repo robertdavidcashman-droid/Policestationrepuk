@@ -5,7 +5,7 @@ export interface BufferChannelConfig {
   service: BufferChannelService;
 }
 
-/** Defaults for robertcashman's Buffer workspace — override via env in other accounts. */
+/** Defaults for robertcashman's Buffer workspace — override via env in production. */
 const DEFAULT_ORG_ID = '69d26bdf0f822245c9a723c4';
 
 const DEFAULT_CHANNELS: BufferChannelConfig[] = [
@@ -13,6 +13,14 @@ const DEFAULT_CHANNELS: BufferChannelConfig[] = [
   { id: '69d26c06031bfa423cd0c50d', service: 'linkedin' },
   { id: '69d26c8b031bfa423cd0c8b7', service: 'googlebusiness' },
 ];
+
+function isProductionRuntime(): boolean {
+  return (
+    process.env.NODE_ENV === 'production' &&
+    process.env.NEXT_PHASE !== 'phase-production-build' &&
+    process.env.VITEST !== 'true'
+  );
+}
 
 export function getBufferApiKey(): string | null {
   const key = process.env.BUFFER_API_KEY?.trim();
@@ -33,6 +41,11 @@ export function getBufferChannels(): BufferChannelConfig[] {
       { id: linkedin, service: 'linkedin' },
       { id: google, service: 'googlebusiness' },
     ];
+  }
+  if (isProductionRuntime()) {
+    throw new Error(
+      'BUFFER_CHANNEL_TWITTER_ID, BUFFER_CHANNEL_LINKEDIN_ID, and BUFFER_CHANNEL_GOOGLEBUSINESS_ID must all be set in production',
+    );
   }
   return DEFAULT_CHANNELS;
 }

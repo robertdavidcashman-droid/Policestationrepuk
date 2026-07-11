@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { sendBufferSchedulerFailureEmail } from '@/lib/buffer/email';
 import { runRepukBufferScheduler } from '@/lib/buffer/engine-run';
 import { isCronAuthorized } from '@/lib/cron-auth';
+import { saveCronRunLog } from '@/lib/cron-run-log';
+import { validateBufferEnv } from '@/lib/pipeline-env';
 import { localDateInTimezone } from '@/lib/buffer/scheduler-core';
 import { getSchedulerTimezone } from '@/lib/buffer/config';
 import {
@@ -30,6 +32,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const envCheck = validateBufferEnv();
+  if (!envCheck.ok) {
+    return NextResponse.json(
+      { ok: false, error: 'buffer_env_invalid', errors: envCheck.errors },
+      { status: 500 },
+    );
+  }
+
+  const startedAt = new Date().toISOString();
+  const t0 = Date.now();
   const scheduleDate = localDateInTimezone(new Date(), getSchedulerTimezone());
   const force = new URL(request.url).searchParams.get('force') === '1';
 
@@ -44,6 +56,17 @@ export async function GET(request: Request) {
       scheduledInBuffer: result.scheduledInBuffer,
       reason: result.reason,
       postCount: result.posts?.length ?? 0,
+    });
+
+    await saveCronRunLog({
+      jobName: 'buffer-blog-posts',
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      durationMs: Date.now() - t0,
+      outcome: result.skipped ? 'skipped' : result.ok ? 'success' : 'failed',
+      skipReason: result.reason,
+      counts: { postCount: result.posts?.length ?? 0 },
+      errorMessage: result.ok ? undefined : result.reason,
     });
 
     if (!result.ok && shouldSendSchedulerFailureEmail(result)) {
@@ -77,6 +100,15 @@ export async function GET(request: Request) {
   } catch (err) {
     console.error('[cron:buffer-blog-posts]', err);
     const error = err instanceof Error ? err.message : 'Buffer scheduler failed';
+    await saveCronRunLog({
+      jobName: 'buffer-blog-posts',
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      durationMs: Date.now() - t0,
+      outcome: 'failed',
+      errorCategory: 'uncaught',
+      errorMessage: error,
+    });
     const partialPosts =
       err instanceof Error && 'partialPosts' in err
         ? (err as Error & { partialPosts?: Array<{ slug: string; channelService: string; dueAt: string | null }> })

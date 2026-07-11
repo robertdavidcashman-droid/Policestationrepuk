@@ -1,4 +1,4 @@
-import { isSerperConfigured, serperSearch } from '@/lib/custody-discovery/search';
+import { isSerperConfigured, serperSearch, isSearchQueryError } from '@/lib/custody-discovery/search';
 
 export interface SerperWebsiteHit {
   title: string;
@@ -138,6 +138,7 @@ export async function discoverFirmWebsiteViaSerper(
 
   for (const q of queries) {
     const rows = await serperSearch(q);
+    if (isSearchQueryError(rows)) continue;
     for (const row of rows) {
       const key = row.url.toLowerCase();
       if (seen.has(key)) continue;

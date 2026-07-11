@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { isCronAuthorized } from '@/lib/cron-auth';
 import {
   bufferDigestVerifyDate,
+  claimBufferDigest,
   markBufferDigestSent,
   wasBufferDigestSent,
 } from '@/lib/buffer/daily-digest';
@@ -30,8 +31,13 @@ export async function GET(request: Request) {
   const dateParam = url.searchParams.get('date')?.trim();
   const verifyDate = dateParam || bufferDigestVerifyDate();
 
-  if (!force && (await wasBufferDigestSent(verifyDate))) {
-    return NextResponse.json({ ok: true, skipped: true, date: verifyDate });
+  if (!force) {
+    if (await wasBufferDigestSent(verifyDate)) {
+      return NextResponse.json({ ok: true, skipped: true, date: verifyDate });
+    }
+    if (!(await claimBufferDigest(verifyDate))) {
+      return NextResponse.json({ ok: true, skipped: true, date: verifyDate, reason: 'concurrent_digest' });
+    }
   }
 
   try {

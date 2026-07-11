@@ -1,12 +1,25 @@
-import type { CustodySuite, SearchResult } from './types';
+import type { SearchResult } from './types';
 
-export type SearchProvider = (query: string) => Promise<SearchResult[]>;
+export type SearchProvider = (query: string) => Promise<SearchQueryResult>;
+
+export type SearchQueryResult = SearchResult[] | SearchQueryError;
+
+export interface SearchQueryError {
+  ok: false;
+  reason: string;
+}
+
+export function isSearchQueryError(result: SearchQueryResult): result is SearchQueryError {
+  return !Array.isArray(result) && 'ok' in result && result.ok === false;
+}
 
 const SERPER_URL = 'https://google.serper.dev/search';
 
-async function serperSearch(query: string): Promise<SearchResult[]> {
+async function serperSearch(query: string): Promise<SearchQueryResult> {
   const key = process.env.SERPER_API_KEY?.trim();
-  if (!key) return [];
+  if (!key) {
+    return { ok: false, reason: 'SERPER_API_KEY missing' };
+  }
 
   const res = await fetch(SERPER_URL, {
     method: 'POST',
@@ -17,7 +30,9 @@ async function serperSearch(query: string): Promise<SearchResult[]> {
     body: JSON.stringify({ q: query, gl: 'uk', hl: 'en', num: 10 }),
   });
 
-  if (!res.ok) return [];
+  if (!res.ok) {
+    return { ok: false, reason: `Serper HTTP ${res.status}` };
+  }
   const data = (await res.json()) as {
     organic?: Array<{ title?: string; link?: string; snippet?: string; date?: string }>;
   };
@@ -39,7 +54,7 @@ function stationSearchLabel(name: string): string {
     .trim();
 }
 
-export function buildSearchQueries(suite: CustodySuite): string[] {
+export function buildSearchQueries(suite: import('./types').CustodySuite): string[] {
   const name = suite.custodySuiteName || suite.policeStationName;
   const shortName = stationSearchLabel(name);
   const force = suite.forceName;
@@ -77,16 +92,23 @@ export function isSerperConfigured(): boolean {
 }
 
 export async function searchForSuite(
-  suite: CustodySuite,
+  suite: import('./types').CustodySuite,
   provider: SearchProvider = serperSearch,
   maxQueries = 4,
-): Promise<SearchResult[]> {
+): Promise<SearchResult[] | SearchQueryError> {
+  if (provider === serperSearch && !isSerperConfigured()) {
+    return { ok: false, reason: 'SERPER_API_KEY missing' };
+  }
+
   const queries = buildSearchQueries(suite).slice(0, maxQueries);
   const seen = new Set<string>();
   const results: SearchResult[] = [];
 
   for (const q of queries) {
     const rows = await provider(q);
+    if (isSearchQueryError(rows)) {
+      return rows;
+    }
     for (const row of rows) {
       const key = row.url.toLowerCase();
       if (seen.has(key)) continue;

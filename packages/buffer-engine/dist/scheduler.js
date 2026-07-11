@@ -71,6 +71,7 @@ async function runSiteBufferScheduler(adapter, options = {}) {
     const timezone = envConfig.timezone;
     const localDate = (0, scheduler_core_1.localDateInTimezone)(now, timezone);
     const kv = adapter.kv ?? null;
+    let claimedRunLock = false;
     if (!options.force && !options.dryRun) {
         const existingRun = await (0, storage_1.getSchedulerRunForDate)(kv, adapter.siteId, localDate);
         if (existingRun) {
@@ -90,7 +91,27 @@ async function runSiteBufferScheduler(adapter, options = {}) {
                 })),
             };
         }
+        claimedRunLock = await (0, storage_1.claimSchedulerRun)(kv, adapter.siteId, localDate);
+        if (!claimedRunLock) {
+            const concurrentRun = await (0, storage_1.getSchedulerRunForDate)(kv, adapter.siteId, localDate);
+            if (concurrentRun) {
+                return {
+                    ok: true,
+                    skipped: true,
+                    reason: 'Already scheduled for this date',
+                    date: localDate,
+                };
+            }
+            return {
+                ok: true,
+                skipped: true,
+                reason: 'Another scheduler run in progress',
+                date: localDate,
+            };
+        }
     }
+    let runPersisted = false;
+    try {
     let rawPosts = await Promise.resolve(adapter.getSchedulablePosts());
     rawPosts = rawPosts.map((p) => ({ ...p, feedId: p.feedId || adapter.siteId }));
     if (options.slugs?.length) {
@@ -288,6 +309,7 @@ async function runSiteBufferScheduler(adapter, options = {}) {
         channels: created.map((p) => p.channelId),
         dueAts: created.map((p) => p.dueAt ?? ''),
     });
+    runPersisted = true;
     await (0, storage_1.saveRecentSlugEntries)(kv, adapter.siteId, (0, scheduler_core_1.appendRecentSlugs)(recentEntries, newRecent, 500));
     await (0, storage_1.saveSlugEngagementStats)(kv, adapter.siteId, updatedStats);
     return {
@@ -297,6 +319,12 @@ async function runSiteBufferScheduler(adapter, options = {}) {
         errors: errors.length ? errors : undefined,
         reason: created.length < targetCount ? `Scheduled ${created.length}/${targetCount}` : undefined,
     };
+    }
+    finally {
+        if (claimedRunLock && !runPersisted) {
+            await (0, storage_1.releaseSchedulerRunLock)(kv, adapter.siteId, localDate);
+        }
+    }
 }
 async function createScheduledBufferPostWithRetry(apiKey, input, maxAttempts = 6) {
     let lastError;

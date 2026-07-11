@@ -42,6 +42,7 @@ export interface BufferKV {
     get<T>(key: string): Promise<T | null>;
     set(key: string, value: unknown, options?: {
         ex?: number;
+        nx?: boolean;
     }): Promise<unknown>;
     del?(key: string): Promise<unknown>;
 }

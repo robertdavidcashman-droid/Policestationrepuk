@@ -29,8 +29,10 @@ import {
 } from './scheduler-core';
 import type { SchedulablePost } from './content-types';
 import {
+  claimSchedulerRunLock,
   getRecentSlugEntries,
   getSchedulerRunForDate,
+  releaseSchedulerRunLock,
   saveRecentSlugEntries,
   saveSchedulerRun,
   type SchedulerRunRecord,
@@ -97,6 +99,20 @@ export async function runBufferBlogScheduler(
     };
   }
 
+  let claimedLock = false;
+  if (!options?.force) {
+    claimedLock = await claimSchedulerRunLock(localDate);
+    if (!claimedLock) {
+      const concurrentRun = await getSchedulerRunForDate(localDate);
+      if (concurrentRun) {
+        return { ok: true, skipped: true, reason: 'Already scheduled for this date', date: localDate };
+      }
+      return { ok: true, skipped: true, reason: 'Another scheduler run in progress', date: localDate };
+    }
+  }
+
+  let runPersisted = false;
+  try {
   const cooldownDays = getSchedulerCooldownDays();
   const channels = getBufferChannels();
   const feeds = getContentFeeds();
@@ -439,6 +455,7 @@ export async function runBufferBlogScheduler(
   };
 
   await saveSchedulerRun(record);
+  runPersisted = true;
   await saveRecentSlugEntries(appendRecentSlugs(recentEntries, newRecent, 500));
 
   return {
@@ -446,6 +463,11 @@ export async function runBufferBlogScheduler(
     date: localDate,
     posts: created,
   };
+  } finally {
+    if (claimedLock && !runPersisted) {
+      await releaseSchedulerRunLock(localDate);
+    }
+  }
 }
 
 function poolTooSmall(pool: SchedulablePost[], required: number): boolean {

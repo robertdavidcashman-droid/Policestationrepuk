@@ -24,14 +24,19 @@ jobs:
       # resolved on Linux that differ from a Windows-generated lockfile).
       # Matches Vercel's install behaviour.
       - run: npm install --no-audit --no-fund --prefer-offline
+      - run: npx tsc --noEmit
       - run: npm run lint
       - run: npm run build
       - name: Vitest unit tests
         run: npm test
+      - name: Reliability gate tests
+        run: npm run test:reliability:ci
       - name: Firm outreach approval + send tests
         run: npm run test:firm-outreach:ci
       - name: Buffer scheduler unit tests and GBP image probe
         run: npm run test:buffer:ci
+      - name: Custody discovery tests
+        run: npm run test:custody-discovery:ci
       - name: Directory search engine self-test
         run: npm run test:directory-search
       - name: Lighthouse CI (tier-1 URLs, warn-only thresholds)
@@ -48,6 +53,8 @@ jobs:
         run: node scripts/audit/blog-partner-utm.mjs
       - name: Blog JSON-LD shape check
         run: npm run validate:schema
+      - name: Playwright smoke (local prod build)
+        run: npm run test:ci:smoke
       - name: Live sitemap crawl (sample)
         # Tolerant of transient failures: every push also triggers a Vercel
         # production deploy in parallel, so the live site can briefly serve

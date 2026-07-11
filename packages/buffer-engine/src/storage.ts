@@ -1,8 +1,33 @@
 import type { BufferKV, RecentSlugEntry, SchedulerRunRecord, SlugEngagementStats } from './types';
 
 const RUN_KEY = (siteId: string, date: string) => `buffer-engine:run:${siteId}:${date}`;
+const LOCK_KEY = (siteId: string, date: string) => `buffer-engine:lock:${siteId}:${date}`;
 const RECENT_KEY = (siteId: string) => `buffer-engine:recent-slugs:${siteId}`;
 const STATS_KEY = (siteId: string) => `buffer-engine:slug-stats:${siteId}`;
+
+/** Atomic claim — prevents overlapping cron invocations from double-scheduling. */
+export async function claimSchedulerRun(
+  kv: BufferKV | null | undefined,
+  siteId: string,
+  date: string,
+  ttlSeconds = 7200,
+): Promise<boolean> {
+  if (!kv) return true;
+  const result = await kv.set(LOCK_KEY(siteId, date), new Date().toISOString(), {
+    ex: ttlSeconds,
+    nx: true,
+  });
+  return result === 'OK';
+}
+
+export async function releaseSchedulerRunLock(
+  kv: BufferKV | null | undefined,
+  siteId: string,
+  date: string,
+): Promise<void> {
+  if (!kv?.del) return;
+  await kv.del(LOCK_KEY(siteId, date));
+}
 
 export async function getSchedulerRunForDate(
   kv: BufferKV | null | undefined,

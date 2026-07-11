@@ -59,6 +59,8 @@
     "blog:heroes:fetch": "node scripts/blog/fetch-hero-images.mjs",
     "social:preview": "node scripts/generate-social-preview.mjs",
     "test": "vitest run",
+    "test:reliability:ci": "vitest run __tests__/vercel-cron-routes.test.ts __tests__/cron-routes-smoke.test.ts __tests__/auth-routes.test.ts __tests__/resend-webhook.test.ts __tests__/custody-search-config.test.ts __tests__/firm-outreach-daily-cap-race.test.ts __tests__/custody-storage-concurrency.test.ts __tests__/health-ready.test.ts",
+    "test:ci:smoke": "bash scripts/ci-smoke-playwright.sh",
     "test:ci": "bash scripts/ci-local.sh",
     "test:ci:audit": "npm run audit:site",
     "ci:fix": "bash scripts/ci-autofix.sh",

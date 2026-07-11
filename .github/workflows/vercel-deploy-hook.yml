@@ -54,3 +54,16 @@ jobs:
             fi
           done
           exit 1
+
+      - name: Post-deploy smoke
+        if: success()
+        run: |
+          set -e
+          for path in /api/health /api/ready / /directory /Register; do
+            code=$(curl -sS -o /dev/null -w "%{http_code}" "https://policestationrepuk.org${path}")
+            echo "${path} → HTTP ${code}"
+            if [ "$code" -ge 500 ]; then
+              echo "Post-deploy smoke failed for ${path}"
+              exit 1
+            fi
+          done

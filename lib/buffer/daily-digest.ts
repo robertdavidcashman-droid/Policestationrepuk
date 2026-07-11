@@ -1,5 +1,6 @@
 import { getSchedulerTimezone } from './config';
 import { localDateInTimezone } from './scheduler-core';
+import { claimKey } from '@/lib/kv-atomic';
 import { getKV } from '@/lib/kv';
 
 const DEDUP_PREFIX = 'buffer-digest:sent:';
@@ -18,6 +19,11 @@ export async function wasBufferDigestSent(date: string): Promise<boolean> {
   const kv = getKV();
   if (!kv) return false;
   return Boolean(await kv.get(`${DEDUP_PREFIX}${date}`));
+}
+
+/** Atomic claim — only one digest send per date across overlapping crons. */
+export async function claimBufferDigest(date: string): Promise<boolean> {
+  return claimKey(`${DEDUP_PREFIX}${date}`, 60 * 60 * 24 * 14);
 }
 
 export async function markBufferDigestSent(date: string): Promise<void> {

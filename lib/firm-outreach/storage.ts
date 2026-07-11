@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { incrementCounter } from '@/lib/kv-atomic';
 import {
   resendQuotaKey,
   resendQuotaRemaining as calcResendQuotaRemaining,
@@ -458,10 +459,7 @@ export async function incrementDailySendCount(date: string, campaignId?: string)
   const key = campaignId
     ? dailySendKeyForCampaignId(campaignId, date)
     : dailySendKey(date);
-  const current = (await kv.get<number>(key)) ?? 0;
-  const next = current + 1;
-  await kv.set(key, next, { ex: 60 * 60 * 24 * 3 });
-  return next;
+  return incrementCounter(key, 60 * 60 * 24 * 3);
 }
 
 export async function getPaidLookupCount(date: string): Promise<number> {
@@ -474,11 +472,7 @@ export async function getPaidLookupCount(date: string): Promise<number> {
 export async function incrementPaidLookupCount(date: string): Promise<number> {
   const kv = getKV();
   if (!kv) return 0;
-  const key = paidDailyKey(date);
-  const current = (await kv.get<number>(key)) ?? 0;
-  const next = current + 1;
-  await kv.set(key, next, { ex: 60 * 60 * 24 * 2 });
-  return next;
+  return incrementCounter(paidDailyKey(date), 60 * 60 * 24 * 2);
 }
 
 export async function isSuppressed(email: string): Promise<boolean> {

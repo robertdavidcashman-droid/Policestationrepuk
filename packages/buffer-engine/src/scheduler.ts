@@ -26,9 +26,11 @@ import { countSitePostsInBufferForDay } from './reconcile';
 import { ensureCompliantPostImage } from './image-corrector';
 import { hydratePostImagesForBuffer } from './image-url';
 import {
+  claimSchedulerRun,
   getRecentSlugEntries,
   getSchedulerRunForDate,
   getSlugEngagementStats,
+  releaseSchedulerRunLock,
   saveRecentSlugEntries,
   saveSchedulerRun,
   saveSlugEngagementStats,
@@ -108,6 +110,7 @@ export async function runSiteBufferScheduler(
   const localDate = localDateInTimezone(now, timezone);
   const kv = adapter.kv ?? null;
 
+  let claimedRunLock = false;
   if (!options.force && !options.dryRun) {
     const existingRun = await getSchedulerRunForDate(kv, adapter.siteId, localDate);
     if (existingRun) {
@@ -127,8 +130,36 @@ export async function runSiteBufferScheduler(
         })),
       };
     }
+
+    claimedRunLock = await claimSchedulerRun(kv, adapter.siteId, localDate);
+    if (!claimedRunLock) {
+      const concurrentRun = await getSchedulerRunForDate(kv, adapter.siteId, localDate);
+      if (concurrentRun) {
+        return {
+          ok: true,
+          skipped: true,
+          reason: 'Already scheduled for this date',
+          date: localDate,
+        };
+      }
+      return {
+        ok: true,
+        skipped: true,
+        reason: 'Another scheduler run in progress',
+        date: localDate,
+      };
+    }
   }
 
+  const releaseLockIfClaimed = async () => {
+    if (claimedRunLock) {
+      await releaseSchedulerRunLock(kv, adapter.siteId, localDate);
+      claimedRunLock = false;
+    }
+  };
+
+  let runPersisted = false;
+  try {
   let rawPosts = await Promise.resolve(adapter.getSchedulablePosts());
   rawPosts = rawPosts.map((p) => ({ ...p, feedId: p.feedId || adapter.siteId }));
 
@@ -381,6 +412,7 @@ export async function runSiteBufferScheduler(
     channels: created.map((p) => p.channelId),
     dueAts: created.map((p) => p.dueAt ?? ''),
   });
+  runPersisted = true;
 
   await saveRecentSlugEntries(kv, adapter.siteId, appendRecentSlugs(recentEntries, newRecent, 500));
   await saveSlugEngagementStats(kv, adapter.siteId, updatedStats);
@@ -392,6 +424,11 @@ export async function runSiteBufferScheduler(
     errors: errors.length ? errors : undefined,
     reason: created.length < targetCount ? `Scheduled ${created.length}/${targetCount}` : undefined,
   };
+  } finally {
+    if (claimedRunLock && !runPersisted) {
+      await releaseSchedulerRunLock(kv, adapter.siteId, localDate);
+    }
+  }
 }
 
 async function createScheduledBufferPostWithRetry(

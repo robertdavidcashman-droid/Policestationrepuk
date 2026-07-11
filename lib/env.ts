@@ -81,7 +81,11 @@ export function validateEnv(): void {
     warnings.push('RESEND_API_KEY not set — transactional emails will be logged instead of sent.');
   }
   if (!has('CRON_SECRET')) {
-    warnings.push('CRON_SECRET not set — scheduled/cron endpoints are unauthenticated or disabled.');
+    if (shouldFailFast) {
+      errors.push('CRON_SECRET not set — scheduled/cron endpoints will reject all automation in production.');
+    } else {
+      warnings.push('CRON_SECRET not set — scheduled/cron endpoints are unauthenticated or disabled.');
+    }
   }
 
   for (const w of warnings) console.warn(`[env] ${w}`);
