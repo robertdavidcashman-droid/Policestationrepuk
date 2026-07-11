@@ -32,7 +32,15 @@ for suite in $(seq 1 "$SUITE_RUNS"); do
   fi
 
   if [ "$suite" -eq 1 ]; then
-    run_step "clean artifacts" bash -c 'rm -rf .next node_modules reports/playwright-audit.json reports/site-audit.json node_modules/.cache'
+    run_step "clean artifacts" bash -c '
+      rm -rf .next reports/playwright-audit.json reports/site-audit.json node_modules/.cache 2>/dev/null || true
+      if [ -d node_modules ]; then
+        if command -v cmd.exe >/dev/null 2>&1; then
+          cmd.exe //c "rmdir /s /q node_modules" 2>/dev/null || true
+        fi
+        rm -rf node_modules 2>/dev/null || true
+      fi
+    '
     run_step "clean install (lockfile)" npm ci --no-audit --no-fund
   fi
 
