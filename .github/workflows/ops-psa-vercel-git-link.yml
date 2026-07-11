@@ -1,0 +1,60 @@
+# Ops: reconnect web44ai (PSA) using team VERCEL_TOKEN from this repo.
+name: Ops — PSA Vercel git link (web44ai)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  link-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_PROJECT_ID: prj_XvBhew2OZV8JYpI2dNHDTD6P05Ai
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: robertdavidcashman-droid/policestationagent
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Require Vercel token
+        run: |
+          if [ -z "${VERCEL_TOKEN}" ] || [ -z "${VERCEL_ORG_ID}" ]; then
+            echo "VERCEL_TOKEN or VERCEL_ORG_ID missing on this repo"
+            exit 1
+          fi
+
+      - name: Unlink old Git connection (All monorepo)
+        run: |
+          curl -sS -w "\nHTTP %{http_code}\n" -X DELETE \
+            "https://api.vercel.com/v9/projects/web44ai/link?teamId=${VERCEL_ORG_ID}" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" || true
+
+      - name: Link robertdavidcashman-droid/policestationagent
+        run: |
+          resp=$(curl -sS -w "\nHTTP %{http_code}\n" -X POST \
+            "https://api.vercel.com/v9/projects/web44ai/link?teamId=${VERCEL_ORG_ID}" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"type":"github","repo":"robertdavidcashman-droid/policestationagent"}')
+          echo "$resp"
+          echo "$resp" | tail -1 | grep -qE 'HTTP (200|201)' || exit 1
+
+      - name: Pull project settings and deploy production
+        run: |
+          vercel pull --yes --environment=production --token="${VERCEL_TOKEN}"
+          vercel deploy --prod --yes --token="${VERCEL_TOKEN}"
+
+      - name: Verify latest deployment repo
+        run: |
+          dep=$(curl -sS \
+            "https://api.vercel.com/v6/deployments?projectId=${VERCEL_PROJECT_ID}&teamId=${VERCEL_ORG_ID}&limit=1" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}")
+          echo "$dep" | jq -r '.deployments[0].meta | {githubRepo, githubCommitRef, githubCommitSha}'
