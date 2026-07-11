@@ -13,17 +13,19 @@ function kvAdapter(): BufferKV | null {
   if (!redis) return null;
   return {
     get: (key) => redis.get(key),
-    set: (key, value, options) =>
-      redis.set(
-        key,
-        value,
-        options
-          ? {
-              ...(options.ex != null ? { ex: options.ex } : {}),
-              ...(options.nx ? { nx: true } : {}),
-            }
-          : undefined,
-      ),
+    set: (key, value, options) => {
+      if (!options) return redis.set(key, value);
+      if (options.nx && options.ex != null) {
+        return redis.set(key, value, { nx: true, ex: options.ex });
+      }
+      if (options.nx) {
+        return redis.set(key, value, { nx: true });
+      }
+      if (options.ex != null) {
+        return redis.set(key, value, { ex: options.ex });
+      }
+      return redis.set(key, value);
+    },
     del: (key) => redis.del(key),
   };
 }
