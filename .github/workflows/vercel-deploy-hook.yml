@@ -20,6 +20,10 @@ on:
         required: true
         type: string
 
+permissions:
+  checks: read
+  contents: read
+
 concurrency:
   group: vercel-prod
   cancel-in-progress: true
@@ -69,8 +73,8 @@ jobs:
             echo "OK: ${name} → ${conclusion}"
           }
 
-          require_check "CI — Next.js build"
-          require_check "Site audit"
+          require_check "build"
+          require_check "audit"
 
   deploy:
     needs: gate-checks
