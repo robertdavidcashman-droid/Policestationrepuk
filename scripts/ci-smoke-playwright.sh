@@ -28,4 +28,4 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
-PW_BASE_URL="http://127.0.0.1:${PORT}" playwright test --config=playwright.ci.config.ts
+PW_BASE_URL="http://127.0.0.1:${PORT}" npx playwright test --config=playwright.ci.config.ts
