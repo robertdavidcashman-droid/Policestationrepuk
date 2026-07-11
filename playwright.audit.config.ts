@@ -48,6 +48,7 @@ export default defineConfig({
             PORT: '3100',
             NEXT_PUBLIC_SITE_URL: BASE_URL,
             LEGACY_REPS_PUBLIC: '1',
+            CRON_SECRET: process.env.CRON_SECRET || 'ci-smoke-placeholder-not-for-production',
           },
         },
       }

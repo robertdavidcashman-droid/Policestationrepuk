@@ -1,12 +1,12 @@
 # Production deploy to Vercel — only after CI passes on master/main.
 #
-# Uses the Vercel CLI with VERCEL_TOKEN so the deploy lands as
-# Production on policestationrepuk-new (policestationrepuk.com / .org).
+# Vercel Deployment Checks gate production promotion on GitHub check results
+# (CI "build", Site audit "audit"). This workflow does NOT run `vercel deploy
+# --prod` (that hangs on BLOCKED deployments); it triggers a git-source build
+# if needed, waits for promotion, then runs post-deploy smoke.
 #
-# Required repository secrets (GitHub → Settings → Secrets → Actions):
-#   VERCEL_TOKEN       — https://vercel.com/account/tokens
-#   VERCEL_ORG_ID      — team_wbvkpoLfvbg9qFwg5LqJLAjN
-#   VERCEL_PROJECT_ID  — prj_lZ0zL8uq5cBDFosKovyF0n8FmlCn  (policestationrepuk-new)
+# Required repository secrets:
+#   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
 name: Deploy to Vercel (production)
 on:
   workflow_dispatch:
@@ -15,7 +15,6 @@ on:
     types: [completed]
     branches: [master, main]
 
-# Cancel any in-flight prod deploy if a newer commit lands.
 concurrency:
   group: vercel-prod
   cancel-in-progress: true
@@ -26,42 +25,104 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_SCOPE: robert-cashmans-projects
+      REPUK_REPO_ID: '1295786573'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+      - name: Resolve target SHA
+        id: sha
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "value=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Pull Vercel project settings (production)
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy to production
+      - name: Trigger or locate git production deployment
+        id: deployment
         run: |
-          for attempt in 1 2 3; do
-            echo "Deploy attempt $attempt/3"
-            if vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}; then
+          set -euo pipefail
+          SHA="${{ steps.sha.outputs.value }}"
+          API="https://api.vercel.com"
+          AUTH="Authorization: Bearer ${VERCEL_TOKEN}"
+
+          find_url() {
+            curl -sS "${API}/v6/deployments?projectId=${VERCEL_PROJECT_ID}&teamId=${VERCEL_ORG_ID}&limit=25" \
+              -H "${AUTH}" \
+              | jq -r --arg sha "$SHA" '.deployments[] | select(.meta.githubCommitSha == $sha) | .url' \
+              | head -1
+          }
+
+          URL="$(find_url || true)"
+          if [ -z "$URL" ]; then
+            echo "No deployment for ${SHA}; triggering git production build"
+            RESP=$(curl -sS -X POST "${API}/v13/deployments?teamId=${VERCEL_ORG_ID}" \
+              -H "${AUTH}" \
+              -H "Content-Type: application/json" \
+              -d "{\"name\":\"policestationrepuk-new\",\"project\":\"${VERCEL_PROJECT_ID}\",\"target\":\"production\",\"gitSource\":{\"type\":\"github\",\"repoId\":${REPUK_REPO_ID},\"ref\":\"master\",\"sha\":\"${SHA}\"}}")
+            echo "$RESP" | jq '{id, url, readyState}'
+            URL=$(echo "$RESP" | jq -r '.url // empty')
+            if [ -z "$URL" ]; then
+              echo "Failed to trigger deployment"
+              echo "$RESP"
+              exit 1
+            fi
+          fi
+
+          echo "url=https://${URL}" >> "$GITHUB_OUTPUT"
+          echo "Deployment URL: https://${URL}"
+
+      - name: Wait for deployment checks and promote
+        run: |
+          set -euo pipefail
+          DEPLOY_URL="${{ steps.deployment.outputs.url }}"
+          HOST="${DEPLOY_URL#https://}"
+          API="https://api.vercel.com"
+          AUTH="Authorization: Bearer ${VERCEL_TOKEN}"
+
+          for i in $(seq 1 60); do
+            STATE=$(curl -sS "${API}/v13/deployments/${HOST}?teamId=${VERCEL_ORG_ID}" \
+              -H "${AUTH}" | jq -r '.readyState // "UNKNOWN"')
+            echo "[$i/60] deployment state=${STATE}"
+            if [ "$STATE" = "READY" ]; then
+              echo "Deployment already promoted"
               exit 0
             fi
-            if [ "$attempt" -lt 3 ]; then
-              echo "Deploy failed; retrying in 30s..."
-              sleep 30
+            if [ "$STATE" = "ERROR" ] || [ "$STATE" = "CANCELED" ]; then
+              echo "Deployment failed with state=${STATE}"
+              exit 1
             fi
+            sleep 20
           done
+
+          echo "Still blocked after wait — attempting explicit promote"
+          vercel promote "$DEPLOY_URL" --yes --scope="$VERCEL_SCOPE" --timeout=15m --token="$VERCEL_TOKEN"
+
+      - name: Wait for production health endpoints
+        run: |
+          set -euo pipefail
+          WANT="${{ steps.sha.outputs.value }}"
+          WANT_SHORT="${WANT:0:7}"
+          for i in $(seq 1 40); do
+            CODE=$(curl -sS -o /tmp/health.json -w "%{http_code}" "https://policestationrepuk.org/api/health" || echo "000")
+            VER=$(jq -r '.version // empty' /tmp/health.json 2>/dev/null || true)
+            echo "[$i/40] /api/health HTTP ${CODE} version=${VER} want=${WANT_SHORT}"
+            if [ "$CODE" = "200" ] && [ "$VER" = "$WANT_SHORT" ]; then
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Production health did not match target SHA in time"
           exit 1
 
       - name: Post-deploy smoke
-        if: success()
         run: |
           set -e
           check_path() {
