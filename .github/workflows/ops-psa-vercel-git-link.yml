@@ -29,16 +29,31 @@ jobs:
             -H "Authorization: Bearer ${VERCEL_TOKEN}" || true
 
       - name: Link robertdavidcashman-droid/policestationagent
+        id: link
+        continue-on-error: true
         run: |
-          resp=$(curl -sS -w "\nHTTP %{http_code}\n" -X POST \
-            "https://api.vercel.com/v9/projects/web44ai/link?teamId=${VERCEL_ORG_ID}" \
-            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{"type":"github","repo":"robertdavidcashman-droid/policestationagent"}')
-          echo "$resp"
-          echo "$resp" | tail -1 | grep -qE 'HTTP (200|201)' || exit 1
+          for body in \
+            '{"type":"github","org":"robertdavidcashman-droid","repo":"policestationagent"}' \
+            '{"type":"github","repo":"robertdavidcashman-droid/policestationagent"}'; do
+            echo "Trying link body: $body"
+            resp=$(curl -sS -w "\nHTTP %{http_code}\n" -X POST \
+              "https://api.vercel.com/v9/projects/web44ai/link?teamId=${VERCEL_ORG_ID}" \
+              -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "$body")
+            echo "$resp"
+            if echo "$resp" | tail -1 | grep -qE 'HTTP (200|201)'; then
+              echo "linked=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+          echo "linked=false" >> "$GITHUB_OUTPUT"
+          echo "Git link failed — Vercel GitHub app may need access to policestationagent repo"
+          exit 1
 
       - name: Trigger production deploy from policestationagent main
+        continue-on-error: true
+        id: deploy
         env:
           PSA_REPO_ID: "1114666936"
         run: |
@@ -49,6 +64,15 @@ jobs:
             -d "{\"name\":\"web44ai\",\"project\":\"${VERCEL_PROJECT_ID}\",\"target\":\"production\",\"gitSource\":{\"type\":\"github\",\"repoId\":${PSA_REPO_ID},\"ref\":\"main\"}}")
           echo "$resp"
           echo "$resp" | tail -1 | grep -qE 'HTTP (200|201)' || exit 1
+
+      - name: Summarize
+        if: always()
+        run: |
+          echo "Git link: ${{ steps.link.outcome }}"
+          echo "Deploy trigger: ${{ steps.deploy.outcome }}"
+          if [ "${{ steps.link.outcome }}" != "success" ] || [ "${{ steps.deploy.outcome }}" != "success" ]; then
+            echo "Grant Vercel GitHub app access to robertdavidcashman-droid/policestationagent, then re-run this workflow."
+          fi
 
       - name: Verify latest deployment repo
         run: |
