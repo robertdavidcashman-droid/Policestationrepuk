@@ -6,8 +6,6 @@ export interface LaaProviderRecord {
     county?: string;
     postcode?: string;
     phone?: string;
-    /** LAA work category (e.g. 'Crime', 'Family'). Present in raw spreadsheet rows. */
-    category?: string;
 }
 /** Minimal DSCC register row shape used by firm-outreach. */
 export interface DsccRegisterEntry {

@@ -25,6 +25,7 @@ export const LEGACY_EXACT_REDIRECTS: Record<string, string> = {
   '/complaints': '/Complaints',
   '/dataprotection': '/DataProtection',
   '/formslibrary': '/FormsLibrary',
+  '/forum': '/Forum',
   '/firms': '/legal-services-directory/category/solicitors',
   '/forces': '/Forces',
   '/home': '/',

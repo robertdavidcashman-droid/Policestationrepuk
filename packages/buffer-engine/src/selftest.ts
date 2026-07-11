@@ -1,6 +1,6 @@
 import { listPostsInWindow } from './client';
 import { getSiteBufferEnvConfig, MIN_POSTS_PER_DAY } from './config';
-import { localDateInTimezone, addDaysToLocalDate } from './scheduler-core';
+import { localDateInTimezone, addDaysToLocalDate, timezoneOffsetForDate } from './scheduler-core';
 import type { BufferEngineAdapter, SelfTestResult } from './types';
 import { ingestMetricsFromPosts, siteHostnameFromUrl } from './metrics';
 import { getSlugEngagementStats, mergeSlugStats, saveSlugEngagementStats } from './storage';
@@ -26,8 +26,11 @@ export async function runSiteBufferSelfTest(
   }
 
   const hostname = siteHostnameFromUrl(adapter.siteUrl);
-  const dayStart = `${yesterday}T00:00:00`;
-  const dayEnd = `${localDateInTimezone(now, env.timezone)}T00:00:00`;
+  const today = localDateInTimezone(now, env.timezone);
+  const yesterdayOffset = timezoneOffsetForDate(yesterday, env.timezone);
+  const todayOffset = timezoneOffsetForDate(today, env.timezone);
+  const dayStart = `${yesterday}T00:00:00${yesterdayOffset}`;
+  const dayEnd = `${today}T00:00:00${todayOffset}`;
 
   const sent = await listPostsInWindow(env.apiKey, env.organizationId, {
     status: ['sent'],

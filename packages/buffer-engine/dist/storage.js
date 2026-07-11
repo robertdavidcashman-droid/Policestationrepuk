@@ -14,6 +14,7 @@ const RUN_KEY = (siteId, date) => `buffer-engine:run:${siteId}:${date}`;
 const LOCK_KEY = (siteId, date) => `buffer-engine:lock:${siteId}:${date}`;
 const RECENT_KEY = (siteId) => `buffer-engine:recent-slugs:${siteId}`;
 const STATS_KEY = (siteId) => `buffer-engine:slug-stats:${siteId}`;
+/** Atomic claim — prevents overlapping cron invocations from double-scheduling. */
 async function claimSchedulerRun(kv, siteId, date, ttlSeconds = 7200) {
     if (!kv)
         return true;

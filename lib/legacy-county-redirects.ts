@@ -24,8 +24,8 @@ export const LEGACY_COUNTY_REDIRECTS: { source: string; destination: string }[] 
   { source: '/policestationrepssuffolk', destination: '/directory/suffolk' },
   { source: '/PoliceStationRepsBerkshire', destination: '/directory/berkshire' },
   { source: '/policestationrepsberkshire', destination: '/directory/berkshire' },
-  { source: '/PoliceStationRepsHertfordshire', destination: '/directory' },
-  { source: '/policestationrepshertfordshire', destination: '/directory' },
+  { source: '/PoliceStationRepsHertfordshire', destination: '/directory/hertfordshire' },
+  { source: '/policestationrepshertfordshire', destination: '/directory/hertfordshire' },
 ];
 
 export const LEGACY_COUNTY_MIRROR_PATHS = new Set(

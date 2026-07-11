@@ -1,6 +1,6 @@
 import { getKV } from '@/lib/kv';
 
-export type CronRunOutcome = 'success' | 'skipped' | 'failed';
+export type CronRunOutcome = 'success' | 'partial' | 'skipped' | 'failed' | 'error';
 
 export interface CronRunLogEntry {
   jobName: string;

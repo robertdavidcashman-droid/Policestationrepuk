@@ -31,8 +31,35 @@ async function orderedActiveSuites(suites: CustodySuite[]): Promise<CustodySuite
   return [...missing, ...hasNumber];
 }
 
-/** Rotate through active suites — missing approved numbers first, then recheck covered suites. */
-export async function selectSuiteBatch(
+function buildBatch(active: CustodySuite[], offset: number, limit: number): SuiteBatchSelection {
+  if (active.length === 0 || limit <= 0) {
+    return { batch: [], batchStartIndex: 0, nextCursor: 0, total: 0, scannedSuiteIds: [] };
+  }
+
+  const batchStartIndex = offset;
+  const batch: CustodySuite[] = [];
+  const seenInBatch = new Set<string>();
+
+  const take = Math.min(limit, active.length);
+  for (let i = 0; i < take; i++) {
+    const suite = active[(offset + i) % active.length];
+    if (seenInBatch.has(suite.id)) break;
+    seenInBatch.add(suite.id);
+    batch.push(suite);
+  }
+
+  const nextCursor = (offset + batch.length) % active.length;
+  return {
+    batch,
+    batchStartIndex,
+    nextCursor,
+    total: active.length,
+    scannedSuiteIds: batch.map((s) => s.id),
+  };
+}
+
+/** Select the next batch without advancing the cursor (commit after work completes). */
+export async function peekSuiteBatch(
   suites: CustodySuite[],
   limit: number,
 ): Promise<SuiteBatchSelection> {
@@ -53,32 +80,29 @@ export async function selectSuiteBatch(
     offset = memoryCursor % active.length;
   }
 
-  const batchStartIndex = offset;
-  const batch: CustodySuite[] = [];
-  const seenInBatch = new Set<string>();
+  return buildBatch(active, offset, limit);
+}
 
-  const take = Math.min(limit, active.length);
-  for (let i = 0; i < take; i++) {
-    const suite = active[(offset + i) % active.length];
-    if (seenInBatch.has(suite.id)) break;
-    seenInBatch.add(suite.id);
-    batch.push(suite);
-  }
-
-  const nextCursor = (offset + batch.length) % active.length;
+/** Advance the suite cursor after a run completes (full or partial batch). */
+export async function commitSuiteCursor(nextCursor: number): Promise<void> {
+  const kv = getKV();
   if (kv) {
     await kv.set(CURSOR_KEY, nextCursor);
   } else {
     memoryCursor = nextCursor;
   }
+}
 
-  return {
-    batch,
-    batchStartIndex,
-    nextCursor,
-    total: active.length,
-    scannedSuiteIds: batch.map((s) => s.id),
-  };
+/** Rotate through active suites — missing approved numbers first, then recheck covered suites. */
+export async function selectSuiteBatch(
+  suites: CustodySuite[],
+  limit: number,
+): Promise<SuiteBatchSelection> {
+  const selection = await peekSuiteBatch(suites, limit);
+  if (selection.batch.length > 0) {
+    await commitSuiteCursor(selection.nextCursor);
+  }
+  return selection;
 }
 
 /** Test helper — reset cursor in memory and KV so tests are isolated. */

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { sendLeadMagnetNotification } from '@/lib/email';
 import {
-  contactRateLimitOk,
   getClientIp,
+  rateLimitOk,
   validateContactTiming,
 } from '@/lib/contact-guards';
 import { saveSubmission } from '@/lib/submissions';
@@ -26,8 +26,11 @@ export async function POST(request: Request) {
     }
 
     const ip = getClientIp(request);
-    if (ip !== 'unknown' && !contactRateLimitOk(ip)) {
-      return NextResponse.json({ error: 'Too many requests. Please wait a few minutes.' }, { status: 429 });
+    if (ip !== 'unknown') {
+      const limited = await rateLimitOk({ ip, scope: 'lead-magnet' });
+      if (!limited.ok) {
+        return NextResponse.json({ error: 'Too many requests. Please wait a few minutes.' }, { status: 429 });
+      }
     }
 
     if (!email || typeof email !== 'string') {
@@ -45,7 +48,8 @@ export async function POST(request: Request) {
     ]);
 
     return NextResponse.json({ ok: true, id, message: 'Thank you — check your inbox.' });
-  } catch {
-    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
+  } catch (err) {
+    console.error('[lead-magnet]', err);
+    return NextResponse.json({ error: 'Unable to process your request right now.' }, { status: 500 });
   }
 }

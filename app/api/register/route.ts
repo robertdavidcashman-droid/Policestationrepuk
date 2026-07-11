@@ -334,21 +334,35 @@ export async function POST(request: Request) {
 
     const normalised = { email };
     const kv = getKV();
-    if (kv) {
-      try {
-        const existing = await kv.get(`newrep:${normalised.email}`);
-        if (existing) {
-          return NextResponse.json(
-            {
-              error:
-                'This email is already registered in our directory. Please log in via the account page to update your listing.',
-            },
-            { status: 409 },
-          );
-        }
-      } catch (err) {
-        console.warn('[register] KV duplicate-check failed:', err);
+    if (!kv) {
+      return NextResponse.json(
+        {
+          error:
+            'Registration storage is temporarily unavailable. Please try again shortly.',
+        },
+        { status: 503 },
+      );
+    }
+    try {
+      const existing = await kv.get(`newrep:${normalised.email}`);
+      if (existing) {
+        return NextResponse.json(
+          {
+            error:
+              'This email is already registered in our directory. Please log in via the account page to update your listing.',
+          },
+          { status: 409 },
+        );
       }
+    } catch (err) {
+      console.warn('[register] KV duplicate-check failed:', err);
+      return NextResponse.json(
+        {
+          error:
+            'Registration storage is temporarily unavailable. Please try again shortly.',
+        },
+        { status: 503 },
+      );
     }
     const staticDup = getRawReps().find(
       (r) => r.email.toLowerCase() === normalised.email,
@@ -438,33 +452,50 @@ export async function POST(request: Request) {
 
     /* ----------------- Persist registration ----------------- */
 
-    await saveRegistration({
-      email,
-      name: fullName,
-      phone: mobile,
-      accreditation: accreditationText,
-      counties: canonicalCounties,
-      stations,
-      coverage_areas: coverageAreas,
-      availability,
-      message: publicNotes,
-      website_url: websiteUrl,
-      whatsapp_link: whatsappLink,
-      dscc_pin: pinNumber,
-      sra_number: sraNumber,
-      firm_name: firmName,
-      firm_address: firmAddress,
-      firm_email: firmEmail,
-      proof_url: proofUrl,
-      professional_profile_url: professionalProfileUrl,
-      languages,
-      specialisms,
-      years_experience: yearsExperience,
-      full_postal_address: fullPostalAddress,
-      ipAddress: ip,
-      userAgent,
-      registeredAt,
-    });
+    try {
+      await saveRegistration({
+        email,
+        name: fullName,
+        phone: mobile,
+        accreditation: accreditationText,
+        counties: canonicalCounties,
+        stations,
+        coverage_areas: coverageAreas,
+        availability,
+        message: publicNotes,
+        website_url: websiteUrl,
+        whatsapp_link: whatsappLink,
+        dscc_pin: pinNumber,
+        sra_number: sraNumber,
+        firm_name: firmName,
+        firm_address: firmAddress,
+        firm_email: firmEmail,
+        proof_url: proofUrl,
+        professional_profile_url: professionalProfileUrl,
+        languages,
+        specialisms,
+        years_experience: yearsExperience,
+        full_postal_address: fullPostalAddress,
+        ipAddress: ip,
+        userAgent,
+        registeredAt,
+      });
+    } catch (persistErr) {
+      const msg = persistErr instanceof Error ? persistErr.message : String(persistErr);
+      if (msg.includes('duplicate_registration') || msg.includes('KV not configured')) {
+        const status = msg.includes('KV not configured') ? 503 : 409;
+        return NextResponse.json(
+          {
+            error:
+              status === 503
+                ? 'Registration storage is temporarily unavailable. Please try again shortly.'
+                : 'This email is already registered in our directory. Please log in via the account page to update your listing.',
+          },
+          { status },
+        );
+      }
+      throw persistErr;
+    }
 
     /* ----------------- Update admin review record ----------------- */
 

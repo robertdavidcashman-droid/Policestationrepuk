@@ -110,215 +110,221 @@ async function runSiteBufferScheduler(adapter, options = {}) {
             };
         }
     }
+    const releaseLockIfClaimed = async () => {
+        if (claimedRunLock) {
+            await (0, storage_1.releaseSchedulerRunLock)(kv, adapter.siteId, localDate);
+            claimedRunLock = false;
+        }
+    };
     let runPersisted = false;
     try {
-    let rawPosts = await Promise.resolve(adapter.getSchedulablePosts());
-    rawPosts = rawPosts.map((p) => ({ ...p, feedId: p.feedId || adapter.siteId }));
-    if (options.slugs?.length) {
-        const set = new Set(options.slugs);
-        rawPosts = rawPosts.filter((p) => set.has(p.slug));
-    }
-    const schedule = (0, config_1.resolveFeedSchedule)(envConfig);
-    const targetCount = options.limit && options.limit > 0
-        ? Math.max(schedule.postsPerFeed, options.limit)
-        : schedule.postsPerFeed;
-    if (rawPosts.length === 0) {
-        return { ok: false, reason: 'No schedulable posts available', date: localDate };
-    }
-    const recentEntries = await (0, storage_1.getRecentSlugEntries)(kv, adapter.siteId);
-    const statsMap = await (0, storage_1.getSlugEngagementStats)(kv, adapter.siteId);
-    const feedCooldown = (0, scheduler_core_1.effectiveCooldownDays)(rawPosts.length, targetCount, envConfig.cooldownDays);
-    const excludeKeys = (0, scheduler_core_1.slugsInCooldownForFeed)(recentEntries, adapter.siteId, feedCooldown, now);
-    const rng = (0, scheduler_core_1.mulberry32)((0, scheduler_core_1.hashSeed)(`buffer-engine:${adapter.siteId}:${localDate}`));
-    const poolCoverage = (0, bandit_1.computePoolCoverage)(rawPosts, statsMap);
-    let picked = (0, bandit_1.pickBanditSchedulablePosts)(rawPosts, {
-        count: Math.min(targetCount, rawPosts.length),
-        excludeKeys,
-        stats: statsMap,
-        explorationRate: envConfig.explorationRate,
-        poolCoverage,
-        random: rng,
-    });
-    if (picked.length < targetCount && rawPosts.length >= targetCount) {
-        const fallbackRng = (0, scheduler_core_1.mulberry32)((0, scheduler_core_1.hashSeed)(`buffer-fallback:${adapter.siteId}:${localDate}`));
-        const extra = (0, bandit_1.pickBanditSchedulablePosts)(rawPosts, {
-            count: targetCount - picked.length,
-            excludeKeys: new Set([...excludeKeys, ...picked.map((p) => (0, scheduler_core_1.postCooldownKey)(p.feedId, p.slug))]),
-            stats: statsMap,
-            explorationRate: 1,
-            poolCoverage,
-            random: fallbackRng,
-        });
-        picked = [...picked, ...extra];
-    }
-    if (picked.length === 0) {
-        const reconciled = await tryReconcileExistingSchedule(envConfig, adapter, localDate, targetCount, kv);
-        if (reconciled) {
-            console.info(`[buffer-engine:${adapter.siteId}] Reconciled day ${localDate}: ${reconciled.reason}`);
-            return reconciled;
+        let rawPosts = await Promise.resolve(adapter.getSchedulablePosts());
+        rawPosts = rawPosts.map((p) => ({ ...p, feedId: p.feedId || adapter.siteId }));
+        if (options.slugs?.length) {
+            const set = new Set(options.slugs);
+            rawPosts = rawPosts.filter((p) => set.has(p.slug));
         }
-        return {
-            ok: false,
-            reason: `No posts after cooldown (pool ${rawPosts.length}, cooldown ${feedCooldown}d)`,
-            date: localDate,
-        };
-    }
-    picked = await preparePostImages(adapter, picked);
-    for (const post of picked) {
-        if (!post.imageUrl?.trim()) {
+        const schedule = (0, config_1.resolveFeedSchedule)(envConfig);
+        const targetCount = options.limit && options.limit > 0
+            ? Math.max(schedule.postsPerFeed, options.limit)
+            : schedule.postsPerFeed;
+        if (rawPosts.length === 0) {
+            return { ok: false, reason: 'No schedulable posts available', date: localDate };
+        }
+        const recentEntries = await (0, storage_1.getRecentSlugEntries)(kv, adapter.siteId);
+        const statsMap = await (0, storage_1.getSlugEngagementStats)(kv, adapter.siteId);
+        const feedCooldown = (0, scheduler_core_1.effectiveCooldownDays)(rawPosts.length, targetCount, envConfig.cooldownDays);
+        const excludeKeys = (0, scheduler_core_1.slugsInCooldownForFeed)(recentEntries, adapter.siteId, feedCooldown, now);
+        const rng = (0, scheduler_core_1.mulberry32)((0, scheduler_core_1.hashSeed)(`buffer-engine:${adapter.siteId}:${localDate}`));
+        const poolCoverage = (0, bandit_1.computePoolCoverage)(rawPosts, statsMap);
+        let picked = (0, bandit_1.pickBanditSchedulablePosts)(rawPosts, {
+            count: Math.min(targetCount, rawPosts.length),
+            excludeKeys,
+            stats: statsMap,
+            explorationRate: envConfig.explorationRate,
+            poolCoverage,
+            random: rng,
+        });
+        if (picked.length < targetCount && rawPosts.length >= targetCount) {
+            const fallbackRng = (0, scheduler_core_1.mulberry32)((0, scheduler_core_1.hashSeed)(`buffer-fallback:${adapter.siteId}:${localDate}`));
+            const extra = (0, bandit_1.pickBanditSchedulablePosts)(rawPosts, {
+                count: targetCount - picked.length,
+                excludeKeys: new Set([...excludeKeys, ...picked.map((p) => (0, scheduler_core_1.postCooldownKey)(p.feedId, p.slug))]),
+                stats: statsMap,
+                explorationRate: 1,
+                poolCoverage,
+                random: fallbackRng,
+            });
+            picked = [...picked, ...extra];
+        }
+        if (picked.length === 0) {
+            const reconciled = await tryReconcileExistingSchedule(envConfig, adapter, localDate, targetCount, kv);
+            if (reconciled) {
+                console.info(`[buffer-engine:${adapter.siteId}] Reconciled day ${localDate}: ${reconciled.reason}`);
+                return reconciled;
+            }
             return {
                 ok: false,
-                reason: `Post "${post.slug}" has no Buffer-compatible image after correction`,
+                reason: `No posts after cooldown (pool ${rawPosts.length}, cooldown ${feedCooldown}d)`,
                 date: localDate,
             };
         }
-    }
-    let dayWindow = (0, config_1.getSchedulerDayWindow)();
-    let nightWindow = (0, config_1.getSchedulerNightWindow)();
-    if (options.respectCurrentTime) {
-        const parts = new Intl.DateTimeFormat('en-GB', {
-            timeZone: timezone,
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-        }).formatToParts(now);
-        const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? '0');
-        const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? '0');
-        const nowSlotHour = minute > 0 ? hour + 1 : hour;
-        dayWindow = {
-            ...dayWindow,
-            startHour: Math.min(Math.max(dayWindow.startHour, nowSlotHour), dayWindow.endHour),
-            minGapMinutes: Math.min(dayWindow.minGapMinutes, 45),
-        };
-        nightWindow = {
-            ...nightWindow,
-            startHour: Math.min(Math.max(nightWindow.startHour, nowSlotHour), nightWindow.endHour),
-            minGapMinutes: Math.min(nightWindow.minGapMinutes, 45),
-        };
-    }
-    let dueAts = (0, scheduler_core_1.generateDayNightPostTimes)(localDate, {
-        dayCount: schedule.dayPosts,
-        nightCount: schedule.nightPosts,
-        dayWindow,
-        nightWindow,
-        earlyMorningWindow: (0, config_1.getSchedulerEarlyMorningWindow)(),
-    }, rng, timezone);
-    if (dueAts.length < picked.length) {
-        dueAts = (0, scheduler_core_1.ensurePostTimeCount)(localDate, dueAts, picked.length, [nightWindow, { ...(0, config_1.getSchedulerEarlyMorningWindow)(), date: (0, scheduler_core_1.addDaysToLocalDate)(localDate, 1) }], rng, timezone);
-    }
-    if (dueAts.length < picked.length) {
-        return {
-            ok: false,
-            reason: `Could not allocate ${picked.length} schedule times (got ${dueAts.length})`,
-            date: localDate,
-        };
-    }
-    const channelOrder = shuffleChannelsRepeated(envConfig.channels, picked.length, rng);
-    const gbpPosts = picked.filter((_, i) => channelOrder[i].service === 'googlebusiness');
-    const gbpIssues = await (0, gbp_preflight_1.collectGoogleBusinessPreflightIssues)(gbpPosts, adapter.siteUrl);
-    if (gbpIssues.length > 0) {
-        return { ok: false, reason: 'GBP preflight failed', gbpIssues, date: localDate };
-    }
-    if (options.dryRun) {
-        return {
-            ok: true,
-            dryRun: true,
-            date: localDate,
-            posts: picked.map((post, i) => ({
-                postId: 'dry-run',
-                slug: post.slug,
-                feedId: post.feedId,
-                channelId: channelOrder[i].id,
-                channelService: channelOrder[i].service,
-                dueAt: dueAts[i] ?? null,
-                title: post.title,
-                imageUrl: post.imageUrl,
-            })),
-        };
-    }
-    const created = [];
-    const newRecent = [];
-    const errors = [];
-    const updatedStats = new Map(statsMap);
-    for (let i = 0; i < picked.length; i++) {
-        const post = picked[i];
-        const channel = channelOrder[i];
-        const dueAt = dueAts[i];
-        try {
-            const text = (0, scheduler_core_1.buildSchedulablePostTextForService)(post, channel.service);
-            const imageUrlForChannel = channel.service === 'googlebusiness'
-                ? (post.googleBusinessImageUrl ?? post.imageUrl)
-                : post.imageUrl;
-            const createdPost = await createScheduledBufferPostWithRetry(apiKey, {
-                channelId: channel.id,
-                channelService: channel.service,
-                text,
-                dueAt,
-                url: post.url,
-                imageUrl: imageUrlForChannel,
-                imageAlt: post.imageAlt,
-                feedId: post.feedId,
-                siteUrl: adapter.siteUrl,
-            });
-            created.push({
-                postId: createdPost.id,
-                slug: post.slug,
-                feedId: post.feedId,
-                channelId: channel.id,
-                channelService: createdPost.channelService,
-                dueAt: createdPost.dueAt,
-                title: post.title,
-                imageUrl: createdPost.imageUrl ?? post.imageUrl,
-            });
-            newRecent.push({ slug: post.slug, feedId: post.feedId, scheduledAt: now.toISOString() });
-            const prev = updatedStats.get(post.slug) ?? {
-                slug: post.slug,
-                clicks: 0,
-                impressions: 0,
-                reactions: 0,
-                timesPosted: 0,
-                lastPostedAt: null,
+        picked = await preparePostImages(adapter, picked);
+        for (const post of picked) {
+            if (!post.imageUrl?.trim()) {
+                return {
+                    ok: false,
+                    reason: `Post "${post.slug}" has no Buffer-compatible image after correction`,
+                    date: localDate,
+                };
+            }
+        }
+        let dayWindow = (0, config_1.getSchedulerDayWindow)();
+        let nightWindow = (0, config_1.getSchedulerNightWindow)();
+        if (options.respectCurrentTime) {
+            const parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: timezone,
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+            }).formatToParts(now);
+            const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? '0');
+            const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? '0');
+            const nowSlotHour = minute > 0 ? hour + 1 : hour;
+            dayWindow = {
+                ...dayWindow,
+                startHour: Math.min(Math.max(dayWindow.startHour, nowSlotHour), dayWindow.endHour),
+                minGapMinutes: Math.min(dayWindow.minGapMinutes, 45),
             };
-            updatedStats.set(post.slug, {
-                ...prev,
-                timesPosted: prev.timesPosted + 1,
-                lastPostedAt: now.toISOString(),
-            });
+            nightWindow = {
+                ...nightWindow,
+                startHour: Math.min(Math.max(nightWindow.startHour, nowSlotHour), nightWindow.endHour),
+                minGapMinutes: Math.min(nightWindow.minGapMinutes, 45),
+            };
         }
-        catch (err) {
-            errors.push({
-                slug: post.slug,
-                error: err instanceof Error ? err.message : String(err),
-            });
+        let dueAts = (0, scheduler_core_1.generateDayNightPostTimes)(localDate, {
+            dayCount: schedule.dayPosts,
+            nightCount: schedule.nightPosts,
+            dayWindow,
+            nightWindow,
+            earlyMorningWindow: (0, config_1.getSchedulerEarlyMorningWindow)(),
+        }, rng, timezone);
+        if (dueAts.length < picked.length) {
+            dueAts = (0, scheduler_core_1.ensurePostTimeCount)(localDate, dueAts, picked.length, [nightWindow, { ...(0, config_1.getSchedulerEarlyMorningWindow)(), date: (0, scheduler_core_1.addDaysToLocalDate)(localDate, 1) }], rng, timezone);
         }
-    }
-    if (created.length === 0) {
-        const reconciled = await tryReconcileExistingSchedule(envConfig, adapter, localDate, targetCount, kv);
-        if (reconciled) {
-            console.info(`[buffer-engine:${adapter.siteId}] Reconciled after schedule failures for ${localDate}: ${reconciled.reason}`);
-            return reconciled;
+        if (dueAts.length < picked.length) {
+            return {
+                ok: false,
+                reason: `Could not allocate ${picked.length} schedule times (got ${dueAts.length})`,
+                date: localDate,
+            };
         }
-        return { ok: false, reason: 'All schedule attempts failed', date: localDate, errors };
-    }
-    await (0, storage_1.saveSchedulerRun)(kv, adapter.siteId, {
-        date: localDate,
-        scheduledAt: now.toISOString(),
-        postIds: created.map((p) => p.postId),
-        slugs: created.map((p) => p.slug),
-        feedIds: created.map((p) => p.feedId),
-        channels: created.map((p) => p.channelId),
-        dueAts: created.map((p) => p.dueAt ?? ''),
-    });
-    runPersisted = true;
-    await (0, storage_1.saveRecentSlugEntries)(kv, adapter.siteId, (0, scheduler_core_1.appendRecentSlugs)(recentEntries, newRecent, 500));
-    await (0, storage_1.saveSlugEngagementStats)(kv, adapter.siteId, updatedStats);
-    return {
-        ok: created.length >= targetCount || rawPosts.length < targetCount,
-        date: localDate,
-        posts: created,
-        errors: errors.length ? errors : undefined,
-        reason: created.length < targetCount ? `Scheduled ${created.length}/${targetCount}` : undefined,
-    };
+        const channelOrder = shuffleChannelsRepeated(envConfig.channels, picked.length, rng);
+        const gbpPosts = picked.filter((_, i) => channelOrder[i].service === 'googlebusiness');
+        const gbpIssues = await (0, gbp_preflight_1.collectGoogleBusinessPreflightIssues)(gbpPosts, adapter.siteUrl);
+        if (gbpIssues.length > 0) {
+            return { ok: false, reason: 'GBP preflight failed', gbpIssues, date: localDate };
+        }
+        if (options.dryRun) {
+            return {
+                ok: true,
+                dryRun: true,
+                date: localDate,
+                posts: picked.map((post, i) => ({
+                    postId: 'dry-run',
+                    slug: post.slug,
+                    feedId: post.feedId,
+                    channelId: channelOrder[i].id,
+                    channelService: channelOrder[i].service,
+                    dueAt: dueAts[i] ?? null,
+                    title: post.title,
+                    imageUrl: post.imageUrl,
+                })),
+            };
+        }
+        const created = [];
+        const newRecent = [];
+        const errors = [];
+        const updatedStats = new Map(statsMap);
+        for (let i = 0; i < picked.length; i++) {
+            const post = picked[i];
+            const channel = channelOrder[i];
+            const dueAt = dueAts[i];
+            try {
+                const text = (0, scheduler_core_1.buildSchedulablePostTextForService)(post, channel.service);
+                const imageUrlForChannel = channel.service === 'googlebusiness'
+                    ? (post.googleBusinessImageUrl ?? post.imageUrl)
+                    : post.imageUrl;
+                const createdPost = await createScheduledBufferPostWithRetry(apiKey, {
+                    channelId: channel.id,
+                    channelService: channel.service,
+                    text,
+                    dueAt,
+                    url: post.url,
+                    imageUrl: imageUrlForChannel,
+                    imageAlt: post.imageAlt,
+                    feedId: post.feedId,
+                    siteUrl: adapter.siteUrl,
+                });
+                created.push({
+                    postId: createdPost.id,
+                    slug: post.slug,
+                    feedId: post.feedId,
+                    channelId: channel.id,
+                    channelService: createdPost.channelService,
+                    dueAt: createdPost.dueAt,
+                    title: post.title,
+                    imageUrl: createdPost.imageUrl ?? post.imageUrl,
+                });
+                newRecent.push({ slug: post.slug, feedId: post.feedId, scheduledAt: now.toISOString() });
+                const prev = updatedStats.get(post.slug) ?? {
+                    slug: post.slug,
+                    clicks: 0,
+                    impressions: 0,
+                    reactions: 0,
+                    timesPosted: 0,
+                    lastPostedAt: null,
+                };
+                updatedStats.set(post.slug, {
+                    ...prev,
+                    timesPosted: prev.timesPosted + 1,
+                    lastPostedAt: now.toISOString(),
+                });
+            }
+            catch (err) {
+                errors.push({
+                    slug: post.slug,
+                    error: err instanceof Error ? err.message : String(err),
+                });
+            }
+        }
+        if (created.length === 0) {
+            const reconciled = await tryReconcileExistingSchedule(envConfig, adapter, localDate, targetCount, kv);
+            if (reconciled) {
+                console.info(`[buffer-engine:${adapter.siteId}] Reconciled after schedule failures for ${localDate}: ${reconciled.reason}`);
+                return reconciled;
+            }
+            return { ok: false, reason: 'All schedule attempts failed', date: localDate, errors };
+        }
+        await (0, storage_1.saveSchedulerRun)(kv, adapter.siteId, {
+            date: localDate,
+            scheduledAt: now.toISOString(),
+            postIds: created.map((p) => p.postId),
+            slugs: created.map((p) => p.slug),
+            feedIds: created.map((p) => p.feedId),
+            channels: created.map((p) => p.channelId),
+            dueAts: created.map((p) => p.dueAt ?? ''),
+        });
+        runPersisted = true;
+        await (0, storage_1.saveRecentSlugEntries)(kv, adapter.siteId, (0, scheduler_core_1.appendRecentSlugs)(recentEntries, newRecent, 500));
+        await (0, storage_1.saveSlugEngagementStats)(kv, adapter.siteId, updatedStats);
+        return {
+            ok: created.length >= targetCount || rawPosts.length < targetCount,
+            date: localDate,
+            posts: created,
+            errors: errors.length ? errors : undefined,
+            reason: created.length < targetCount ? `Scheduled ${created.length}/${targetCount}` : undefined,
+        };
     }
     finally {
         if (claimedRunLock && !runPersisted) {

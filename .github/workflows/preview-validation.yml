@@ -1,0 +1,38 @@
+# Preview validation — run only after local predeploy gate passes 3×.
+name: Preview validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      preview_url:
+        description: 'Isolated preview deployment URL (no production)'
+        required: true
+        type: string
+      runs:
+        description: 'Number of consecutive smoke runs (default 10)'
+        required: false
+        default: '10'
+        type: string
+      confirm_preview:
+        description: 'Type PREVIEW to confirm'
+        required: true
+        type: string
+
+jobs:
+  smoke:
+    if: github.event.inputs.confirm_preview == 'PREVIEW'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject production URL
+        run: |
+          URL="${{ github.event.inputs.preview_url }}"
+          if echo "$URL" | grep -qi 'policestationrepuk.org'; then
+            echo "Production URL is not allowed for preview validation"
+            exit 1
+          fi
+
+      - name: Preview smoke (${{ github.event.inputs.runs }}×)
+        run: bash scripts/preview-smoke.sh "${{ github.event.inputs.preview_url }}" "${{ github.event.inputs.runs }}"

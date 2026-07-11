@@ -1,4 +1,5 @@
 import type { BufferKV, RecentSlugEntry, SchedulerRunRecord, SlugEngagementStats } from './types';
+/** Atomic claim — prevents overlapping cron invocations from double-scheduling. */
 export declare function claimSchedulerRun(kv: BufferKV | null | undefined, siteId: string, date: string, ttlSeconds?: number): Promise<boolean>;
 export declare function releaseSchedulerRunLock(kv: BufferKV | null | undefined, siteId: string, date: string): Promise<void>;
 export declare function getSchedulerRunForDate(kv: BufferKV | null | undefined, siteId: string, date: string): Promise<SchedulerRunRecord | null>;

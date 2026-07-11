@@ -136,8 +136,12 @@ export default function RootLayout({
           </Suspense>
           <DeferredGlobalWidgets />
         </AssistantUiProvider>
-        <SpeedInsights />
-        <Analytics />
+        {process.env.VERCEL === '1' && (
+          <>
+            <SpeedInsights />
+            <Analytics />
+          </>
+        )}
       </body>
     </html>
   );

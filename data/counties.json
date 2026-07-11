@@ -60,6 +60,12 @@
     "stationCount": 0
   },
   {
+    "name": "Hertfordshire",
+    "slug": "hertfordshire",
+    "repCount": 0,
+    "stationCount": 0
+  },
+  {
     "name": "Kent",
     "slug": "kent",
     "repCount": 16,

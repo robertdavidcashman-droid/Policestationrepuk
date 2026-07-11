@@ -527,8 +527,7 @@ export interface SaveRegistrationInput {
 export async function saveRegistration(input: SaveRegistrationInput): Promise<void> {
   const kv = getKV();
   if (!kv) {
-    console.warn('[data] saveRegistration: KV not configured, registration not persisted');
-    return;
+    throw new Error('KV not configured — registration cannot be persisted');
   }
   const email = input.email.trim().toLowerCase();
   if (!email) throw new Error('saveRegistration: missing email');
@@ -538,7 +537,10 @@ export async function saveRegistration(input: SaveRegistrationInput): Promise<vo
     email,
     registeredAt: input.registeredAt || now,
   };
-  await kv.set(`newrep:${email}`, row);
+  const result = await kv.set(`newrep:${email}`, row, { nx: true });
+  if (result !== 'OK') {
+    throw new Error('duplicate_registration');
+  }
   invalidateRegisteredRepsCache();
 }
 

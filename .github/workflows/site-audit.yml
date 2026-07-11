@@ -2,8 +2,7 @@
 # console/network, responsive, forms/CTAs, a11y, SEO) against a local production
 # build of the Next.js app and uploads the report artifacts.
 #
-# Initially advisory (continue-on-error) on the master branch until the audit
-# baseline is stable; promote to a required check via branch protection once green.
+# Required gate for production promotion (paired with CI — Next.js build).
 name: Site audit
 
 on:

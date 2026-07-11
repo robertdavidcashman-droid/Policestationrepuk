@@ -86,6 +86,36 @@ export function validateAutomationEnv(): PipelineEnvValidation {
   if (!process.env.SERPER_API_KEY?.trim()) {
     errors.push('SERPER_API_KEY missing');
   }
+  if (!process.env.DECISION_TOKEN_SECRET?.trim()) {
+    errors.push('DECISION_TOKEN_SECRET missing');
+  }
+  if (!process.env.FIRM_OUTREACH_WEBHOOK_SECRET?.trim()) {
+    errors.push('FIRM_OUTREACH_WEBHOOK_SECRET missing');
+  }
+
+  return { ok: errors.length === 0, errors };
+}
+
+/** Safe test-environment guard — rejects production hosts/credentials in local gates. */
+export function validateSafeTestEnv(): PipelineEnvValidation {
+  const errors: string[] = [];
+  const forbiddenHosts = ['policestationrepuk.org', 'www.policestationrepuk.org'];
+  const baseUrl = (
+    process.env.AUDIT_BASE_URL ||
+    process.env.PREVIEW_BASE_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    ''
+  ).toLowerCase();
+
+  for (const host of forbiddenHosts) {
+    if (baseUrl.includes(host)) {
+      errors.push(`Unsafe test base URL references production host: ${host}`);
+    }
+  }
+
+  if (process.env.FIRM_OUTREACH_DRY_RUN !== '1' && process.env.FIRM_OUTREACH_DRY_RUN !== 'true') {
+    errors.push('FIRM_OUTREACH_DRY_RUN must be 1 during local/predeploy gates');
+  }
 
   return { ok: errors.length === 0, errors };
 }

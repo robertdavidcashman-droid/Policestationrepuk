@@ -32,9 +32,11 @@ for suite in $(seq 1 "$SUITE_RUNS"); do
   fi
 
   if [ "$suite" -eq 1 ]; then
-    run_step "clean install" npm install --no-audit --no-fund --prefer-offline
+    run_step "clean artifacts" bash -c 'rm -rf .next node_modules reports/playwright-audit.json reports/site-audit.json node_modules/.cache'
+    run_step "clean install (lockfile)" npm ci --no-audit --no-fund
   fi
 
+  run_step "safe test env" npx tsx scripts/validate-test-env.ts
   run_step "TypeScript" npx tsc --noEmit
   run_step "lint" npm run lint
   run_step "unit tests" npm test
@@ -42,8 +44,22 @@ for suite in $(seq 1 "$SUITE_RUNS"); do
   run_step "firm outreach CI" npm run test:firm-outreach:ci
   run_step "buffer CI" npm run test:buffer:ci
   run_step "custody discovery CI" npm run test:custody-discovery:ci
+
+  if command -v docker >/dev/null 2>&1 && [ "${SKIP_SUPABASE:-0}" != "1" ]; then
+    run_step "local Supabase" bash -c '
+      docker compose -f docker-compose.supabase.yml up -d --wait || true
+      if docker compose -f docker-compose.supabase.yml ps --status running | grep -q db; then
+        bash scripts/supabase-migrate.sh
+        npm run test:supabase:rls
+      else
+        echo "Supabase docker not running — skipping migration/RLS tests (set SKIP_SUPABASE=1 to silence)"
+      fi
+    '
+  fi
+
   run_step "production build" npm run build
   run_step "Playwright smoke (prod mode)" bash scripts/ci-smoke-playwright.sh
+  run_step "site audit (prod mode)" npm run audit:site
   run_step "repeat critical tests (20x)" node scripts/repeat-vitest.mjs --times 20
 done
 

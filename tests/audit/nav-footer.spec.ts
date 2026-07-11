@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { checkFacebookGroupUrl } from '../../lib/community-health';
+import { FACEBOOK_GROUP_URL } from '../../lib/site-navigation';
 import { fetchStatus, normaliseUrl } from './helpers/link-graph';
 
 test.describe('Header and footer link integrity', () => {
@@ -68,8 +70,6 @@ test.describe('Header and footer link integrity', () => {
   });
 
   test('Facebook group footer link is reachable', async ({ request }) => {
-    const { checkFacebookGroupUrl } = await import('../../lib/community-health');
-    const { FACEBOOK_GROUP_URL } = await import('../../lib/site-navigation');
     const result = await checkFacebookGroupUrl(FACEBOOK_GROUP_URL, request.fetch.bind(request));
     expect(result.ok, result.issue ?? 'Facebook group URL unreachable').toBe(true);
   });

@@ -57,7 +57,7 @@ export function HelpChatButton() {
           }`}
         >
           <SparkleIcon />
-          <span className="text-xs font-bold uppercase tracking-wide">Ask AI</span>
+          <span className="text-sm font-bold uppercase tracking-wide text-white">Ask AI</span>
         </button>
       </div>
 

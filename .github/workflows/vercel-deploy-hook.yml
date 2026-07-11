@@ -1,29 +1,79 @@
-# Production deploy to Vercel — only after CI passes on master/main.
+# Production deploy to Vercel — MANUAL ONLY during stabilization.
 #
-# Vercel Deployment Checks gate production promotion on GitHub check results
-# (CI "build", Site audit "audit"). This workflow does NOT run `vercel deploy
-# --prod` (that hangs on BLOCKED deployments); it triggers a git-source build
-# if needed, waits for promotion, then runs post-deploy smoke.
+# Requires explicit workflow_dispatch with the exact SHA to promote. Verifies
+# CI and Site audit checks passed for that SHA before triggering a git-source
+# production build. Does NOT auto-run on CI completion.
 #
 # Required repository secrets:
 #   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
 name: Deploy to Vercel (production)
+
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ['CI — Next.js build']
-    types: [completed]
-    branches: [master, main]
+    inputs:
+      sha:
+        description: 'Exact git commit SHA to promote to production'
+        required: true
+        type: string
+      confirm_production:
+        description: 'Type PRODUCTION to confirm promotion'
+        required: true
+        type: string
 
 concurrency:
   group: vercel-prod
   cancel-in-progress: true
 
 jobs:
+  gate-checks:
+    if: github.event.inputs.confirm_production == 'PRODUCTION'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+    steps:
+      - name: Resolve and validate SHA
+        id: resolve
+        run: |
+          set -euo pipefail
+          SHA="${{ github.event.inputs.sha }}"
+          if ! echo "$SHA" | grep -qE '^[0-9a-f]{40}$'; then
+            echo "Invalid SHA format: $SHA (expected 40-char hex)"
+            exit 1
+          fi
+          echo "value=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "Target SHA: ${SHA}"
+
+      - name: Verify CI and Site audit passed for SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SHA="${{ steps.resolve.outputs.sha }}"
+          API="https://api.github.com/repos/${{ github.repository }}/commits/${SHA}/check-runs?per_page=100"
+          RESP=$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$API")
+          echo "$RESP" | jq -r '.check_runs[] | "\(.name)\t\(.conclusion)\t\(.status)"' | sort
+
+          require_check() {
+            local name="$1"
+            local conclusion
+            conclusion=$(echo "$RESP" | jq -r --arg n "$name" '.check_runs[] | select(.name == $n) | .conclusion' | head -1)
+            if [ -z "$conclusion" ] || [ "$conclusion" = "null" ]; then
+              echo "Missing required check: ${name}"
+              exit 1
+            fi
+            if [ "$conclusion" != "success" ]; then
+              echo "Required check ${name} conclusion=${conclusion} (expected success)"
+              exit 1
+            fi
+            echo "OK: ${name} → ${conclusion}"
+          }
+
+          require_check "CI — Next.js build"
+          require_check "Site audit"
+
   deploy:
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+    needs: gate-checks
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -31,25 +81,16 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_SCOPE: robert-cashmans-projects
-      REPUK_REPO_ID: '1295786573'
     steps:
-      - name: Resolve target SHA
-        id: sha
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            echo "value=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=${{ github.sha }}" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
+      - name: Install Vercel CLI (pinned)
+        run: npm install -g vercel@41.4.0
 
       - name: Trigger or locate git production deployment
         id: deployment
         run: |
           set -euo pipefail
-          SHA="${{ steps.sha.outputs.value }}"
+          SHA="${{ needs.gate-checks.outputs.sha }}"
+          REPO_ID="${{ github.repository_id }}"
           API="https://api.vercel.com"
           AUTH="Authorization: Bearer ${VERCEL_TOKEN}"
 
@@ -62,11 +103,11 @@ jobs:
 
           URL="$(find_url || true)"
           if [ -z "$URL" ]; then
-            echo "No deployment for ${SHA}; triggering git production build"
+            echo "No deployment for ${SHA}; triggering git production build (repoId=${REPO_ID})"
             RESP=$(curl -sS -X POST "${API}/v13/deployments?teamId=${VERCEL_ORG_ID}" \
               -H "${AUTH}" \
               -H "Content-Type: application/json" \
-              -d "{\"name\":\"policestationrepuk-new\",\"project\":\"${VERCEL_PROJECT_ID}\",\"target\":\"production\",\"gitSource\":{\"type\":\"github\",\"repoId\":${REPUK_REPO_ID},\"ref\":\"master\",\"sha\":\"${SHA}\"}}")
+              -d "{\"name\":\"policestationrepuk-new\",\"project\":\"${VERCEL_PROJECT_ID}\",\"target\":\"production\",\"gitSource\":{\"type\":\"github\",\"repoId\":${REPO_ID},\"ref\":\"master\",\"sha\":\"${SHA}\"}}")
             echo "$RESP" | jq '{id, url, readyState}'
             URL=$(echo "$RESP" | jq -r '.url // empty')
             if [ -z "$URL" ]; then
@@ -92,7 +133,7 @@ jobs:
               -H "${AUTH}" | jq -r '.readyState // "UNKNOWN"')
             echo "[$i/60] deployment state=${STATE}"
             if [ "$STATE" = "READY" ]; then
-              echo "Deployment already promoted"
+              echo "Deployment promoted"
               exit 0
             fi
             if [ "$STATE" = "ERROR" ] || [ "$STATE" = "CANCELED" ]; then
@@ -108,7 +149,7 @@ jobs:
       - name: Wait for production health endpoints
         run: |
           set -euo pipefail
-          WANT="${{ steps.sha.outputs.value }}"
+          WANT="${{ needs.gate-checks.outputs.sha }}"
           WANT_SHORT="${WANT:0:7}"
           for i in $(seq 1 40); do
             CODE=$(curl -sS -o /tmp/health.json -w "%{http_code}" "https://policestationrepuk.org/api/health" || echo "000")

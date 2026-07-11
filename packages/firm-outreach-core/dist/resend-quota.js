@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_RESEND_DAILY_LIMIT = exports.DEFAULT_RESEND_HEADROOM = exports.RESEND_COUNT_KEY_PREFIX = void 0;
+exports.RESEND_COUNT_KEY_PREFIX = exports.DEFAULT_RESEND_HEADROOM = exports.DEFAULT_RESEND_DAILY_LIMIT = void 0;
 exports.resendQuotaKey = resendQuotaKey;
 exports.resendDailyLimit = resendDailyLimit;
 exports.resendDailyHeadroom = resendDailyHeadroom;
@@ -8,7 +8,9 @@ exports.resendOutreachBudget = resendOutreachBudget;
 exports.resendQuotaRemaining = resendQuotaRemaining;
 exports.isTransientResendError = isTransientResendError;
 exports.isPermanentResendError = isPermanentResendError;
+/** Shared Resend free-tier ceiling — both workspaces share one API key. */
 exports.DEFAULT_RESEND_DAILY_LIMIT = 100;
+/** Headroom reserved for login codes, digests, Kent corrections, etc. */
 exports.DEFAULT_RESEND_HEADROOM = 10;
 exports.RESEND_COUNT_KEY_PREFIX = 'firmoutreach:resend:count:';
 function resendQuotaKey(utcDate) {
@@ -22,6 +24,7 @@ function resendDailyHeadroom() {
     return (Number(process.env.FIRM_OUTREACH_RESEND_HEADROOM ?? exports.DEFAULT_RESEND_HEADROOM) ||
         exports.DEFAULT_RESEND_HEADROOM);
 }
+/** Effective outreach budget across both sites for a UTC day. */
 function resendOutreachBudget() {
     return Math.max(0, resendDailyLimit() - resendDailyHeadroom());
 }

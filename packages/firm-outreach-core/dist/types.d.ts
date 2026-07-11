@@ -181,6 +181,8 @@ export interface EnrichmentRunStats {
     poolSize?: number;
     /** IDs scored in the sliding window this run. */
     candidatesScanned?: number;
+    /** Set when the cron skipped due to an overlapping run lock. */
+    skippedReason?: string;
 }
 export interface OutreachRunStats {
     queued: number;
@@ -189,9 +191,10 @@ export interface OutreachRunStats {
     suppressed: number;
     errors: number;
     elapsedMs: number;
+    /** Prospects evaluated (send attempted or skipped with reason). */
     attempted?: number;
     failed?: number;
-    skipReasons?: Partial<Record<string, number>>;
+    skipReasons?: Partial<Record<'no_step' | 'no_email' | 'not_qualified' | 'suppressed' | 'duplicate' | 'firm_cooldown' | 'mx_invalid' | 'resend_quota' | 'daily_cap' | 'send_disabled' | 'resend_error' | 'transient_resend_error' | 'permanent_resend_error' | 'no_resend', number>>;
     failures?: Array<{
         email: string;
         firmName?: string;
@@ -200,5 +203,9 @@ export interface OutreachRunStats {
         transient?: boolean;
     }>;
     resendQuotaRemaining?: number;
+    /** True when the run stopped early due to maxElapsedMs. */
+    partial?: boolean;
+    /** Set when the cron skipped due to an overlapping run lock. */
+    skippedReason?: string;
 }
 //# sourceMappingURL=types.d.ts.map

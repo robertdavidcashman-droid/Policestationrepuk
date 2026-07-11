@@ -27,7 +27,7 @@ import {
   getFindingsForSuite,
   saveFinding,
 } from './storage';
-import { selectSuiteBatch } from './cursor';
+import { selectSuiteBatch, peekSuiteBatch, commitSuiteCursor } from './cursor';
 import type { CrawlerRunStats, CustodyNumberFinding, CustodySuite, SearchResult } from './types';
 
 const REJECT_CLASSIFICATIONS = new Set([
@@ -342,6 +342,8 @@ export interface CrawlAllOptions extends CrawlSuiteOptions {
   suiteIds?: string[];
   /** When true (default), rotate batch cursor across cron runs. */
   useCursor?: boolean;
+  /** Wall-clock budget — stop early and return partial progress. */
+  maxElapsedMs?: number;
 }
 
 export interface CrawlerRunResult {
@@ -361,12 +363,14 @@ export async function runCustodyDiscoveryCrawler(
   let batchTotal = suites.filter((s) => s.active).length;
   let scannedSuiteIds: string[] = [];
 
+  let selection: Awaited<ReturnType<typeof peekSuiteBatch>> | null = null;
+
   if (options.suiteIds?.length) {
     const set = new Set(options.suiteIds);
     target = suites.filter((s) => s.active && set.has(s.id));
     scannedSuiteIds = target.map((s) => s.id);
   } else if (options.limit && useCursor) {
-    const selection = await selectSuiteBatch(suites, options.limit);
+    selection = await peekSuiteBatch(suites, options.limit);
     target = selection.batch;
     batchCursor = selection.nextCursor;
     batchStartIndex = selection.batchStartIndex;
@@ -397,6 +401,10 @@ export async function runCustodyDiscoveryCrawler(
   const newFindingIds: string[] = [];
 
   for (const suite of target) {
+    if (options.maxElapsedMs && Date.now() - started >= options.maxElapsedMs) {
+      stats.partial = true;
+      break;
+    }
     try {
       const row = await crawlCustodySuite(suite, options);
       stats.searchesRun += row.searchesRun;
@@ -412,6 +420,12 @@ export async function runCustodyDiscoveryCrawler(
       console.error(`custody discovery: crawl failed for ${suite.id}`, err);
     }
     stats.suitesScanned++;
+  }
+
+  if (selection && stats.suitesScanned > 0 && selection.total > 0) {
+    const nextCursor = (selection.batchStartIndex + stats.suitesScanned) % selection.total;
+    await commitSuiteCursor(nextCursor);
+    batchCursor = nextCursor;
   }
 
   stats.elapsedMs = Date.now() - started;

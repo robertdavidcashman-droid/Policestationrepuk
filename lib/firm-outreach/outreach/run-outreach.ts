@@ -32,11 +32,13 @@ import {
   recordSkip,
 } from './run-log';
 import { sendOutreachEmail } from './send';
+import { claimProspectSend } from '../run-lock';
 
 const FOLLOWUP_DAY_1 = 7;
 const FOLLOWUP_DAY_2 = 21;
 const FIRM_SEND_COOLDOWN_DAYS = 90;
 const MAX_CANDIDATE_SCAN = 500;
+const DEFAULT_MAX_ELAPSED_MS = 240_000;
 
 /** Prospects in ready/sent were MX-checked at enrich/requalify; skip DNS on send ticks. */
 function emailPrevalidatedForSend(prospect: FirmProspect): boolean {
@@ -108,6 +110,7 @@ export async function runFirmOutreach(opts?: {
   campaignId?: string;
   dryRun?: boolean;
   limit?: number;
+  maxElapsedMs?: number;
 }): Promise<OutreachRunStats> {
   const startedAt = new Date().toISOString();
   const started = Date.now();
@@ -147,18 +150,21 @@ export async function runFirmOutreach(opts?: {
   }
 
   const date = new Date().toISOString().slice(0, 10);
-  const cap = opts?.limit ?? dailySendCap();
+  const dailyCap = dailySendCap();
+  const batchLimit = opts?.limit ?? dailyCap;
   const alreadySent = await getDailySendCount(date, campaignId);
-  const remaining = Math.max(0, cap - alreadySent);
+  const remainingDaily = Math.max(0, dailyCap - alreadySent);
+  const remaining = Math.min(batchLimit, remainingDaily);
   const globalQuota = await getGlobalResendQuotaRemaining(date);
+  const maxElapsedMs = opts?.maxElapsedMs ?? DEFAULT_MAX_ELAPSED_MS;
 
   if (remaining === 0) {
     recordSkip(stats, 'daily_cap');
-    return finish(globalQuota, alreadySent, cap);
+    return finish(globalQuota, alreadySent, dailyCap);
   }
   if (!opts?.dryRun && globalQuota <= 0) {
     recordSkip(stats, 'resend_quota');
-    return finish(0, alreadySent, cap);
+    return finish(0, alreadySent, dailyCap);
   }
 
   const ready = await listProspectsByRecordStatus(
@@ -176,6 +182,10 @@ export async function runFirmOutreach(opts?: {
   let resendQuota = globalQuota;
 
   for (const prospect of candidates) {
+    if (Date.now() - started >= maxElapsedMs) {
+      stats.partial = true;
+      break;
+    }
     if (stats.sent >= remaining) break;
     if (!opts?.dryRun && resendQuota <= 0) {
       recordSkip(stats, 'resend_quota');
@@ -254,6 +264,11 @@ export async function runFirmOutreach(opts?: {
       stats.queued++;
       stats.attempted = (stats.attempted ?? 0) + 1;
 
+      if (!opts?.dryRun && !(await claimProspectSend(prospect.id))) {
+        recordSkip(stats, 'duplicate');
+        continue;
+      }
+
       const result = await sendOutreachEmail({
         prospect,
         step,
@@ -324,5 +339,5 @@ export async function runFirmOutreach(opts?: {
   }
 
   const finalQuota = await getGlobalResendQuotaRemaining(date);
-  return finish(finalQuota, alreadySent, cap);
+  return finish(finalQuota, alreadySent, dailyCap);
 }

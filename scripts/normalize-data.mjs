@@ -15,6 +15,7 @@ const COUNTY_MAP = {
   'lancashire': 'Lancashire',
   'surrey': 'Surrey',
   'hampshire': 'Hampshire',
+  'hertfordshire': 'Hertfordshire',
   'sussex': 'Sussex',
   'west sussex': 'Sussex',
   'middlesex': 'Middlesex',
@@ -103,6 +104,11 @@ const countySet = new Set();
 reps.forEach(r => { if (r.county) countySet.add(r.county); });
 const countyNames = [...countySet].sort();
 
+/** Counties that must survive regeneration even when repCount is zero. */
+const CANONICAL_COUNTIES = [
+  { name: 'Hertfordshire', slug: 'hertfordshire' },
+];
+
 const counties = countyNames.map(name => {
   const countyReps = reps.filter(r => r.county === name);
   const countyStationNames = new Set();
@@ -114,6 +120,13 @@ const counties = countyNames.map(name => {
     stationCount: countyStationNames.size,
   };
 });
+
+for (const canon of CANONICAL_COUNTIES) {
+  if (!counties.some((c) => c.slug === canon.slug)) {
+    counties.push({ name: canon.name, slug: canon.slug, repCount: 0, stationCount: 0 });
+  }
+}
+counties.sort((a, b) => a.name.localeCompare(b.name));
 
 // Coverage report
 console.log('=== NORMALIZED DATA COVERAGE ===');

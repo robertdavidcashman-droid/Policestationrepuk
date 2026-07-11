@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { sendStationUpdateNotification } from '@/lib/email';
 import {
-  contactRateLimitOk,
   getClientIp,
   messageLooksSpammy,
+  rateLimitOk,
   validateContactTiming,
 } from '@/lib/contact-guards';
 import { saveSubmission } from '@/lib/submissions';
@@ -46,11 +46,14 @@ export async function POST(request: Request) {
     }
 
     const ip = getClientIp(request);
-    if (ip !== 'unknown' && !contactRateLimitOk(ip)) {
-      return NextResponse.json(
-        { error: 'Too many submissions recently. Please wait a few minutes and try again.' },
-        { status: 429 },
-      );
+    if (ip !== 'unknown') {
+      const limited = await rateLimitOk({ ip, scope: 'station-update' });
+      if (!limited.ok) {
+        return NextResponse.json(
+          { error: 'Too many submissions recently. Please wait a few minutes and try again.' },
+          { status: 429 },
+        );
+      }
     }
 
     if (!stationId || !stationName || !submitterName || !submitterEmail) {

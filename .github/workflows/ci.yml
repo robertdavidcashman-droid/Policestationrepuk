@@ -13,6 +13,7 @@ jobs:
       # Large SSG (1600+ routes) + Next build can OOM on default Node heap in CI
       NODE_OPTIONS: --max-old-space-size=8192
       LEGACY_REPS_PUBLIC: '1'
+      FIRM_OUTREACH_DRY_RUN: '1'
       # `npm run start` / Lighthouse / Playwright run production mode — satisfy validateEnv()
       CRON_SECRET: 'ci-smoke-placeholder-not-for-production'
     steps:
@@ -25,7 +26,8 @@ jobs:
       # optional dep drift in package-lock.json (e.g. `@emnapi/*` versions
       # resolved on Linux that differ from a Windows-generated lockfile).
       # Matches Vercel's install behaviour.
-      - run: npm install --no-audit --no-fund --prefer-offline
+      - run: npm ci --no-audit --no-fund
+      - run: npx tsx scripts/validate-test-env.ts
       - run: npx tsc --noEmit
       - run: npm run lint
       - run: npm run build

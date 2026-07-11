@@ -9,6 +9,7 @@ import { sendDailyOutreachDigest } from './outreach/digest-email';
 import { getOutreachSendHealth } from './outreach/from-address';
 import { maybeNotifyOutreachSendFailure } from './outreach/send-failure-email';
 import { runFirmOutreach } from './outreach/run-outreach';
+import { claimOutreachRunLock } from './run-lock';
 import { requalifyAllProspects } from './requalify-prospects';
 import { countProspectsByStatus } from './storage';
 import type {
@@ -107,23 +108,39 @@ export async function runFirmOutreachPipeline(opts?: {
   }
 
   if (!opts?.skipEnrich) {
+    const enrichLocked = await claimOutreachRunLock('enrich');
+    if (!enrichLocked) {
+      enrich = { ...emptyEnrich(), skippedReason: 'overlap' };
+    } else {
     const enrichLimit = opts?.enrichLimit ?? (opts?.skipSend ? 120 : 60);
     enrich = await runFirmEnrichment({
       limit: enrichLimit,
-      maxElapsedMs: opts?.enrichMaxElapsedMs,
+      maxElapsedMs: opts?.enrichMaxElapsedMs ?? 240_000,
     });
     const kentLimit = Math.min(15, Math.max(1, Math.floor(enrichLimit / 4)));
     agentCoverEnrich = await runFirmEnrichment({
       campaignId: AGENT_COVER_KENT_CAMPAIGN_ID,
       limit: kentLimit,
-      maxElapsedMs: opts?.enrichMaxElapsedMs,
+      maxElapsedMs: opts?.enrichMaxElapsedMs ?? 240_000,
     });
+    }
   }
 
   const send =
     opts?.skipSend || !outreachSendEnabled()
       ? emptySend()
-      : await runFirmOutreach({ limit: opts?.sendLimit });
+      : await (async () => {
+          const locked = await claimOutreachRunLock('send');
+          if (!locked) {
+            const skipped = emptySend();
+            skipped.skippedReason = 'overlap';
+            return skipped;
+          }
+          return runFirmOutreach({
+            limit: opts?.sendLimit,
+            maxElapsedMs: 240_000,
+          });
+        })();
 
   const counts = opts?.skipCounts ? {} : await countProspectsByStatus();
 

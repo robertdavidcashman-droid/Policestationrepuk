@@ -14,6 +14,7 @@
  */
 
 import crypto from 'crypto';
+import { claimKey } from '@/lib/kv-atomic';
 import { getDirectoryStore } from './store';
 import { getCategoryBySlug, categorySlugFromProviderType } from './categories';
 import {
@@ -224,6 +225,18 @@ export async function createListing(
   const email = normalizeEmail(input.email);
   const descErr = validateDescription(input.description);
   if (descErr) return { ok: false, error: descErr };
+
+  const emailClaimed = await claimKey(`legaldir:claim:${email}`, 3600);
+  if (!emailClaimed) {
+    const existing = await getListingByOwnerEmail(email);
+    if (existing && existing.status !== 'deleted' && existing.status !== 'rejected') {
+      return {
+        ok: false,
+        error:
+          'A listing already exists for this email address. Use Manage Your Listing to request changes.',
+      };
+    }
+  }
 
   const existing = await getListingByOwnerEmail(email);
   if (existing && existing.status !== 'deleted' && existing.status !== 'rejected') {

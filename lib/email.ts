@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { phoneToTelHref } from '@/lib/phone';
+import { isEmailRecipientAllowed } from '@/lib/email-allowlist';
 
 const ADMIN_EMAIL = 'robertcashman@defencelegalservices.co.uk';
 const REGULATORY_ALERT_EMAIL =
@@ -39,6 +40,10 @@ export async function sendContactNotification(data: ContactSubmission): Promise<
   const client = getResend();
   if (!client) {
     console.info('[Contact form — no RESEND_API_KEY]', { name: data.name, email: data.email, subject: data.subject });
+    return false;
+  }
+  if (!isEmailRecipientAllowed(ADMIN_EMAIL)) {
+    console.info('[Contact form — preview allowlist blocked]', { to: ADMIN_EMAIL });
     return false;
   }
 

@@ -1,5 +1,4 @@
-export declare function createEmptySkipReasons(): Partial<Record<string, number>>;
-export declare function bumpSkipReason(map: Partial<Record<string, number>>, reason: string): void;
+/** Structured skip/failure reasons recorded during a send run. */
 export type OutreachSkipReason = 'no_step' | 'no_email' | 'not_qualified' | 'suppressed' | 'duplicate' | 'firm_cooldown' | 'mx_invalid' | 'resend_quota' | 'daily_cap' | 'send_disabled' | 'resend_error' | 'transient_resend_error' | 'permanent_resend_error' | 'no_resend';
 export interface OutreachFailureRecord {
     email: string;
@@ -25,3 +24,6 @@ export interface OutreachRunLog {
     sentTodayBefore: number;
     resendQuotaRemaining?: number;
 }
+export declare function createEmptySkipReasons(): Partial<Record<OutreachSkipReason, number>>;
+export declare function bumpSkipReason(map: Partial<Record<OutreachSkipReason, number>>, reason: OutreachSkipReason): void;
+//# sourceMappingURL=run-log-types.d.ts.map

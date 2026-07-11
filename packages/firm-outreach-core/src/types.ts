@@ -221,6 +221,8 @@ export interface EnrichmentRunStats {
   poolSize?: number;
   /** IDs scored in the sliding window this run. */
   candidatesScanned?: number;
+  /** Set when the cron skipped due to an overlapping run lock. */
+  skippedReason?: string;
 }
 
 export interface OutreachRunStats {
@@ -260,4 +262,8 @@ export interface OutreachRunStats {
     transient?: boolean;
   }>;
   resendQuotaRemaining?: number;
+  /** True when the run stopped early due to maxElapsedMs. */
+  partial?: boolean;
+  /** Set when the cron skipped due to an overlapping run lock. */
+  skippedReason?: string;
 }

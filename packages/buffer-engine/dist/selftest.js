@@ -22,8 +22,11 @@ async function runSiteBufferSelfTest(adapter, options) {
         };
     }
     const hostname = (0, metrics_1.siteHostnameFromUrl)(adapter.siteUrl);
-    const dayStart = `${yesterday}T00:00:00`;
-    const dayEnd = `${(0, scheduler_core_1.localDateInTimezone)(now, env.timezone)}T00:00:00`;
+    const today = (0, scheduler_core_1.localDateInTimezone)(now, env.timezone);
+    const yesterdayOffset = (0, scheduler_core_1.timezoneOffsetForDate)(yesterday, env.timezone);
+    const todayOffset = (0, scheduler_core_1.timezoneOffsetForDate)(today, env.timezone);
+    const dayStart = `${yesterday}T00:00:00${yesterdayOffset}`;
+    const dayEnd = `${today}T00:00:00${todayOffset}`;
     const sent = await (0, client_1.listPostsInWindow)(env.apiKey, env.organizationId, {
         status: ['sent'],
         dueAtStart: dayStart,

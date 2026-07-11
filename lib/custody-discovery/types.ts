@@ -172,4 +172,6 @@ export interface CrawlerRunStats {
   batchTotal: number;
   scannedSuiteIds: string[];
   elapsedMs: number;
+  /** True when the run stopped early due to maxElapsedMs. */
+  partial?: boolean;
 }

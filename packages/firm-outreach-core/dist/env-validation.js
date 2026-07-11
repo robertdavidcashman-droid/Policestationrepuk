@@ -6,6 +6,7 @@ function hasKvCreds() {
     const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim() || process.env.KV_REST_API_TOKEN?.trim() || '';
     return Boolean(url && token);
 }
+/** Loud fail helper for cron routes — lists missing production config. */
 function validateOutreachEnv(opts) {
     const errors = [];
     if (!process.env.RESEND_API_KEY?.trim()) {

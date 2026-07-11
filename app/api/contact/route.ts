@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { sendContactNotification } from '@/lib/email';
 import {
-  contactRateLimitOk,
   getClientIp,
   messageLooksSpammy,
+  rateLimitOk,
   validateContactTiming,
 } from '@/lib/contact-guards';
 import { saveSubmission } from '@/lib/submissions';
@@ -27,14 +27,17 @@ export async function POST(request: Request) {
     }
 
     const ip = getClientIp(request);
-    if (ip !== 'unknown' && !contactRateLimitOk(ip)) {
-      return NextResponse.json(
-        {
-          error:
-            'Too many messages sent from this connection recently. Please wait a few minutes or email us directly.',
-        },
-        { status: 429 }
-      );
+    if (ip !== 'unknown') {
+      const limited = await rateLimitOk({ ip, scope: 'contact' });
+      if (!limited.ok) {
+        return NextResponse.json(
+          {
+            error:
+              'Too many messages sent from this connection recently. Please wait a few minutes or email us directly.',
+          },
+          { status: 429 },
+        );
+      }
     }
 
     if (!name || !email || !message) {
@@ -79,7 +82,8 @@ export async function POST(request: Request) {
       id: submissionId,
       message: 'Thank you — your enquiry has been received.',
     });
-  } catch {
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+  } catch (err) {
+    console.error('[contact]', err);
+    return NextResponse.json({ error: 'Unable to process your enquiry right now.' }, { status: 500 });
   }
 }

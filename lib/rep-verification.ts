@@ -14,6 +14,7 @@
  */
 
 import { getKV, skipKVInPrerender } from '@/lib/kv';
+import { claimKey } from '@/lib/kv-atomic';
 import type {
   RepEnquiryRecord,
   RepVerificationRecord,
@@ -251,6 +252,8 @@ export async function consumeRegisterGateToken(
 ): Promise<RegisterGateTokenRecord | null> {
   const kv = getKV();
   if (!kv) return null;
+  const claim = await claimKey(`${REGISTER_GATE_PREFIX}claim:${token}`, 300);
+  if (!claim) return null;
   const key = `${REGISTER_GATE_PREFIX}${token}`;
   const rec = await kv.get<RegisterGateTokenRecord>(key);
   if (!rec) return null;

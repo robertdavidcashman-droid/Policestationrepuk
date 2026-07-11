@@ -178,15 +178,16 @@ export async function listProspectIdsByStatus(status: FirmProspectStatus): Promi
   return readStringList(statusIndexKey(status));
 }
 
-/** Prospect ids whose stored record matches status (truthful; ignores stale status indexes). */
+/** Prospect ids whose stored record matches status (uses status index, not full scan). */
 export async function listProspectIdsByRecordStatus(
   status: FirmProspectStatus,
   opts?: { campaignId?: string },
 ): Promise<string[]> {
   if (skipKVInPrerender()) return [];
   const campaignId = opts?.campaignId ?? activeOutreachCampaignId();
-  const ids = [...new Set(await listAllProspectIds())];
+  const ids = await listProspectIdsByStatus(status);
   if (ids.length === 0) return [];
+
   const map = await getProspectsByIds(ids);
   return ids.filter((id) => {
     const p = map.get(id);
@@ -209,16 +210,17 @@ export async function listProspectsByStatus(status: FirmProspectStatus, limit = 
   return out;
 }
 
-/** Campaign-scoped prospects whose stored record matches the given status. */
 export async function listProspectsByRecordStatus(
   status: FirmProspectStatus,
   limit = 500,
   opts?: { campaignId?: string },
 ): Promise<FirmProspect[]> {
-  const ids = (await listProspectIdsByRecordStatus(status, opts)).slice(0, limit);
-  if (ids.length === 0) return [];
-  const map = await getProspectsByIds(ids);
-  return ids.map((id) => map.get(id)).filter((p): p is FirmProspect => Boolean(p));
+  const campaignId = opts?.campaignId ?? activeOutreachCampaignId();
+  const ids = await listProspectIdsByRecordStatus(status, { campaignId });
+  const slice = ids.slice(0, limit);
+  if (slice.length === 0) return [];
+  const map = await getProspectsByIds(slice);
+  return slice.map((id) => map.get(id)).filter((p): p is FirmProspect => Boolean(p));
 }
 
 export async function listProspectsForFirmKey(firmKey: string): Promise<FirmProspect[]> {
@@ -592,7 +594,7 @@ export async function countProspectsByStatus(): Promise<Record<string, number>> 
   ];
   const out: Record<string, number> = {};
   for (const s of statuses) {
-    const ids = await listProspectIdsByRecordStatus(s);
+    const ids = await listProspectIdsByStatus(s);
     out[s] = ids.length;
   }
   return out;
@@ -606,13 +608,7 @@ export async function getResendSendCount(date: string): Promise<number> {
 }
 
 export async function incrementResendSendCount(date: string): Promise<number> {
-  const kv = getKV();
-  if (!kv) return 0;
-  const key = resendQuotaKey(date);
-  const current = (await kv.get<number>(key)) ?? 0;
-  const next = current + 1;
-  await kv.set(key, next, { ex: 60 * 60 * 24 * 3 });
-  return next;
+  return incrementCounter(resendQuotaKey(date), 60 * 60 * 24 * 3);
 }
 
 export async function getGlobalResendQuotaRemaining(date: string): Promise<number> {
