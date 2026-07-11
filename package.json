@@ -72,7 +72,7 @@
     "custody:setup": "node scripts/setup-custody-discovery.mjs",
     "custody:seed": "npx tsx scripts/seed-custody-discovery.ts",
     "custody:ai-review": "npx tsx scripts/review-custody-findings-ai.ts",
-    "test:custody-discovery:ci": "vitest run __tests__/custody-discovery*.test.ts",
+    "test:custody-discovery:ci": "vitest run custody-discovery",
     "custody:review": "echo 'Open /admin/custody-number-review after signing in as admin'",
     "psa:coverage": "npx tsx scripts/build-psa-coverage.ts",
     "buffer:schedule": "npx tsx scripts/run-buffer-blog-scheduler.ts",
