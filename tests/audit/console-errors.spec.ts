@@ -3,6 +3,8 @@ import { CORE_PAGES } from './helpers/routes';
 
 const IGNORED_CONSOLE_PATTERNS: RegExp[] = [
   /Failed to load resource:.*favicon/i,
+  /Failed to load resource:.*_vercel\/(speed-insights|insights)/i,
+  /Refused to execute script from .*_vercel\/(speed-insights|insights)/i,
   /Tracking Prevention/i,
   /Stripe\.js/i,
   /HMR/i,
@@ -12,6 +14,7 @@ const IGNORED_NETWORK_PATTERNS: RegExp[] = [
   /\.well-known\/(appspecific|microsoft-identity)/i,
   /favicon\.ico/i,
   /\/api\/featured\/grandfather/i,
+  /\/_vercel\/(speed-insights|insights)\//i,
 ];
 
 test.describe('Console, page error and network sanity', () => {
