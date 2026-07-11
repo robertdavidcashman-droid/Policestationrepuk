@@ -43,8 +43,10 @@ export async function readIndexMembers(key: string): Promise<string[]> {
   const raw = await kv.get<string[]>(key);
   if (!Array.isArray(raw) || raw.length === 0) return [];
 
+  // Legacy JSON array — replace with a Redis SET (delete first; SADD on string keys fails).
+  await kv.del(key);
   const pipeline = kv.pipeline();
-  for (const id of raw) pipeline.sadd(key, id);
+  for (const member of raw) pipeline.sadd(key, member);
   await pipeline.exec();
   return raw;
 }
@@ -53,7 +55,18 @@ export async function readIndexMembers(key: string): Promise<string[]> {
 export async function addToIndexSet(key: string, id: string): Promise<void> {
   const kv = getKV();
   if (!kv) return;
-  await kv.sadd(key, id);
+  try {
+    await kv.sadd(key, id);
+  } catch {
+    const legacy = await kv.get<string[]>(key);
+    await kv.del(key);
+    if (Array.isArray(legacy) && legacy.length > 0) {
+      const pipeline = kv.pipeline();
+      for (const member of legacy) pipeline.sadd(key, member);
+      await pipeline.exec();
+    }
+    await kv.sadd(key, id);
+  }
 }
 
 /** @deprecated Use addToIndexSet — kept for callers migrating from RMW append. */
