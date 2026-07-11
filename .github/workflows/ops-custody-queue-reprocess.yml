@@ -1,0 +1,60 @@
+# Ops: ensure CUSTODY_AI_AUTO_PUBLISH is not false, then reprocess open custody queue.
+name: Ops — custody queue reprocess
+
+on:
+  workflow_dispatch:
+
+jobs:
+  custody-ops:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Ensure CUSTODY_AI_AUTO_PUBLISH is not false on production
+        run: |
+          env_json=$(curl -sS \
+            "https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}/env?teamId=${VERCEL_ORG_ID}&decrypt=true" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}")
+          echo "$env_json" | jq '[.envs[] | select(.key=="CUSTODY_AI_AUTO_PUBLISH") | {id, key, value, target}]'
+          bad_ids=$(echo "$env_json" | jq -r \
+            '.envs[] | select(.key=="CUSTODY_AI_AUTO_PUBLISH" and (.value=="false" or .value=="False" or .value=="FALSE")) | .id')
+          if [ -n "$bad_ids" ]; then
+            for id in $bad_ids; do
+              echo "Removing CUSTODY_AI_AUTO_PUBLISH=false (env id $id)"
+              curl -sS -X DELETE \
+                "https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}/env/${id}?teamId=${VERCEL_ORG_ID}" \
+                -H "Authorization: Bearer ${VERCEL_TOKEN}"
+            done
+          else
+            echo "CUSTODY_AI_AUTO_PUBLISH unset or not false — auto-publish remains ON by default"
+          fi
+
+      - name: Pull production env for KV access
+        run: vercel env pull .env.production --environment=production --yes --token="${VERCEL_TOKEN}"
+
+      - name: Run open-queue reprocess
+        run: |
+          set -a
+          # shellcheck disable=SC1091
+          source .env.production
+          set +a
+          export CUSTODY_AI_AUTO_PUBLISH="${CUSTODY_AI_AUTO_PUBLISH:-true}"
+          export CUSTODY_AI_AUTO_REJECT="${CUSTODY_AI_AUTO_REJECT:-true}"
+          export CUSTODY_AI_AUTO_RESOLVE_CONFLICTS="${CUSTODY_AI_AUTO_RESOLVE_CONFLICTS:-true}"
+          npx tsx scripts/custody-queue-reprocess.ts
