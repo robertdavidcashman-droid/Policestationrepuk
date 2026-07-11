@@ -13,6 +13,8 @@ jobs:
       # Large SSG (1600+ routes) + Next build can OOM on default Node heap in CI
       NODE_OPTIONS: --max-old-space-size=8192
       LEGACY_REPS_PUBLIC: '1'
+      # `npm run start` / Lighthouse / Playwright run production mode — satisfy validateEnv()
+      CRON_SECRET: 'ci-smoke-placeholder-not-for-production'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,7 +30,7 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - name: Vitest unit tests
-        run: npm test
+        run: npm test 2>&1 | tee vitest-unit.log
       - name: Reliability gate tests
         run: npm run test:reliability:ci
       - name: Repeat critical automation tests (20x)
@@ -67,6 +69,33 @@ jobs:
       - name: CI test summary
         if: always()
         run: |
-          echo "## CI test gate" >> "$GITHUB_STEP_SUMMARY"
-          echo "- tsc, lint, build, vitest, reliability, repeat-20x, outreach, buffer, custody, playwright smoke" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Deploy to production runs only after this workflow succeeds (vercel-deploy-hook workflow_run)" >> "$GITHUB_STEP_SUMMARY"
+          echo "## CI test gate (SHA: ${GITHUB_SHA::7})" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "**Result: PASSED**" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "**Result: FAILED**" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Step | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| tsc --noEmit | required |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| lint | required |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| build | required |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| vitest (npm test) | required |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| test:reliability:ci | required |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| test:automation:repeat (20x) | required |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| test:firm-outreach:ci | required |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| test:buffer:ci | required |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| test:custody-discovery:ci | required |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Lighthouse CI | warn-only scores |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Playwright smoke | required |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f vitest-unit.log ]; then
+            VITEST_LINE=$(grep -E 'Tests +[0-9]+ passed' vitest-unit.log | tail -1 || true)
+            if [ -n "$VITEST_LINE" ]; then
+              echo "**Vitest:** $VITEST_LINE" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deploy to production runs only after this workflow succeeds (vercel-deploy-hook workflow_run)." >> "$GITHUB_STEP_SUMMARY"

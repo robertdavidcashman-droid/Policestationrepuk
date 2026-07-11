@@ -7,6 +7,7 @@ cd "$ROOT"
 
 export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=8192}"
 export LEGACY_REPS_PUBLIC="${LEGACY_REPS_PUBLIC:-1}"
+export CRON_SECRET="${CRON_SECRET:-ci-smoke-placeholder-not-for-production}"
 
 run_step() {
   echo ""
