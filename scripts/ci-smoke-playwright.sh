@@ -13,7 +13,8 @@ npm run build
 npx playwright install chromium
 
 PORT=3000
-npx next start -p "$PORT" &
+VERCEL= VERCEL_ENV= KV_REST_API_URL= KV_REST_API_TOKEN= UPSTASH_REDIS_REST_URL= UPSTASH_REDIS_REST_TOKEN= \
+  npx next start -p "$PORT" &
 SERVER_PID=$!
 
 cleanup() {

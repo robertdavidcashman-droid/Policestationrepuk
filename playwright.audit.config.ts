@@ -9,7 +9,7 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   fullyParallel: true,
   retries: 0,
-  workers: process.env.CI ? 2 : 4,
+  workers: process.env.CI ? 2 : 2,
   reporter: [
     ['list'],
     ['json', { outputFile: 'reports/playwright-audit.json' }],
@@ -39,7 +39,7 @@ export default defineConfig({
         webServer: {
           command: 'npm run start -- --port 3100',
           url: BASE_URL,
-          reuseExistingServer: !process.env.CI,
+          reuseExistingServer: false,
           timeout: 180_000,
           stdout: 'pipe',
           stderr: 'pipe',
@@ -49,6 +49,13 @@ export default defineConfig({
             NEXT_PUBLIC_SITE_URL: BASE_URL,
             LEGACY_REPS_PUBLIC: '1',
             CRON_SECRET: process.env.CRON_SECRET || 'ci-smoke-placeholder-not-for-production',
+            // Isolate audit from production KV / Vercel runtime flags on developer machines.
+            VERCEL: '',
+            VERCEL_ENV: '',
+            KV_REST_API_URL: '',
+            KV_REST_API_TOKEN: '',
+            UPSTASH_REDIS_REST_URL: '',
+            UPSTASH_REDIS_REST_TOKEN: '',
           },
         },
       }
