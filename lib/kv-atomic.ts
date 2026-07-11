@@ -32,9 +32,9 @@ export async function readIndexMembers(key: string): Promise<string[]> {
   if (!kv) return [];
 
   try {
-    const members = await kv.smembers<string>(key);
+    const members = await kv.smembers(key);
     if (Array.isArray(members) && members.length > 0) {
-      return members;
+      return members.map(String);
     }
   } catch {
     // Key may be legacy JSON array type — fall through.
