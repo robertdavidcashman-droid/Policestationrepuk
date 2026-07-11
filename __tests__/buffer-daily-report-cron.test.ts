@@ -3,6 +3,7 @@ import { GET } from '@/app/api/cron/buffer-daily-report/route';
 
 const mockVerify = vi.fn();
 const mockWasSent = vi.fn();
+const mockClaimDigest = vi.fn();
 const mockMarkSent = vi.fn();
 const mockSuccessEmail = vi.fn();
 const mockFailureEmail = vi.fn();
@@ -14,6 +15,7 @@ vi.mock('@/lib/buffer/verify-posted', () => ({
 vi.mock('@/lib/buffer/daily-digest', () => ({
   bufferDigestVerifyDate: () => '2026-06-12',
   wasBufferDigestSent: (...args: unknown[]) => mockWasSent(...args),
+  claimBufferDigest: (...args: unknown[]) => mockClaimDigest(...args),
   markBufferDigestSent: (...args: unknown[]) => mockMarkSent(...args),
 }));
 
@@ -29,6 +31,7 @@ describe('buffer-daily-report cron route', () => {
     vi.clearAllMocks();
     process.env = { ...ENV, CRON_SECRET: 'cron-test-secret' };
     mockWasSent.mockResolvedValue(false);
+    mockClaimDigest.mockResolvedValue(true);
     mockMarkSent.mockResolvedValue(undefined);
     mockSuccessEmail.mockResolvedValue(true);
     mockFailureEmail.mockResolvedValue(true);

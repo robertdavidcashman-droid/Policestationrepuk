@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { appendUniqueToIndex, claimKey } from '@/lib/kv-atomic';
+import { addToIndexSet, readIndexMembers, claimKey } from '@/lib/kv-atomic';
 import { getKV, skipKVInPrerender } from '@/lib/kv';
 import type {
   ApprovedCustodyNumber,
@@ -36,14 +36,11 @@ function newId(prefix: string): string {
 }
 
 async function readStringList(key: string): Promise<string[]> {
-  const kv = getKV();
-  if (!kv) return [];
-  const raw = await kv.get<string[]>(key);
-  return Array.isArray(raw) ? raw : [];
+  return readIndexMembers(key);
 }
 
 async function appendIndex(key: string, id: string): Promise<void> {
-  await appendUniqueToIndex(key, id);
+  await addToIndexSet(key, id);
 }
 
 /* ------------------------------------------------------------------ */

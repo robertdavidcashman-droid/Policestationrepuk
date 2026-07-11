@@ -20,6 +20,7 @@ run_step "npx tsc --noEmit" npx tsc --noEmit
 run_step "npm run build" npm run build
 run_step "Vitest unit tests" npm test
 run_step "Reliability gate tests" npm run test:reliability:ci
+run_step "Repeat critical automation (20x)" npm run test:automation:repeat
 run_step "Firm outreach approval tests" npm run test:firm-outreach:ci
 run_step "Buffer scheduler + GBP probe" npm run test:buffer:ci
 run_step "Custody discovery tests" npm run test:custody-discovery:ci

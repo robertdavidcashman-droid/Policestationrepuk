@@ -1,6 +1,6 @@
-# Production deploy to Vercel on every push to master.
+# Production deploy to Vercel — only after CI passes on master/main.
 #
-# Uses the Vercel CLI with VERCEL_TOKEN so the deploy always lands as
+# Uses the Vercel CLI with VERCEL_TOKEN so the deploy lands as
 # Production on policestationrepuk-new (policestationrepuk.com / .org).
 #
 # Required repository secrets (GitHub → Settings → Secrets → Actions):
@@ -10,7 +10,9 @@
 name: Deploy to Vercel (production)
 on:
   workflow_dispatch:
-  push:
+  workflow_run:
+    workflows: ['CI — Next.js build']
+    types: [completed]
     branches: [master, main]
 
 # Cancel any in-flight prod deploy if a newer commit lands.
@@ -20,6 +22,9 @@ concurrency:
 
 jobs:
   deploy:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -27,6 +32,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -39,8 +46,6 @@ jobs:
       - name: Pull Vercel project settings (production)
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      # Remote build on Vercel — avoids uploading a large prebuilt artefact
-      # (~170MB) which was failing with 5xx errors from the file-upload API.
       - name: Deploy to production
         run: |
           for attempt in 1 2 3; do
@@ -59,11 +64,18 @@ jobs:
         if: success()
         run: |
           set -e
-          for path in /api/health /api/ready / /directory /Register; do
+          check_path() {
+            path="$1"
+            expected="$2"
             code=$(curl -sS -o /dev/null -w "%{http_code}" "https://policestationrepuk.org${path}")
-            echo "${path} → HTTP ${code}"
-            if [ "$code" -ge 500 ]; then
+            echo "${path} → HTTP ${code} (expected ${expected})"
+            if [ "$code" != "$expected" ]; then
               echo "Post-deploy smoke failed for ${path}"
               exit 1
             fi
-          done
+          }
+          check_path /api/health 200
+          check_path /api/ready 200
+          check_path / 200
+          check_path /directory 200
+          check_path /Register 200

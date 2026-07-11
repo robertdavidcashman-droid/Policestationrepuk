@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockBuildReport = vi.fn();
 const mockGetDailySendCount = vi.fn();
 const mockWasSent = vi.fn();
+const mockClaimDigest = vi.fn();
 const mockMarkSent = vi.fn();
 const mockResendSend = vi.fn();
 
@@ -17,7 +18,10 @@ vi.mock('@/lib/firm-outreach/storage', () => ({
 vi.mock('@/lib/firm-outreach/outreach/daily-digest', () => ({
   outreachDigestDate: () => '2026-06-11',
   wasOutreachDigestSent: (...args: unknown[]) => mockWasSent(...args),
+  claimOutreachDigest: (...args: unknown[]) => mockClaimDigest(...args),
   markOutreachDigestSent: (...args: unknown[]) => mockMarkSent(...args),
+  localDateInTimezone: (date: Date, _tz: string) => date.toISOString().slice(0, 10),
+  NOTIFY_TIMEZONE: 'Europe/London',
 }));
 
 vi.mock('resend', () => ({
@@ -32,6 +36,7 @@ describe('sendDailyOutreachDigest', () => {
     process.env.RESEND_API_KEY = 're_test';
     process.env.FIRM_OUTREACH_DIGEST_EMAIL = 'robertdavidcashman@gmail.com';
     mockWasSent.mockResolvedValue(false);
+    mockClaimDigest.mockResolvedValue(true);
     mockGetDailySendCount.mockResolvedValue(2);
     mockBuildReport.mockResolvedValue({
       report: {
@@ -103,5 +108,6 @@ describe('sendDailyOutreachDigest', () => {
       }),
     );
     expect(mockMarkSent).toHaveBeenCalledWith('2026-06-11', 'whatsapp_invite_v1');
+    expect(mockGetDailySendCount).toHaveBeenCalledWith('2026-06-11', 'whatsapp_invite_v1');
   });
 });

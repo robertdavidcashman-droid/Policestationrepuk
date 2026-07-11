@@ -60,3 +60,32 @@ export function validateCustodyEnv(): PipelineEnvValidation {
 
   return { ok: errors.length === 0, errors };
 }
+
+/** Combined automation env check for ops scripts (always strict, not test-skipped). */
+export function validateAutomationEnv(): PipelineEnvValidation {
+  const errors: string[] = [];
+
+  if (!process.env.CRON_SECRET?.trim()) {
+    errors.push('CRON_SECRET missing');
+  }
+  if (!process.env.RESEND_API_KEY?.trim()) {
+    errors.push('RESEND_API_KEY missing');
+  }
+  if (!hasKvCreds()) {
+    errors.push('KV credentials missing');
+  }
+  if (!process.env.BUFFER_API_KEY?.trim()) {
+    errors.push('BUFFER_API_KEY missing');
+  }
+  const twitter = process.env.BUFFER_CHANNEL_TWITTER_ID?.trim();
+  const linkedin = process.env.BUFFER_CHANNEL_LINKEDIN_ID?.trim();
+  const google = process.env.BUFFER_CHANNEL_GOOGLEBUSINESS_ID?.trim();
+  if (!twitter || !linkedin || !google) {
+    errors.push('BUFFER_CHANNEL_*_ID missing (all three required)');
+  }
+  if (!process.env.SERPER_API_KEY?.trim()) {
+    errors.push('SERPER_API_KEY missing');
+  }
+
+  return { ok: errors.length === 0, errors };
+}

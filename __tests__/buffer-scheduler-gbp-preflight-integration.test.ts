@@ -6,6 +6,8 @@ const mockGetRun = vi.fn();
 const mockSaveRun = vi.fn();
 const mockGetRecent = vi.fn();
 const mockSaveRecent = vi.fn();
+const mockClaimLock = vi.fn();
+const mockReleaseLock = vi.fn();
 const mockLoadAll = vi.fn();
 const mockGetContentFeeds = vi.fn();
 
@@ -18,6 +20,8 @@ vi.mock('@/lib/buffer/scheduler-storage', () => ({
   saveSchedulerRun: (...args: unknown[]) => mockSaveRun(...args),
   getRecentSlugEntries: (...args: unknown[]) => mockGetRecent(...args),
   saveRecentSlugEntries: (...args: unknown[]) => mockSaveRecent(...args),
+  claimSchedulerRunLock: (...args: unknown[]) => mockClaimLock(...args),
+  releaseSchedulerRunLock: (...args: unknown[]) => mockReleaseLock(...args),
 }));
 
 vi.mock('@/lib/buffer/feeds', () => ({
@@ -47,6 +51,8 @@ describe('runBufferBlogScheduler GBP preflight (no mock)', () => {
       BUFFER_SCHEDULER_COOLDOWN_DAYS: '14',
     };
     mockGetRun.mockResolvedValue(null);
+    mockClaimLock.mockResolvedValue(true);
+    mockReleaseLock.mockResolvedValue(undefined);
     mockGetRecent.mockResolvedValue([]);
     mockGetContentFeeds.mockReturnValue([{ id: 'custodynote', type: 'rss', url: 'https://custodynote.com/feed' }]);
     mockLoadAll.mockResolvedValue({

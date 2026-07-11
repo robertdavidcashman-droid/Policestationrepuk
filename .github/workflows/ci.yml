@@ -31,6 +31,8 @@ jobs:
         run: npm test
       - name: Reliability gate tests
         run: npm run test:reliability:ci
+      - name: Repeat critical automation tests (20x)
+        run: npm run test:automation:repeat
       - name: Firm outreach approval + send tests
         run: npm run test:firm-outreach:ci
       - name: Buffer scheduler unit tests and GBP image probe
@@ -56,12 +58,15 @@ jobs:
       - name: Playwright smoke (local prod build)
         run: npm run test:ci:smoke
       - name: Live sitemap crawl (sample)
-        # Tolerant of transient failures: every push also triggers a Vercel
-        # production deploy in parallel, so the live site can briefly serve
-        # 404s for paths that exist in the new sitemap but not yet in the
-        # rolled-out build. The crawl script also retries transient errors.
+        # Tolerant of transient failures during parallel Vercel rollouts.
         env:
           CRAWL_MAX_URLS: '800'
           CRAWL_CONCURRENCY: '10'
           CRAWL_FAIL_THRESHOLD: '25'
         run: node scripts/audit/sitemap-crawl.mjs
+      - name: CI test summary
+        if: always()
+        run: |
+          echo "## CI test gate" >> "$GITHUB_STEP_SUMMARY"
+          echo "- tsc, lint, build, vitest, reliability, repeat-20x, outreach, buffer, custody, playwright smoke" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Deploy to production runs only after this workflow succeeds (vercel-deploy-hook workflow_run)" >> "$GITHUB_STEP_SUMMARY"

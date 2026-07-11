@@ -26,22 +26,40 @@ export async function incrementCounter(
   return next;
 }
 
-/** Append a unique id to a string list index (read-modify-write with retry). */
+/** Read string index — Redis SET (SMEMBERS) with legacy JSON array fallback. */
+export async function readIndexMembers(key: string): Promise<string[]> {
+  const kv = getKV();
+  if (!kv) return [];
+
+  try {
+    const members = await kv.smembers<string>(key);
+    if (Array.isArray(members) && members.length > 0) {
+      return members;
+    }
+  } catch {
+    // Key may be legacy JSON array type — fall through.
+  }
+
+  const raw = await kv.get<string[]>(key);
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+
+  const pipeline = kv.pipeline();
+  for (const id of raw) pipeline.sadd(key, id);
+  await pipeline.exec();
+  return raw;
+}
+
+/** Atomically add a unique id to a string index (Redis SADD). */
+export async function addToIndexSet(key: string, id: string): Promise<void> {
+  const kv = getKV();
+  if (!kv) return;
+  await kv.sadd(key, id);
+}
+
+/** @deprecated Use addToIndexSet — kept for callers migrating from RMW append. */
 export async function appendUniqueToIndex(
   key: string,
   id: string,
-  maxRetries = 3,
 ): Promise<void> {
-  const kv = getKV();
-  if (!kv) return;
-
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const raw = await kv.get<string[]>(key);
-    const ids = Array.isArray(raw) ? [...raw] : [];
-    if (ids.includes(id)) return;
-    ids.push(id);
-    await kv.set(key, ids);
-    const verify = await kv.get<string[]>(key);
-    if (Array.isArray(verify) && verify.includes(id)) return;
-  }
+  await addToIndexSet(key, id);
 }

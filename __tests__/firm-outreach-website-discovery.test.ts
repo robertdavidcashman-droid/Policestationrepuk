@@ -67,16 +67,20 @@ describe('discoverFirmWebsiteViaSerper', () => {
 
   it('uses serper and picks a homepage', async () => {
     vi.stubEnv('SERPER_API_KEY', 'test-key');
-    vi.doMock('@/lib/custody-discovery/search', () => ({
-      isSerperConfigured: () => true,
-      serperSearch: vi.fn().mockResolvedValue([
-        {
-          title: 'Crime Solicitors Kent',
-          url: 'https://crimekent.example.co.uk/',
-          snippet: 'criminal defence',
-        },
-      ]),
-    }));
+    vi.doMock('@/lib/custody-discovery/search', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('@/lib/custody-discovery/search')>();
+      return {
+        ...actual,
+        isSerperConfigured: () => true,
+        serperSearch: vi.fn().mockResolvedValue([
+          {
+            title: 'Crime Solicitors Kent',
+            url: 'https://crimekent.example.co.uk/',
+            snippet: 'criminal defence',
+          },
+        ]),
+      };
+    });
 
     const { discoverFirmWebsiteViaSerper } = await import(
       '@/lib/firm-outreach/enrichment/website-discovery'
