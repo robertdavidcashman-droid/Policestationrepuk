@@ -1,14 +1,19 @@
-# Production deploy to Vercel — MANUAL ONLY during stabilization.
+# Production deploy to Vercel.
 #
-# Requires explicit workflow_dispatch with the exact SHA to promote. Verifies
-# CI and Site audit checks passed for that SHA before triggering a git-source
-# production build. Does NOT auto-run on CI completion.
+# Auto: runs when "CI — Next.js build" succeeds on master/main, after verifying
+# both `build` and `audit` checks passed for that SHA.
+# Manual: workflow_dispatch still available (type PRODUCTION + SHA).
 #
 # Required repository secrets:
 #   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
 name: Deploy to Vercel (production)
 
 on:
+  workflow_run:
+    workflows:
+      - CI — Next.js build
+    types:
+      - completed
   workflow_dispatch:
     inputs:
       sha:
@@ -23,6 +28,7 @@ on:
 permissions:
   checks: read
   contents: read
+  actions: read
 
 concurrency:
   group: vercel-prod
@@ -30,7 +36,15 @@ concurrency:
 
 jobs:
   gate-checks:
-    if: github.event.inputs.confirm_production == 'PRODUCTION'
+    # Auto path: CI succeeded on master/main.
+    # Manual path: operator typed PRODUCTION.
+    if: >
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       (github.event.workflow_run.head_branch == 'master' ||
+        github.event.workflow_run.head_branch == 'main')) ||
+      (github.event_name == 'workflow_dispatch' &&
+       github.event.inputs.confirm_production == 'PRODUCTION')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -40,13 +54,18 @@ jobs:
         id: resolve
         run: |
           set -euo pipefail
-          SHA="${{ github.event.inputs.sha }}"
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            SHA="${{ github.event.workflow_run.head_sha }}"
+          else
+            SHA="${{ github.event.inputs.sha }}"
+          fi
           if ! echo "$SHA" | grep -qE '^[0-9a-f]{40}$'; then
             echo "Invalid SHA format: $SHA (expected 40-char hex)"
             exit 1
           fi
           echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
           echo "Target SHA: ${SHA}"
+          echo "Trigger: ${{ github.event_name }}"
 
       - name: Verify CI and Site audit passed for SHA
         env:
@@ -55,26 +74,43 @@ jobs:
           set -euo pipefail
           SHA="${{ steps.resolve.outputs.sha }}"
           API="https://api.github.com/repos/${{ github.repository }}/commits/${SHA}/check-runs?per_page=100"
-          RESP=$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$API")
-          echo "$RESP" | jq -r '.check_runs[] | "\(.name)\t\(.conclusion)\t\(.status)"' | sort
 
-          require_check() {
-            local name="$1"
-            local conclusion
-            conclusion=$(echo "$RESP" | jq -r --arg n "$name" '.check_runs[] | select(.name == $n) | .conclusion' | head -1)
-            if [ -z "$conclusion" ] || [ "$conclusion" = "null" ]; then
-              echo "Missing required check: ${name}"
+          # Audit may finish slightly after CI; poll briefly on the auto path.
+          for attempt in $(seq 1 24); do
+            RESP=$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$API")
+            echo "$RESP" | jq -r '.check_runs[] | "\(.name)\t\(.conclusion)\t\(.status)"' | sort
+
+            build_conclusion=$(echo "$RESP" | jq -r '.check_runs[] | select(.name == "build") | .conclusion' | head -1)
+            audit_conclusion=$(echo "$RESP" | jq -r '.check_runs[] | select(.name == "audit") | .conclusion' | head -1)
+            audit_status=$(echo "$RESP" | jq -r '.check_runs[] | select(.name == "audit") | .status' | head -1)
+
+            if [ "$build_conclusion" = "success" ] && [ "$audit_conclusion" = "success" ]; then
+              echo "OK: build → success"
+              echo "OK: audit → success"
+              exit 0
+            fi
+
+            if [ "$build_conclusion" != "success" ] && [ "$build_conclusion" != "null" ] && [ -n "$build_conclusion" ]; then
+              echo "Required check build conclusion=${build_conclusion} (expected success)"
               exit 1
             fi
-            if [ "$conclusion" != "success" ]; then
-              echo "Required check ${name} conclusion=${conclusion} (expected success)"
+
+            if [ "$audit_conclusion" = "failure" ] || [ "$audit_conclusion" = "cancelled" ]; then
+              echo "Required check audit conclusion=${audit_conclusion} (expected success)"
               exit 1
             fi
-            echo "OK: ${name} → ${conclusion}"
-          }
 
-          require_check "build"
-          require_check "audit"
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              echo "Missing required successful build/audit checks for manual deploy"
+              exit 1
+            fi
+
+            echo "[$attempt/24] waiting for audit (status=${audit_status:-missing} conclusion=${audit_conclusion:-missing})"
+            sleep 15
+          done
+
+          echo "Timed out waiting for successful build + audit checks"
+          exit 1
 
   deploy:
     needs: gate-checks
@@ -185,3 +221,4 @@ jobs:
           check_path / 200
           check_path /directory 200
           check_path /Register 200
+          check_path /admin/automation 200
