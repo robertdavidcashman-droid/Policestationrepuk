@@ -29,9 +29,12 @@ export interface BufferRepairResult {
 export async function repairBufferSchedule(options?: {
   dryRun?: boolean;
   now?: Date;
+  /** Admin/ops override — perform live repairs even when AUTO_REPAIR_ENABLED=0. */
+  forceLive?: boolean;
 }): Promise<BufferRepairResult> {
   const config = getAutomationConfig();
   const dryRun = options?.dryRun ?? config.dryRun;
+  const forceLive = options?.forceLive === true;
   const now = options?.now ?? new Date();
   const timezone = getSchedulerTimezone();
   const today = localDateInTimezone(now, timezone);
@@ -60,7 +63,10 @@ export async function repairBufferSchedule(options?: {
   }
 
   // Today's schedule gap-fill.
-  if (dryRun || !config.autoRepairEnabled || !canPerformLiveSideEffects()) {
+  // Automated paths require AUTO_REPAIR_ENABLED; explicit admin forceLive may proceed.
+  const allowLive =
+    !dryRun && canPerformLiveSideEffects() && (forceLive || config.autoRepairEnabled);
+  if (!allowLive) {
     const verifyDry = await verifyRepukBufferSchedule({ now, gapFill: false });
     repairs.push({
       id: 'gap-fill-today',

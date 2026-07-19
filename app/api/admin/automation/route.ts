@@ -96,7 +96,8 @@ export async function POST(request: Request) {
                 ],
               };
             }
-            const repair = await repairBufferSchedule({ dryRun: false });
+            // forceLive: admin explicitly requested live repair — do not require AUTO_REPAIR_ENABLED.
+            const repair = await repairBufferSchedule({ dryRun: false, forceLive: true });
             return {
               status:
                 repair.todayScheduled >= repair.todayRequired
@@ -132,6 +133,7 @@ export async function POST(request: Request) {
               };
             }
             const result = await runRepukBufferScheduler({ force: true });
+            const postCount = result.posts?.length ?? 0;
             return {
               status: result.ok
                 ? result.skipped
@@ -143,9 +145,12 @@ export async function POST(request: Request) {
               notes: [
                 `force_schedule by ${auth.email}`,
                 result.reason ?? '',
-                `posts=${result.posts?.length ?? 0}`,
+                `posts=${postCount}`,
               ].filter(Boolean),
-              counts: { postCount: result.posts?.length ?? 0 },
+              counts: {
+                recordsScheduled: postCount,
+                quotaAchieved: postCount,
+              },
             };
           },
         });

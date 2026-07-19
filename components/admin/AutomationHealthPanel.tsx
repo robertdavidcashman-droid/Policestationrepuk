@@ -146,6 +146,23 @@ export function AutomationHealthPanel() {
         </button>
         <button
           type="button"
+          className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-base font-semibold text-amber-950 disabled:opacity-50"
+          onClick={() => {
+            if (
+              !window.confirm(
+                'Live gap-fill today\'s REPUK Buffer quota now? This may create live Buffer posts.',
+              )
+            ) {
+              return;
+            }
+            runAction('gap_fill', false);
+          }}
+          disabled={pending}
+        >
+          Gap-fill today (live)
+        </button>
+        <button
+          type="button"
           className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-base font-semibold text-[var(--navy)] disabled:opacity-50"
           onClick={() => runAction('cross_site_inspect', true)}
           disabled={pending}
