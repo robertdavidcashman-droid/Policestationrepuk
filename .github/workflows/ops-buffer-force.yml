@@ -1,0 +1,38 @@
+# Manual force re-run of the RepUK Buffer daily scheduler.
+name: Ops — buffer force schedule
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type FORCE to confirm production buffer-blog-posts?force=1'
+        required: true
+        type: string
+
+jobs:
+  force-schedule:
+    if: github.event.inputs.confirm == 'FORCE'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger buffer-blog-posts?force=1
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "CRON_SECRET secret is not set"
+            exit 1
+          fi
+          CODE=$(curl -sS -o /tmp/buffer-force.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "https://policestationrepuk.org/api/cron/buffer-blog-posts?force=1")
+          echo "HTTP ${CODE}"
+          cat /tmp/buffer-force.json
+          echo
+          if [ "$CODE" != "200" ]; then
+            echo "Force schedule failed"
+            exit 1
+          fi
+          jq -e '.ok == true or .skipped == true' /tmp/buffer-force.json >/dev/null \
+            || jq . /tmp/buffer-force.json
