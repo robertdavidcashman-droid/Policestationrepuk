@@ -35,4 +35,4 @@ jobs:
             exit 1
           fi
           jq -e '.ok == true or .skipped == true' /tmp/buffer-force.json >/dev/null \
-            || jq . /tmp/buffer-force.json
+            || { jq . /tmp/buffer-force.json; exit 1; }
