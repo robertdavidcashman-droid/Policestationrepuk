@@ -122,6 +122,31 @@ export function AutomationHealthPanel() {
         <button
           type="button"
           className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-base font-semibold text-[var(--navy)] disabled:opacity-50"
+          onClick={() => runAction('force_schedule', true)}
+          disabled={pending}
+        >
+          Inspect force-schedule
+        </button>
+        <button
+          type="button"
+          className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-base font-semibold text-amber-950 disabled:opacity-50"
+          onClick={() => {
+            if (
+              !window.confirm(
+                'Force-schedule today\'s Buffer posts on production now? This creates live Buffer posts.',
+              )
+            ) {
+              return;
+            }
+            runAction('force_schedule', false);
+          }}
+          disabled={pending}
+        >
+          Force schedule today (live)
+        </button>
+        <button
+          type="button"
+          className="rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-base font-semibold text-[var(--navy)] disabled:opacity-50"
           onClick={() => runAction('cross_site_inspect', true)}
           disabled={pending}
         >
@@ -226,8 +251,8 @@ export function AutomationHealthPanel() {
       ) : null}
 
       <p className="text-sm text-[var(--muted)]">
-        Manual actions default to dry-run. Live repairs require setting dryRun=false via API and
-        production AUTOMATION_ALLOW / AUTO_REPAIR flags. Secrets and email addresses are not shown
+        Most actions default to dry-run. <strong>Force schedule today (live)</strong> runs the same
+        path as the Buffer cron with <code>?force=1</code>. Secrets and email addresses are not shown
         here.
       </p>
     </div>

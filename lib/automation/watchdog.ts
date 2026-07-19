@@ -166,53 +166,75 @@ export async function runAutomationWatchdog(
           localDateInTimezone(new Date(cronLog.finishedAt), timezone) === today);
 
       if (!successToday) {
-        overdueJobs.push('buffer-blog-posts');
-        logAutomationEvent('automation.job.missed', { jobName: 'buffer-blog-posts' });
+        // Prefer Buffer truth over missing cron logs (e.g. mid-day deploy after morning run).
+        const inspect = await verifyRepukBufferSchedule({ now, gapFill: false }).catch(() => null);
+        const quotaMet =
+          Boolean(inspect?.ok) &&
+          typeof inspect?.scheduledCount === 'number' &&
+          typeof inspect?.requiredCount === 'number' &&
+          inspect.scheduledCount >= inspect.requiredCount;
 
-        if (!dryRun && config.autoRepairEnabled && canPerformLiveSideEffects() && !authFailure) {
-          const verify = await verifyRepukBufferSchedule({ now, gapFill: true });
-          repairs.push({
-            id: 'watchdog-gap-fill',
-            kind: 'buffer_gap_fill',
-            target: today,
-            attempted: true,
-            verified: verify.ok,
-            dryRun: false,
-            summary: verify.ok
-              ? `Watchdog gap-fill OK ${verify.scheduledCount}/${verify.requiredCount}`
-              : `Watchdog gap-fill incomplete ${verify.scheduledCount}/${verify.requiredCount}`,
-          });
-          logAutomationEvent('automation.job.recovered', {
+        if (quotaMet) {
+          notes.push(
+            `buffer-blog-posts cron log missing but Buffer quota already met (${inspect!.scheduledCount}/${inspect!.requiredCount}) — not overdue`,
+          );
+          logAutomationEvent('automation.job.missed', {
             jobName: 'buffer-blog-posts',
-            ok: verify.ok,
+            suppressed: true,
+            reason: 'buffer_quota_met',
           });
         } else {
-          repairs.push({
-            id: 'watchdog-gap-fill',
-            kind: 'buffer_gap_fill',
-            target: 'buffer-blog-posts',
-            attempted: false,
-            verified: false,
-            dryRun: true,
-            summary: 'Would gap-fill missed buffer-blog-posts',
-          });
-        }
+          overdueJobs.push('buffer-blog-posts');
+          logAutomationEvent('automation.job.missed', { jobName: 'buffer-blog-posts' });
 
-        const result = await notifyIncident({
-          fingerprint: buildIncidentFingerprint({
+          if (!dryRun && config.autoRepairEnabled && canPerformLiveSideEffects() && !authFailure) {
+            const verify = await verifyRepukBufferSchedule({ now, gapFill: true });
+            repairs.push({
+              id: 'watchdog-gap-fill',
+              kind: 'buffer_gap_fill',
+              target: today,
+              attempted: true,
+              verified: verify.ok,
+              dryRun: false,
+              summary: verify.ok
+                ? `Watchdog gap-fill OK ${verify.scheduledCount}/${verify.requiredCount}`
+                : `Watchdog gap-fill incomplete ${verify.scheduledCount}/${verify.requiredCount}`,
+            });
+            logAutomationEvent('automation.job.recovered', {
+              jobName: 'buffer-blog-posts',
+              ok: verify.ok,
+            });
+          } else {
+            repairs.push({
+              id: 'watchdog-gap-fill',
+              kind: 'buffer_gap_fill',
+              target: 'buffer-blog-posts',
+              attempted: false,
+              verified: false,
+              dryRun: true,
+              summary: 'Would gap-fill missed buffer-blog-posts',
+            });
+          }
+
+          const result = await notifyIncident({
+            fingerprint: buildIncidentFingerprint({
+              jobName: 'buffer-blog-posts',
+              category: 'scheduler',
+              scheduledDate: localDateInTimezone(now, getSchedulerTimezone()),
+            }),
+            notificationType: 'job_overdue',
             jobName: 'buffer-blog-posts',
-            category: 'scheduler',
-            scheduledDate: localDateInTimezone(now, getSchedulerTimezone()),
-          }),
-          notificationType: 'job_overdue',
-          jobName: 'buffer-blog-posts',
-          severity: 'error',
-          summary: 'Critical job buffer-blog-posts appears overdue',
-          executionId,
-          dryRun,
-        });
-        if (result.sent) alertsSent += 1;
-        if (result.suppressed) notes.push('overdue alert suppressed (dedup)');
+            severity: 'error',
+            summary: 'Critical job buffer-blog-posts appears overdue',
+            details: inspect
+              ? `Buffer quota ${inspect.scheduledCount}/${inspect.requiredCount}`
+              : 'Could not inspect Buffer quota',
+            executionId,
+            dryRun,
+          });
+          if (result.sent) alertsSent += 1;
+          if (result.suppressed) notes.push('overdue alert suppressed (dedup)');
+        }
       }
     }
 
