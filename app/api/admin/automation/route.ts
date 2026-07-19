@@ -10,7 +10,7 @@ import {
   resolveIncident,
   sendDailyHealthReportEmail,
 } from '@/lib/automation/notifications';
-import { verifyRepukBufferSchedule } from '@/lib/buffer/engine-run';
+import { runRepukBufferScheduler, verifyRepukBufferSchedule } from '@/lib/buffer/engine-run';
 import { withAutomationJob } from '@/lib/automation/with-job';
 import { buildDailyHealthReport } from '@/lib/automation/report';
 import { createExecutionId } from '@/lib/automation/execution-log';
@@ -38,6 +38,7 @@ type Action =
   | 'healthcheck'
   | 'watchdog'
   | 'gap_fill'
+  | 'force_schedule'
   | 'cross_site_inspect'
   | 'acknowledge_incident'
   | 'resolve_incident'
@@ -108,6 +109,43 @@ export async function POST(request: Request) {
                 quotaAchieved: repair.todayScheduled,
                 recordsRepaired: repair.repairs.filter((r) => r.verified).length,
               },
+            };
+          },
+        });
+        return NextResponse.json({ ok: wrapped.ok, wrapped, admin: auth.email });
+      }
+      case 'force_schedule': {
+        // Live admin recovery for missed buffer-blog-posts (same as cron ?force=1).
+        const wrapped = await withAutomationJob<unknown>({
+          jobName: 'buffer-blog-posts',
+          triggerSource: 'admin',
+          dryRun,
+          run: async () => {
+            if (dryRun) {
+              const inspect = await verifyRepukBufferSchedule({ gapFill: false });
+              return {
+                status: 'successful' as const,
+                result: { dryRun: true, inspect },
+                notes: [
+                  `Would force-schedule today (currently ${inspect.scheduledCount}/${inspect.requiredCount})`,
+                ],
+              };
+            }
+            const result = await runRepukBufferScheduler({ force: true });
+            return {
+              status: result.ok
+                ? result.skipped
+                  ? ('skipped_duplicate' as const)
+                  : ('successful' as const)
+                : ('failed' as const),
+              result,
+              errorMessage: result.ok ? null : result.reason ?? 'Buffer scheduler failed',
+              notes: [
+                `force_schedule by ${auth.email}`,
+                result.reason ?? '',
+                `posts=${result.posts?.length ?? 0}`,
+              ].filter(Boolean),
+              counts: { postCount: result.posts?.length ?? 0 },
             };
           },
         });
