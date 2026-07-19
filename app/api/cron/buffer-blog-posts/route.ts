@@ -100,19 +100,27 @@ export async function GET(request: Request) {
         }
       }
 
+      const postCount = result.posts?.length ?? result.scheduledInBuffer ?? 0;
+      const status = result.skipped
+        ? ('skipped_duplicate' as const)
+        : result.ok
+          ? ('successful' as const)
+          : postCount > 0
+            ? ('partially_successful' as const)
+            : ('failed' as const);
       return {
-        status: result.skipped
-          ? 'skipped_duplicate'
-          : result.ok
-            ? 'successful'
-            : 'failed',
+        status,
         result,
         counts: {
           recordsScheduled: result.posts?.length ?? 0,
-          quotaAchieved: result.posts?.length ?? result.scheduledInBuffer ?? 0,
+          quotaAchieved: postCount,
         },
         externalIds: result.posts?.map((p) => p.postId).filter(Boolean) ?? [],
-        errorMessage: result.ok ? null : result.reason ?? 'Buffer scheduler failed',
+        errorMessage: result.ok || postCount > 0 ? result.reason ?? null : result.reason ?? 'Buffer scheduler failed',
+        notes:
+          status === 'partially_successful'
+            ? ['Under daily quota — buffer-verify gap-fill should top up']
+            : undefined,
       };
     },
   });

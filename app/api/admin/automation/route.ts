@@ -134,18 +134,25 @@ export async function POST(request: Request) {
             }
             const result = await runRepukBufferScheduler({ force: true });
             const postCount = result.posts?.length ?? 0;
+            // Partial schedules (e.g. 3/5) still created live posts — treat as partial, not hard fail.
+            const status = result.skipped
+              ? ('skipped_duplicate' as const)
+              : result.ok
+                ? ('successful' as const)
+                : postCount > 0
+                  ? ('partially_successful' as const)
+                  : ('failed' as const);
             return {
-              status: result.ok
-                ? result.skipped
-                  ? ('skipped_duplicate' as const)
-                  : ('successful' as const)
-                : ('failed' as const),
+              status,
               result,
-              errorMessage: result.ok ? null : result.reason ?? 'Buffer scheduler failed',
+              errorMessage: result.ok || postCount > 0 ? result.reason ?? null : result.reason ?? 'Buffer scheduler failed',
               notes: [
                 `force_schedule by ${auth.email}`,
                 result.reason ?? '',
                 `posts=${postCount}`,
+                status === 'partially_successful'
+                  ? 'Under quota — run Gap-fill today (live) to complete'
+                  : '',
               ].filter(Boolean),
               counts: {
                 recordsScheduled: postCount,
