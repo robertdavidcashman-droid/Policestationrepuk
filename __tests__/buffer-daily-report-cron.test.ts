@@ -29,7 +29,12 @@ const ENV = process.env;
 describe('buffer-daily-report cron route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env = { ...ENV, CRON_SECRET: 'cron-test-secret' };
+    process.env = {
+      ...ENV,
+      CRON_SECRET: 'cron-test-secret',
+      // Legacy email path under test — healthcheck consolidation off.
+      DAILY_HEALTHCHECK_ENABLED: '0',
+    };
     mockWasSent.mockResolvedValue(false);
     mockClaimDigest.mockResolvedValue(true);
     mockMarkSent.mockResolvedValue(undefined);

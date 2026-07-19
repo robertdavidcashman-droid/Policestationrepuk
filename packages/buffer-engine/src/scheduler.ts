@@ -35,6 +35,11 @@ import {
   saveSchedulerRun,
   saveSlugEngagementStats,
 } from './storage';
+import {
+  bufferPostIdempotencyKey,
+  claimBufferPostIdempotency,
+  finalizeBufferPostIdempotency,
+} from './idempotency';
 import { join } from 'node:path';
 
 function shuffleChannelsRepeated<T>(items: T[], count: number, random: () => number): T[] {
@@ -332,8 +337,39 @@ export async function runSiteBufferScheduler(
     const post = picked[i]!;
     const channel = channelOrder[i]!;
     const dueAt = dueAts[i]!;
+    const idemKey = bufferPostIdempotencyKey({
+      siteId: adapter.siteId,
+      date: localDate,
+      channelId: channel.id,
+      slug: post.slug,
+    });
 
     try {
+      const claim = await claimBufferPostIdempotency(kv, idemKey, 'pending');
+      if (!claim.claimed) {
+        if (claim.existingPostId && claim.existingPostId !== 'pending') {
+          console.info(
+            `[buffer-engine:${adapter.siteId}] Idempotency skipped duplicate ${post.slug} on ${channel.service} (postId=${claim.existingPostId})`,
+          );
+          created.push({
+            postId: claim.existingPostId,
+            slug: post.slug,
+            feedId: post.feedId,
+            channelId: channel.id,
+            channelService: channel.service,
+            dueAt,
+            title: post.title,
+            imageUrl: post.imageUrl,
+          });
+          newRecent.push({ slug: post.slug, feedId: post.feedId, scheduledAt: now.toISOString() });
+          continue;
+        }
+        console.info(
+          `[buffer-engine:${adapter.siteId}] Idempotency in-flight for ${post.slug} on ${channel.service} — skipping`,
+        );
+        continue;
+      }
+
       const text = buildSchedulablePostTextForService(post, channel.service);
       const imageUrlForChannel =
         channel.service === 'googlebusiness'
@@ -351,6 +387,8 @@ export async function runSiteBufferScheduler(
         feedId: post.feedId,
         siteUrl: adapter.siteUrl,
       });
+
+      await finalizeBufferPostIdempotency(kv, idemKey, createdPost.id);
 
       created.push({
         postId: createdPost.id,
@@ -379,6 +417,14 @@ export async function runSiteBufferScheduler(
         lastPostedAt: now.toISOString(),
       });
     } catch (err) {
+      // Release pending claim so a later retry can re-attempt.
+      if (kv?.del) {
+        try {
+          await kv.del(`${'buffer-engine:idem:'}${idemKey}`);
+        } catch {
+          // ignore
+        }
+      }
       errors.push({
         slug: post.slug,
         error: err instanceof Error ? err.message : String(err),

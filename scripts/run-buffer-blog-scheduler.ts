@@ -1,11 +1,21 @@
 #!/usr/bin/env npx tsx
 /**
- * Manual trigger for the daily Buffer blog scheduler.
- * Usage: npm run buffer:schedule
+ * Manual Buffer scheduler trigger.
+ *
+ * Production cron uses buffer-engine via /api/cron/buffer-blog-posts.
+ * This CLI defaults to the same engine path. Pass --legacy-feeds to use the
+ * multi-feed RSS scheduler (ops only — can double-post if siblings self-schedule).
+ *
+ * Usage:
+ *   npm run buffer:schedule -- --dry-run
+ *   AUTOMATION_ALLOW_NON_PROD=1 npm run buffer:schedule -- --force
+ *   AUTOMATION_ALLOW_NON_PROD=1 npm run buffer:schedule -- --legacy-feeds --force
  */
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { runBufferBlogScheduler } from '../lib/buffer/scheduler';
+import { runRepukBufferScheduler } from '../lib/buffer/engine-run';
+import { assertLiveAutomationAllowed, AutomationEnvError } from '../lib/automation/env-guard';
 
 function loadEnvFile(filename: string) {
   const path = resolve(process.cwd(), filename);
@@ -33,7 +43,44 @@ async function main() {
 
   const respectCurrentTime = process.argv.includes('--respect-now');
   const force = process.argv.includes('--force');
-  const result = await runBufferBlogScheduler(new Date(), { respectCurrentTime, force });
+  const dryRun = process.argv.includes('--dry-run');
+  const legacyFeeds = process.argv.includes('--legacy-feeds');
+
+  if (!dryRun) {
+    try {
+      assertLiveAutomationAllowed('CLI buffer:schedule');
+    } catch (err) {
+      if (err instanceof AutomationEnvError) {
+        console.error(
+          `${err.message}\n` +
+            'Hint: use --dry-run, or set AUTOMATION_ALLOW_NON_PROD=1 for controlled ops.\n' +
+            'Production scheduling should go through Vercel cron /api/cron/buffer-blog-posts.',
+        );
+        process.exit(2);
+      }
+      throw err;
+    }
+  }
+
+  if (legacyFeeds) {
+    if (dryRun) {
+      console.error('Legacy multi-feed scheduler does not support --dry-run; omit --legacy-feeds.');
+      process.exit(2);
+    }
+    const result = await runBufferBlogScheduler(new Date(), {
+      respectCurrentTime,
+      force,
+    });
+    console.log(JSON.stringify(result, null, 2));
+    if (!result.ok) process.exit(1);
+    return;
+  }
+
+  const result = await runRepukBufferScheduler({
+    respectCurrentTime,
+    force,
+    dryRun,
+  });
   console.log(JSON.stringify(result, null, 2));
   if (!result.ok) process.exit(1);
 }

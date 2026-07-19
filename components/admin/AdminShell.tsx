@@ -9,13 +9,15 @@ export type AdminSection =
   | 'station-contacts'
   | 'custody'
   | 'custody-discovery'
-  | 'firm-outreach';
+  | 'firm-outreach'
+  | 'automation';
 
 const NAV: { id: AdminSection; href: string; label: string }[] = [
   { id: 'reps', href: '/admin', label: 'Rep verification' },
   { id: 'legal', href: '/admin/legal-directory', label: 'Legal directory' },
   { id: 'legal-queue', href: '/admin/legal-directory/review-queue', label: 'Flagged listings' },
   { id: 'firm-outreach', href: '/admin/firm-outreach', label: 'Firm outreach' },
+  { id: 'automation', href: '/admin/automation', label: 'Automation' },
   { id: 'stations', href: '/admin/station-updates', label: 'Station updates' },
   { id: 'station-contacts', href: '/admin/station-contacts', label: 'Station contacts' },
   { id: 'custody', href: '/admin/custody-tips', label: 'Custody tips' },

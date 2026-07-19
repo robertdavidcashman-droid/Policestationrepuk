@@ -97,6 +97,14 @@
       "schedule": "45 4 * * *"
     },
     {
+      "path": "/api/cron/automation-healthcheck",
+      "schedule": "15 7 * * *"
+    },
+    {
+      "path": "/api/cron/automation-watchdog",
+      "schedule": "20 * * * *"
+    },
+    {
       "path": "/api/cron/traffic-digest",
       "schedule": "0 7 * * 1"
     },

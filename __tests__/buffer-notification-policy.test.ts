@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 import {
   shouldSendSchedulerFailureEmail,
   shouldSendSchedulerFailureForError,
@@ -7,6 +7,10 @@ import {
 import { schedulerFailureErrorKey } from '@/lib/buffer/scheduler-notification-digest';
 
 describe('buffer notification policy', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('does not send failure email when reconciled after cooldown', () => {
     expect(
       shouldSendSchedulerFailureEmail({
@@ -28,13 +32,24 @@ describe('buffer notification policy', () => {
     ).toBe(false);
   });
 
-  it('sends failure email for genuine final failure', () => {
+  it('sends immediate email for permanent config failure', () => {
+    vi.stubEnv('DAILY_HEALTHCHECK_ENABLED', 'true');
     expect(
       shouldSendSchedulerFailureEmail({
         ok: false,
         reason: 'BUFFER_API_KEY is not configured',
       }),
     ).toBe(true);
+  });
+
+  it('defers transient failures to daily healthcheck when enabled', () => {
+    vi.stubEnv('DAILY_HEALTHCHECK_ENABLED', 'true');
+    expect(
+      shouldSendSchedulerFailureEmail({
+        ok: false,
+        reason: 'fetch failed: network timeout',
+      }),
+    ).toBe(false);
   });
 
   it('does not send skipped email (log only)', () => {
