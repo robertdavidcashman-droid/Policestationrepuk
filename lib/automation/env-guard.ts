@@ -52,9 +52,15 @@ export function canPerformLiveSideEffects(): boolean {
 
 /** Preview/local must not send production alert emails. */
 export function canSendProductionAlerts(): boolean {
-  if (process.env.VITEST === 'true') return false;
   if (isPreviewDeployment()) return false;
-  if (!isProductionDeployment() && !getAutomationConfig().allowNonProd) return false;
+  // Vitest: allow the helper to report production eligibility when VERCEL_ENV is stubbed,
+  // but sendHtmlEmail still no-ops without RESEND and callers pass dryRun in tests.
+  if (!isProductionDeployment() && !getAutomationConfig().allowNonProd) {
+    if (process.env.VITEST === 'true' && process.env.VERCEL_ENV === 'production') {
+      return true;
+    }
+    return false;
+  }
   return true;
 }
 

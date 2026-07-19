@@ -153,7 +153,11 @@ export async function probeBufferCredentials(): Promise<BufferCredentialProbe> {
 
     if (json.errors?.length) {
       const message = json.errors.map((e) => e.message).join('; ');
-      const category: ErrorCategory = /unauthor/i.test(message) ? 'auth' : 'unknown';
+      const category: ErrorCategory = /unauthor/i.test(message)
+        ? 'auth'
+        : /missing|not configured|invalid/i.test(message)
+          ? 'config'
+          : 'unknown';
       issues.push(
         issue({
           jobName: 'buffer-blog-posts',
@@ -161,7 +165,7 @@ export async function probeBufferCredentials(): Promise<BufferCredentialProbe> {
           severity: 'critical',
           summary: 'Buffer authentication or API probe failed',
           details: message,
-          recoverable: category !== 'auth' && category !== 'config',
+          recoverable: category === 'unknown',
           requiresHumanAction: category === 'auth' || category === 'config',
         }),
       );

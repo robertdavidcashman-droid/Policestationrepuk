@@ -80,7 +80,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true, result, admin: auth.email });
       }
       case 'gap_fill': {
-        const wrapped = await withAutomationJob({
+        const wrapped = await withAutomationJob<unknown>({
           jobName: 'buffer-verify',
           triggerSource: 'admin',
           dryRun,
@@ -97,7 +97,10 @@ export async function POST(request: Request) {
             }
             const repair = await repairBufferSchedule({ dryRun: false });
             return {
-              status: repair.todayScheduled >= repair.todayRequired ? 'repaired' : 'partially_successful',
+              status:
+                repair.todayScheduled >= repair.todayRequired
+                  ? ('repaired' as const)
+                  : ('partially_successful' as const),
               result: repair,
               repairs: repair.repairs.map((r) => r.summary),
               counts: {

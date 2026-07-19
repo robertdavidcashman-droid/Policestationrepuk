@@ -53,7 +53,7 @@ export async function GET(request: Request) {
     }
   }
 
-  const wrapped = await withAutomationJob({
+  const wrapped = await withAutomationJob<Record<string, unknown>>({
     jobName: 'buffer-daily-report',
     triggerSource: 'cron',
     run: async ({ executionId }) => {

@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, skipped: true, date: verifyDate });
   }
 
-  const wrapped = await withAutomationJob({
+  const wrapped = await withAutomationJob<Record<string, unknown>>({
     jobName: 'buffer-cross-site-report',
     triggerSource: 'cron',
     run: async ({ executionId }) => {
