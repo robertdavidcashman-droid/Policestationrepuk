@@ -92,9 +92,11 @@ async function inspectSchedulerHealth(
       });
     }
 
-    // Overdue: after allowed window end and no success today/yesterday as appropriate.
+    // Overdue: after allowed window end and no success in today's window.
+    // Skip "missed" alerts when we have no history at all (first deploy / empty registry).
     const hourUtc = now.getUTCHours();
-    if (hourUtc >= def.allowedWindowEndHourUtc) {
+    const hasAnyHistory = Boolean(job.lastAttemptedAt || job.lastSuccessfulAt || cronLog);
+    if (hasAnyHistory && hourUtc >= def.allowedWindowEndHourUtc) {
       const lastOk = job.lastSuccessfulAt ? Date.parse(job.lastSuccessfulAt) : 0;
       const windowStart = Date.UTC(
         now.getUTCFullYear(),
@@ -103,7 +105,6 @@ async function inspectSchedulerHealth(
         def.allowedWindowStartHourUtc,
       );
       if (!lastOk || lastOk < windowStart) {
-        // Also check legacy cron-run-log
         const cronOk =
           cronLog &&
           (cronLog.outcome === 'success' || cronLog.outcome === 'skipped') &&
