@@ -14,18 +14,41 @@ jobs:
     if: github.event.inputs.confirm == 'FORCE'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
-      - name: Trigger buffer-blog-posts?force=1
-        env:
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      - uses: actions/checkout@v4
+
+      - name: Install Vercel CLI (pinned)
+        run: npm install -g vercel@41.4.0
+
+      - name: Pull production env (for CRON_SECRET)
         run: |
           set -euo pipefail
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+            echo "VERCEL_TOKEN secret is not set"
+            exit 1
+          fi
+          vercel env pull .env.production --environment=production --yes --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Trigger buffer-blog-posts?force=1
+        env:
+          CRON_SECRET_FALLBACK: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          set -a
+          # shellcheck disable=SC1091
+          source .env.production
+          set +a
+          CRON_SECRET="${CRON_SECRET:-${CRON_SECRET_FALLBACK:-}}"
           if [ -z "${CRON_SECRET}" ]; then
-            echo "CRON_SECRET secret is not set"
+            echo "CRON_SECRET missing from Vercel production env and GitHub secrets"
             exit 1
           fi
           CODE=$(curl -sS -o /tmp/buffer-force.json -w "%{http_code}" \
             -H "Authorization: Bearer ${CRON_SECRET}" \
+            --max-time 290 \
             "https://policestationrepuk.org/api/cron/buffer-blog-posts?force=1")
           echo "HTTP ${CODE}"
           cat /tmp/buffer-force.json
@@ -34,5 +57,8 @@ jobs:
             echo "Force schedule failed"
             exit 1
           fi
-          jq -e '.ok == true or .skipped == true' /tmp/buffer-force.json >/dev/null \
-            || jq . /tmp/buffer-force.json
+          if ! jq -e '.ok == true or .skipped == true' /tmp/buffer-force.json >/dev/null; then
+            echo "Unexpected response body"
+            exit 1
+          fi
+          echo "OK"
