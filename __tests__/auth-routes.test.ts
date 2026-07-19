@@ -73,16 +73,12 @@ describe('auth routes (expanded)', () => {
     expect(res.status).toBe(401);
   });
 
-  it('admin-login returns 503 when password auth not configured', async () => {
+  it('admin-login password route is permanently disabled', async () => {
     const { POST } = await import('@/app/api/auth/admin-login/route');
-    const res = await POST(
-      new Request('http://localhost/api/auth/admin-login', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email: 'admin@example.com', password: 'secret' }),
-      }),
-    );
-    expect(res.status).toBe(503);
+    const res = await POST();
+    expect(res.status).toBe(410);
+    const body = await res.json();
+    expect(body.useMagicCode).toBe(true);
   });
 
   it('logout succeeds without an active session', async () => {

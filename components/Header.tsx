@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { SITE_URL } from '@/lib/seo-layer/config';
-import { SCROLL_HIDE_PX, shouldCompactHeader } from '@/lib/promo-banner-scroll';
+import { shouldCompactHeader } from '@/lib/promo-banner-scroll';
 import {
   HEADER_NAV_BLOG_LINKS,
   HEADER_NAV_DROPDOWNS,
@@ -194,7 +194,9 @@ export function Header() {
   const mobileDropdowns = HEADER_NAV_DROPDOWNS.filter((group) => group.label !== 'Blog');
 
   useEffect(() => {
-    const onScroll = () => setCompact(shouldCompactHeader(window.scrollY, SCROLL_HIDE_PX));
+    const onScroll = () => {
+      setCompact((prev) => shouldCompactHeader(window.scrollY, prev));
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);

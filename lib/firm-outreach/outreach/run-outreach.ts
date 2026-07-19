@@ -92,7 +92,13 @@ async function persistRunLog(opts: {
   sentTodayBefore: number;
   resendQuotaRemaining: number;
 }): Promise<void> {
-  if (opts.dryRun || process.env.FIRM_OUTREACH_DRY_RUN === 'true') return;
+  const dryRunEnv = process.env.FIRM_OUTREACH_DRY_RUN?.trim().toLowerCase();
+  if (
+    opts.dryRun ||
+    (dryRunEnv !== undefined && ['1', 'true', 'yes', 'on'].includes(dryRunEnv))
+  ) {
+    return;
+  }
   await saveOutreachRunLog(
     buildOutreachRunLog({
       campaignId: opts.campaignId,
@@ -298,7 +304,10 @@ export async function runFirmOutreach(opts?: {
         continue;
       }
 
-      if (!opts?.dryRun && process.env.FIRM_OUTREACH_DRY_RUN !== 'true') {
+      const dryRunEnv = process.env.FIRM_OUTREACH_DRY_RUN?.trim().toLowerCase();
+      const envDryRun =
+        dryRunEnv !== undefined && ['1', 'true', 'yes', 'on'].includes(dryRunEnv);
+      if (!opts?.dryRun && !envDryRun) {
         const now = new Date().toISOString();
         prospect.sequenceStep = step;
         prospect.lastEmailAt = now;

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validateOutreachEnv } from '@robertcashman/firm-outreach-core';
 import { isCronAuthorized } from '@/lib/cron-auth';
-import { cronSendBatchSize } from '@/lib/firm-outreach/constants';
+import { cronSendBatchSize, outreachRequireApproval } from '@/lib/firm-outreach/constants';
 import { runFirmOutreachPipeline } from '@/lib/firm-outreach/run-pipeline';
 
 export const dynamic = 'force-dynamic';
@@ -14,9 +14,22 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Click-to-send mode: only the approval Confirm path may send firm emails.
+  if (outreachRequireApproval()) {
+    return NextResponse.json({
+      ok: true,
+      mode: 'approval-required',
+      skipped: true,
+      reason: 'FIRM_OUTREACH_REQUIRE_APPROVAL=true — use Ready to send approval link',
+    });
+  }
+
   const envCheck = validateOutreachEnv({ requireCronSecret: true });
   if (!envCheck.ok) {
-    return NextResponse.json({ ok: false, error: 'outreach_env_invalid', errors: envCheck.errors }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: 'outreach_env_invalid', errors: envCheck.errors, warnings: envCheck.warnings },
+      { status: 500 },
+    );
   }
 
   const url = new URL(request.url);
@@ -30,5 +43,10 @@ export async function GET(request: Request) {
     skipCounts: true,
     sendLimit,
   });
-  return NextResponse.json({ ok: true, mode: 'send-only', ...result });
+  return NextResponse.json({
+    ok: true,
+    mode: 'send-only',
+    warnings: envCheck.warnings,
+    ...result,
+  });
 }

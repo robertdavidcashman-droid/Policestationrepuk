@@ -102,6 +102,8 @@ describe('sendOutreachEmail domain retry', () => {
     vi.resetModules();
     clearVerifiedDomainsCache();
     process.env = { ...ENV, RESEND_API_KEY: 're_test' };
+    // CI sets FIRM_OUTREACH_DRY_RUN=1; this suite exercises the real Resend path.
+    delete process.env.FIRM_OUTREACH_DRY_RUN;
     sendMock.mockReset();
   });
 

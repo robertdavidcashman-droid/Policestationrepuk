@@ -1,6 +1,7 @@
 export interface OutreachEnvValidation {
   ok: boolean;
   errors: string[];
+  warnings?: string[];
 }
 
 function hasKvCreds(): boolean {
@@ -11,9 +12,14 @@ function hasKvCreds(): boolean {
   return Boolean(url && token);
 }
 
-/** Loud fail helper for cron routes — lists missing production config. */
+/**
+ * Loud fail helper for cron routes — lists missing production config.
+ * FROM/DIGEST are warnings only: runtime already falls back to
+ * `PoliceStationRepUK <noreply@policestationrepuk.org>` and a digest default.
+ */
 export function validateOutreachEnv(opts?: { requireCronSecret?: boolean }): OutreachEnvValidation {
   const errors: string[] = [];
+  const warnings: string[] = [];
 
   if (!process.env.RESEND_API_KEY?.trim()) {
     errors.push('RESEND_API_KEY missing');
@@ -30,12 +36,16 @@ export function validateOutreachEnv(opts?: { requireCronSecret?: boolean }): Out
     process.env.BUFFER_SCHEDULER_NOTIFY_EMAIL?.trim() ||
     process.env.OWNER_EMAIL?.trim();
   if (!digest) {
-    errors.push('FIRM_OUTREACH_DIGEST_EMAIL (or BUFFER_SCHEDULER_NOTIFY_EMAIL / OWNER_EMAIL) missing');
+    warnings.push(
+      'FIRM_OUTREACH_DIGEST_EMAIL unset — using code fallback for operator notifications',
+    );
   }
 
   if (!process.env.FIRM_OUTREACH_FROM_EMAIL?.trim()) {
-    errors.push('FIRM_OUTREACH_FROM_EMAIL missing (recommended for outreach + digest FROM)');
+    warnings.push(
+      'FIRM_OUTREACH_FROM_EMAIL unset — using PoliceStationRepUK <noreply@policestationrepuk.org>',
+    );
   }
 
-  return { ok: errors.length === 0, errors };
+  return { ok: errors.length === 0, errors, warnings };
 }

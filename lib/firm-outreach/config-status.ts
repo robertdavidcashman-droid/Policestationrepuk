@@ -19,7 +19,9 @@ export async function getOutreachConfigStatus() {
     kvConfigured: Boolean(getKV()),
     resendConfigured: sendHealth.resendConfigured,
     brochureExists: existsSync(BROCHURE_PUBLIC_PATH),
-    dryRun: process.env.FIRM_OUTREACH_DRY_RUN === 'true',
+    dryRun: ['1', 'true', 'yes', 'on'].includes(
+      (process.env.FIRM_OUTREACH_DRY_RUN ?? '').trim().toLowerCase(),
+    ),
     outreachEnabled: outreachEnabled(),
     sendEnabledEnv: process.env.FIRM_OUTREACH_SEND_ENABLED !== 'false',
     sendAllowed,

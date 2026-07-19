@@ -41,7 +41,7 @@ All cron routes require `Authorization: Bearer $CRON_SECRET` (Vercel adds this a
 | `CRON_SECRET` | — | Cron auth + unsubscribe token signing |
 | `FIRM_OUTREACH_DAILY_CAP` | `150` | Max outreach sends per UTC day |
 | `FIRM_OUTREACH_DIGEST_EMAIL` | `robertdavidcashman@gmail.com` | Approval + confirmation email recipient |
-| `FIRM_OUTREACH_REQUIRE_APPROVAL` | *(unset = approval required)* | Set **`false`** on Vercel for automatic sends at 09:30/14:30/18:30 UTC; set `true` for click-to-send |
+| `FIRM_OUTREACH_REQUIRE_APPROVAL` | *(unset = auto-send)* | Default **auto-send** at 09:30/14:30/18:30 UTC. Set `true` for click-to-send approval emails |
 | `ADMIN_DECISION_TOKEN_SECRET` | — | Signs Ready to send links (or falls back to `CRON_SECRET`) |
 | `RESEND_WEBHOOK_SECRET` | — | Resend webhook signing secret (from configure script) |
 | `FIRM_OUTREACH_CRON_ENRICH_BATCH` | `60` | Firms per cron enrich tick |
@@ -69,9 +69,9 @@ Recommended to set explicitly (otherwise code defaults apply):
 - `FIRM_OUTREACH_CRON_ENRICH_BATCH=50`
 - `FIRM_OUTREACH_DAILY_CAP=150`
 
-**Approval mode (default):** `FIRM_OUTREACH_REQUIRE_APPROVAL` unset means approval is **required** — you receive daily approval/reminder emails and must click **Ready to send**. Set `FIRM_OUTREACH_REQUIRE_APPROVAL=false` on Vercel for automatic sends at 09:30/14:30/18:30 UTC.
+**Auto-send (default):** `FIRM_OUTREACH_REQUIRE_APPROVAL` unset/`false` means crons send automatically at 09:30/14:30/18:30 UTC. Set `FIRM_OUTREACH_REQUIRE_APPROVAL=true` for click-to-send (approval email + Confirm).
 
-- `FIRM_OUTREACH_REQUIRE_APPROVAL=false` (optional — automatic sends)
+- `FIRM_OUTREACH_REQUIRE_APPROVAL=true` (optional — click-to-send)
 - `SERPER_API_KEY` — resolves firm websites via Google when SRA lookup has no URL
 - `HUNTER_API_KEY` — Hunter.io fallback when website crawl finds no email
 - `FIRM_OUTREACH_PAID_DAILY_CAP=100` — Hunter lookups per day (default 100)
@@ -170,10 +170,11 @@ When `FIRM_OUTREACH_REQUIRE_APPROVAL=true`:
 2. You click the button → confirmation page → **Confirm — Ready to send** sends up to `FIRM_OUTREACH_DAILY_CAP` from the ready queue.
 3. **Confirmation email** lists sent count and receipts.
 4. **17:00 UTC** — reminder if you have not yet reached today's cap.
+5. Afternoon send crons **no-op** (approval Confirm is the only send path).
 
-**Production default (recommended):** `FIRM_OUTREACH_REQUIRE_APPROVAL=false` on Vercel — 09:30, 14:30, and 18:30 UTC crons send automatically (no approval email). Quality gates (LAA/DSCC qualification, dedupe, suppression) still apply.
+**Production default:** auto-send (approval off) — 09:30, 14:30, and 18:30 UTC crons send automatically. Quality gates (LAA/DSCC qualification, dedupe, suppression) still apply.
 
-**Verify on Vercel:** Project → Settings → Environment Variables → Production → confirm `FIRM_OUTREACH_REQUIRE_APPROVAL` matches your intent (auto-send vs click-to-send).
+**Verify on Vercel:** Project → Settings → Environment Variables → Production → ensure `FIRM_OUTREACH_DRY_RUN` is unset/`0`, and `FIRM_OUTREACH_ENABLED` / `FIRM_OUTREACH_SEND_ENABLED` are not `false`.
 
 Links are prefetch-safe: the email button only opens a preview; sends happen on POST confirm.
 

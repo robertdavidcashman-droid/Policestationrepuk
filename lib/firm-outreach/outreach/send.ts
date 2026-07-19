@@ -61,7 +61,9 @@ export async function sendOutreachEmail(opts: {
     unsubscribeUrl,
   });
 
-  if (opts.dryRun || process.env.FIRM_OUTREACH_DRY_RUN === 'true') {
+  const dryRunEnv = process.env.FIRM_OUTREACH_DRY_RUN?.trim().toLowerCase();
+  const envDryRun = dryRunEnv !== undefined && ['1', 'true', 'yes', 'on'].includes(dryRunEnv);
+  if (opts.dryRun || envDryRun) {
     console.info('[firm-outreach dry-run]', email, subject);
     return { ok: true, subject, messageId: 'dry-run' };
   }
