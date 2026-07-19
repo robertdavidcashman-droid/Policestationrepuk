@@ -226,8 +226,16 @@ export function createOutreachEnvHelpers(defaults: OutreachLimitsDefaults = {}) 
         process.env.FIRM_OUTREACH_PAUSED !== 'true'
       );
     },
+    /**
+     * Auto-send by default (matches production recommendation).
+     * Set FIRM_OUTREACH_REQUIRE_APPROVAL=true for click-to-send approval emails.
+     */
     outreachRequireApproval(): boolean {
-      return process.env.FIRM_OUTREACH_REQUIRE_APPROVAL !== 'false';
+      const raw = process.env.FIRM_OUTREACH_REQUIRE_APPROVAL?.trim().toLowerCase();
+      if (raw === undefined || raw === '') return false;
+      if (['1', 'true', 'yes', 'on'].includes(raw)) return true;
+      if (['0', 'false', 'no', 'off'].includes(raw)) return false;
+      return false;
     },
     dailySendCap(): number {
       return Number(process.env.FIRM_OUTREACH_DAILY_CAP ?? defaults.dailyCap ?? 50) || 50;

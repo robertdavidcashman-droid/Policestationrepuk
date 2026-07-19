@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GET as fullGet } from '@/app/api/cron/firm-outreach-pipeline/full/route';
 import { GET as digestGet } from '@/app/api/cron/firm-outreach-digest/route';
+import { GET as sendGet } from '@/app/api/cron/firm-outreach-send/route';
 
 const mockPipeline = vi.fn();
 const mockApprovalEmail = vi.fn();
@@ -18,11 +19,20 @@ vi.mock('@/lib/firm-outreach/outreach/digest-email', () => ({
   sendDailyOutreachDigest: (...args: unknown[]) => mockDigest(...args),
 }));
 
+vi.mock('@robertcashman/firm-outreach-core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@robertcashman/firm-outreach-core')>();
+  return {
+    ...actual,
+    validateOutreachEnv: () => ({ ok: true, errors: [], warnings: [] }),
+  };
+});
+
 const ENV = process.env;
 
 describe('firm-outreach approval crons', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Explicit true — default is now auto-send (false).
     process.env = { ...ENV, CRON_SECRET: 'cron-test', FIRM_OUTREACH_REQUIRE_APPROVAL: 'true' };
     mockPipeline.mockResolvedValue({ skipped: false, send: { sent: 0 } });
     mockApprovalEmail.mockResolvedValue({ sent: true, date: '2026-06-13' });
@@ -98,5 +108,40 @@ describe('firm-outreach legacy digest cron', () => {
     const json = await res.json();
     expect(json.mode).toBe('digest');
     expect(mockDigest).toHaveBeenCalledOnce();
+  });
+});
+
+describe('firm-outreach-send cron', () => {
+  afterEach(() => {
+    process.env = { ...ENV };
+  });
+
+  it('skips send when approval is required', async () => {
+    process.env = { ...ENV, CRON_SECRET: 'cron-test', FIRM_OUTREACH_REQUIRE_APPROVAL: 'true' };
+    mockPipeline.mockClear();
+    const res = await sendGet(
+      new Request('http://localhost/api/cron/firm-outreach-send', {
+        headers: { authorization: 'Bearer cron-test' },
+      }),
+    );
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.mode).toBe('approval-required');
+    expect(json.skipped).toBe(true);
+    expect(mockPipeline).not.toHaveBeenCalled();
+  });
+
+  it('runs send pipeline when approval disabled', async () => {
+    process.env = { ...ENV, CRON_SECRET: 'cron-test', FIRM_OUTREACH_REQUIRE_APPROVAL: 'false' };
+    mockPipeline.mockResolvedValue({ skipped: false, send: { sent: 2 } });
+    const res = await sendGet(
+      new Request('http://localhost/api/cron/firm-outreach-send', {
+        headers: { authorization: 'Bearer cron-test' },
+      }),
+    );
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.mode).toBe('send-only');
+    expect(mockPipeline).toHaveBeenCalledOnce();
   });
 });

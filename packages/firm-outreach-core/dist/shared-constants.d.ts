@@ -29,6 +29,10 @@ export declare function createOutreachEnvHelpers(defaults?: OutreachLimitsDefaul
     outreachEnabled(): boolean;
     outreachPaused(): boolean;
     outreachSendEnabled(): boolean;
+    /**
+     * Auto-send by default (matches production recommendation).
+     * Set FIRM_OUTREACH_REQUIRE_APPROVAL=true for click-to-send approval emails.
+     */
     outreachRequireApproval(): boolean;
     dailySendCap(): number;
     enrichBatchSize(): number;

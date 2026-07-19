@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import { isAdminEmail } from '@/lib/admin-auth';
 import { getRawReps, getRegisteredRepByEmail } from '@/lib/data';
-import { verifyMagicCode, createSession, getSessionCookieName } from '@/lib/auth';
+import {
+  ADMIN_SESSION_TTL,
+  verifyMagicCode,
+  createSession,
+  getDefaultSessionTtlSeconds,
+  getSessionCookieName,
+} from '@/lib/auth';
 import { getClientIp, rateLimitOk } from '@/lib/contact-guards';
 
 export async function POST(request: Request) {
@@ -39,16 +45,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status: 401 });
   }
 
-  const token = await createSession(email);
+  // Admin magic-code sessions last 1 hour; rep Account sessions keep the longer default.
+  const ttlSeconds = adminLogin ? ADMIN_SESSION_TTL : getDefaultSessionTtlSeconds();
+  const token = await createSession(email, { ttlSeconds });
   const isProduction = process.env.NODE_ENV === 'production';
 
-  const response = NextResponse.json({ ok: true });
+  const response = NextResponse.json({
+    ok: true,
+    sessionTtlSeconds: ttlSeconds,
+    admin: adminLogin,
+  });
   response.cookies.set(getSessionCookieName(), token, {
     httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: ttlSeconds,
   });
 
   return response;

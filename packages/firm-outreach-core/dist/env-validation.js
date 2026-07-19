@@ -6,9 +6,14 @@ function hasKvCreds() {
     const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim() || process.env.KV_REST_API_TOKEN?.trim() || '';
     return Boolean(url && token);
 }
-/** Loud fail helper for cron routes — lists missing production config. */
+/**
+ * Loud fail helper for cron routes — lists missing production config.
+ * FROM/DIGEST are warnings only: runtime already falls back to
+ * `PoliceStationRepUK <noreply@policestationrepuk.org>` and a digest default.
+ */
 function validateOutreachEnv(opts) {
     const errors = [];
+    const warnings = [];
     if (!process.env.RESEND_API_KEY?.trim()) {
         errors.push('RESEND_API_KEY missing');
     }
@@ -22,10 +27,10 @@ function validateOutreachEnv(opts) {
         process.env.BUFFER_SCHEDULER_NOTIFY_EMAIL?.trim() ||
         process.env.OWNER_EMAIL?.trim();
     if (!digest) {
-        errors.push('FIRM_OUTREACH_DIGEST_EMAIL (or BUFFER_SCHEDULER_NOTIFY_EMAIL / OWNER_EMAIL) missing');
+        warnings.push('FIRM_OUTREACH_DIGEST_EMAIL unset — using code fallback for operator notifications');
     }
     if (!process.env.FIRM_OUTREACH_FROM_EMAIL?.trim()) {
-        errors.push('FIRM_OUTREACH_FROM_EMAIL missing (recommended for outreach + digest FROM)');
+        warnings.push('FIRM_OUTREACH_FROM_EMAIL unset — using PoliceStationRepUK <noreply@policestationrepuk.org>');
     }
-    return { ok: errors.length === 0, errors };
+    return { ok: errors.length === 0, errors, warnings };
 }

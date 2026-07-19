@@ -31,7 +31,9 @@ export function PromoBannerStack() {
       const scrollY = window.scrollY;
       setPinnedOpen((prevPinned) => {
         const nextPinned = clearPinnedOnScroll(scrollY, prevPinned, SCROLL_HIDE_PX);
-        setCollapsed(shouldCollapsePromos(scrollY, nextPinned, SCROLL_HIDE_PX));
+        setCollapsed((prevCollapsed) =>
+          shouldCollapsePromos(scrollY, nextPinned, prevCollapsed),
+        );
         return nextPinned;
       });
     };

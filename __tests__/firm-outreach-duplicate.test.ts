@@ -114,21 +114,21 @@ describe('paidDailyCap default', () => {
 });
 
 describe('outreachRequireApproval default', () => {
-  it('defaults to true when env is unset', async () => {
+  it('defaults to false (auto-send) when env is unset', async () => {
     const prev = process.env.FIRM_OUTREACH_REQUIRE_APPROVAL;
     delete process.env.FIRM_OUTREACH_REQUIRE_APPROVAL;
     vi.resetModules();
     const { outreachRequireApproval } = await import('@/lib/firm-outreach/constants');
-    expect(outreachRequireApproval()).toBe(true);
+    expect(outreachRequireApproval()).toBe(false);
     if (prev === undefined) delete process.env.FIRM_OUTREACH_REQUIRE_APPROVAL;
     else process.env.FIRM_OUTREACH_REQUIRE_APPROVAL = prev;
   });
 
-  it('returns false when env is false', async () => {
-    process.env.FIRM_OUTREACH_REQUIRE_APPROVAL = 'false';
+  it('returns true when explicitly enabled', async () => {
+    process.env.FIRM_OUTREACH_REQUIRE_APPROVAL = 'true';
     vi.resetModules();
     const { outreachRequireApproval } = await import('@/lib/firm-outreach/constants');
-    expect(outreachRequireApproval()).toBe(false);
+    expect(outreachRequireApproval()).toBe(true);
     delete process.env.FIRM_OUTREACH_REQUIRE_APPROVAL;
   });
 });

@@ -10,7 +10,9 @@ function timingSafeEqualStrings(a: string, b: string): boolean {
   return crypto.timingSafeEqual(ab, bb);
 }
 
-const SESSION_TTL = 60 * 60 * 24 * 7; // 7 days
+const SESSION_TTL = 60 * 60 * 24 * 7; // 7 days (reps / Account)
+/** Admin magic-code sessions stay signed in for one hour. */
+export const ADMIN_SESSION_TTL = 60 * 60; // 1 hour
 const MAGIC_CODE_TTL = 60 * 10; // 10 minutes
 const MAX_VERIFY_ATTEMPTS = 5;
 const COOKIE_NAME = 'rep_session';
@@ -18,6 +20,8 @@ const COOKIE_NAME = 'rep_session';
 interface SessionData {
   email: string;
   created: number;
+  /** Seconds of absolute TTL applied when the session was created. */
+  ttlSeconds?: number;
 }
 
 interface MagicCodeData {
@@ -37,17 +41,25 @@ export async function getSession(): Promise<string | null> {
   return session?.email ?? null;
 }
 
-export async function createSession(email: string): Promise<string> {
+export async function createSession(
+  email: string,
+  options?: { ttlSeconds?: number },
+): Promise<string> {
   const kv = getKV();
   if (!kv) throw new Error('KV not configured');
 
+  const ttlSeconds = options?.ttlSeconds ?? SESSION_TTL;
   const token = crypto.randomUUID();
   await kv.set<SessionData>(
     `session:${token}`,
-    { email: email.toLowerCase(), created: Date.now() },
-    { ex: SESSION_TTL },
+    { email: email.toLowerCase(), created: Date.now(), ttlSeconds },
+    { ex: ttlSeconds },
   );
   return token;
+}
+
+export function getDefaultSessionTtlSeconds(): number {
+  return SESSION_TTL;
 }
 
 export async function destroySession(token: string): Promise<void> {
