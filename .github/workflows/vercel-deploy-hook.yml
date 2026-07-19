@@ -216,9 +216,10 @@ jobs:
               exit 1
             fi
           }
+          # Prefer final routes (middleware 301s /Register → /register).
           check_path /api/health 200
           check_path /api/ready 200
           check_path / 200
           check_path /directory 200
-          check_path /Register 200
+          check_path /register 200
           check_path /admin/automation 200
