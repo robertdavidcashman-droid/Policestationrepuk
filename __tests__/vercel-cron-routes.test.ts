@@ -34,4 +34,13 @@ describe('vercel.json cron routes', () => {
     expect(paths).not.toContain('/api/cron/firm-outreach-kick');
     expect(paths).toContain('/api/cron/firm-outreach-bootstrap');
   });
+
+  it('schedules automation healthcheck and watchdog', () => {
+    const vercel = JSON.parse(
+      readFileSync(join(ROOT, 'vercel.json'), 'utf8'),
+    ) as { crons?: Array<{ path: string; schedule: string }> };
+    const byPath = new Map((vercel.crons ?? []).map((c) => [c.path, c.schedule]));
+    expect(byPath.get('/api/cron/automation-healthcheck')).toBe('15 7 * * *');
+    expect(byPath.get('/api/cron/automation-watchdog')).toBe('20 * * * *');
+  });
 });

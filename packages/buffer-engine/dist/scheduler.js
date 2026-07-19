@@ -10,6 +10,7 @@ const reconcile_1 = require("./reconcile");
 const image_corrector_1 = require("./image-corrector");
 const image_url_1 = require("./image-url");
 const storage_1 = require("./storage");
+const idempotency_1 = require("./idempotency");
 const node_path_1 = require("node:path");
 function shuffleChannelsRepeated(items, count, random) {
     const shuffled = [...items];
@@ -250,7 +251,33 @@ async function runSiteBufferScheduler(adapter, options = {}) {
             const post = picked[i];
             const channel = channelOrder[i];
             const dueAt = dueAts[i];
+            const idemKey = (0, idempotency_1.bufferPostIdempotencyKey)({
+                siteId: adapter.siteId,
+                date: localDate,
+                channelId: channel.id,
+                slug: post.slug,
+            });
             try {
+                const claim = await (0, idempotency_1.claimBufferPostIdempotency)(kv, idemKey, 'pending');
+                if (!claim.claimed) {
+                    if (claim.existingPostId && claim.existingPostId !== 'pending') {
+                        console.info(`[buffer-engine:${adapter.siteId}] Idempotency skipped duplicate ${post.slug} on ${channel.service} (postId=${claim.existingPostId})`);
+                        created.push({
+                            postId: claim.existingPostId,
+                            slug: post.slug,
+                            feedId: post.feedId,
+                            channelId: channel.id,
+                            channelService: channel.service,
+                            dueAt,
+                            title: post.title,
+                            imageUrl: post.imageUrl,
+                        });
+                        newRecent.push({ slug: post.slug, feedId: post.feedId, scheduledAt: now.toISOString() });
+                        continue;
+                    }
+                    console.info(`[buffer-engine:${adapter.siteId}] Idempotency in-flight for ${post.slug} on ${channel.service} — skipping`);
+                    continue;
+                }
                 const text = (0, scheduler_core_1.buildSchedulablePostTextForService)(post, channel.service);
                 const imageUrlForChannel = channel.service === 'googlebusiness'
                     ? (post.googleBusinessImageUrl ?? post.imageUrl)
@@ -266,6 +293,7 @@ async function runSiteBufferScheduler(adapter, options = {}) {
                     feedId: post.feedId,
                     siteUrl: adapter.siteUrl,
                 });
+                await (0, idempotency_1.finalizeBufferPostIdempotency)(kv, idemKey, createdPost.id);
                 created.push({
                     postId: createdPost.id,
                     slug: post.slug,
@@ -292,6 +320,15 @@ async function runSiteBufferScheduler(adapter, options = {}) {
                 });
             }
             catch (err) {
+                // Release pending claim so a later retry can re-attempt.
+                if (kv?.del) {
+                    try {
+                        await kv.del(`${'buffer-engine:idem:'}${idemKey}`);
+                    }
+                    catch {
+                        // ignore
+                    }
+                }
                 errors.push({
                     slug: post.slug,
                     error: err instanceof Error ? err.message : String(err),

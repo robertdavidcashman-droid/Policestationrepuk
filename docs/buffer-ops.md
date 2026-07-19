@@ -6,12 +6,18 @@ Daily social scheduling for blog content across Twitter, LinkedIn, and Google Bu
 
 | Schedule (UTC) | Route | Purpose |
 |----------------|-------|---------|
-| `5 5 * * *` | `/api/cron/buffer-blog-posts` | Schedule today's posts from all feeds |
-| `30 4 * * *` | `/api/cron/buffer-daily-report` | Daily email: verify yesterday's posts all sent |
-| `45 4 * * *` | `/api/cron/buffer-cross-site-report` | Cross-site email: all four properties met yesterday's quota |
-| `0 6 * * 1` | `/api/cron/buffer-health` | Weekly GBP scheduled-image verification |
+| `5 5 * * *` | `/api/cron/buffer-blog-posts` | Schedule today's REPUK posts (buffer-engine) |
+| `35 5 * * *` | `/api/cron/buffer-verify` | Verify today's schedule; gap-fill if under quota |
+| `30 4 * * *` | `/api/cron/buffer-daily-report` | Inspect yesterday's sent status (emails suppressed when healthcheck owns reports) |
+| `45 4 * * *` | `/api/cron/buffer-cross-site-report` | Inspect cross-site quotas (consolidated into daily health report) |
+| `15 7 * * *` | `/api/cron/automation-healthcheck` | **Authoritative** daily health-check, safe repairs, one consolidated email |
+| `20 * * * *` | `/api/cron/automation-watchdog` | Lightweight overdue / stuck-lock / auth watchdog |
+| `0 6 * * *` | `/api/cron/buffer-selftest` | Buffer self-test |
+| `0 6 * * 1` | `/api/cron/buffer-health` | Weekly GBP scheduled-image verification (manual cron entry) |
 
-Auth: `Authorization: Bearer $CRON_SECRET` (or `x-cron-secret` locally).
+**Authoritative scheduler:** Vercel Cron → `/api/cron/buffer-blog-posts` → `runRepukBufferScheduler` (buffer-engine). Do not run a second competing scheduler in production.
+
+Auth: `Authorization: Bearer $CRON_SECRET` (or `x-cron-secret` locally). Preview deployments cannot schedule live posts.
 
 ## Environment variables
 
@@ -25,11 +31,56 @@ Auth: `Authorization: Bearer $CRON_SECRET` (or `x-cron-secret` locally).
 | `BUFFER_CONTENT_FEEDS` | Optional | JSON override for feed URLs |
 | `BUFFER_SCHEDULER_POSTS_PER_FEED` | Optional | Posts per feed per day (default 5, **minimum 4**, max 15) |
 | `BUFFER_VERIFY_GBP_ONLY` | Optional | Set `1` for GBP-only verify scripts |
+| `AUTOMATION_DRY_RUN` | Optional | Default `1` — healthcheck inspects without live repairs/emails |
+| `AUTO_REPAIR_ENABLED` | Optional | Default `0` — enable after first dry-run looks correct |
+| `DAILY_HEALTHCHECK_ENABLED` | Optional | Default `true` — owns consolidated daily report email |
+| `AUTOMATION_ALERT_EMAIL` | Optional | Falls back to `BUFFER_SCHEDULER_NOTIFY_EMAIL` |
+| `AUTOMATION_ALLOW_NON_PROD` | Optional | Set `1` only for controlled non-prod ops |
+
+## Automation health-check (self-healing)
+
+Admin UI: `/admin/automation` (requires admin login).
+
+### First dry-run after deploy
+
+```bash
+curl -sS -H "Authorization: Bearer $CRON_SECRET" \
+  "https://policestationrepuk.org/api/cron/automation-healthcheck?dryRun=1" | jq .
+```
+
+Or use **Dry-run healthcheck** on `/admin/automation`.
+
+Confirm:
+
+- No live Buffer posts were created
+- No real emails were sent (`AUTOMATION_DRY_RUN=1`)
+- Report lists Buffer + cross-site expected vs actual
+- Duplicate lock / duplicate email paths are noted when relevant
+
+### Enable repairs safely
+
+1. Keep `AUTOMATION_DRY_RUN=1`, set `AUTO_REPAIR_ENABLED=1`, re-run dry-run
+2. Set `AUTOMATION_DRY_RUN=0` in Vercel production
+3. Confirm one daily email at ~07:15 UTC and no duplicate Buffer digest spam
+
+### What auto-repairs
+
+- REPUK under-quota gap-fill (today) via existing verify/scheduler
+- Expired job locks
+- Missed `buffer-blog-posts` recovery from watchdog (when auto-repair on)
+- Duplicate alert suppression / reminder after `ALERT_REMINDER_HOURS`
+
+### What still needs a human
+
+- Invalid/revoked Buffer credentials or disconnected channels
+- Sibling site (psrtrain / custodynote / PSA) quota deficits (they self-schedule)
+- Content-supply exhaustion / editorial issues
+- Changing quotas, recipients, or production domains
 
 ## NPM scripts
 
 ```bash
-npm run buffer:schedule              # Run scheduler once (manual)
+npm run buffer:schedule              # Engine scheduler (add --dry-run; --legacy-feeds for old multi-feed)
 npm run buffer:list-today              # List today's scheduled posts
 npm run buffer:verify-feeds            # Live RSS + image ratio check
 npm run buffer:verify-posted           # Verify yesterday's run all reached sent

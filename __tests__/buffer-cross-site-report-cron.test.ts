@@ -27,7 +27,11 @@ const ENV = process.env;
 describe('buffer-cross-site-report cron route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env = { ...ENV, CRON_SECRET: 'cron-test-secret' };
+    process.env = {
+      ...ENV,
+      CRON_SECRET: 'cron-test-secret',
+      DAILY_HEALTHCHECK_ENABLED: '0',
+    };
     mockWasSent.mockResolvedValue(false);
     mockMarkSent.mockResolvedValue(undefined);
     mockSuccessEmail.mockResolvedValue(true);

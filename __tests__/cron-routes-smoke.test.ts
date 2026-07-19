@@ -1,10 +1,26 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const ENV = process.env;
+
+vi.mock('@/lib/indexnow-pipeline', () => ({
+  submitSitemapToIndexNow: vi.fn(async () => ({
+    source: 'live',
+    status: 200,
+    submitted: 0,
+    batches: 0,
+    keyLocation: 'https://example.com/indexnow.txt',
+  })),
+  fetchLiveSitemapUrls: vi.fn(async () => []),
+}));
+
+vi.mock('@/lib/bing-submit', () => ({
+  submitToBing: vi.fn(async () => ({ ok: true, submitted: 0 })),
+}));
 
 describe('cron route auth smoke', () => {
   afterEach(() => {
     process.env = { ...ENV };
+    vi.resetModules();
   });
 
   it('indexnow returns 401 without cron secret in production', async () => {
@@ -15,17 +31,22 @@ describe('cron route auth smoke', () => {
     expect(res.status).toBe(401);
   });
 
-  it('indexnow returns 200 with valid bearer in production', async () => {
-    process.env.NODE_ENV = 'production';
-    process.env.CRON_SECRET = 'test-secret';
-    const { GET } = await import('@/app/api/cron/indexnow/route');
-    const res = await GET(
-      new Request('http://localhost/api/cron/indexnow', {
-        headers: { authorization: 'Bearer test-secret' },
-      }),
-    );
-    expect(res.status).not.toBe(401);
-  });
+  it(
+    'indexnow returns 200 with valid bearer in production',
+    async () => {
+      process.env.NODE_ENV = 'production';
+      process.env.CRON_SECRET = 'test-secret';
+      const { GET } = await import('@/app/api/cron/indexnow/route');
+      const res = await GET(
+        new Request('http://localhost/api/cron/indexnow', {
+          headers: { authorization: 'Bearer test-secret' },
+        }),
+      );
+      expect(res.status).not.toBe(401);
+      expect(res.status).toBe(200);
+    },
+    15_000,
+  );
 
   it('buffer-blog-posts returns 401 without cron secret in production', async () => {
     process.env.NODE_ENV = 'production';
@@ -40,6 +61,22 @@ describe('cron route auth smoke', () => {
     process.env.CRON_SECRET = 'test-secret';
     const { GET } = await import('@/app/api/cron/custody-number-discovery/route');
     const res = await GET(new Request('http://localhost/api/cron/custody-number-discovery'));
+    expect(res.status).toBe(401);
+  });
+
+  it('automation-healthcheck returns 401 without cron secret in production', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.CRON_SECRET = 'test-secret';
+    const { GET } = await import('@/app/api/cron/automation-healthcheck/route');
+    const res = await GET(new Request('http://localhost/api/cron/automation-healthcheck'));
+    expect(res.status).toBe(401);
+  });
+
+  it('automation-watchdog returns 401 without cron secret in production', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.CRON_SECRET = 'test-secret';
+    const { GET } = await import('@/app/api/cron/automation-watchdog/route');
+    const res = await GET(new Request('http://localhost/api/cron/automation-watchdog'));
     expect(res.status).toBe(401);
   });
 
