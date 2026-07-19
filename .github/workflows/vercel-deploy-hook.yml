@@ -1,7 +1,7 @@
 # Production deploy to Vercel.
 #
-# Auto: runs when "CI — Next.js build" succeeds on master/main, after verifying
-# both `build` and `audit` checks passed for that SHA.
+# Auto: runs when "CI — Next.js build" or "Site audit" succeeds on a master/main
+# push, after verifying both `build` and `audit` checks passed for that SHA.
 # Manual: workflow_dispatch still available (type PRODUCTION + SHA).
 #
 # Required repository secrets:
@@ -37,7 +37,7 @@ concurrency:
 
 jobs:
   gate-checks:
-    # Auto path: CI succeeded on master/main.
+    # Auto path: CI or Site audit succeeded on a master/main push.
     # Manual path: operator typed PRODUCTION.
     if: >
       (github.event_name == 'workflow_run' &&
@@ -48,25 +48,44 @@ jobs:
       (github.event_name == 'workflow_dispatch' &&
        github.event.inputs.confirm_production == 'PRODUCTION')
     runs-on: ubuntu-latest
+    # Site audit can take up to ~25 minutes; poll budget is ~30 minutes.
     timeout-minutes: 35
     outputs:
       sha: ${{ steps.resolve.outputs.sha }}
+      ref: ${{ steps.resolve.outputs.ref }}
     steps:
-      - name: Resolve and validate SHA
+      - name: Resolve and validate SHA + branch ref
         id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" = "workflow_run" ]; then
             SHA="${{ github.event.workflow_run.head_sha }}"
+            REF="${{ github.event.workflow_run.head_branch }}"
           else
             SHA="${{ github.event.inputs.sha }}"
+            REF=$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/commits/${SHA}/branches-where-head" \
+              | jq -r '[.[] | select(.name == "master" or .name == "main") | .name] | first // empty')
+            if [ -z "$REF" ]; then
+              REF=$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/${{ github.repository }}" \
+                | jq -r '.default_branch // "master"')
+            fi
           fi
           if ! echo "$SHA" | grep -qE '^[0-9a-f]{40}$'; then
             echo "Invalid SHA format: $SHA (expected 40-char hex)"
             exit 1
           fi
+          if [ "$REF" != "master" ] && [ "$REF" != "main" ]; then
+            echo "Ref must be master or main, got: ${REF}"
+            exit 1
+          fi
           echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "ref=${REF}" >> "$GITHUB_OUTPUT"
           echo "Target SHA: ${SHA}"
+          echo "Target ref: ${REF}"
           echo "Trigger: ${{ github.event_name }}"
 
       - name: Verify CI and Site audit passed for SHA
@@ -77,7 +96,7 @@ jobs:
           SHA="${{ steps.resolve.outputs.sha }}"
           API="https://api.github.com/repos/${{ github.repository }}/commits/${SHA}/check-runs?per_page=100"
 
-          # Audit may finish slightly after CI; poll briefly on the auto path.
+          # Cover Site audit's ~25m budget (120 × 15s = 30m) within the 35m job timeout.
           for attempt in $(seq 1 120); do
             RESP=$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$API")
             echo "$RESP" | jq -r '.check_runs[] | "\(.name)\t\(.conclusion)\t\(.status)"' | sort
@@ -107,7 +126,7 @@ jobs:
               exit 1
             fi
 
-            echo "[$attempt/120] waiting for audit (status=${audit_status:-missing} conclusion=${audit_conclusion:-missing})"
+            echo "[$attempt/120] waiting for build/audit (audit status=${audit_status:-missing} conclusion=${audit_conclusion:-missing})"
             sleep 15
           done
 
@@ -132,14 +151,10 @@ jobs:
         run: |
           set -euo pipefail
           SHA="${{ needs.gate-checks.outputs.sha }}"
+          REF="${{ needs.gate-checks.outputs.ref }}"
           REPO_ID="${{ github.repository_id }}"
           API="https://api.vercel.com"
           AUTH="Authorization: Bearer ${VERCEL_TOKEN}"
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            REF="${{ github.event.workflow_run.head_branch }}"
-          else
-            REF="${{ github.ref_name }}"
-          fi
 
           find_url() {
             curl -sS "${API}/v6/deployments?projectId=${VERCEL_PROJECT_ID}&teamId=${VERCEL_ORG_ID}&limit=25" \
@@ -150,7 +165,7 @@ jobs:
 
           URL="$(find_url || true)"
           if [ -z "$URL" ]; then
-            echo "No deployment for ${SHA}; triggering git production build (repoId=${REPO_ID})"
+            echo "No deployment for ${SHA}; triggering git production build (repoId=${REPO_ID} ref=${REF})"
             RESP=$(curl -sS -X POST "${API}/v13/deployments?teamId=${VERCEL_ORG_ID}" \
               -H "${AUTH}" \
               -H "Content-Type: application/json" \
