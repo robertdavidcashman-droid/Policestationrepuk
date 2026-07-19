@@ -104,7 +104,12 @@ export async function withAutomationJob<T = unknown>(input: {
       ok,
       error: outcome.errorMessage,
       repairAction: outcome.repairs?.[0] ?? null,
-      healthStatus: ok ? 'healthy' : 'failing',
+      healthStatus:
+        outcome.status === 'partially_successful'
+          ? 'degraded'
+          : ok
+            ? 'healthy'
+            : 'failing',
     });
 
     return { ok, skipped: false, execution: completed, result: outcome.result };
