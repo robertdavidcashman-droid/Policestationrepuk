@@ -12,6 +12,7 @@ on:
   workflow_run:
     workflows:
       - CI — Next.js build
+      - Site audit
     types:
       - completed
   workflow_dispatch:
@@ -40,13 +41,14 @@ jobs:
     # Manual path: operator typed PRODUCTION.
     if: >
       (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.conclusion == 'success' &&
        (github.event.workflow_run.head_branch == 'master' ||
         github.event.workflow_run.head_branch == 'main')) ||
       (github.event_name == 'workflow_dispatch' &&
        github.event.inputs.confirm_production == 'PRODUCTION')
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 35
     outputs:
       sha: ${{ steps.resolve.outputs.sha }}
     steps:
@@ -76,7 +78,7 @@ jobs:
           API="https://api.github.com/repos/${{ github.repository }}/commits/${SHA}/check-runs?per_page=100"
 
           # Audit may finish slightly after CI; poll briefly on the auto path.
-          for attempt in $(seq 1 24); do
+          for attempt in $(seq 1 120); do
             RESP=$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$API")
             echo "$RESP" | jq -r '.check_runs[] | "\(.name)\t\(.conclusion)\t\(.status)"' | sort
 
@@ -105,7 +107,7 @@ jobs:
               exit 1
             fi
 
-            echo "[$attempt/24] waiting for audit (status=${audit_status:-missing} conclusion=${audit_conclusion:-missing})"
+            echo "[$attempt/120] waiting for audit (status=${audit_status:-missing} conclusion=${audit_conclusion:-missing})"
             sleep 15
           done
 
@@ -133,6 +135,11 @@ jobs:
           REPO_ID="${{ github.repository_id }}"
           API="https://api.vercel.com"
           AUTH="Authorization: Bearer ${VERCEL_TOKEN}"
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            REF="${{ github.event.workflow_run.head_branch }}"
+          else
+            REF="${{ github.ref_name }}"
+          fi
 
           find_url() {
             curl -sS "${API}/v6/deployments?projectId=${VERCEL_PROJECT_ID}&teamId=${VERCEL_ORG_ID}&limit=25" \
@@ -147,7 +154,7 @@ jobs:
             RESP=$(curl -sS -X POST "${API}/v13/deployments?teamId=${VERCEL_ORG_ID}" \
               -H "${AUTH}" \
               -H "Content-Type: application/json" \
-              -d "{\"name\":\"policestationrepuk-new\",\"project\":\"${VERCEL_PROJECT_ID}\",\"target\":\"production\",\"gitSource\":{\"type\":\"github\",\"repoId\":${REPO_ID},\"ref\":\"master\",\"sha\":\"${SHA}\"}}")
+              -d "{\"name\":\"policestationrepuk-new\",\"project\":\"${VERCEL_PROJECT_ID}\",\"target\":\"production\",\"gitSource\":{\"type\":\"github\",\"repoId\":${REPO_ID},\"ref\":\"${REF}\",\"sha\":\"${SHA}\"}}")
             echo "$RESP" | jq '{id, url, readyState}'
             URL=$(echo "$RESP" | jq -r '.url // empty')
             if [ -z "$URL" ]; then
