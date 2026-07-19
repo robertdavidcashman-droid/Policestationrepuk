@@ -22,7 +22,17 @@ export interface WithAutomationJobResult<T> {
 /**
  * Wrap a cron/manual job with lock + execution logging + registry updates.
  */
-export async function withAutomationJob<T>(input: {
+export type AutomationJobRunOutcome<T> = {
+  status: ExecutionStatus;
+  result: T;
+  counts?: ExecutionRecord['counts'];
+  externalIds?: string[];
+  errorMessage?: string | null;
+  notes?: string[];
+  repairs?: string[];
+};
+
+export async function withAutomationJob<T = unknown>(input: {
   jobName: string;
   triggerSource: ExecutionRecord['triggerSource'];
   dryRun?: boolean;
@@ -31,15 +41,7 @@ export async function withAutomationJob<T>(input: {
   run: (ctx: {
     executionId: string;
     dryRun: boolean;
-  }) => Promise<{
-    status: ExecutionStatus;
-    result: T;
-    counts?: ExecutionRecord['counts'];
-    externalIds?: string[];
-    errorMessage?: string | null;
-    notes?: string[];
-    repairs?: string[];
-  }>;
+  }) => Promise<AutomationJobRunOutcome<T>>;
 }): Promise<WithAutomationJobResult<T>> {
   const config = getAutomationConfig();
   if (!config.enabled && input.jobName.startsWith('automation-')) {
