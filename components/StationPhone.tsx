@@ -87,7 +87,7 @@ function FieldMetaLine({ station, field }: { station: PoliceStation; field: 'pho
             rel="noopener noreferrer"
             className="font-semibold text-[var(--gold-link)] hover:underline"
           >
-            source
+            View official source
           </a>
         </>
       ) : null}
@@ -141,23 +141,19 @@ export function StationPhone({
   const custodyDisplay = custody ? getCustodyPublicDisplay(station) : null;
   const { number: neNumber, hint } = forceNonEmergency(station);
 
-  const mainEntry = entries.find((e) => e.label === 'Main line' || e.label === 'Station');
+  const mainEntry = entries.find(
+    (e) => e.label === 'Station main line' || e.label === 'Main line' || e.label === 'Station',
+  );
   const custodyEntry = entries.find((e) => e.label.startsWith('Custody'));
 
   if (entries.length > 0 || custody) {
     return (
       <div className={wrapperClass}>
-        {mainEntry ? (
-          <div>
-            <span className="text-[10px] font-semibold uppercase text-[var(--muted)]">Main: </span>
-            <PhoneValue number={mainEntry.number} link={link} />
-            <EntryMeta entry={mainEntry} />
-            <FieldMetaLine station={station} field="phone" />
-          </div>
-        ) : null}
         {custody ? (
-          <div className="mt-1">
-            <span className="text-[10px] font-semibold uppercase text-[var(--muted)]">Custody: </span>
+          <div>
+            <span className="text-[10px] font-semibold uppercase text-[var(--muted)]">
+              Custody desk:{' '}
+            </span>
             {custodyDisplay?.published && custodyEntry ? (
               <>
                 <PhoneValue number={custodyEntry.number} link={link} />
@@ -169,6 +165,16 @@ export function StationPhone({
             )}
           </div>
         ) : null}
+        {mainEntry ? (
+          <div className={custody ? 'mt-1' : undefined}>
+            <span className="text-[10px] font-semibold uppercase text-[var(--muted)]">
+              Station main line:{' '}
+            </span>
+            <PhoneValue number={mainEntry.number} link={link} />
+            <EntryMeta entry={mainEntry} />
+            <FieldMetaLine station={station} field="phone" />
+          </div>
+        ) : null}
         {entries
           .filter((e) => e !== mainEntry && e !== custodyEntry)
           .map((entry) => (
@@ -178,7 +184,9 @@ export function StationPhone({
             </div>
           ))}
         <div className="mt-1">
-          <span className="text-[10px] font-semibold uppercase text-[var(--muted)]">Force: </span>
+          <span className="text-[10px] font-semibold uppercase text-[var(--muted)]">
+            Force non-emergency:{' '}
+          </span>
           <PhoneValue number={neNumber} link={link} className="text-[10px]" />
           <span className="ml-1 text-[10px] text-[var(--muted)]">({hint})</span>
         </div>

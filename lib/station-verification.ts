@@ -9,7 +9,12 @@ import {
   type StationPhoneProvenanceFile,
 } from './station-phone-provenance';
 
-export type FieldVerificationStatus = 'verified' | 'unverified' | 'not_publicly_listed';
+export type FieldVerificationStatus =
+  | 'verified'
+  | 'unverified'
+  | 'not_publicly_listed'
+  /** Official source lists a different number than currently published. */
+  | 'needs_review';
 
 export interface FieldVerification {
   status: FieldVerificationStatus;

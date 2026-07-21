@@ -11,18 +11,9 @@ import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { RepCard } from '@/components/RepCard';
 import { DirectoryCredentialVerificationNotice } from '@/components/DirectoryCredentialVerificationNotice';
 import { FirmCoverCTA } from '@/components/FirmCoverCTA';
-import { phoneToTelHref } from '@/lib/phone';
-import { displayPhoneNumber, stationPhoneNumbers } from '@/lib/station-search';
+import { displayPhoneNumber } from '@/lib/station-search';
 import { StationContactDisclaimer } from '@/components/StationPhone';
-import { getCustodyPublicDisplay } from '@/lib/station-contacts/publish';
-import { CUSTODY_NOT_PUBLISHED_TEXT } from '@/lib/station-contacts/types';
-import { stationPhoneEntryHint } from '@/lib/station-phone-labels';
-import { isCustodyStation } from '@/lib/custody-station';
-import {
-  DEFAULT_NON_EMERGENCY,
-  getOfficialContact,
-} from '@/lib/official-force-contacts';
-import { formatPhoneUk } from '@/lib/phone-format';
+import { StationPhoneActions } from '@/components/stations/StationPhoneActions';
 import { StationLocationMap } from '@/components/StationLocationMap';
 import { countRepsForStation, shouldIndexPoliceStationPage } from '@/lib/station-indexing';
 import { directoryHrefForAreaName } from '@/lib/county-links';
@@ -387,76 +378,11 @@ export default async function PoliceStationPage({ params }: PageProps) {
 }
 
 function StationPhoneDetail({ station }: { station: PoliceStation }) {
-  const entries = stationPhoneNumbers(station);
-  const custody = isCustodyStation(station);
-  const custodyDisplay = custody ? getCustodyPublicDisplay(station) : null;
-  const hasCustodyLine = entries.some(
-    (e) => e.label.startsWith('Custody') && e.className === 'station',
-  );
-  const neRaw = getOfficialContact(station.forceName)?.nonEmergency ?? DEFAULT_NON_EMERGENCY;
-  const neNumber = formatPhoneUk(neRaw) || neRaw;
-  const neHint =
-    station.forceName === 'British Transport Police'
-      ? 'BTP non-emergency'
-      : neNumber === '101'
-        ? 'non-emergency'
-        : 'force non-emergency';
-
-  if (entries.length === 0) {
-    return (
-      <div>
-        <dt className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Phone</dt>
-        <dd className="mt-0.5 text-[var(--muted)]">
-          No direct number —{' '}
-          <a
-            href={phoneToTelHref(neNumber)}
-            className="font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)]"
-          >
-            {neNumber}
-          </a>{' '}
-          ({neHint})
-        </dd>
-        {custody && !hasCustodyLine && (
-          <dd className="mt-2 text-xs font-semibold text-amber-800">{CUSTODY_NOT_PUBLISHED_TEXT}</dd>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div>
       <dt className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Phone</dt>
-      <dd className="mt-1 space-y-1.5">
-        {entries.map((entry) => (
-          <div key={`${entry.label}-${entry.number}`}>
-            <a
-              href={phoneToTelHref(entry.number)}
-              className="font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)]"
-            >
-              {entry.number}
-            </a>
-            <span className="ml-2 text-[10px] text-[var(--muted)]">{stationPhoneEntryHint(entry)}</span>
-            {!entry.verified && (
-              <span className="ml-2 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-900">
-                Unverified
-              </span>
-            )}
-          </div>
-        ))}
-        {custody && !hasCustodyLine && (
-          <p className="text-xs font-semibold text-amber-800">{CUSTODY_NOT_PUBLISHED_TEXT}</p>
-        )}
-        {custodyDisplay?.published && custodyDisplay.number && (
-          <p className="text-xs text-[var(--muted)]">
-            Published custody line:{' '}
-            <a
-              href={phoneToTelHref(custodyDisplay.number)}
-              className="font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)]"
-            >
-              {custodyDisplay.number}
-            </a>
-          </p>
-        )}
+      <dd className="mt-2">
+        <StationPhoneActions station={station} />
       </dd>
     </div>
   );

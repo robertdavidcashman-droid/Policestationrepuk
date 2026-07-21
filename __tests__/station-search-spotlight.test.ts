@@ -11,7 +11,9 @@ describe('StationSearchSpotlight', () => {
     expect(actions).toContain('Call ');
     expect(actions).toContain('Copy number');
     expect(actions).toContain('Custody desk');
-    expect(actions).toContain('Main line');
+    expect(actions).toContain('Station main line');
+    expect(actions).toContain('View official source');
+    expect(actions).toContain('buildStationPhoneReportUrl');
   });
 
   it('shows custody published badge state', async () => {

@@ -150,8 +150,8 @@ export function stationPhoneNumbers(station: PoliceStation): StationPhoneEntry[]
   const candidates: Array<{ label: string; field: 'custodyPhone' | 'custodyPhone2' | 'phone' | 'nonEmergencyPhone'; value?: string }> = [
     { label: 'Custody desk', field: 'custodyPhone', value: station.custodyPhone },
     { label: 'Custody desk (alt)', field: 'custodyPhone2', value: station.custodyPhone2 },
-    { label: 'Main line', field: 'phone', value: station.phone },
-    { label: 'Non-emergency', field: 'nonEmergencyPhone', value: station.nonEmergencyPhone },
+    { label: 'Station main line', field: 'phone', value: station.phone },
+    { label: 'Force non-emergency', field: 'nonEmergencyPhone', value: station.nonEmergencyPhone },
   ];
 
   const seen = new Set<string>();
@@ -169,7 +169,11 @@ export function stationPhoneNumbers(station: PoliceStation): StationPhoneEntry[]
     else if (isAlwaysPublishableForceContact(station, field, trimmed)) {
       className = GENERIC_NUMBERS_NORM.has(norm) ? 'generic' : 'switchboard';
     }
-    entries.push({ label, number: trimmed, className, verified });
+    const displayLabel =
+      field === 'nonEmergencyPhone' && (norm === '101' || trimmed === '101')
+        ? 'Force non-emergency (101)'
+        : label;
+    entries.push({ label: displayLabel, number: trimmed, className, verified });
   }
   return entries;
 }
@@ -183,6 +187,25 @@ const POSTCODE_PREFIX_RE = /^[A-Z]{1,2}\d/i;
 
 function stripPunctuation(s: string): string {
   return s.replace(/[^\w\s-]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+/** Digit-heavy query suitable for reverse phone lookup (at least 6 digits). */
+export function extractPhoneQueryDigits(query: string): string | null {
+  const digits = normalizePhone(query);
+  if (digits.length < 6) return null;
+  // Prefer queries that are mostly phone-like (avoid boosting every address with a house number).
+  const nonDigit = query.replace(/\D/g, '').length;
+  const digitRatio = digits.length / Math.max(1, query.replace(/\s+/g, '').length);
+  if (digits.length >= 10) return digits;
+  if (digitRatio >= 0.7 && digits.length >= 6) return digits;
+  if (nonDigit === 0 && digits.length >= 6) return digits;
+  return null;
+}
+
+function stationPhoneDigitHaystack(station: PoliceStation): string[] {
+  return [station.phone, station.custodyPhone, station.custodyPhone2, station.nonEmergencyPhone]
+    .map((v) => (v ? normalizePhone(v) : ''))
+    .filter((d) => d.length >= 6);
 }
 
 export function normalizeStationQuery(query: string): NormalizedStationQuery {
@@ -351,6 +374,17 @@ export function scoreStation(
           break;
         }
       }
+    }
+  }
+
+  // Reverse phone match — typed digits against published main/custody lines
+  const phoneDigits = extractPhoneQueryDigits(nq.raw);
+  if (phoneDigits) {
+    const hay = stationPhoneDigitHaystack(station);
+    if (hay.some((d) => d === phoneDigits)) {
+      score += 120;
+    } else if (hay.some((d) => d.includes(phoneDigits) || phoneDigits.includes(d))) {
+      score += 90;
     }
   }
 

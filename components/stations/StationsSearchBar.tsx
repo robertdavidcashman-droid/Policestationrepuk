@@ -55,7 +55,7 @@ export function StationsSearchBar({
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Name, town, postcode, county, force…"
+        placeholder="Name, town, postcode, force, or phone number…"
         autoComplete="off"
         className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-12 pr-24 text-base text-[var(--foreground)] shadow-sm placeholder:text-slate-400 focus:border-[var(--gold)] focus:ring-2 focus:ring-[var(--gold)]/30 sm:text-[15px]"
       />
