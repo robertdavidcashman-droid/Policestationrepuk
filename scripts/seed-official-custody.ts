@@ -130,6 +130,27 @@ function main(): void {
             },
           };
         }
+      } else if (
+        normalizePhoneDigits(station.custodyPhone || '') !==
+        normalizePhoneDigits(entry.custodyPhone)
+      ) {
+        console.warn(
+          `  ! conflict ${station.name}: published ${station.custodyPhone} vs official ${formatted} (${source})`,
+        );
+        if (WRITE) {
+          verification[key] = {
+            ...verification[key],
+            fields: {
+              ...verification[key]?.fields,
+              custodyPhone: {
+                ...verification[key]?.fields?.custodyPhone,
+                status: 'needs_review',
+                sourceUrl: source,
+                notes: `Official listing now ${formatted}; published ${station.custodyPhone}. Review before changing.`,
+              },
+            },
+          };
+        }
       }
     }
   }

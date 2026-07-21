@@ -16,6 +16,10 @@ const VALID: AiReviewRecommendation[] = ['approve', 'reject', 'hold'];
 export interface AiReviewContext {
   hasApprovedNumber: boolean;
   approvedNumber?: string;
+  /** Safety flags already computed for this number (mobile, premium, etc.). */
+  numberFlags?: string[];
+  /** Other open findings on the same suite (sibling numbers / corroboration). */
+  siblingNumbers?: string[];
 }
 
 function getClient(): OpenAI | null {
@@ -88,6 +92,16 @@ export async function runAiReview(
   const approvedNote = ctx.hasApprovedNumber
     ? `Suite already has approved number: ${ctx.approvedNumber ?? 'yes'}.`
     : 'No approved number on this suite yet.';
+  const flags = ctx.numberFlags?.length
+    ? ctx.numberFlags
+    : (finding.numberFlags ?? []).map(String);
+  const flagsNote = flags.length
+    ? `Number safety flags: ${flags.join(', ')}.`
+    : 'Number safety flags: none.';
+  const siblings = (ctx.siblingNumbers ?? []).filter(Boolean);
+  const siblingsNote = siblings.length
+    ? `Other open numbers on this suite: ${siblings.join(', ')}.`
+    : 'No other open numbers on this suite.';
 
   const userPrompt = `Review this custody desk number finding for a UK police station directory.
 
@@ -99,6 +113,8 @@ Source URL: ${finding.sourceUrl}
 Source type: ${finding.sourceType}
 Rule classification: ${finding.classification}
 Rule confidence score: ${finding.confidenceScore} (${finding.confidenceLevel})
+${flagsNote}
+${siblingsNote}
 ${conflictNote}
 ${approvedNote}
 

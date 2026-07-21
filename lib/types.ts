@@ -161,7 +161,7 @@ export interface PoliceStation {
         | 'email'
         | 'openingHours',
         {
-          status: 'verified' | 'unverified' | 'not_publicly_listed';
+          status: 'verified' | 'unverified' | 'not_publicly_listed' | 'needs_review';
           sourceUrl?: string;
           secondarySourceUrl?: string;
           dateVerified?: string;

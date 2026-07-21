@@ -516,6 +516,12 @@ describe('official page fallback', () => {
     const queries = buildSearchQueries(suite);
     expect(queries.some((q) => q.includes('site:kent.police.uk'))).toBe(true);
     expect(queries.some((q) => q.includes('filetype:pdf'))).toBe(true);
+    expect(queries.some((q) => q.includes('custody desk'))).toBe(true);
+  });
+
+  it('includes Avon and Somerset in FORCE_CUSTODY_PAGES', async () => {
+    const { FORCE_CUSTODY_PAGES } = await import('@/lib/custody-discovery/official-pages');
+    expect(FORCE_CUSTODY_PAGES['avon and somerset constabulary']?.length).toBeGreaterThan(0);
   });
 });
 
