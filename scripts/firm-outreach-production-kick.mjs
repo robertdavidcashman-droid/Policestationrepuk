@@ -10,13 +10,43 @@
  * bash `source` quoting/expansion cannot drop CRON_SECRET.
  */
 import { existsSync, readFileSync } from 'node:fs';
-import { parse as parseDotenv } from 'dotenv';
 import {
   DEFAULT_PRODUCTION_KICK_STEPS,
   resolveKickAuth,
   runProductionKickSteps,
   waitForVercelProductionDeploy,
 } from '../lib/firm-outreach/production-kick.ts';
+
+function parseDotenv(src) {
+  const text = Buffer.isBuffer(src) ? src.toString('utf8') : String(src ?? '');
+  const out = {};
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+    const match = /^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line);
+    if (!match) continue;
+
+    const key = match[1];
+    let value = match[2] ?? '';
+
+    // If value is unquoted, strip inline comments.
+    const firstChar = value.trimStart().slice(0, 1);
+    const isQuoted = firstChar === '"' || firstChar === "'";
+    if (!isQuoted) {
+      value = value.replace(/\s+#.*$/, '');
+    }
+
+    value = value.trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    out[key] = value;
+  }
+  return out;
+}
 
 function loadEnvFileIfPresent(path) {
   if (!existsSync(path)) return { loaded: false, filled: [] };
