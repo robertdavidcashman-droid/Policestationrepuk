@@ -139,7 +139,7 @@ jobs:
             vercel env pull .env.production --environment=production --yes --token=${{ secrets.VERCEL_TOKEN }}
             echo "Pulled production env keys:"
             # Keys only — never print values.
-            grep -E '^[A-Za-z_][A-Za-z0-9_]*=' .env.production | cut -d= -f1 | sort
+            grep -E '^[A-Za-z_][A-Za-z0-9_]*=' .env.production | cut -d= -f1 | sort || true
           else
             echo "VERCEL_TOKEN not set — using GitHub secrets for cron auth only"
           fi
