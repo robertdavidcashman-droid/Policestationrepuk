@@ -42,7 +42,7 @@ jobs:
             echo "VERCEL_TOKEN not set — using GitHub secrets for cron auth only"
           fi
 
-      - name: Requalify + enrich kick on production
+      - name: Requalify + enrich + send flush on production
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           FIRM_OUTREACH_BOOTSTRAP_SECRET: ${{ secrets.FIRM_OUTREACH_BOOTSTRAP_SECRET }}
@@ -56,4 +56,6 @@ jobs:
           export FIRM_OUTREACH_KICK_BASE_URL="https://policestationrepuk.org"
           export VERCEL_TOKEN="${{ secrets.VERCEL_TOKEN }}"
           export FIRM_OUTREACH_KICK_COMMIT_SHA="${{ github.event.inputs.sha }}"
+          # Status + bootstrap enrich, then optional /api/cron/firm-outreach-send
+          # (both campaigns; needs CRON_SECRET from GH secret or pulled .env.production).
           node scripts/firm-outreach-production-kick.mjs

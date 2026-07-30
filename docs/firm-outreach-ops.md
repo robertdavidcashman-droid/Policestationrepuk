@@ -116,6 +116,8 @@ Unset production blockers: `FIRM_OUTREACH_DRY_RUN`, `FIRM_OUTREACH_PAUSED`, `FIR
 
 **Health check:** `GET /api/cron/firm-outreach-status` (with `CRON_SECRET`) reports `sendHealthy`, `sendBlockers`, and `campaignSendHealth` per campaign.
 
+**Manual production kick (GitHub Actions):** workflow **Firm outreach production kick** → `workflow_dispatch` with `sha=<full commit SHA>` and `confirm_kick=KICK`. Steps: status → requalify/enrich → optional send flush (`/api/cron/firm-outreach-send?limit=25`) for both campaigns. Confirm `sendByCampaign.agent_cover_kent_v1` in the kick log (or empty queue / approval-required skip). Scheduled send crons also flush both campaigns (12:00 / 14:30 / 16:00 / 18:30 UTC).
+
 ## Manual commands
 
 ```bash
