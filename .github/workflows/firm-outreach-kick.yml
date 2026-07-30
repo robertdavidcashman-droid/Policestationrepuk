@@ -55,8 +55,9 @@ jobs:
           FIRM_OUTREACH_BOOTSTRAP_SECRET: ${{ secrets.FIRM_OUTREACH_BOOTSTRAP_SECRET }}
         run: |
           set -euo pipefail
-          if [ -z "${CRON_SECRET:-}" ] && [ -z "${FIRM_OUTREACH_BOOTSTRAP_SECRET:-}" ]; then
-            echo "No CRON_SECRET or FIRM_OUTREACH_BOOTSTRAP_SECRET — skipping kick"
+          # Auth may come from GH secrets or from vercel env pull (VERCEL_TOKEN).
+          if [ -z "${VERCEL_TOKEN:-}" ] && [ -z "${CRON_SECRET:-}" ] && [ -z "${FIRM_OUTREACH_BOOTSTRAP_SECRET:-}" ]; then
+            echo "No VERCEL_TOKEN or cron auth secrets — skipping kick"
             echo "run=false" >> "$GITHUB_OUTPUT"
             echo "sha=" >> "$GITHUB_OUTPUT"
             exit 0
