@@ -5,13 +5,40 @@
  * Usage:
  *   FIRM_OUTREACH_KICK_BASE_URL=https://policestationrepuk.org \
  *   CRON_SECRET=... node scripts/firm-outreach-production-kick.mjs
+ *
+ * Optionally loads `.env.production` (from `vercel env pull`) via dotenv so
+ * bash `source` quoting/expansion cannot drop CRON_SECRET.
  */
+import { existsSync, readFileSync } from 'node:fs';
+import { parse as parseDotenv } from 'dotenv';
 import {
   DEFAULT_PRODUCTION_KICK_STEPS,
   resolveKickAuth,
   runProductionKickSteps,
   waitForVercelProductionDeploy,
 } from '../lib/firm-outreach/production-kick.ts';
+
+function loadEnvFileIfPresent(path) {
+  if (!existsSync(path)) return { loaded: false, filled: [] };
+  const parsed = parseDotenv(readFileSync(path));
+  const filled = [];
+  for (const [key, value] of Object.entries(parsed)) {
+    const current = process.env[key];
+    // Fill missing/empty only — never overwrite a non-empty GH secret.
+    if (current == null || current === '') {
+      process.env[key] = value;
+      if (value) filled.push(key);
+    }
+  }
+  return { loaded: true, filled };
+}
+
+const envLoad = loadEnvFileIfPresent('.env.production');
+if (envLoad.loaded) {
+  console.log(
+    `Loaded .env.production (filled empty keys: ${envLoad.filled.length}; cron_len=${(process.env.CRON_SECRET || '').length})`,
+  );
+}
 
 const baseUrl = process.env.FIRM_OUTREACH_KICK_BASE_URL?.trim();
 if (!baseUrl) {
