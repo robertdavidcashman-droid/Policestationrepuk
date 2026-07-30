@@ -23,10 +23,15 @@ on:
         required: true
         type: string
 
+permissions:
+  actions: read
+  contents: read
+
 jobs:
   should-kick:
     if: >
       (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success' &&
        (github.event.workflow_run.head_branch == 'master' ||
         github.event.workflow_run.head_branch == 'main')) ||
@@ -44,13 +49,14 @@ jobs:
       - name: Decide whether to kick
         id: decide
         env:
+          GH_TOKEN: ${{ github.token }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           FIRM_OUTREACH_BOOTSTRAP_SECRET: ${{ secrets.FIRM_OUTREACH_BOOTSTRAP_SECRET }}
         run: |
           set -euo pipefail
-          if [ -z "${VERCEL_TOKEN:-}" ] && [ -z "${CRON_SECRET:-}" ] && [ -z "${FIRM_OUTREACH_BOOTSTRAP_SECRET:-}" ]; then
-            echo "No VERCEL_TOKEN or cron auth secrets — skipping kick"
+          if [ -z "${CRON_SECRET:-}" ] && [ -z "${FIRM_OUTREACH_BOOTSTRAP_SECRET:-}" ]; then
+            echo "No CRON_SECRET or FIRM_OUTREACH_BOOTSTRAP_SECRET — skipping kick"
             echo "run=false" >> "$GITHUB_OUTPUT"
             echo "sha=" >> "$GITHUB_OUTPUT"
             exit 0
@@ -61,6 +67,17 @@ jobs:
             echo "Manual KICK for ${SHA}"
             echo "run=true" >> "$GITHUB_OUTPUT"
             echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          RUN_ID="${{ github.event.workflow_run.id }}"
+          JOBS_JSON="$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${RUN_ID}/jobs?per_page=100" || true)"
+          DEPLOY_CONCLUSION="$(echo "$JOBS_JSON" | jq -r '.jobs[] | select(.name == "deploy") | .conclusion' | head -1 || true)"
+          if [ "$DEPLOY_CONCLUSION" != "success" ]; then
+            echo "Deploy workflow did not run deploy job (conclusion=${DEPLOY_CONCLUSION:-missing}) — skipping kick"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "sha=" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -75,13 +92,20 @@ jobs:
           git fetch origin "$SHA" --depth=2
           PARENT="$(git rev-parse "${SHA}^" 2>/dev/null || true)"
           if [ -z "$PARENT" ] || [ "$PARENT" = "$SHA" ]; then
-            echo "No parent commit for ${SHA} — kicking anyway (outreach deploy)"
-            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "No parent commit for ${SHA} — checking changed files from commit"
+            FILES="$(git show --pretty='' --name-only "$SHA" 2>/dev/null || true)"
+          else
+            FILES="$(git diff --name-only "$PARENT" "$SHA" 2>/dev/null || true)"
+          fi
+
+          if [ -z "${FILES:-}" ]; then
+            echo "Unable to determine changed files for ${SHA} — skipping kick"
+            echo "run=false" >> "$GITHUB_OUTPUT"
             echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          if git diff --name-only "$PARENT" "$SHA" | grep -qE '^(lib/firm-outreach|app/api/cron/firm-outreach|packages/firm-outreach-core|scripts/firm-outreach|\.github/workflows/firm-outreach-kick\.yml)'; then
+          if echo "$FILES" | grep -qE '^(lib/firm-outreach|app/api/cron/firm-outreach|packages/firm-outreach-core|scripts/firm-outreach|\.github/workflows/firm-outreach-kick\.yml)'; then
             echo "Firm-outreach changes in ${SHA} — will kick"
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
