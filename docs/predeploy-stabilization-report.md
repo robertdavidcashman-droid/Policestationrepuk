@@ -40,7 +40,7 @@ Production deploy and outreach kick workflows remain **manual-only** with SHA + 
 |---|---------|------------|-----|-----------------|
 | 1 | Auto prod deploy on CI alone | `workflow_run` on CI only; Site Audit not required | Manual `workflow_dispatch` + CI + Site audit check-runs gate | `.github/workflows/vercel-deploy-hook.yml` |
 | 2 | `incorrect_git_source_info` | Hardcoded `REPUK_REPO_ID` | Use `github.repository_id` | Deploy workflow |
-| 3 | Auto outreach kick on CI | `firm-outreach-kick` `workflow_run` | Manual-only with `KICK` confirmation | `firm-outreach-kick.yml` |
+| 3 | Auto outreach kick on CI | `firm-outreach-kick` on CI alone | Auto after successful **Deploy to Vercel (production)** when SHA touches firm-outreach paths; manual `KICK` still available | `firm-outreach-kick.yml` |
 | 4 | `/directory/hertfordshire` 404 | County missing from regenerated data + bad legacy redirect | `counties.json`, `normalize-data.mjs`, legacy redirect | `stabilization-regressions.spec.ts` |
 | 5 | Buffer self-test GraphQL 500 | Offset-less `T00:00:00` day bounds | RFC3339 offsets in `selftest.ts` | `packages/buffer-engine/src/selftest.test.ts` |
 | 6 | Outreach cron 300s timeout | O(N) prospect scans; batch cap = daily cap | Status-index lookups; `min(batch, dailyRemaining)` | `firm-outreach-daily-cap.test.ts` |
