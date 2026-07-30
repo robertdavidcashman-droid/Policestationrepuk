@@ -137,14 +137,19 @@ jobs:
         run: |
           if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
             vercel env pull .env.production --environment=production --yes --token=${{ secrets.VERCEL_TOKEN }}
+            echo "Pulled production env keys:"
+            # Keys only — never print values.
+            grep -E '^[A-Za-z_][A-Za-z0-9_]*=' .env.production | cut -d= -f1 | sort
           else
             echo "VERCEL_TOKEN not set — using GitHub secrets for cron auth only"
           fi
 
       - name: Requalify + enrich + send flush on production
         env:
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          FIRM_OUTREACH_BOOTSTRAP_SECRET: ${{ secrets.FIRM_OUTREACH_BOOTSTRAP_SECRET }}
+          # Only inject when the GH secret is non-empty. An empty env: value would
+          # otherwise shadow CRON_SECRET loaded from vercel env pull.
+          GH_CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          GH_BOOTSTRAP_SECRET: ${{ secrets.FIRM_OUTREACH_BOOTSTRAP_SECRET }}
         run: |
           set -a
           if [ -f .env.production ]; then
@@ -152,9 +157,18 @@ jobs:
             source .env.production
           fi
           set +a
+          # Non-empty GitHub secrets win over pulled env.
+          if [ -n "${GH_CRON_SECRET:-}" ]; then
+            export CRON_SECRET="$GH_CRON_SECRET"
+          fi
+          if [ -n "${GH_BOOTSTRAP_SECRET:-}" ]; then
+            export FIRM_OUTREACH_BOOTSTRAP_SECRET="$GH_BOOTSTRAP_SECRET"
+          fi
+          echo "Kick auth present: cron=$( [ -n "${CRON_SECRET:-}" ] && echo yes || echo no ) bootstrap=$( [ -n "${FIRM_OUTREACH_BOOTSTRAP_SECRET:-}" ] && echo yes || echo no )"
           export FIRM_OUTREACH_KICK_BASE_URL="https://policestationrepuk.org"
           export VERCEL_TOKEN="${{ secrets.VERCEL_TOKEN }}"
           export FIRM_OUTREACH_KICK_COMMIT_SHA="${{ needs.should-kick.outputs.sha }}"
+          export FIRM_OUTREACH_KICK_REQUIRE_AUTH=1
           # Status + bootstrap enrich, then optional /api/cron/firm-outreach-send
           # (both campaigns; needs CRON_SECRET from GH secret or pulled .env.production).
           node scripts/firm-outreach-production-kick.mjs

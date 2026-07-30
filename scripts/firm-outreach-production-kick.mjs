@@ -21,7 +21,15 @@ if (!baseUrl) {
 
 const auth = resolveKickAuth(process.env);
 if (!auth) {
-  console.log('No CRON_SECRET or FIRM_OUTREACH_BOOTSTRAP_SECRET — skip kick');
+  const requireAuth = process.env.FIRM_OUTREACH_KICK_REQUIRE_AUTH === '1';
+  console.error('No CRON_SECRET or FIRM_OUTREACH_BOOTSTRAP_SECRET after env load');
+  if (requireAuth) {
+    console.error(
+      'Set repository secret CRON_SECRET (same value as Vercel production) or FIRM_OUTREACH_BOOTSTRAP_SECRET.',
+    );
+    process.exit(1);
+  }
+  console.log('Skipping kick (auth optional in this context)');
   process.exit(0);
 }
 
