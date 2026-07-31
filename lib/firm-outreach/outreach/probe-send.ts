@@ -12,7 +12,6 @@ import {
   DEFAULT_PSA_FROM_PREFERRED,
   fetchResendVerifiedDomains,
   parseFromAddressDomain,
-  resolveFromAddressForCampaign,
   resolveOutreachFromAddress,
   VERIFIED_FALLBACK_DOMAIN,
 } from './from-address';
@@ -168,22 +167,26 @@ export async function runOutreachSendProbes(opts?: {
       continue;
     }
 
-    // PSA: one retry with explicit verified fallback if preferred domain rejected.
+    // PSA: match live send.ts — retry once with DEFAULT_PSA_FROM_FALLBACK
+    // (not resolveFromAddressForCampaign, which can re-pick the preferred
+    // domain when Resend still lists it as verified).
     if (
       c.campaignId === AGENT_COVER_KENT_CAMPAIGN_ID &&
       resolved.from !== DEFAULT_PSA_FROM_FALLBACK
     ) {
-      const fallback = resolveFromAddressForCampaign(c.campaignId, verified);
+      const fallbackFrom = DEFAULT_PSA_FROM_FALLBACK;
+      const fallbackDomain =
+        parseFromAddressDomain(fallbackFrom) ?? VERIFIED_FALLBACK_DOMAIN;
       const retry = await provider.send({
-        from: fallback.from,
+        from: fallbackFrom,
         to,
         replyTo: COMMUNITY_EMAIL,
         subject: `[probe] ${c.campaignId} send check (fallback)`,
         html: probeHtml({
           campaignId: c.campaignId,
           site: c.site,
-          from: fallback.from,
-          domain: fallback.domain,
+          from: fallbackFrom,
+          domain: fallbackDomain,
           usedFallback: true,
         }),
         headers: {
@@ -194,8 +197,8 @@ export async function runOutreachSendProbes(opts?: {
         probes.push({
           ...base,
           ok: true,
-          resolvedFrom: fallback.from,
-          resolvedDomain: fallback.domain,
+          resolvedFrom: fallbackFrom,
+          resolvedDomain: fallbackDomain,
           usedFallback: true,
           messageId: retry.providerMessageId,
         });

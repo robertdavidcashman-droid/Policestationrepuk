@@ -59,4 +59,27 @@ describe('runOutreachSendProbes', () => {
     expect(mocks.send).not.toHaveBeenCalled();
     expect(result.probes.every((p) => p.skipped && p.reason === 'dry_run')).toBe(true);
   });
+
+  it('retries PSA probe with DEFAULT_PSA_FROM_FALLBACK even when preferred domain looks verified', async () => {
+    // Preferred PSA domain still listed as verified, but Resend rejects the send.
+    mocks.domains.mockResolvedValue(
+      new Set(['policestationrepuk.org', 'policestationagent.com']),
+    );
+    mocks.send
+      .mockResolvedValueOnce({ ok: true, providerMessageId: 'msg_repuk' })
+      .mockResolvedValueOnce({ ok: false, error: 'domain is not verified' })
+      .mockResolvedValueOnce({ ok: true, providerMessageId: 'msg_psa_fallback' });
+
+    const result = await runOutreachSendProbes({ to: 'owner@example.com' });
+    expect(result.ok).toBe(true);
+    expect(mocks.send).toHaveBeenCalledTimes(3);
+
+    const psaPreferred = mocks.send.mock.calls[1]?.[0].from as string;
+    const psaFallback = mocks.send.mock.calls[2]?.[0].from as string;
+    expect(psaPreferred).toContain('@policestationagent.com');
+    expect(psaFallback).toBe('Police Station Agent <noreply@policestationrepuk.org>');
+    expect(result.probes[1]?.ok).toBe(true);
+    expect(result.probes[1]?.usedFallback).toBe(true);
+    expect(result.probes[1]?.messageId).toBe('msg_psa_fallback');
+  });
 });
