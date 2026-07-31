@@ -1,5 +1,7 @@
 /**
- * Pre-flight Resend probes for both outreach brands/sites.
+ * Pre-flight Resend probes for both outreach brands/sites:
+ * - policestationrepuk.com / .org → whatsapp_invite_v1
+ * - policestationagent.com → agent_cover_kent_v1
  * Sends one operator-only test email per campaign so we confirm
  * from-address resolution before flushing live firm mail.
  */
@@ -149,7 +151,7 @@ export async function runOutreachSendProbes(opts?: {
       from: resolved.from,
       to,
       replyTo: COMMUNITY_EMAIL,
-      subject: `[probe] ${c.campaignId} send check`,
+      subject: `[probe] ${c.site} / ${c.campaignId} send check`,
       html: probeHtml({
         campaignId: c.campaignId,
         site: c.site,
@@ -159,6 +161,7 @@ export async function runOutreachSendProbes(opts?: {
       }),
       headers: {
         'X-Firm-Outreach-Probe': c.campaignId,
+        'X-Firm-Outreach-Probe-Site': c.site,
       },
     });
 

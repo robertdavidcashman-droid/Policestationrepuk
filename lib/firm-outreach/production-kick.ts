@@ -84,10 +84,10 @@ export const DEFAULT_PRODUCTION_KICK_STEPS: KickStep[] = [
     label: 'Outreach send health (status)',
     optional: true,
   },
-  // Operator-only Resend probes for RepUK + PSA (fails kick if either path cannot send).
+  // Operator-only Resend probes for both websites (fails kick if either path cannot send).
   {
     path: '/api/cron/firm-outreach-probe',
-    label: 'Pre-flight email probes (RepUK + PSA)',
+    label: 'Pre-flight email probes (policestationrepuk + policestationagent)',
   },
   {
     path: '/api/cron/firm-outreach-bootstrap?requalifyOnly=1',
