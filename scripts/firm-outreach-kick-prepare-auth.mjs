@@ -100,6 +100,11 @@ async function upsertProductionEnv(key, value, existingIds) {
   });
 }
 
+async function getProjectName() {
+  const project = await vercelJson(`/v9/projects/${projectId}`);
+  return project.name || projectId;
+}
+
 async function redeployLatestProduction() {
   const list = await vercelJson('/v6/deployments', {
     query: { projectId, target: 'production', limit: 5 },
@@ -110,12 +115,23 @@ async function redeployLatestProduction() {
     throw new Error('No production deployment found to redeploy');
   }
   const id = ready.uid || ready.id;
-  console.log(`Redeploying production deployment ${id}`);
-  const redeploy = await vercelJson(`/v13/deployments/${id}/redeploy`, {
+  const name = await getProjectName();
+  console.log(`Redeploying production deployment ${id} (project=${name})`);
+  // Correct redeploy path: POST /v13/deployments with deploymentId (+ forceNew).
+  const redeploy = await vercelJson('/v13/deployments', {
     method: 'POST',
-    body: { target: 'production' },
+    query: { forceNew: '1' },
+    body: {
+      name,
+      deploymentId: id,
+      target: 'production',
+      project: projectId,
+    },
   });
-  const newId = redeploy.id || redeploy.uid || id;
+  const newId = redeploy.id || redeploy.uid;
+  if (!newId) {
+    throw new Error('Redeploy response missing deployment id');
+  }
   const deadline = Date.now() + 12 * 60_000;
   while (Date.now() < deadline) {
     const dep = await vercelJson(`/v13/deployments/${newId}`);
@@ -128,6 +144,21 @@ async function redeployLatestProduction() {
     await new Promise((r) => setTimeout(r, 15_000));
   }
   throw new Error('Redeploy wait timed out');
+}
+
+async function productionAcceptsBootstrap(secret) {
+  const base = (process.env.FIRM_OUTREACH_KICK_BASE_URL || 'https://policestationrepuk.org').replace(
+    /\/$/,
+    '',
+  );
+  try {
+    const res = await fetch(`${base}/api/cron/firm-outreach-status`, {
+      headers: { 'x-firm-outreach-bootstrap-secret': secret },
+    });
+    return res.status !== 401;
+  } catch {
+    return false;
+  }
 }
 
 async function main() {
@@ -168,6 +199,15 @@ async function main() {
       await upsertProductionEnv('FIRM_OUTREACH_REQUIRE_APPROVAL', 'false', ids);
       needsRedeploy = true;
       console.log('Ungated FIRM_OUTREACH_REQUIRE_APPROVAL → false');
+    }
+
+    // Bootstrap may already exist in Vercel from a prior kick that failed before redeploy.
+    if (!needsRedeploy && !cron && bootstrap) {
+      const ok = await productionAcceptsBootstrap(bootstrap);
+      if (!ok) {
+        console.log('Production does not accept bootstrap yet — redeploying to pick up env');
+        needsRedeploy = true;
+      }
     }
 
     if (needsRedeploy) {
