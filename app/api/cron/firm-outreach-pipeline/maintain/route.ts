@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { isCronAuthorized } from '@/lib/cron-auth';
+import { recoverEnrichPool } from '@/lib/firm-outreach/enrichment/recover-enrich-pool';
 import { requeueNoEmailProspects } from '@/lib/firm-outreach/enrichment/requeue-no-email';
+import { AGENT_COVER_KENT_CAMPAIGN_ID } from '@/lib/firm-outreach/campaign-scope';
+import { FIRM_OUTREACH_CAMPAIGN_ID } from '@/lib/firm-outreach/site-config';
 import { runFirmOutreachPipeline } from '@/lib/firm-outreach/run-pipeline';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +21,10 @@ export async function GET(request: Request) {
   }
 
   const requeue = isSundayUtc() ? await requeueNoEmailProspects() : { requeued: 0 };
+  const enrichPoolRecovery = {
+    whatsapp_invite_v1: await recoverEnrichPool({ campaignId: FIRM_OUTREACH_CAMPAIGN_ID }),
+    agent_cover_kent_v1: await recoverEnrichPool({ campaignId: AGENT_COVER_KENT_CAMPAIGN_ID }),
+  };
 
   const result = await runFirmOutreachPipeline({
     skipSend: true,
@@ -26,5 +33,11 @@ export async function GET(request: Request) {
     forceLaaRefresh: false,
   });
 
-  return NextResponse.json({ ok: true, mode: 'maintain', requeue, ...result });
+  return NextResponse.json({
+    ok: true,
+    mode: 'maintain',
+    requeue,
+    enrichPoolRecovery,
+    ...result,
+  });
 }

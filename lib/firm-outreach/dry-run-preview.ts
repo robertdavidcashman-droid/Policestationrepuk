@@ -36,6 +36,9 @@ export interface DryRunPreviewResult {
   sentToday: number;
   remaining: number;
   resendQuotaRemaining: number;
+  /** min(would-send eligible, remaining daily, resend quota) */
+  safeSendLimitNow: number;
+  wouldSendCount: number;
   preview: DryRunPreviewRow[];
   skipReasons: Partial<Record<string, number>>;
   selection?: {
@@ -43,6 +46,8 @@ export interface DryRunPreviewResult {
     sentScanned: number;
     readyEligible: number;
     followUpEligible: number;
+    firmCooldownSkipped: number;
+    sendableCandidates: number;
   };
 }
 
@@ -164,6 +169,11 @@ export async function previewFirmOutreachDryRun(opts?: {
     preview.push(row);
   }
 
+  const safeSendLimitNow = Math.max(
+    0,
+    Math.min(wouldSend, remaining, resendQuotaRemaining),
+  );
+
   return {
     campaignId,
     date,
@@ -171,6 +181,8 @@ export async function previewFirmOutreachDryRun(opts?: {
     sentToday,
     remaining,
     resendQuotaRemaining,
+    safeSendLimitNow,
+    wouldSendCount: wouldSend,
     preview,
     skipReasons,
     selection: {
@@ -178,6 +190,8 @@ export async function previewFirmOutreachDryRun(opts?: {
       sentScanned: selection.sentScanned,
       readyEligible: selection.readyEligible,
       followUpEligible: selection.followUpEligible,
+      firmCooldownSkipped: selection.firmCooldownSkipped,
+      sendableCandidates: selection.candidates.length,
     },
   };
 }

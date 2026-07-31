@@ -163,12 +163,18 @@ export async function loadEnrichPoolIds(campaignId?: string): Promise<string[]> 
   const discovered = await listProspectIdsByRecordStatus('discovered', opts);
   const noEmail = await listProspectIdsByRecordStatus('no_email', opts);
   const now = Date.now();
-  const retryIds: string[] = [];
+  const enrichable: string[] = [];
+  // Critical: do not include exhausted discovered rows — they used to clog the
+  // pool (poolSize>0, processed=0) forever because shouldEnrichProspect rejects them.
+  for (const id of discovered) {
+    const p = await getProspect(id);
+    if (p && shouldEnrichProspect(p, now)) enrichable.push(id);
+  }
   for (const id of noEmail) {
     const p = await getProspect(id);
-    if (p && shouldEnrichProspect(p, now)) retryIds.push(id);
+    if (p && shouldEnrichProspect(p, now)) enrichable.push(id);
   }
-  return [...discovered, ...retryIds];
+  return enrichable;
 }
 
 /** Score a sliding window of the pool and return top IDs for this batch. */

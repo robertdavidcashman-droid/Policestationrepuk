@@ -43,6 +43,9 @@ export function enrichCandidateScore(prospect: FirmProspect): number {
   if (prospect.sources.includes('laa')) score += 80;
   if (prospect.sources.includes('dscc') && prospect.prospectType === 'firm') score += 40;
   if (prospect.sources.includes('dscc') && prospect.prospectType === 'solicitor') score += 25;
+  // Firm inboxes avoid firm_cooldown solicitor skips — prefer them heavily.
+  if (prospect.prospectType === 'firm') score += 55;
+  else if (prospect.prospectType === 'solicitor') score -= 25;
   // LAA firms missing email are the main backlog — prioritise never-tried first.
   if (prospect.sources.includes('laa') && !prospect.email) score += 50;
   // Individual DSCC duty solicitors rarely have a findable firm inbox — deprioritise.

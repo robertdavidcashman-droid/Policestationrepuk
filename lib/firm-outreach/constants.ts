@@ -16,7 +16,8 @@ export {
 const env = createOutreachEnvHelpers({
   countyAllowlist: null,
   cronEnrichBatch: 60,
-  cronSendBatch: 25,
+  // Scheduled send ticks should use remaining daily/Resend capacity (caps still bind).
+  cronSendBatch: 50,
   enrichMaxMs: 270_000,
   paidDailyCap: 150,
   dailyCap: 150,

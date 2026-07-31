@@ -3,9 +3,10 @@ import { resolve } from 'path';
 import { ensureDsccRegisterCache } from '@/lib/dscc-register-lookup';
 import { readLaaCrimeJson } from '@/lib/legal-directory/laa-fetch';
 import { listApprovedListings } from '@/lib/legal-directory/storage';
+import { normalizeFirmName } from '@robertcashman/firm-outreach-core';
 import { AGENT_COVER_KENT_CAMPAIGN_ID } from '../campaign-scope';
 import { countyAllowlist } from '../constants';
-import { filterKentInputs } from '../kent-filter';
+import { filterKentInputs, isKentProspectInput } from '../kent-filter';
 import {
   archiveFirmsToInputs,
   buildProspectForCampaign,
@@ -20,6 +21,19 @@ import { FIRM_OUTREACH_CAMPAIGN_ID } from '../site-config';
 import { buildCrimeRegistry } from '../qualification';
 import { getProspect, saveProspect } from '../storage';
 import type { DiscoveryRunStats } from '../types';
+
+/** Keep geo-Kent rows plus DSCC firms whose name matches a Kent LAA firm. */
+export function filterAgentCoverKentInputs(
+  inputs: RawProspectInput[],
+  kentLaaFirmNames: Set<string>,
+): RawProspectInput[] {
+  return inputs.filter((input) => {
+    if (isKentProspectInput(input)) return true;
+    if (input.prospectType !== 'firm') return false;
+    if (input.source !== 'dscc') return false;
+    return kentLaaFirmNames.has(normalizeFirmName(input.firmName));
+  });
+}
 
 const ARCHIVE_PATH = resolve(process.cwd(), 'data/archive/law-firms.json');
 
@@ -99,7 +113,10 @@ export async function runFirmDiscovery(opts?: {
     allowlist,
   );
   if (isAgentCover) {
-    allInputs = filterKentInputs(allInputs);
+    const kentLaaNames = new Set(
+      filterKentInputs(laaRecordsToInputs(laa)).map((i) => normalizeFirmName(i.firmName)),
+    );
+    allInputs = filterAgentCoverKentInputs(allInputs, kentLaaNames);
   }
 
   let created = 0;

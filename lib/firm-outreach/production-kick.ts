@@ -108,6 +108,12 @@ export const DEFAULT_PRODUCTION_KICK_STEPS: KickStep[] = [
     label: 'Enrich batch 2 (RepUK bootstrap)',
     optional: true,
   },
+  // Production dry-run (no provider sends) — reports safeSendLimitNow before flush.
+  {
+    path: '/api/cron/firm-outreach-bootstrap?dryRunPreview=1&limit=150',
+    label: 'Dry-run preview (safe send limit)',
+    optional: true,
+  },
   // CRON_SECRET Bearer or FIRM_OUTREACH_BOOTSTRAP_SECRET header. Optional so enrich-only kicks still succeed.
   // Limit high; daily/hourly/Resend caps still bind actual accepts.
   {

@@ -1,5 +1,6 @@
 import { AGENT_COVER_KENT_CAMPAIGN_ID } from './campaign-scope';
 import { runFirmDiscovery } from './discovery/run-discovery';
+import { recoverEnrichPool } from './enrichment/recover-enrich-pool';
 import { runFirmEnrichment } from './enrichment/run-enrich';
 import { reindexProspectStatuses } from './reindex-prospects';
 import { isOutreachSendAllowed, setAdminPauseState, getOutreachPauseSummary } from './pause-state';
@@ -15,6 +16,7 @@ export interface BootstrapOutreachResult {
   countsAfter: Record<string, number>;
   reindex?: Awaited<ReturnType<typeof reindexProspectStatuses>>;
   agentCoverDiscovery?: DiscoveryRunStats;
+  enrichPoolRecovery?: Awaited<ReturnType<typeof recoverEnrichPool>>;
   batches: Awaited<ReturnType<typeof runFirmEnrichment>>[];
   totals: {
     processed: number;
@@ -93,6 +95,12 @@ export async function bootstrapOutreach(opts?: {
   const batchResults: Awaited<ReturnType<typeof runFirmEnrichment>>[] = [];
   const campaignId = opts?.campaignId?.trim() || undefined;
 
+  // Unstick exhausted discovered / stale no_email before enrich so poolSize≠0
+  // no longer means processed=0 forever.
+  const enrichPoolRecovery = await recoverEnrichPool({
+    campaignId: campaignId ?? (opts?.seedAgentCover ? AGENT_COVER_KENT_CAMPAIGN_ID : undefined),
+  });
+
   for (let i = 0; i < batches; i++) {
     if (Date.now() >= deadline) break;
     const remaining = deadline - Date.now();
@@ -127,6 +135,7 @@ export async function bootstrapOutreach(opts?: {
     countsAfter,
     reindex: reindexResult,
     agentCoverDiscovery,
+    enrichPoolRecovery,
     batches: batchResults,
     totals,
   };

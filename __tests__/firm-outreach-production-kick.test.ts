@@ -75,8 +75,11 @@ describe('runProductionKickSteps', () => {
     expect(DEFAULT_PRODUCTION_KICK_STEPS[1]?.optional).toBeFalsy();
   });
 
-  it('ends with optional multi-campaign send flush', () => {
+  it('ends with optional multi-campaign send flush after dry-run preview', () => {
     const last = DEFAULT_PRODUCTION_KICK_STEPS.at(-1);
+    const dryRun = DEFAULT_PRODUCTION_KICK_STEPS.at(-2);
+    expect(dryRun?.path).toContain('dryRunPreview=1');
+    expect(dryRun?.optional).toBe(true);
     expect(last?.path).toBe('/api/cron/firm-outreach-send?limit=150');
     expect(last?.optional).toBe(true);
   });
@@ -222,6 +225,13 @@ describe('bootstrapOutreach', () => {
         errors: 0,
       }),
     }));
+    vi.doMock('@/lib/firm-outreach/enrichment/recover-enrich-pool', () => ({
+      recoverEnrichPool: vi.fn().mockResolvedValue({
+        retiredExhaustedDiscovered: 0,
+        requeuedStaleNoEmail: 0,
+        campaignId: 'whatsapp_invite_v1',
+      }),
+    }));
     vi.doMock('@/lib/firm-outreach/reindex-prospects', () => ({ reindexProspectStatuses }));
     vi.doMock('@/lib/firm-outreach/pause-state', () => ({
       getOutreachPauseSummary: vi.fn().mockResolvedValue({ effectivePaused: false, envPaused: false }),
@@ -230,6 +240,9 @@ describe('bootstrapOutreach', () => {
     }));
     vi.doMock('@/lib/firm-outreach/storage', () => ({
       countProspectsByStatus: vi.fn().mockResolvedValue({ discovered: 10 }),
+      listProspectIdsByRecordStatus: vi.fn().mockResolvedValue([]),
+      getProspect: vi.fn(),
+      saveProspect: vi.fn(),
     }));
 
     const { bootstrapOutreach } = await import('@/lib/firm-outreach/bootstrap-outreach');
