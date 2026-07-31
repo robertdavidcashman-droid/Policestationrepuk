@@ -252,10 +252,16 @@ export async function runFirmOutreach(opts?: {
     sentScanned: selection.sentScanned,
     readyEligible: selection.readyEligible,
     followUpEligible: selection.followUpEligible,
+    firmCooldownSkipped: selection.firmCooldownSkipped,
     candidates: selection.candidates.length,
     remaining,
     dryRun,
   });
+  if (selection.firmCooldownSkipped > 0) {
+    for (let i = 0; i < selection.firmCooldownSkipped; i++) {
+      recordSkip(stats, 'firm_cooldown');
+    }
+  }
 
   const emailsSentThisRun = new Set<string>();
   let resendQuota = globalQuota;

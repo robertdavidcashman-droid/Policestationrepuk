@@ -1,7 +1,10 @@
+import { AGENT_COVER_KENT_CAMPAIGN_ID } from './campaign-scope';
+import { runFirmDiscovery } from './discovery/run-discovery';
 import { runFirmEnrichment } from './enrichment/run-enrich';
 import { reindexProspectStatuses } from './reindex-prospects';
 import { isOutreachSendAllowed, setAdminPauseState, getOutreachPauseSummary } from './pause-state';
 import { countProspectsByStatus } from './storage';
+import type { DiscoveryRunStats } from './types';
 
 export interface BootstrapOutreachResult {
   unpaused: boolean;
@@ -11,6 +14,7 @@ export interface BootstrapOutreachResult {
   countsBefore: Record<string, number>;
   countsAfter: Record<string, number>;
   reindex?: Awaited<ReturnType<typeof reindexProspectStatuses>>;
+  agentCoverDiscovery?: DiscoveryRunStats;
   batches: Awaited<ReturnType<typeof runFirmEnrichment>>[];
   totals: {
     processed: number;
@@ -29,6 +33,10 @@ export async function bootstrapOutreach(opts?: {
   unpauseOnly?: boolean;
   reindex?: boolean;
   reindexOnly?: boolean;
+  /** Enrich a specific campaign (defaults to active RepUK campaign). */
+  campaignId?: string;
+  /** Seed Kent firms into agent_cover_kent_v1 before enrich. */
+  seedAgentCover?: boolean;
 }): Promise<BootstrapOutreachResult> {
   const batches = opts?.batches ?? 2;
   const limit = opts?.limit ?? 60;
@@ -74,7 +82,16 @@ export async function bootstrapOutreach(opts?: {
     };
   }
 
+  let agentCoverDiscovery: DiscoveryRunStats | undefined;
+  if (opts?.seedAgentCover) {
+    agentCoverDiscovery = await runFirmDiscovery({
+      campaignId: AGENT_COVER_KENT_CAMPAIGN_ID,
+      countyAllowlist: ['kent'],
+    });
+  }
+
   const batchResults: Awaited<ReturnType<typeof runFirmEnrichment>>[] = [];
+  const campaignId = opts?.campaignId?.trim() || undefined;
 
   for (let i = 0; i < batches; i++) {
     if (Date.now() >= deadline) break;
@@ -82,6 +99,7 @@ export async function bootstrapOutreach(opts?: {
     const stats = await runFirmEnrichment({
       limit,
       maxElapsedMs: Math.min(maxElapsedMs, remaining),
+      campaignId,
     });
     batchResults.push(stats);
     if (stats.processed === 0) break;
@@ -108,6 +126,7 @@ export async function bootstrapOutreach(opts?: {
     countsBefore,
     countsAfter,
     reindex: reindexResult,
+    agentCoverDiscovery,
     batches: batchResults,
     totals,
   };

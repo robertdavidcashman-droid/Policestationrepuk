@@ -7,13 +7,15 @@ const prospects = vi.hoisted(() => {
   return { ready, sent };
 });
 
+const siblingsByFirm = vi.hoisted(() => new Map<string, FirmProspect[]>());
+
 vi.mock('@/lib/firm-outreach/storage', () => ({
   listProspectsByRecordStatus: async (status: string) => {
     if (status === 'ready_to_send') return prospects.ready;
     if (status === 'sent') return prospects.sent;
     return [];
   },
-  listProspectsForFirmKey: async () => [],
+  listProspectsForFirmKey: async (firmKey: string) => siblingsByFirm.get(firmKey) ?? [],
 }));
 
 import { selectOutreachCandidates } from '@/lib/firm-outreach/outreach/candidate-selection';
@@ -41,6 +43,7 @@ describe('selectOutreachCandidates', () => {
   beforeEach(() => {
     prospects.ready.length = 0;
     prospects.sent.length = 0;
+    siblingsByFirm.clear();
   });
 
   it('excludes not-due sent prospects from the candidate pool', async () => {
@@ -107,5 +110,39 @@ describe('selectOutreachCandidates', () => {
     const result = await selectOutreachCandidates({ campaignId: 'whatsapp_invite_v1' });
     expect(result.candidates).toHaveLength(1);
     expect(result.candidates[0]!.step).toBe(0);
+  });
+
+  it('excludes solicitors on firm cooldown from the sendable candidate pool', async () => {
+    const recent = new Date().toISOString();
+    const sol = base({
+      id: 'sol-cool',
+      firmKey: 'acme',
+      prospectType: 'solicitor',
+      status: 'ready_to_send',
+      priorityScore: 90,
+    });
+    const firm = base({
+      id: 'firm-ok',
+      firmKey: 'beta',
+      prospectType: 'firm',
+      status: 'ready_to_send',
+      priorityScore: 5,
+    });
+    prospects.ready.push(sol, firm);
+    siblingsByFirm.set('acme', [
+      sol,
+      base({
+        id: 'sib-sent',
+        firmKey: 'acme',
+        prospectType: 'firm',
+        status: 'sent',
+        lastEmailAt: recent,
+      }),
+    ]);
+
+    const result = await selectOutreachCandidates({ campaignId: 'whatsapp_invite_v1' });
+    expect(result.firmCooldownSkipped).toBe(1);
+    expect(result.readyEligible).toBe(2);
+    expect(result.candidates.map((c) => c.prospect.id)).toEqual(['firm-ok']);
   });
 });

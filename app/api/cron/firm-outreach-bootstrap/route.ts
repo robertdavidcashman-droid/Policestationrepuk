@@ -60,6 +60,8 @@ export async function GET(request: Request) {
   const unpauseOnly = url.searchParams.get('unpause') === '1';
   const reindex = url.searchParams.get('reindex') === '1';
   const reindexOnly = url.searchParams.get('reindexOnly') === '1';
+  const seedAgentCover = url.searchParams.get('seedAgentCover') === '1';
+  const campaignId = url.searchParams.get('campaignId')?.trim() || undefined;
   const batches = Number(url.searchParams.get('batches') || 2) || 2;
   const limit = Number(url.searchParams.get('limit') || 60) || 60;
 
@@ -71,6 +73,8 @@ export async function GET(request: Request) {
     unpauseOnly,
     reindex,
     reindexOnly,
+    seedAgentCover,
+    campaignId,
   });
   return NextResponse.json({ ok: true, mode: 'bootstrap', ...result });
 }

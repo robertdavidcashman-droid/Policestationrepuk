@@ -54,16 +54,20 @@ export async function selectOutreachCandidates(opts: {
   readyLimit?: number;
   sentLimit?: number;
   nowMs?: number;
+  /** When true (default), drop solicitors whose firm was emailed inside the cooldown window. */
+  excludeFirmCooldown?: boolean;
 }): Promise<{
   candidates: Array<{ prospect: FirmProspect; step: number }>;
   readyScanned: number;
   sentScanned: number;
   readyEligible: number;
   followUpEligible: number;
+  firmCooldownSkipped: number;
 }> {
   const readyLimit = opts.readyLimit ?? DEFAULT_READY_SCAN;
   const sentLimit = opts.sentLimit ?? DEFAULT_SENT_SCAN;
   const nowMs = opts.nowMs ?? Date.now();
+  const excludeFirmCooldown = opts.excludeFirmCooldown !== false;
   const campaignOpts = { campaignId: opts.campaignId };
 
   const ready = await listProspectsByRecordStatus('ready_to_send', readyLimit, campaignOpts);
@@ -83,7 +87,31 @@ export async function selectOutreachCandidates(opts: {
     followUpEligible.push({ prospect, step });
   }
 
-  const candidates = [...readyEligible, ...followUpEligible].sort(compareCandidates);
+  const ranked = [...readyEligible, ...followUpEligible].sort(compareCandidates);
+
+  // Cache per firmKey so sibling cooldown lookups are O(firms) not O(prospects).
+  const cooledFirmKeys = new Map<string, boolean>();
+  let firmCooldownSkipped = 0;
+  const candidates: Array<{ prospect: FirmProspect; step: number }> = [];
+
+  for (const row of ranked) {
+    if (
+      excludeFirmCooldown &&
+      row.prospect.prospectType === 'solicitor'
+    ) {
+      const key = row.prospect.firmKey;
+      let cooled = cooledFirmKeys.get(key);
+      if (cooled === undefined) {
+        cooled = await firmRecentlyContacted(row.prospect, opts.campaignId);
+        cooledFirmKeys.set(key, cooled);
+      }
+      if (cooled) {
+        firmCooldownSkipped++;
+        continue;
+      }
+    }
+    candidates.push(row);
+  }
 
   return {
     candidates,
@@ -91,5 +119,6 @@ export async function selectOutreachCandidates(opts: {
     sentScanned: sent.length,
     readyEligible: readyEligible.length,
     followUpEligible: followUpEligible.length,
+    firmCooldownSkipped,
   };
 }

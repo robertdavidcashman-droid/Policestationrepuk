@@ -36,14 +36,21 @@ describe('outreachPathsChanged', () => {
 });
 
 describe('runProductionKickSteps', () => {
-  it('continues when optional requalify step fails', async () => {
-    const fetchFn = vi
-      .fn()
-      .mockResolvedValueOnce({ status: 200, text: async () => '{"ok":true}' })
-      .mockResolvedValueOnce({ status: 504, text: async () => 'timeout' })
-      .mockResolvedValueOnce({ status: 200, text: async () => '{"ok":true}' })
-      .mockResolvedValueOnce({ status: 504, text: async () => 'timeout' })
-      .mockResolvedValueOnce({ status: 200, text: async () => '{"ok":true,"mode":"send-only"}' });
+  it('continues when optional requalify/seed steps fail', async () => {
+    const fetchFn = vi.fn().mockImplementation(async (url: string) => {
+      const u = String(url);
+      if (u.includes('requalifyOnly=1') || u.includes('seedAgentCover=1')) {
+        return { status: 504, text: async () => 'timeout' };
+      }
+      if (u.includes('batches=1') && !u.includes('seedAgentCover') && !u.includes('campaignId=')) {
+        const n = fetchFn.mock.calls.filter((c: unknown[]) => {
+          const cu = String(c[0]);
+          return cu.includes('batches=1') && !cu.includes('seedAgentCover') && !cu.includes('campaignId=');
+        }).length;
+        if (n >= 2) return { status: 504, text: async () => 'timeout' };
+      }
+      return { status: 200, text: async () => '{"ok":true}' };
+    });
 
     const { failed, results } = await runProductionKickSteps({
       baseUrl: 'https://example.com',
@@ -53,15 +60,9 @@ describe('runProductionKickSteps', () => {
     });
 
     expect(failed).toBe(false);
-    expect(results).toHaveLength(5);
-    expect(results[0]?.ok).toBe(true);
-    expect(results[1]?.ok).toBe(false);
-    expect(results[1]?.optional).toBe(true);
-    expect(results[2]?.ok).toBe(true);
-    expect(results[3]?.ok).toBe(false);
-    expect(results[3]?.optional).toBe(true);
-    expect(results[4]?.ok).toBe(true);
-    expect(results[4]?.optional).toBe(true);
+    expect(results.length).toBe(DEFAULT_PRODUCTION_KICK_STEPS.length);
+    expect(results[1]?.path).toContain('firm-outreach-probe');
+    expect(results[1]?.ok).toBe(true);
   });
 
   it('starts with optional outreach status health check', () => {
@@ -69,18 +70,22 @@ describe('runProductionKickSteps', () => {
     expect(DEFAULT_PRODUCTION_KICK_STEPS[0]?.optional).toBe(true);
   });
 
+  it('requires pre-flight email probes before flush', () => {
+    expect(DEFAULT_PRODUCTION_KICK_STEPS[1]?.path).toBe('/api/cron/firm-outreach-probe');
+    expect(DEFAULT_PRODUCTION_KICK_STEPS[1]?.optional).toBeFalsy();
+  });
+
   it('ends with optional multi-campaign send flush', () => {
     const last = DEFAULT_PRODUCTION_KICK_STEPS.at(-1);
-    expect(last?.path).toBe('/api/cron/firm-outreach-send?limit=25');
+    expect(last?.path).toBe('/api/cron/firm-outreach-send?limit=150');
     expect(last?.optional).toBe(true);
   });
 
-  it('fails when required enrich batch is non-200', async () => {
+  it('fails when required probe is non-200', async () => {
     const fetchFn = vi
       .fn()
       .mockResolvedValueOnce({ status: 200, text: async () => '{"ok":true}' })
-      .mockResolvedValueOnce({ status: 200, text: async () => '{}' })
-      .mockResolvedValueOnce({ status: 504, text: async () => 'timeout' });
+      .mockResolvedValueOnce({ status: 503, text: async () => '{"ok":false}' });
 
     const { failed, results } = await runProductionKickSteps({
       baseUrl: 'https://example.com',
@@ -90,14 +95,36 @@ describe('runProductionKickSteps', () => {
     });
 
     expect(failed).toBe(true);
-    expect(results).toHaveLength(3);
-    expect(results[2]?.ok).toBe(false);
-    expect(results[2]?.optional).toBe(false);
+    expect(results).toHaveLength(2);
+    expect(results[1]?.ok).toBe(false);
+  });
+
+  it('fails when required enrich batch is non-200', async () => {
+    const fetchFn = vi.fn().mockImplementation(async (url: string) => {
+      const u = String(url);
+      if (u.includes('batches=1') && !u.includes('seedAgentCover') && !u.includes('campaignId=')) {
+        return { status: 504, text: async () => 'timeout' };
+      }
+      return { status: 200, text: async () => '{"ok":true}' };
+    });
+
+    const { failed, results } = await runProductionKickSteps({
+      baseUrl: 'https://example.com',
+      auth: { header: 'Authorization', value: 'Bearer x' },
+      steps: DEFAULT_PRODUCTION_KICK_STEPS,
+      fetchFn: fetchFn as typeof fetch,
+    });
+
+    expect(failed).toBe(true);
+    const failedStep = results.find((r) => !r.ok && !r.optional);
+    expect(failedStep?.label).toContain('Enrich batch 1');
   });
 
   it('uses separate bootstrap enrich calls not a combined batch', () => {
-    const enrichSteps = DEFAULT_PRODUCTION_KICK_STEPS.filter((s) => s.path.includes('bootstrap') && s.path.includes('batches=1'));
-    expect(enrichSteps).toHaveLength(2);
+    const enrichSteps = DEFAULT_PRODUCTION_KICK_STEPS.filter(
+      (s) => s.path.includes('bootstrap') && s.path.includes('batches=1'),
+    );
+    expect(enrichSteps.length).toBeGreaterThanOrEqual(2);
     expect(DEFAULT_PRODUCTION_KICK_STEPS.some((s) => s.path.includes('batches=2'))).toBe(false);
   });
 });

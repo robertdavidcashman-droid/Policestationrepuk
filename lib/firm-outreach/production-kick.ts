@@ -84,23 +84,34 @@ export const DEFAULT_PRODUCTION_KICK_STEPS: KickStep[] = [
     label: 'Outreach send health (status)',
     optional: true,
   },
+  // Operator-only Resend probes for RepUK + PSA (fails kick if either path cannot send).
+  {
+    path: '/api/cron/firm-outreach-probe',
+    label: 'Pre-flight email probes (RepUK + PSA)',
+  },
   {
     path: '/api/cron/firm-outreach-bootstrap?requalifyOnly=1',
     label: 'Requalify ready_to_send junk rows',
     optional: true,
   },
   {
-    path: '/api/cron/firm-outreach-bootstrap?batches=1&limit=30',
-    label: 'Enrich batch 1 (bootstrap)',
+    path: '/api/cron/firm-outreach-bootstrap?seedAgentCover=1&campaignId=agent_cover_kent_v1&batches=1&limit=40',
+    label: 'Seed + enrich PSA agent-cover Kent',
+    optional: true,
   },
   {
-    path: '/api/cron/firm-outreach-bootstrap?batches=1&limit=30',
-    label: 'Enrich batch 2 (bootstrap)',
+    path: '/api/cron/firm-outreach-bootstrap?batches=1&limit=40',
+    label: 'Enrich batch 1 (RepUK bootstrap)',
+  },
+  {
+    path: '/api/cron/firm-outreach-bootstrap?batches=1&limit=40',
+    label: 'Enrich batch 2 (RepUK bootstrap)',
     optional: true,
   },
   // CRON_SECRET Bearer or FIRM_OUTREACH_BOOTSTRAP_SECRET header. Optional so enrich-only kicks still succeed.
+  // Limit high; daily/hourly/Resend caps still bind actual accepts.
   {
-    path: '/api/cron/firm-outreach-send?limit=25',
+    path: '/api/cron/firm-outreach-send?limit=150',
     label: 'Send flush (whatsapp_invite_v1 + agent_cover_kent_v1)',
     optional: true,
   },
