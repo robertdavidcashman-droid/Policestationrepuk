@@ -29,6 +29,49 @@ export interface OutreachSendFailureEmailInput {
   date?: string;
 }
 
+/** Skip reasons that mean "intentionally did not send" — not an outage. */
+const BENIGN_SKIP_REASONS = new Set([
+  'firm_cooldown',
+  'daily_cap',
+  'hourly_cap',
+  'idempotent_exists',
+  'duplicate',
+  'suppressed',
+  'not_qualified',
+  'no_email',
+  'mx_invalid',
+  'quiet_hours',
+  'send_disabled',
+  'resend_quota',
+  'not_due',
+  'no_step',
+]);
+
+export function shouldAlertZeroSends(opts: {
+  stats: OutreachRunStats;
+  readyToSend: number;
+}): boolean {
+  if (opts.stats.sent > 0) return false;
+  if (opts.readyToSend <= 0) return false;
+
+  // Only alert when we actually intended to send work this run.
+  const intended =
+    (opts.stats.jobsCreated ?? 0) > 0 ||
+    (opts.stats.jobsClaimed ?? 0) > 0 ||
+    (opts.stats.queued ?? 0) > 0;
+  if (!intended) return false;
+
+  const reasons = opts.stats.skipReasons ?? {};
+  const entries = Object.entries(reasons).filter(([, n]) => (n ?? 0) > 0);
+  if (entries.length === 0) {
+    // Queued/claimed work but nothing accepted and no skip explanation → alert.
+    return true;
+  }
+
+  // If every recorded skip is benign, this is expected idle — no alert.
+  return entries.some(([reason]) => !BENIGN_SKIP_REASONS.has(reason));
+}
+
 export async function sendOutreachSendFailureEmail(
   input: OutreachSendFailureEmailInput,
 ): Promise<boolean> {
@@ -76,7 +119,7 @@ export async function sendOutreachSendFailureEmail(
   }
 }
 
-/** Notify when an auto-send cron had errors or accepted zero while prospects are eligible. */
+/** Notify when an auto-send cron had errors or accepted zero while work was intended. */
 export async function maybeNotifyOutreachSendFailure(opts: {
   stats: OutreachRunStats;
   readyToSend: number;
@@ -100,7 +143,7 @@ export async function maybeNotifyOutreachSendFailure(opts: {
     });
     return;
   }
-  if (opts.stats.sent === 0 && opts.readyToSend > 0) {
+  if (shouldAlertZeroSends(opts)) {
     await sendOutreachSendFailureEmail({
       stats: opts.stats,
       readyToSend: opts.readyToSend,

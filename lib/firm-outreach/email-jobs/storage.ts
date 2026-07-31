@@ -141,8 +141,31 @@ export interface EnqueueEmailJobResult {
   duplicate: boolean;
 }
 
+async function waitForIdempotentJob(
+  idempotencyKey: string,
+  attempts = 5,
+  delayMs = 25,
+): Promise<EmailJob | null> {
+  const kv = getKV();
+  if (!kv) return null;
+  for (let i = 0; i < attempts; i++) {
+    const existing = await getEmailJobByIdempotencyKey(idempotencyKey);
+    if (existing) return existing;
+    const heldId = await kv.get<string>(idemKey(idempotencyKey));
+    if (heldId) {
+      const job = await getEmailJob(heldId);
+      if (job) return job;
+    }
+    if (i < attempts - 1) {
+      await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
+    }
+  }
+  return null;
+}
+
 /**
  * Create a durable send job. Database-level uniqueness via SET NX on idempotency key.
+ * Fail closed on race: never create a second job when the idempotency key is held.
  */
 export async function enqueueEmailJob(
   input: EnqueueEmailJobInput,
@@ -164,14 +187,10 @@ export async function enqueueEmailJob(
   const id = newJobId();
   const claimed = await claimKey(idemKey(idempotencyKey), 60 * 60 * 24 * 120, id);
   if (!claimed) {
-    const raced = await getEmailJobByIdempotencyKey(idempotencyKey);
+    const raced = await waitForIdempotentJob(idempotencyKey);
     if (raced) return { job: raced, created: false, duplicate: true };
-    // Idem key held without job row — heal by reading value
-    const heldId = await kv.get<string>(idemKey(idempotencyKey));
-    if (heldId) {
-      const job = await getEmailJob(heldId);
-      if (job) return { job, created: false, duplicate: true };
-    }
+    // Key held but job never appeared — do NOT create a second sendable job.
+    throw new Error(`idempotency_race_unresolved:${idempotencyKey}`);
   }
 
   const job: EmailJob = {
@@ -194,9 +213,19 @@ export async function enqueueEmailJob(
     subject: input.subject,
   };
 
-  await saveEmailJob(job);
-  await kv.set(idemKey(idempotencyKey), id, { ex: 60 * 60 * 24 * 120 });
-  return { job, created: true, duplicate: false };
+  try {
+    await saveEmailJob(job);
+    await kv.set(idemKey(idempotencyKey), id, { ex: 60 * 60 * 24 * 120 });
+    return { job, created: true, duplicate: false };
+  } catch (err) {
+    // Release NX claim so another worker can retry enqueue cleanly.
+    try {
+      await kv.del(idemKey(idempotencyKey));
+    } catch {
+      /* ignore */
+    }
+    throw err;
+  }
 }
 
 export async function listEmailJobIdsByStatus(
@@ -321,12 +350,7 @@ export async function recoverAbandonedEmailJobs(opts?: {
       job.claimOwner = undefined;
       job.claimExpiresAt = undefined;
       job.lastError = job.lastError ?? 'abandoned_lease_recovered';
-      // Drop the NX lease key so another worker can claim immediately.
-      try {
-        await kv.del(`firmoutreach:job:lease:${job.id}`);
-      } catch {
-        /* ignore */
-      }
+      await releaseJobLease(job.id);
       await saveEmailJob(job, prev);
       recovered++;
     }
@@ -344,6 +368,38 @@ export async function markJobProcessing(job: EmailJob): Promise<EmailJob> {
   return job;
 }
 
+export async function releaseJobLease(jobId: string): Promise<void> {
+  const kv = getKV();
+  if (!kv) return;
+  try {
+    await kv.del(`firmoutreach:job:lease:${jobId}`);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Requeue a claimed job to pending/retry and drop the NX lease so it can be claimed again. */
+export async function requeueClaimedJob(
+  job: EmailJob,
+  opts: {
+    status: 'pending' | 'retry_scheduled';
+    nextRetryAt?: string;
+    previousStatus?: EmailJobStatus;
+    lastError?: string;
+  },
+): Promise<EmailJob> {
+  const prev = opts.previousStatus ?? job.status;
+  job.status = opts.status;
+  job.nextRetryAt = opts.nextRetryAt ?? new Date().toISOString();
+  job.claimedAt = undefined;
+  job.claimOwner = undefined;
+  job.claimExpiresAt = undefined;
+  if (opts.lastError) job.lastError = opts.lastError.slice(0, 500);
+  await releaseJobLease(job.id);
+  await saveEmailJob(job, prev);
+  return job;
+}
+
 export async function markJobAccepted(
   job: EmailJob,
   opts: { providerMessageId: string; sendId?: string; subject?: string },
@@ -357,6 +413,10 @@ export async function markJobAccepted(
   job.completedAt = job.acceptedAt;
   job.lastError = undefined;
   job.nextRetryAt = undefined;
+  job.claimedAt = undefined;
+  job.claimOwner = undefined;
+  job.claimExpiresAt = undefined;
+  await releaseJobLease(job.id);
   await saveEmailJob(job, prev);
   return job;
 }
@@ -370,6 +430,15 @@ export async function markJobRetryOrPermanent(
     delayMs: number;
   },
 ): Promise<EmailJob> {
+  // Never retry a job that already has a provider message id — Resend accepted it.
+  if (job.providerMessageId) {
+    return markJobAccepted(job, {
+      providerMessageId: job.providerMessageId,
+      sendId: job.sendId,
+      subject: job.subject,
+    });
+  }
+
   const prev = job.status;
   job.lastError = opts.error.slice(0, 500);
   job.providerStatusCode = opts.statusCode;
@@ -385,6 +454,7 @@ export async function markJobRetryOrPermanent(
   job.claimedAt = undefined;
   job.claimOwner = undefined;
   job.claimExpiresAt = undefined;
+  await releaseJobLease(job.id);
   await saveEmailJob(job, prev);
   return job;
 }

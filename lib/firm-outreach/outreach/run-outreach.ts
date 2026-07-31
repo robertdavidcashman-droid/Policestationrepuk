@@ -15,7 +15,7 @@ import {
   markJobRetryOrPermanent,
   markJobSuppressed,
   recoverAbandonedEmailJobs,
-  saveEmailJob,
+  requeueClaimedJob,
 } from '../email-jobs/storage';
 import { isOutreachSendAllowed } from '../pause-state';
 import {
@@ -475,16 +475,17 @@ export async function runFirmOutreach(opts?: {
 
     let dailyReserved = false;
     let hourlyReserved = false;
+    let providerAccepted = false;
     try {
       const daily = await reserveDailySendSlot(date, campaignId, dailyCap);
       if (!daily.ok) {
         recordSkip(stats, 'daily_cap');
-        job.status = 'pending';
-        job.claimedAt = undefined;
-        job.claimOwner = undefined;
-        job.claimExpiresAt = undefined;
-        job.nextRetryAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-        await saveEmailJob(job, 'claimed');
+        await requeueClaimedJob(job, {
+          status: 'pending',
+          nextRetryAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          previousStatus: 'claimed',
+          lastError: 'daily_cap',
+        });
         stats.retryScheduled = (stats.retryScheduled ?? 0) + 1;
         break;
       }
@@ -496,12 +497,12 @@ export async function runFirmOutreach(opts?: {
           await releaseDailySendSlot(date, campaignId);
           dailyReserved = false;
           recordSkip(stats, 'hourly_cap');
-          job.status = 'retry_scheduled';
-          job.nextRetryAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-          job.claimedAt = undefined;
-          job.claimOwner = undefined;
-          job.claimExpiresAt = undefined;
-          await saveEmailJob(job, 'claimed');
+          await requeueClaimedJob(job, {
+            status: 'retry_scheduled',
+            nextRetryAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+            previousStatus: 'claimed',
+            lastError: 'hourly_cap',
+          });
           stats.retryScheduled = (stats.retryScheduled ?? 0) + 1;
           break;
         }
@@ -512,11 +513,12 @@ export async function runFirmOutreach(opts?: {
         if (dailyReserved) await releaseDailySendSlot(date, campaignId);
         if (hourlyReserved) await releaseHourlySendSlot(campaignId, hourBucket);
         recordSkip(stats, 'job_claim_failed');
-        job.status = 'pending';
-        job.claimedAt = undefined;
-        job.claimOwner = undefined;
-        job.claimExpiresAt = undefined;
-        await saveEmailJob(job, 'claimed');
+        await requeueClaimedJob(job, {
+          status: 'pending',
+          nextRetryAt: new Date().toISOString(),
+          previousStatus: 'claimed',
+          lastError: 'prospect_claim_failed',
+        });
         continue;
       }
 
@@ -564,6 +566,15 @@ export async function runFirmOutreach(opts?: {
         continue;
       }
 
+      // Persist provider acceptance BEFORE prospect/send side effects.
+      // If later KV writes fail, we must not retry the provider call.
+      const providerMessageId = result.messageId ?? 'unknown';
+      await markJobAccepted(job, {
+        providerMessageId,
+        subject: result.subject,
+      });
+      providerAccepted = true;
+
       const now = new Date().toISOString();
       prospect.sequenceStep = job.sequenceStep;
       prospect.lastEmailAt = now;
@@ -582,11 +593,13 @@ export async function runFirmOutreach(opts?: {
       });
       send.status = 'sent';
       send.sentAt = now;
-      send.resendMessageId = result.messageId;
+      send.resendMessageId = providerMessageId;
       await saveSend(send);
 
+      // Attach send id to the already-accepted job (best-effort).
+      job.sendId = send.id;
       await markJobAccepted(job, {
-        providerMessageId: result.messageId ?? 'unknown',
+        providerMessageId,
         sendId: send.id,
         subject: result.subject,
       });
@@ -599,6 +612,19 @@ export async function runFirmOutreach(opts?: {
       stats.accepted = (stats.accepted ?? 0) + 1;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      if (providerAccepted || job.providerMessageId || job.status === 'accepted') {
+        // Provider already accepted — never release cap / never retry send.
+        structuredRunLog('error', 'outreach.job.post_accept_persist_failed', {
+          runId,
+          campaignId,
+          jobId: job.id,
+          providerMessageId: job.providerMessageId,
+          error: msg,
+        });
+        stats.sent++;
+        stats.accepted = (stats.accepted ?? 0) + 1;
+        continue;
+      }
       if (dailyReserved) await releaseDailySendSlot(date, campaignId);
       if (hourlyReserved) await releaseHourlySendSlot(campaignId, hourBucket);
       await markJobRetryOrPermanent(job, {

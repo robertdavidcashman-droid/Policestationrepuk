@@ -325,4 +325,84 @@ describe('email job queue (KV)', () => {
     expect(current.status).toBe('accepted');
     expect(current.providerMessageId).toBe('re_123');
   });
+
+  it('does not create a second job when idempotency key is held without a row', async () => {
+    const key = buildOutreachIdempotencyKey(
+      'whatsapp_invite_v1',
+      'race@test.co.uk',
+      0,
+    );
+    // Simulate another worker holding the NX key before writing the job row.
+    store.data.set(`firmoutreach:job:idem:${key}`, 'foj_held_but_missing');
+
+    await expect(
+      enqueueEmailJob({
+        campaignId: 'whatsapp_invite_v1',
+        prospectId: 'p-race',
+        firmName: 'Race Firm',
+        prospectType: 'firm',
+        email: 'race@test.co.uk',
+        sequenceStep: 0,
+        correlationId: 'c-race',
+      }),
+    ).rejects.toThrow(/idempotency_race_unresolved/);
+  });
+
+  it('clears lease when requeueing a claimed job so it can be claimed again', async () => {
+    const { requeueClaimedJob } = await import('@/lib/firm-outreach/email-jobs/storage');
+    await enqueueEmailJob({
+      campaignId: 'whatsapp_invite_v1',
+      prospectId: 'p1',
+      firmName: 'Test',
+      prospectType: 'firm',
+      email: 'lease@test.co.uk',
+      sequenceStep: 0,
+      correlationId: 'c1',
+    });
+    const claimed = await claimNextEmailJob({
+      owner: 'worker-a',
+      campaignId: 'whatsapp_invite_v1',
+    });
+    expect(claimed).toBeTruthy();
+    expect(store.data.has(`firmoutreach:job:lease:${claimed!.id}`)).toBe(true);
+
+    await requeueClaimedJob(claimed!, {
+      status: 'pending',
+      previousStatus: 'claimed',
+      lastError: 'daily_cap',
+    });
+
+    expect(store.data.has(`firmoutreach:job:lease:${claimed!.id}`)).toBe(false);
+    const again = await claimNextEmailJob({
+      owner: 'worker-b',
+      campaignId: 'whatsapp_invite_v1',
+    });
+    expect(again?.id).toBe(claimed!.id);
+  });
+
+  it('does not retry a job that already has a provider message id', async () => {
+    const { job } = await enqueueEmailJob({
+      campaignId: 'whatsapp_invite_v1',
+      prospectId: 'p1',
+      firmName: 'Test',
+      prospectType: 'firm',
+      email: 'accepted@test.co.uk',
+      sequenceStep: 0,
+      correlationId: 'c1',
+    });
+    let current = await claimNextEmailJob({
+      owner: 'w',
+      campaignId: 'whatsapp_invite_v1',
+    });
+    current = await markJobProcessing(current!);
+    current.providerMessageId = 're_already';
+    current = await markJobRetryOrPermanent(current, {
+      error: 'kv_write_failed_after_accept',
+      retryable: true,
+      delayMs: 1000,
+    });
+    expect(current.status).toBe('accepted');
+    expect(current.providerMessageId).toBe('re_already');
+    expect(job.id).toBe(current.id);
+  });
 });
