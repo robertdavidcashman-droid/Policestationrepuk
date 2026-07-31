@@ -46,6 +46,7 @@ vi.mock('@/lib/firm-outreach/outreach/candidate-selection', () => ({
     sentScanned: 5,
     readyEligible: 8,
     followUpEligible: 1,
+    firmCooldownSkipped: 0,
   }),
 }));
 

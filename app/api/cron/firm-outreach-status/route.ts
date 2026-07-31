@@ -29,6 +29,8 @@ export async function GET(request: Request) {
       readyScanned: number;
       readyEligible: number;
       followUpEligible: number;
+      firmCooldownSkipped: number;
+      sendableCandidates: number;
       lastRun?: unknown;
     }
   > = {};
@@ -43,6 +45,8 @@ export async function GET(request: Request) {
       readyScanned: selection.readyScanned,
       readyEligible: selection.readyEligible,
       followUpEligible: selection.followUpEligible,
+      firmCooldownSkipped: selection.firmCooldownSkipped,
+      sendableCandidates: selection.candidates.length,
       lastRun: await getLatestOutreachRunLog(campaignId),
     };
   }
