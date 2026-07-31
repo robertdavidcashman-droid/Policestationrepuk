@@ -15,9 +15,16 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
 
   if (url.searchParams.get('dryRunPreview') === '1') {
-    const { buildOutreachDryRunPreview } = await import('@/lib/firm-outreach/dry-run-preview');
     const limit = Number(url.searchParams.get('limit') || 25) || 25;
-    const preview = await buildOutreachDryRunPreview({ limit });
+    const campaignId = url.searchParams.get('campaignId')?.trim() || undefined;
+    // Default: both flush campaigns with shared Resend budget (matches send flush).
+    if (!campaignId || url.searchParams.get('allCampaigns') === '1') {
+      const { buildAllCampaignsDryRunPreview } = await import('@/lib/firm-outreach/dry-run-preview');
+      const preview = await buildAllCampaignsDryRunPreview({ limit });
+      return NextResponse.json({ ok: true, mode: 'dryRunPreview', preview });
+    }
+    const { buildOutreachDryRunPreview } = await import('@/lib/firm-outreach/dry-run-preview');
+    const preview = await buildOutreachDryRunPreview({ limit, campaignId });
     return NextResponse.json({ ok: true, mode: 'dryRunPreview', preview });
   }
 

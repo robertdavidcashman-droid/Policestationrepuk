@@ -16,7 +16,10 @@ export interface BootstrapOutreachResult {
   countsAfter: Record<string, number>;
   reindex?: Awaited<ReturnType<typeof reindexProspectStatuses>>;
   agentCoverDiscovery?: DiscoveryRunStats;
+  /** Recovery for the campaign that enrich will process. */
   enrichPoolRecovery?: Awaited<ReturnType<typeof recoverEnrichPool>>;
+  /** Extra recovery when seedAgentCover targets a different campaign than enrich. */
+  seedCampaignRecovery?: Awaited<ReturnType<typeof recoverEnrichPool>>;
   batches: Awaited<ReturnType<typeof runFirmEnrichment>>[];
   totals: {
     processed: number;
@@ -93,13 +96,20 @@ export async function bootstrapOutreach(opts?: {
   }
 
   const batchResults: Awaited<ReturnType<typeof runFirmEnrichment>>[] = [];
+  // Enrich target — must match recoverEnrichPool campaign (Bugbot: do not recover
+  // agent_cover when seedAgentCover is set but enrich still targets the default).
   const campaignId = opts?.campaignId?.trim() || undefined;
 
-  // Unstick exhausted discovered / stale no_email before enrich so poolSize≠0
-  // no longer means processed=0 forever.
-  const enrichPoolRecovery = await recoverEnrichPool({
-    campaignId: campaignId ?? (opts?.seedAgentCover ? AGENT_COVER_KENT_CAMPAIGN_ID : undefined),
-  });
+  // If we seed Kent inventory but enrich a different campaign, recover Kent too.
+  let seedCampaignRecovery: Awaited<ReturnType<typeof recoverEnrichPool>> | undefined;
+  if (opts?.seedAgentCover && campaignId !== AGENT_COVER_KENT_CAMPAIGN_ID) {
+    seedCampaignRecovery = await recoverEnrichPool({
+      campaignId: AGENT_COVER_KENT_CAMPAIGN_ID,
+    });
+  }
+
+  // Unstick exhausted discovered / stale no_email for the campaign enrich will run.
+  const enrichPoolRecovery = await recoverEnrichPool({ campaignId });
 
   for (let i = 0; i < batches; i++) {
     if (Date.now() >= deadline) break;
@@ -136,6 +146,7 @@ export async function bootstrapOutreach(opts?: {
     reindex: reindexResult,
     agentCoverDiscovery,
     enrichPoolRecovery,
+    seedCampaignRecovery,
     batches: batchResults,
     totals,
   };

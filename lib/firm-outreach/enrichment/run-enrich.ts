@@ -16,6 +16,8 @@ import {
   saveProspect,
   setCursor,
 } from '../storage';
+
+const ENRICH_POOL_FILTER_CHUNK = 100;
 import type { EnrichmentRunStats, FirmProspect } from '../types';
 import {
   enrichCandidateScore,
@@ -166,13 +168,15 @@ export async function loadEnrichPoolIds(campaignId?: string): Promise<string[]> 
   const enrichable: string[] = [];
   // Critical: do not include exhausted discovered rows — they used to clog the
   // pool (poolSize>0, processed=0) forever because shouldEnrichProspect rejects them.
-  for (const id of discovered) {
-    const p = await getProspect(id);
-    if (p && shouldEnrichProspect(p, now)) enrichable.push(id);
-  }
-  for (const id of noEmail) {
-    const p = await getProspect(id);
-    if (p && shouldEnrichProspect(p, now)) enrichable.push(id);
+  // Batch-load via getProspectsByIds so large backlogs do not O(n) sequential GET.
+  const allIds = [...discovered, ...noEmail];
+  for (let i = 0; i < allIds.length; i += ENRICH_POOL_FILTER_CHUNK) {
+    const chunk = allIds.slice(i, i + ENRICH_POOL_FILTER_CHUNK);
+    const map = await getProspectsByIds(chunk);
+    for (const id of chunk) {
+      const p = map.get(id);
+      if (p && shouldEnrichProspect(p, now)) enrichable.push(id);
+    }
   }
   return enrichable;
 }

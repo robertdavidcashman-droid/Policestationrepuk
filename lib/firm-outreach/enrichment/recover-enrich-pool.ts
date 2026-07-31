@@ -1,6 +1,6 @@
 import { activeOutreachCampaignId } from '../campaign-scope';
 import {
-  getProspect,
+  getProspectsByIds,
   listProspectIdsByRecordStatus,
   saveProspect,
 } from '../storage';
@@ -9,6 +9,8 @@ import {
   MAX_ENRICH_ATTEMPTS,
   NO_EMAIL_RETRY_DAYS,
 } from './enrich-candidates';
+
+const RECOVER_CHUNK = 100;
 
 export interface RecoverEnrichPoolResult {
   retiredExhaustedDiscovered: number;
@@ -39,31 +41,39 @@ export async function recoverEnrichPool(opts?: {
   let requeuedStaleNoEmail = 0;
 
   const discovered = await listProspectIdsByRecordStatus('discovered', campaignOpts);
-  for (const id of discovered) {
-    if (retiredExhaustedDiscovered >= maxRetire) break;
-    const p = await getProspect(id);
-    if (!p || p.enrichAttempts < MAX_ENRICH_ATTEMPTS) continue;
-    if (!opts?.dryRun) {
-      p.status = 'no_email';
-      p.updatedAt = new Date(now).toISOString();
-      await saveProspect(p, 'discovered');
+  for (let i = 0; i < discovered.length && retiredExhaustedDiscovered < maxRetire; i += RECOVER_CHUNK) {
+    const chunk = discovered.slice(i, i + RECOVER_CHUNK);
+    const map = await getProspectsByIds(chunk);
+    for (const id of chunk) {
+      if (retiredExhaustedDiscovered >= maxRetire) break;
+      const p = map.get(id);
+      if (!p || p.enrichAttempts < MAX_ENRICH_ATTEMPTS) continue;
+      if (!opts?.dryRun) {
+        p.status = 'no_email';
+        p.updatedAt = new Date(now).toISOString();
+        await saveProspect(p, 'discovered');
+      }
+      retiredExhaustedDiscovered++;
     }
-    retiredExhaustedDiscovered++;
   }
 
   const noEmail = await listProspectIdsByRecordStatus('no_email', campaignOpts);
-  for (const id of noEmail) {
-    if (requeuedStaleNoEmail >= maxRequeue) break;
-    const p = await getProspect(id);
-    if (!p) continue;
-    if (daysSinceIso(p.lastEnrichAttemptAt, now) < NO_EMAIL_RETRY_DAYS) continue;
-    if (!opts?.dryRun) {
-      p.status = 'discovered';
-      p.enrichAttempts = 0;
-      p.updatedAt = new Date(now).toISOString();
-      await saveProspect(p, 'no_email');
+  for (let i = 0; i < noEmail.length && requeuedStaleNoEmail < maxRequeue; i += RECOVER_CHUNK) {
+    const chunk = noEmail.slice(i, i + RECOVER_CHUNK);
+    const map = await getProspectsByIds(chunk);
+    for (const id of chunk) {
+      if (requeuedStaleNoEmail >= maxRequeue) break;
+      const p = map.get(id);
+      if (!p) continue;
+      if (daysSinceIso(p.lastEnrichAttemptAt, now) < NO_EMAIL_RETRY_DAYS) continue;
+      if (!opts?.dryRun) {
+        p.status = 'discovered';
+        p.enrichAttempts = 0;
+        p.updatedAt = new Date(now).toISOString();
+        await saveProspect(p, 'no_email');
+      }
+      requeuedStaleNoEmail++;
     }
-    requeuedStaleNoEmail++;
   }
 
   return { retiredExhaustedDiscovered, requeuedStaleNoEmail, campaignId };

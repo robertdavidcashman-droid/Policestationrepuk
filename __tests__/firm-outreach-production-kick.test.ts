@@ -75,10 +75,11 @@ describe('runProductionKickSteps', () => {
     expect(DEFAULT_PRODUCTION_KICK_STEPS[1]?.optional).toBeFalsy();
   });
 
-  it('ends with optional multi-campaign send flush after dry-run preview', () => {
+  it('ends with optional multi-campaign send flush after both-campaign dry-run', () => {
     const last = DEFAULT_PRODUCTION_KICK_STEPS.at(-1);
     const dryRun = DEFAULT_PRODUCTION_KICK_STEPS.at(-2);
     expect(dryRun?.path).toContain('dryRunPreview=1');
+    expect(dryRun?.path).toContain('allCampaigns=1');
     expect(dryRun?.optional).toBe(true);
     expect(last?.path).toBe('/api/cron/firm-outreach-send?limit=150');
     expect(last?.optional).toBe(true);

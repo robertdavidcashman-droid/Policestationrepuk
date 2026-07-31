@@ -3,7 +3,10 @@ import {
   createEmptySkipReasons,
   nextOutreachStep,
 } from '@robertcashman/firm-outreach-core';
-import { activeOutreachCampaignId } from './campaign-scope';
+import {
+  activeOutreachCampaignId,
+  AGENT_COVER_KENT_CAMPAIGN_ID,
+} from './campaign-scope';
 import { dailySendCap } from './constants';
 import { isPlausibleOutreachEmail, validateEmailForSend } from './enrichment/validator';
 import { qualifyProspectForOutreach } from './qualification';
@@ -11,6 +14,7 @@ import {
   firmRecentlyContacted,
   selectOutreachCandidates,
 } from './outreach/candidate-selection';
+import { FIRM_OUTREACH_CAMPAIGN_ID } from './site-config';
 import {
   getDailySendCount,
   getGlobalResendQuotaRemaining,
@@ -57,6 +61,73 @@ export async function buildOutreachDryRunPreview(opts?: {
   maxRows?: number;
 }): Promise<DryRunPreviewResult> {
   return previewFirmOutreachDryRun(opts);
+}
+
+export interface MultiCampaignDryRunPreviewResult {
+  date: string;
+  resendQuotaRemaining: number;
+  /** Shared Resend-aware safe limit across both flush campaigns. */
+  safeSendLimitNow: number;
+  wouldSendCount: number;
+  campaigns: DryRunPreviewResult[];
+}
+
+/** Apply a shared Resend remaining budget across per-campaign dry-run results. */
+export function applySharedResendBudget(
+  campaigns: DryRunPreviewResult[],
+  resendQuotaRemaining: number,
+): { campaigns: DryRunPreviewResult[]; safeSendLimitNow: number; wouldSendCount: number } {
+  let remainingResend = resendQuotaRemaining;
+  let wouldSendCount = 0;
+  const adjusted: DryRunPreviewResult[] = [];
+
+  for (const preview of campaigns) {
+    const safeForCampaign = Math.min(preview.safeSendLimitNow, remainingResend);
+    remainingResend = Math.max(0, remainingResend - safeForCampaign);
+    wouldSendCount += preview.wouldSendCount;
+    adjusted.push({
+      ...preview,
+      safeSendLimitNow: safeForCampaign,
+      resendQuotaRemaining,
+    });
+  }
+
+  return {
+    campaigns: adjusted,
+    safeSendLimitNow: adjusted.reduce((n, c) => n + c.safeSendLimitNow, 0),
+    wouldSendCount,
+  };
+}
+
+/**
+ * Dry-run both campaigns the production flush sends, with one shared Resend budget.
+ * Per-campaign daily caps still apply independently; Resend remaining is global.
+ */
+export async function buildAllCampaignsDryRunPreview(opts?: {
+  limit?: number;
+  maxRows?: number;
+}): Promise<MultiCampaignDryRunPreviewResult> {
+  const date = new Date().toISOString().slice(0, 10);
+  const resendQuotaRemaining = await getGlobalResendQuotaRemaining(date);
+  const campaignIds = [FIRM_OUTREACH_CAMPAIGN_ID, AGENT_COVER_KENT_CAMPAIGN_ID];
+
+  const perCampaign: DryRunPreviewResult[] = [];
+  for (const campaignId of campaignIds) {
+    perCampaign.push(
+      await previewFirmOutreachDryRun({
+        campaignId,
+        limit: opts?.limit,
+        maxRows: opts?.maxRows,
+      }),
+    );
+  }
+
+  const allocated = applySharedResendBudget(perCampaign, resendQuotaRemaining);
+  return {
+    date,
+    resendQuotaRemaining,
+    ...allocated,
+  };
 }
 
 export async function previewFirmOutreachDryRun(opts?: {
