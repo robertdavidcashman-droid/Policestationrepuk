@@ -177,12 +177,17 @@ async function main() {
     const cronPick = pickEnvValue(envs, 'CRON_SECRET');
     const bootstrapPick = pickEnvValue(envs, 'FIRM_OUTREACH_BOOTSTRAP_SECRET');
     const approvalPick = pickEnvValue(envs, 'FIRM_OUTREACH_REQUIRE_APPROVAL');
+    const dryRunPick = pickEnvValue(envs, 'FIRM_OUTREACH_DRY_RUN');
+    const sendEnabledPick = pickEnvValue(envs, 'FIRM_OUTREACH_SEND_ENABLED');
+    const dailyCapPick = pickEnvValue(envs, 'FIRM_OUTREACH_DAILY_CAP');
+    const resendLimitPick = pickEnvValue(envs, 'FIRM_OUTREACH_RESEND_DAILY_LIMIT');
+    const resendHeadroomPick = pickEnvValue(envs, 'FIRM_OUTREACH_RESEND_HEADROOM');
 
     if (!cron && cronPick.value) cron = cronPick.value;
     if (!bootstrap && bootstrapPick.value) bootstrap = bootstrapPick.value;
 
     console.log(
-      `Decrypt load: cron_len=${cron.length} bootstrap_len=${bootstrap.length} require_approval=${JSON.stringify(approvalPick.value || '')}`,
+      `Decrypt load: cron_len=${cron.length} bootstrap_len=${bootstrap.length} require_approval=${JSON.stringify(approvalPick.value || '')} daily_cap=${JSON.stringify(dailyCapPick.value || '')}`,
     );
 
     if (!cron && !bootstrap) {
@@ -199,6 +204,37 @@ async function main() {
       await upsertProductionEnv('FIRM_OUTREACH_REQUIRE_APPROVAL', 'false', ids);
       needsRedeploy = true;
       console.log('Ungated FIRM_OUTREACH_REQUIRE_APPROVAL → false');
+    }
+
+    // Live sending must not stay in dry-run / disabled when a kick is authorized.
+    const dryRunRaw = (dryRunPick.value || '').toLowerCase();
+    if (dryRunRaw === 'true' || dryRunRaw === '1' || dryRunRaw === 'yes') {
+      const ids = dryRunPick.entries.map((e) => e.id).filter(Boolean);
+      await upsertProductionEnv('FIRM_OUTREACH_DRY_RUN', 'false', ids);
+      needsRedeploy = true;
+      console.log('Disabled FIRM_OUTREACH_DRY_RUN → false');
+    }
+    const sendEnabledRaw = (sendEnabledPick.value || '').toLowerCase();
+    if (sendEnabledRaw === 'false' || sendEnabledRaw === '0' || sendEnabledRaw === 'no') {
+      const ids = sendEnabledPick.entries.map((e) => e.id).filter(Boolean);
+      await upsertProductionEnv('FIRM_OUTREACH_SEND_ENABLED', 'true', ids);
+      needsRedeploy = true;
+      console.log('Enabled FIRM_OUTREACH_SEND_ENABLED → true');
+    }
+
+    // Raise accidental low daily caps up to the Resend outreach budget (limit - headroom).
+    // Never exceed that budget; never bypass provider limits.
+    const resendLimit = Number(resendLimitPick.value || 100) || 100;
+    const resendHeadroom = Number(resendHeadroomPick.value || 10) || 10;
+    const targetDailyCap = Math.max(1, resendLimit - resendHeadroom);
+    const currentDailyCap = Number(dailyCapPick.value || 0) || 0;
+    if (!dailyCapPick.value || currentDailyCap < targetDailyCap) {
+      const ids = dailyCapPick.entries.map((e) => e.id).filter(Boolean);
+      await upsertProductionEnv('FIRM_OUTREACH_DAILY_CAP', String(targetDailyCap), ids);
+      needsRedeploy = true;
+      console.log(
+        `Raised FIRM_OUTREACH_DAILY_CAP ${currentDailyCap || '(unset)'} → ${targetDailyCap} (Resend budget)`,
+      );
     }
 
     // Bootstrap may already exist in Vercel from a prior kick that failed before redeploy.

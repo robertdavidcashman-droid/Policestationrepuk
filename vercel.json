@@ -158,6 +158,10 @@
     },
     {
       "path": "/api/cron/firm-outreach-send",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/firm-outreach-send",
       "schedule": "0 12 * * *"
     },
     {
@@ -171,6 +175,10 @@
     {
       "path": "/api/cron/firm-outreach-send",
       "schedule": "30 18 * * *"
+    },
+    {
+      "path": "/api/cron/firm-outreach-send",
+      "schedule": "0 20 * * *"
     },
     {
       "path": "/api/cron/firm-outreach-digest",

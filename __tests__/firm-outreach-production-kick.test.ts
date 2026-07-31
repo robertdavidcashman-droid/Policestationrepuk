@@ -75,13 +75,15 @@ describe('runProductionKickSteps', () => {
     expect(DEFAULT_PRODUCTION_KICK_STEPS[1]?.optional).toBeFalsy();
   });
 
-  it('ends with optional multi-campaign send flush after both-campaign dry-run', () => {
+  it('ends with dual send flushes after both-campaign dry-run', () => {
     const last = DEFAULT_PRODUCTION_KICK_STEPS.at(-1);
-    const dryRun = DEFAULT_PRODUCTION_KICK_STEPS.at(-2);
-    expect(dryRun?.path).toContain('dryRunPreview=1');
+    const prior = DEFAULT_PRODUCTION_KICK_STEPS.at(-2);
+    const dryRun = DEFAULT_PRODUCTION_KICK_STEPS.find((s) => s.path.includes('dryRunPreview=1'));
     expect(dryRun?.path).toContain('allCampaigns=1');
     expect(dryRun?.optional).toBe(true);
+    expect(prior?.path).toBe('/api/cron/firm-outreach-send?limit=150');
     expect(last?.path).toBe('/api/cron/firm-outreach-send?limit=150');
+    expect(last?.label).toContain('flush 2');
     expect(last?.optional).toBe(true);
   });
 
@@ -124,12 +126,18 @@ describe('runProductionKickSteps', () => {
     expect(failedStep?.label).toContain('Enrich batch 1');
   });
 
-  it('uses separate bootstrap enrich calls not a combined batch', () => {
-    const enrichSteps = DEFAULT_PRODUCTION_KICK_STEPS.filter(
-      (s) => s.path.includes('bootstrap') && s.path.includes('batches=1'),
+  it('uses separate RepUK bootstrap enrich calls (PSA seed may use batches=2)', () => {
+    const repukEnrich = DEFAULT_PRODUCTION_KICK_STEPS.filter(
+      (s) =>
+        s.path.includes('bootstrap') &&
+        s.path.includes('batches=') &&
+        !s.path.includes('seedAgentCover') &&
+        !s.path.includes('dryRunPreview') &&
+        !s.path.includes('cleanupBadEmails') &&
+        !s.path.includes('requalifyOnly'),
     );
-    expect(enrichSteps.length).toBeGreaterThanOrEqual(2);
-    expect(DEFAULT_PRODUCTION_KICK_STEPS.some((s) => s.path.includes('batches=2'))).toBe(false);
+    expect(repukEnrich.length).toBeGreaterThanOrEqual(2);
+    expect(repukEnrich.every((s) => s.path.includes('limit=60'))).toBe(true);
   });
 });
 

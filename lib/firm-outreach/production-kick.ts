@@ -95,17 +95,29 @@ export const DEFAULT_PRODUCTION_KICK_STEPS: KickStep[] = [
     optional: true,
   },
   {
-    path: '/api/cron/firm-outreach-bootstrap?seedAgentCover=1&campaignId=agent_cover_kent_v1&batches=1&limit=40',
+    path: '/api/cron/firm-outreach-bootstrap?cleanupBadEmails=1&dryRun=0&allStatuses=1',
+    label: 'Cleanup non-firm / bad emails (both campaigns)',
+    optional: true,
+  },
+  // PSA: seed Kent + larger enrich so agent_cover gains ready firm inboxes.
+  {
+    path: '/api/cron/firm-outreach-bootstrap?seedAgentCover=1&campaignId=agent_cover_kent_v1&batches=2&limit=60',
     label: 'Seed + enrich PSA agent-cover Kent',
     optional: true,
   },
+  // RepUK: larger enrich batches to surface firm-type emails before flush.
   {
-    path: '/api/cron/firm-outreach-bootstrap?batches=1&limit=40',
+    path: '/api/cron/firm-outreach-bootstrap?batches=1&limit=60',
     label: 'Enrich batch 1 (RepUK bootstrap)',
   },
   {
-    path: '/api/cron/firm-outreach-bootstrap?batches=1&limit=40',
+    path: '/api/cron/firm-outreach-bootstrap?batches=1&limit=60',
     label: 'Enrich batch 2 (RepUK bootstrap)',
+    optional: true,
+  },
+  {
+    path: '/api/cron/firm-outreach-bootstrap?batches=1&limit=60',
+    label: 'Enrich batch 3 (RepUK bootstrap)',
     optional: true,
   },
   // Production dry-run for BOTH flush campaigns (shared Resend budget).
@@ -114,11 +126,16 @@ export const DEFAULT_PRODUCTION_KICK_STEPS: KickStep[] = [
     label: 'Dry-run preview (both campaigns, safe send limit)',
     optional: true,
   },
-  // CRON_SECRET Bearer or FIRM_OUTREACH_BOOTSTRAP_SECRET header. Optional so enrich-only kicks still succeed.
   // Limit high; daily/hourly/Resend caps still bind actual accepts.
   {
     path: '/api/cron/firm-outreach-send?limit=150',
-    label: 'Send flush (whatsapp_invite_v1 + agent_cover_kent_v1)',
+    label: 'Send flush 1 (whatsapp_invite_v1 + agent_cover_kent_v1)',
+    optional: true,
+  },
+  // Second flush catches anything enrich just promoted into ready_to_send.
+  {
+    path: '/api/cron/firm-outreach-send?limit=150',
+    label: 'Send flush 2 (remaining safe capacity)',
     optional: true,
   },
 ];
