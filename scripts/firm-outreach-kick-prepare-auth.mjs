@@ -16,11 +16,7 @@ import { randomBytes } from 'node:crypto';
 const token = process.env.VERCEL_TOKEN?.trim();
 const projectId = process.env.VERCEL_PROJECT_ID?.trim();
 const teamId = process.env.VERCEL_ORG_ID?.trim();
-
-if (!token || !projectId) {
-  console.error('VERCEL_TOKEN and VERCEL_PROJECT_ID are required');
-  process.exit(1);
-}
+const vercelEnabled = Boolean(token && projectId);
 
 function apiUrl(path, query = {}) {
   const u = new URL(`https://api.vercel.com${path}`);
@@ -32,6 +28,9 @@ function apiUrl(path, query = {}) {
 }
 
 async function vercelJson(path, opts = {}) {
+  if (!token) {
+    throw new Error('VERCEL_TOKEN is required for Vercel API requests');
+  }
   const res = await fetch(apiUrl(path, opts.query), {
     method: opts.method || 'GET',
     headers: {
@@ -128,51 +127,54 @@ async function redeployLatestProduction() {
     }
     await new Promise((r) => setTimeout(r, 15_000));
   }
-  console.warn('Redeploy wait timed out — continuing');
+  throw new Error('Redeploy wait timed out');
 }
 
 async function main() {
   // Prefer non-empty values already in the process env (GH secrets / env pull).
   let cron = process.env.CRON_SECRET?.trim() || '';
   let bootstrap = process.env.FIRM_OUTREACH_BOOTSTRAP_SECRET?.trim() || '';
-
-  console.log('Fetching Vercel production env (decrypt=true)…');
-  const envJson = await vercelJson(`/v9/projects/${projectId}/env`, {
-    query: { decrypt: 'true' },
-  });
-  const envs = envJson.envs || [];
-
-  const cronPick = pickEnvValue(envs, 'CRON_SECRET');
-  const bootstrapPick = pickEnvValue(envs, 'FIRM_OUTREACH_BOOTSTRAP_SECRET');
-  const approvalPick = pickEnvValue(envs, 'FIRM_OUTREACH_REQUIRE_APPROVAL');
-
-  if (!cron && cronPick.value) cron = cronPick.value;
-  if (!bootstrap && bootstrapPick.value) bootstrap = bootstrapPick.value;
-
-  console.log(
-    `Decrypt load: cron_len=${cron.length} bootstrap_len=${bootstrap.length} require_approval=${JSON.stringify(approvalPick.value || '')}`,
-  );
-
   let needsRedeploy = false;
 
-  if (!cron && !bootstrap) {
-    bootstrap = randomBytes(32).toString('hex');
-    const ids = bootstrapPick.entries.map((e) => e.id).filter(Boolean);
-    await upsertProductionEnv('FIRM_OUTREACH_BOOTSTRAP_SECRET', bootstrap, ids);
-    needsRedeploy = true;
-    console.log('Provisioned FIRM_OUTREACH_BOOTSTRAP_SECRET on production');
-  }
+  if (vercelEnabled) {
+    console.log('Fetching Vercel production env (decrypt=true)…');
+    const envJson = await vercelJson(`/v9/projects/${projectId}/env`, {
+      query: { decrypt: 'true' },
+    });
+    const envs = envJson.envs || [];
 
-  const approvalRaw = (approvalPick.value || '').toLowerCase();
-  if (approvalRaw === 'true' || approvalRaw === '1' || approvalRaw === 'yes') {
-    const ids = approvalPick.entries.map((e) => e.id).filter(Boolean);
-    await upsertProductionEnv('FIRM_OUTREACH_REQUIRE_APPROVAL', 'false', ids);
-    needsRedeploy = true;
-    console.log('Ungated FIRM_OUTREACH_REQUIRE_APPROVAL → false');
-  }
+    const cronPick = pickEnvValue(envs, 'CRON_SECRET');
+    const bootstrapPick = pickEnvValue(envs, 'FIRM_OUTREACH_BOOTSTRAP_SECRET');
+    const approvalPick = pickEnvValue(envs, 'FIRM_OUTREACH_REQUIRE_APPROVAL');
 
-  if (needsRedeploy) {
-    await redeployLatestProduction();
+    if (!cron && cronPick.value) cron = cronPick.value;
+    if (!bootstrap && bootstrapPick.value) bootstrap = bootstrapPick.value;
+
+    console.log(
+      `Decrypt load: cron_len=${cron.length} bootstrap_len=${bootstrap.length} require_approval=${JSON.stringify(approvalPick.value || '')}`,
+    );
+
+    if (!cron && !bootstrap) {
+      bootstrap = randomBytes(32).toString('hex');
+      const ids = bootstrapPick.entries.map((e) => e.id).filter(Boolean);
+      await upsertProductionEnv('FIRM_OUTREACH_BOOTSTRAP_SECRET', bootstrap, ids);
+      needsRedeploy = true;
+      console.log('Provisioned FIRM_OUTREACH_BOOTSTRAP_SECRET on production');
+    }
+
+    const approvalRaw = (approvalPick.value || '').toLowerCase();
+    if (approvalRaw === 'true' || approvalRaw === '1' || approvalRaw === 'yes') {
+      const ids = approvalPick.entries.map((e) => e.id).filter(Boolean);
+      await upsertProductionEnv('FIRM_OUTREACH_REQUIRE_APPROVAL', 'false', ids);
+      needsRedeploy = true;
+      console.log('Ungated FIRM_OUTREACH_REQUIRE_APPROVAL → false');
+    }
+
+    if (needsRedeploy) {
+      await redeployLatestProduction();
+    }
+  } else {
+    console.log('VERCEL_TOKEN / VERCEL_PROJECT_ID not set — skipping Vercel decrypt / provision / ungate');
   }
 
   process.env.CRON_SECRET = cron;

@@ -107,8 +107,11 @@ export const DEFAULT_PRODUCTION_KICK_STEPS: KickStep[] = [
 ];
 
 export interface VercelDeployment {
+  id?: string;
+  uid?: string;
   url?: string;
   readyState?: string;
+  createdAt?: number;
   meta?: { githubCommitSha?: string };
 }
 
@@ -143,12 +146,22 @@ export async function waitForVercelProductionDeploy(opts: {
     if (res.ok) {
       const data = (await res.json()) as { deployments?: VercelDeployment[] };
       const deployments = data.deployments ?? [];
-      const match = opts.commitSha
-        ? deployments.find(
-            (d) => d.meta?.githubCommitSha === opts.commitSha && d.readyState === 'READY',
-          )
-        : deployments.find((d) => d.readyState === 'READY');
-      if (match) return { ready: true, deployment: match };
+      const sorted = deployments
+        .slice()
+        .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+
+      if (opts.commitSha) {
+        const shaDeployments = sorted.filter((d) => d.meta?.githubCommitSha === opts.commitSha);
+        const latest = shaDeployments[0];
+        if (latest?.readyState === 'READY') return { ready: true, deployment: latest };
+        if (shaDeployments.length === 0) {
+          const anyReady = sorted.find((d) => d.readyState === 'READY');
+          if (anyReady) return { ready: true, deployment: anyReady };
+        }
+      } else {
+        const anyReady = sorted.find((d) => d.readyState === 'READY');
+        if (anyReady) return { ready: true, deployment: anyReady };
+      }
     }
     await sleep(pollMs);
   }

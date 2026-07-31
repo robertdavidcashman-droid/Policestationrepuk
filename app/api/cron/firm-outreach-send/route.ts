@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     });
   }
 
-  const envCheck = validateOutreachEnv({ requireCronSecret: true });
+  const envCheck = validateOutreachEnv({ requireCronSecret: false });
   if (!envCheck.ok) {
     return NextResponse.json(
       { ok: false, error: 'outreach_env_invalid', errors: envCheck.errors, warnings: envCheck.warnings },

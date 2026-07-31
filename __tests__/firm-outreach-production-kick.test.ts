@@ -103,20 +103,25 @@ describe('runProductionKickSteps', () => {
 });
 
 describe('waitForVercelProductionDeploy', () => {
-  it('returns ready when deployment matches commit sha', async () => {
-    let calls = 0;
-    const fetchFn = vi.fn(async () => {
-      calls++;
-      return {
+  it('waits for the newest deployment for a commit sha to be READY', async () => {
+    let nowMs = 0;
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           deployments: [
-            { readyState: 'BUILDING', meta: { githubCommitSha: 'abc' } },
-            { readyState: 'READY', meta: { githubCommitSha: 'abc' }, url: 'x.vercel.app' },
+            { readyState: 'BUILDING', meta: { githubCommitSha: 'abc' }, createdAt: 2, url: 'new.vercel.app' },
+            { readyState: 'READY', meta: { githubCommitSha: 'abc' }, createdAt: 1, url: 'old.vercel.app' },
           ],
         }),
-      };
-    });
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          deployments: [{ readyState: 'READY', meta: { githubCommitSha: 'abc' }, createdAt: 3, url: 'new.vercel.app' }],
+        }),
+      });
 
     const result = await waitForVercelProductionDeploy({
       token: 't',
@@ -124,14 +129,16 @@ describe('waitForVercelProductionDeploy', () => {
       commitSha: 'abc',
       timeoutMs: 5_000,
       pollMs: 1,
-      now: () => 0,
-      sleep: async () => {},
+      now: () => nowMs,
+      sleep: async (ms) => {
+        nowMs += ms;
+      },
       fetchFn: fetchFn as typeof fetch,
     });
 
     expect(result.ready).toBe(true);
-    expect(result.deployment?.url).toBe('x.vercel.app');
-    expect(calls).toBe(1);
+    expect(result.deployment?.url).toBe('new.vercel.app');
+    expect(fetchFn).toHaveBeenCalledTimes(2);
   });
 });
 
