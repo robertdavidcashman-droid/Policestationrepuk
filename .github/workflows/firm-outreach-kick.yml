@@ -4,6 +4,10 @@
 # firm-outreach paths (including this workflow), pull prod env and kick
 # status → enrich → send flush (both campaigns).
 # Manual: workflow_dispatch with sha + confirm_kick=KICK.
+#
+# Auth: load CRON_SECRET / FIRM_OUTREACH_BOOTSTRAP_SECRET via Vercel env API
+# decrypt=true (env pull often returns empty sensitive values). If both empty,
+# provision bootstrap secret; if REQUIRE_APPROVAL=true, ungate to false and redeploy.
 name: Firm outreach production kick
 
 on:
@@ -55,7 +59,7 @@ jobs:
           FIRM_OUTREACH_BOOTSTRAP_SECRET: ${{ secrets.FIRM_OUTREACH_BOOTSTRAP_SECRET }}
         run: |
           set -euo pipefail
-          # Auth may come from GH secrets or from vercel env pull (VERCEL_TOKEN).
+          # Auth may come from GH secrets or from Vercel decrypt API (VERCEL_TOKEN).
           if [ -z "${VERCEL_TOKEN:-}" ] && [ -z "${CRON_SECRET:-}" ] && [ -z "${FIRM_OUTREACH_BOOTSTRAP_SECRET:-}" ]; then
             echo "No VERCEL_TOKEN or cron auth secrets — skipping kick"
             echo "run=false" >> "$GITHUB_OUTPUT"
@@ -119,10 +123,11 @@ jobs:
     needs: should-kick
     if: needs.should-kick.outputs.run == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -135,8 +140,8 @@ jobs:
 
       - name: Pull production env
         run: |
-          if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
-            vercel env pull .env.production --environment=production --yes --token=${{ secrets.VERCEL_TOKEN }}
+          if [ -n "${VERCEL_TOKEN:-}" ]; then
+            vercel env pull .env.production --environment=production --yes --token="${VERCEL_TOKEN}"
             echo "Pulled production env keys:"
             # Keys only — never print values.
             grep -E '^[A-Za-z_][A-Za-z0-9_]*=' .env.production | cut -d= -f1 | sort || true
@@ -144,10 +149,8 @@ jobs:
             echo "VERCEL_TOKEN not set — using GitHub secrets for cron auth only"
           fi
 
-      - name: Requalify + enrich + send flush on production
+      - name: Prepare kick auth (decrypt / provision / ungate)
         env:
-          # Only inject when the GH secret is non-empty. An empty env: value would
-          # otherwise shadow CRON_SECRET loaded from vercel env pull.
           GH_CRON_SECRET: ${{ secrets.CRON_SECRET }}
           GH_BOOTSTRAP_SECRET: ${{ secrets.FIRM_OUTREACH_BOOTSTRAP_SECRET }}
         run: |
@@ -164,11 +167,15 @@ jobs:
           if [ -n "${GH_BOOTSTRAP_SECRET:-}" ]; then
             export FIRM_OUTREACH_BOOTSTRAP_SECRET="$GH_BOOTSTRAP_SECRET"
           fi
+          # Decrypt API fills empty sensitive values; may provision bootstrap / ungate approval.
+          node scripts/firm-outreach-kick-prepare-auth.mjs
+
+      - name: Requalify + enrich + send flush on production
+        run: |
           echo "Kick auth present: cron=$( [ -n "${CRON_SECRET:-}" ] && echo yes || echo no ) bootstrap=$( [ -n "${FIRM_OUTREACH_BOOTSTRAP_SECRET:-}" ] && echo yes || echo no )"
           export FIRM_OUTREACH_KICK_BASE_URL="https://policestationrepuk.org"
-          export VERCEL_TOKEN="${{ secrets.VERCEL_TOKEN }}"
           export FIRM_OUTREACH_KICK_COMMIT_SHA="${{ needs.should-kick.outputs.sha }}"
           export FIRM_OUTREACH_KICK_REQUIRE_AUTH=1
           # Status + bootstrap enrich, then optional /api/cron/firm-outreach-send
-          # (both campaigns; needs CRON_SECRET from GH secret or pulled .env.production).
+          # (both campaigns; CRON Bearer or bootstrap header).
           node scripts/firm-outreach-production-kick.mjs

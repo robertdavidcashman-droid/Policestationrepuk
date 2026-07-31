@@ -144,4 +144,21 @@ describe('firm-outreach-send cron', () => {
     expect(json.mode).toBe('send-only');
     expect(mockPipeline).toHaveBeenCalledOnce();
   });
+
+  it('accepts outreach bootstrap secret header for send', async () => {
+    process.env = {
+      ...ENV,
+      CRON_SECRET: 'cron-test',
+      FIRM_OUTREACH_BOOTSTRAP_SECRET: 'boot-test',
+      FIRM_OUTREACH_REQUIRE_APPROVAL: 'false',
+    };
+    mockPipeline.mockResolvedValue({ skipped: false, send: { sent: 1 } });
+    const res = await sendGet(
+      new Request('http://localhost/api/cron/firm-outreach-send', {
+        headers: { 'x-firm-outreach-bootstrap-secret': 'boot-test' },
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).mode).toBe('send-only');
+  });
 });

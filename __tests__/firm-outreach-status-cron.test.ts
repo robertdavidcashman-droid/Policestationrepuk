@@ -56,4 +56,18 @@ describe('firm-outreach-status cron route', () => {
     expect(json.config.requireApproval).toBe(true);
     expect(json.queue.readyToSend).toBe(109);
   });
+
+  it('accepts outreach bootstrap secret header', async () => {
+    process.env = {
+      ...ENV,
+      CRON_SECRET: 'cron-test-secret',
+      FIRM_OUTREACH_BOOTSTRAP_SECRET: 'boot-test-secret',
+    };
+    const res = await GET(
+      new Request('http://localhost/api/cron/firm-outreach-status', {
+        headers: { 'x-firm-outreach-bootstrap-secret': 'boot-test-secret' },
+      }),
+    );
+    expect(res.status).toBe(200);
+  });
 });

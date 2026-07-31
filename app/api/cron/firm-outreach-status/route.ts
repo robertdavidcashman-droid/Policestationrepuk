@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isCronAuthorized } from '@/lib/cron-auth';
+import { isOutreachBootstrapAuthorized } from '@/lib/cron-auth';
 import { outreachRequireApproval } from '@/lib/firm-outreach/constants';
 import { getOutreachConfigStatus } from '@/lib/firm-outreach/config-status';
 import { buildOutreachActivityReport } from '@/lib/firm-outreach/outreach/activity-report';
@@ -9,7 +9,7 @@ export const runtime = 'nodejs';
 
 /** Outreach health — config, pause state, and queue summary for monitoring. */
 export async function GET(request: Request) {
-  if (!isCronAuthorized(request)) {
+  if (!isOutreachBootstrapAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

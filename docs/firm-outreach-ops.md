@@ -119,8 +119,9 @@ Unset production blockers: `FIRM_OUTREACH_DRY_RUN`, `FIRM_OUTREACH_PAUSED`, `FIR
 **Production kick (GitHub Actions):**
 - **Auto:** after a successful **Deploy to Vercel (production)** on `master`, if the deployed SHA touches firm-outreach paths (or this kick workflow), Actions pulls prod env and runs status → requalify/enrich → optional send flush.
 - **Manual:** workflow **Firm outreach production kick** → `workflow_dispatch` with `sha=<full commit SHA>` and `confirm_kick=KICK`.
+- **Auth:** kick loads `CRON_SECRET` / `FIRM_OUTREACH_BOOTSTRAP_SECRET` via Vercel env API `decrypt=true` (same pattern as custody ops). `vercel env pull` often returns empty sensitive values. Status and send routes accept cron Bearer **or** `x-firm-outreach-bootstrap-secret`. If both secrets are empty, kick provisions `FIRM_OUTREACH_BOOTSTRAP_SECRET` on production and redeploys. If `FIRM_OUTREACH_REQUIRE_APPROVAL=true`, kick sets it to `false` and redeploys so send can flush.
 
-Kick steps: status → requalify/enrich → optional send flush (`/api/cron/firm-outreach-send?limit=25`) for both campaigns. Confirm `sendByCampaign.agent_cover_kent_v1` in the kick log (or empty queue / approval-required skip). Scheduled send crons also flush both campaigns (12:00 / 14:30 / 16:00 / 18:30 UTC).
+Kick steps: status → requalify/enrich → optional send flush (`/api/cron/firm-outreach-send?limit=25`) for both campaigns. Confirm `sendByCampaign.agent_cover_kent_v1` in the kick log (or empty queue). Scheduled send crons also flush both campaigns (12:00 / 14:30 / 16:00 / 18:30 UTC).
 
 ## Manual commands
 

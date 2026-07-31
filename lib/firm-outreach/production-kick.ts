@@ -98,7 +98,7 @@ export const DEFAULT_PRODUCTION_KICK_STEPS: KickStep[] = [
     label: 'Enrich batch 2 (bootstrap)',
     optional: true,
   },
-  // Requires CRON_SECRET (not bootstrap secret). Optional so enrich-only kicks still succeed.
+  // CRON_SECRET Bearer or FIRM_OUTREACH_BOOTSTRAP_SECRET header. Optional so enrich-only kicks still succeed.
   {
     path: '/api/cron/firm-outreach-send?limit=25',
     label: 'Send flush (whatsapp_invite_v1 + agent_cover_kent_v1)',

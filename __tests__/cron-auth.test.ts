@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { isCronAuthorized } from '@/lib/cron-auth';
+import { isCronAuthorized, isOutreachBootstrapAuthorized } from '@/lib/cron-auth';
 
 describe('isCronAuthorized', () => {
   afterEach(() => {
@@ -35,5 +35,37 @@ describe('isCronAuthorized', () => {
       headers: { 'x-cron-secret': 'secret' },
     });
     expect(isCronAuthorized(req, 'secret')).toBe(true);
+  });
+});
+
+describe('isOutreachBootstrapAuthorized', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('accepts cron Bearer auth', () => {
+    vi.stubEnv('CRON_SECRET', 'cron');
+    vi.stubEnv('FIRM_OUTREACH_BOOTSTRAP_SECRET', 'boot');
+    const req = new Request('http://localhost/api/cron/test', {
+      headers: { authorization: 'Bearer cron' },
+    });
+    expect(isOutreachBootstrapAuthorized(req)).toBe(true);
+  });
+
+  it('accepts bootstrap header when cron is wrong', () => {
+    vi.stubEnv('CRON_SECRET', 'cron');
+    vi.stubEnv('FIRM_OUTREACH_BOOTSTRAP_SECRET', 'boot');
+    const req = new Request('http://localhost/api/cron/test', {
+      headers: { 'x-firm-outreach-bootstrap-secret': 'boot' },
+    });
+    expect(isOutreachBootstrapAuthorized(req)).toBe(true);
+  });
+
+  it('rejects when neither secret matches', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('CRON_SECRET', 'cron');
+    vi.stubEnv('FIRM_OUTREACH_BOOTSTRAP_SECRET', 'boot');
+    const req = new Request('http://localhost/api/cron/test');
+    expect(isOutreachBootstrapAuthorized(req)).toBe(false);
   });
 });
