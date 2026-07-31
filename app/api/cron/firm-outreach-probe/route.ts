@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
   const result = await runOutreachSendProbes({ dryRun, to });
   return NextResponse.json(
-    { ok: result.ok, mode: dryRun ? 'probe-dry-run' : 'probe', ...result },
+    { mode: dryRun ? 'probe-dry-run' : 'probe', ...result },
     { status: result.ok || dryRun ? 200 : 503 },
   );
 }
