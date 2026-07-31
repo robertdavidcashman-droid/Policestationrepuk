@@ -31,34 +31,10 @@ function resendOutreachBudget() {
 function resendQuotaRemaining(count) {
     return Math.max(0, resendOutreachBudget() - count);
 }
-function isTransientResendError(error) {
-    if (!error)
-        return false;
-    const m = error.toLowerCase();
-    if (m.includes('429') || m.includes('rate limit') || m.includes('too many requests')) {
-        return true;
-    }
-    if (m.includes('timeout') ||
-        m.includes('503') ||
-        m.includes('502') ||
-        m.includes('500') ||
-        m.includes('econnreset') ||
-        m.includes('network')) {
-        return true;
-    }
-    return false;
+const email_jobs_1 = require("./email-jobs");
+function isTransientResendError(error, statusCode) {
+    return (0, email_jobs_1.classifyProviderError)(error, statusCode) === 'transient';
 }
-function isPermanentResendError(error) {
-    if (!error)
-        return false;
-    const m = error.toLowerCase();
-    if (isTransientResendError(error))
-        return false;
-    if (m.includes('invalid') || m.includes('bounce') || m.includes('not verified')) {
-        return true;
-    }
-    if (m.includes('validation') || m.includes('forbidden') || m.includes('unauthorized')) {
-        return true;
-    }
-    return m.includes('4') && !m.includes('429');
+function isPermanentResendError(error, statusCode) {
+    return (0, email_jobs_1.classifyProviderError)(error, statusCode) === 'permanent';
 }

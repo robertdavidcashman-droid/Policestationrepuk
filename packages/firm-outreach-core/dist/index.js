@@ -20,6 +20,7 @@ __exportStar(require("./shared-constants"), exports);
 __exportStar(require("./normalize"), exports);
 __exportStar(require("./qualification"), exports);
 __exportStar(require("./merge-prospects"), exports);
+__exportStar(require("./email-jobs"), exports);
 __exportStar(require("./reconcile-ready-status"), exports);
 __exportStar(require("./campaign-scope"), exports);
 __exportStar(require("./enrichment/validator"), exports);

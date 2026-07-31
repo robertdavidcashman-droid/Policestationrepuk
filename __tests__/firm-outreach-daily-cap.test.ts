@@ -25,6 +25,12 @@ vi.mock('../lib/firm-outreach/storage', () => ({
   saveProspect: vi.fn(),
   saveSend: vi.fn(),
   refreshProspectStatusSnapshotCache: vi.fn(),
+  reserveDailySendSlot: vi.fn(async () => ({ ok: true, count: 1 })),
+  releaseDailySendSlot: vi.fn(),
+  reserveHourlySendSlot: vi.fn(async () => ({ ok: true, count: 1 })),
+  releaseHourlySendSlot: vi.fn(),
+  utcHourBucket: () => '2026-07-31T12',
+  getProspect: vi.fn(),
 }));
 
 vi.mock('../lib/firm-outreach/outreach/send', () => ({
@@ -76,9 +82,9 @@ function readyProspect(id: string) {
     email: `${id}@example.com`,
     status: 'ready_to_send',
     sequenceStep: 0,
-    campaignId: 'repuk',
+    campaignId: 'whatsapp_invite_v1',
     prospectType: 'firm',
-    sources: [] as string[],
+    sources: ['laa'] as string[],
     priorityScore: 0,
     updatedAt: new Date().toISOString(),
   };

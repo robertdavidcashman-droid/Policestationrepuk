@@ -1,18 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.sequenceStepOf = exports.daysSince = void 0;
 exports.prospectHasInitialSend = prospectHasInitialSend;
 exports.reconcileReadyProspectStatus = reconcileReadyProspectStatus;
 exports.isDueForFollowUpStep1 = isDueForFollowUpStep1;
+const email_jobs_1 = require("./email-jobs");
+Object.defineProperty(exports, "daysSince", { enumerable: true, get: function () { return email_jobs_1.daysSince; } });
+Object.defineProperty(exports, "sequenceStepOf", { enumerable: true, get: function () { return email_jobs_1.sequenceStepOf; } });
 const validator_1 = require("./enrichment/validator");
-const FOLLOWUP_DAY_1 = 7;
-function daysSince(iso) {
-    if (!iso)
-        return Infinity;
-    return (Date.now() - Date.parse(iso)) / (1000 * 60 * 60 * 24);
-}
 /** Whether an initial outreach email was already recorded on this prospect. */
 function prospectHasInitialSend(prospect) {
-    return Boolean(prospect.lastEmailAt) && prospect.sequenceStep === 0;
+    // Any lastEmailAt on a ready row means the initial send already happened —
+    // including legacy rows where sequenceStep is missing/undefined.
+    return Boolean(prospect.lastEmailAt);
 }
 /**
  * ready_to_send + lastEmailAt is a stale index state: the initial send already happened
@@ -34,7 +34,13 @@ function reconcileReadyProspectStatus(prospect) {
 function isDueForFollowUpStep1(prospect) {
     if (prospect.waLinkClickedAt || prospect.joinedWhatsAppAt)
         return false;
-    if (prospect.sequenceStep !== 0 || !prospect.lastEmailAt)
+    if ((0, email_jobs_1.sequenceStepOf)(prospect) !== 0 || !prospect.lastEmailAt)
         return false;
-    return daysSince(prospect.lastEmailAt) >= FOLLOWUP_DAY_1;
+    return (0, email_jobs_1.dueForFollowUp)({
+        status: prospect.status ?? 'sent',
+        sequenceStep: (0, email_jobs_1.sequenceStepOf)(prospect),
+        lastEmailAt: prospect.lastEmailAt,
+        waLinkClickedAt: prospect.waLinkClickedAt,
+        joinedWhatsAppAt: prospect.joinedWhatsAppAt,
+    });
 }

@@ -187,6 +187,17 @@ Then build and run the standalone server as per Next.js docs.
 
 Existing redirects in `next.config.ts` map paths like `/find-a-rep`, `/representatives`, `/contact-us`, `/about-us` to the new structure.
 
+## Firm outreach (criminal defence outreach email)
+
+Lawful B2B outreach to qualified firms runs on Vercel Cron + Upstash KV + Resend.
+
+- Ops: [`docs/firm-outreach-ops.md`](docs/firm-outreach-ops.md)
+- Reliability (durable jobs, idempotency, retries, caps): [`docs/firm-outreach-reliability.md`](docs/firm-outreach-reliability.md)
+- Tests: `npm run test:firm-outreach:ci`
+- Status: `GET /api/cron/firm-outreach-status` (requires `CRON_SECRET`)
+
+Keep `FIRM_OUTREACH_DRY_RUN=1` until production sending is explicitly enabled.
+
 ## Licence
 
 Private — all rights reserved.

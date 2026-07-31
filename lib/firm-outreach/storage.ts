@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { incrementCounter } from '@/lib/kv-atomic';
+import { addToIndexSet, incrementCounter, readIndexMembers } from '@/lib/kv-atomic';
 import {
   resendQuotaKey,
   resendQuotaRemaining as calcResendQuotaRemaining,
@@ -64,28 +64,33 @@ function newSendId(): string {
 }
 
 async function readStringList(key: string): Promise<string[]> {
-  const kv = getKV();
-  if (!kv) return [];
-  const raw = await kv.get<string[]>(key);
-  return Array.isArray(raw) ? raw : [];
+  // Prefer Redis SET members; falls back to legacy JSON arrays and migrates.
+  return readIndexMembers(key);
 }
 
 async function appendIndex(key: string, id: string): Promise<void> {
-  const kv = getKV();
-  if (!kv) return;
-  const ids = await readStringList(key);
-  if (!ids.includes(id)) {
-    ids.push(id);
-    await kv.set(key, ids);
-  }
+  await addToIndexSet(key, id);
 }
 
 async function removeFromIndex(key: string, id: string): Promise<void> {
   const kv = getKV();
   if (!kv) return;
+  try {
+    await kv.srem(key, id);
+    return;
+  } catch {
+    // Legacy JSON array — rewrite without the id, then migrate to SET.
+  }
   const ids = await readStringList(key);
   const next = ids.filter((x) => x !== id);
-  if (next.length !== ids.length) await kv.set(key, next);
+  if (next.length !== ids.length) {
+    await kv.del(key);
+    if (next.length > 0) {
+      const pipeline = kv.pipeline();
+      for (const member of next) pipeline.sadd(key, member);
+      await pipeline.exec();
+    }
+  }
 }
 
 export async function saveProspect(prospect: FirmProspect, previousStatus?: FirmProspectStatus): Promise<void> {
@@ -464,6 +469,75 @@ export async function incrementDailySendCount(date: string, campaignId?: string)
   return incrementCounter(key, 60 * 60 * 24 * 3);
 }
 
+async function decrementCounter(key: string): Promise<number> {
+  const kv = getKV();
+  if (!kv) return 0;
+  const next = await kv.decr(key);
+  return typeof next === 'number' ? next : 0;
+}
+
+/**
+ * Reserve a daily cap slot before calling the provider.
+ * Returns ok=false when the cap would be exceeded (and rolls back the increment).
+ */
+export async function reserveDailySendSlot(
+  date: string,
+  campaignId: string,
+  dailyCap: number,
+): Promise<{ ok: boolean; count: number }> {
+  const count = await incrementDailySendCount(date, campaignId);
+  if (count > dailyCap) {
+    await releaseDailySendSlot(date, campaignId);
+    return { ok: false, count: dailyCap };
+  }
+  return { ok: true, count };
+}
+
+export async function releaseDailySendSlot(date: string, campaignId: string): Promise<number> {
+  const key = dailySendKeyForCampaignId(campaignId, date);
+  return decrementCounter(key);
+}
+
+function hourlySendKey(campaignId: string, hourBucket: string): string {
+  return `firmoutreach:hourly:${campaignId}:${hourBucket}`;
+}
+
+/** UTC hour bucket YYYY-MM-DDTHH */
+export function utcHourBucket(now = new Date()): string {
+  return now.toISOString().slice(0, 13);
+}
+
+export async function getHourlySendCount(
+  campaignId: string,
+  hourBucket: string,
+): Promise<number> {
+  const kv = getKV();
+  if (!kv) return 0;
+  const n = await kv.get<number>(hourlySendKey(campaignId, hourBucket));
+  return typeof n === 'number' ? n : 0;
+}
+
+export async function reserveHourlySendSlot(
+  campaignId: string,
+  hourBucket: string,
+  hourlyCap: number,
+): Promise<{ ok: boolean; count: number }> {
+  if (hourlyCap <= 0) return { ok: true, count: 0 };
+  const count = await incrementCounter(hourlySendKey(campaignId, hourBucket), 60 * 60 * 3);
+  if (count > hourlyCap) {
+    await decrementCounter(hourlySendKey(campaignId, hourBucket));
+    return { ok: false, count: hourlyCap };
+  }
+  return { ok: true, count };
+}
+
+export async function releaseHourlySendSlot(
+  campaignId: string,
+  hourBucket: string,
+): Promise<void> {
+  await decrementCounter(hourlySendKey(campaignId, hourBucket));
+}
+
 export async function getPaidLookupCount(date: string): Promise<number> {
   const kv = getKV();
   if (!kv) return 0;
@@ -580,6 +654,12 @@ export function createSendRecord(input: {
   };
 }
 
+/**
+ * Count prospects by *record* status (not raw index length).
+ * Stale status-index members from legacy RMW races are ignored so
+ * ready_to_send is not inflated — that previously made digests/status
+ * report hundreds of "ready" rows while the send path found almost none.
+ */
 export async function countProspectsByStatus(): Promise<Record<string, number>> {
   const statuses: FirmProspectStatus[] = [
     'discovered',
@@ -595,7 +675,17 @@ export async function countProspectsByStatus(): Promise<Record<string, number>> 
   const out: Record<string, number> = {};
   for (const s of statuses) {
     const ids = await listProspectIdsByStatus(s);
-    out[s] = ids.length;
+    if (ids.length === 0) {
+      out[s] = 0;
+      continue;
+    }
+    const map = await getProspectsByIds(ids);
+    let n = 0;
+    for (const id of ids) {
+      const p = map.get(id);
+      if (p && p.status === s) n++;
+    }
+    out[s] = n;
   }
   return out;
 }

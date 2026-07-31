@@ -23,7 +23,13 @@ vi.mock('@robertcashman/firm-outreach-core', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@robertcashman/firm-outreach-core')>();
   return {
     ...actual,
-    validateOutreachEnv: () => ({ ok: true, errors: [], warnings: [] }),
+    validateOutreachEnv: () => ({
+      ok: true,
+      errors: [],
+      warnings: [],
+      dryRun: false,
+      sendingEnabled: true,
+    }),
   };
 });
 

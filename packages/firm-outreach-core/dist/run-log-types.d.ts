@@ -1,5 +1,5 @@
 /** Structured skip/failure reasons recorded during a send run. */
-export type OutreachSkipReason = 'no_step' | 'no_email' | 'not_qualified' | 'suppressed' | 'duplicate' | 'firm_cooldown' | 'mx_invalid' | 'resend_quota' | 'daily_cap' | 'send_disabled' | 'resend_error' | 'transient_resend_error' | 'permanent_resend_error' | 'no_resend';
+export type OutreachSkipReason = 'no_step' | 'not_due' | 'no_email' | 'not_qualified' | 'suppressed' | 'duplicate' | 'idempotent_exists' | 'firm_cooldown' | 'mx_invalid' | 'resend_quota' | 'daily_cap' | 'hourly_cap' | 'send_disabled' | 'resend_error' | 'transient_resend_error' | 'permanent_resend_error' | 'no_resend' | 'job_claim_failed' | 'quiet_hours' | 'test_redirect';
 export interface OutreachFailureRecord {
     email: string;
     firmName?: string;

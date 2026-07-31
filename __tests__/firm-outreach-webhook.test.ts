@@ -13,14 +13,44 @@ vi.mock('@/lib/kv', () => ({
       store.delete(key);
     },
     mget: async (...keys: string[]) => keys.map((k) => store.get(k) ?? null),
+    sadd: async (key: string, member: string) => {
+      const cur = (store.get(key) as string[] | undefined) ?? [];
+      if (!cur.includes(member)) {
+        store.set(key, [...cur, member]);
+        return 1;
+      }
+      // Also keep a Set-shaped mirror for smembers
+      return 0;
+    },
+    srem: async (key: string, member: string) => {
+      const cur = (store.get(key) as string[] | undefined) ?? [];
+      store.set(
+        key,
+        cur.filter((x) => x !== member),
+      );
+      return 1;
+    },
+    smembers: async (key: string) => {
+      const cur = store.get(key);
+      return Array.isArray(cur) ? cur.map(String) : [];
+    },
     pipeline: () => {
-      const ops: Array<{ op: 'get'; key: string }> = [];
-      return {
+      const ops: Array<() => unknown> = [];
+      const api = {
         get: (key: string) => {
-          ops.push({ op: 'get', key });
+          ops.push(() => store.get(key) ?? null);
+          return api;
         },
-        exec: async () => ops.map((o) => store.get(o.key) ?? null),
+        sadd: (key: string, member: string) => {
+          ops.push(() => {
+            const cur = (store.get(key) as string[] | undefined) ?? [];
+            if (!cur.includes(member)) store.set(key, [...cur, member]);
+          });
+          return api;
+        },
+        exec: async () => ops.map((fn) => fn()),
       };
+      return api;
     },
   }),
   skipKVInPrerender: () => false,

@@ -9,6 +9,6 @@ export declare function resendDailyHeadroom(): number;
 /** Effective outreach budget across both sites for a UTC day. */
 export declare function resendOutreachBudget(): number;
 export declare function resendQuotaRemaining(count: number): number;
-export declare function isTransientResendError(error?: string): boolean;
-export declare function isPermanentResendError(error?: string): boolean;
+export declare function isTransientResendError(error?: string, statusCode?: number): boolean;
+export declare function isPermanentResendError(error?: string, statusCode?: number): boolean;
 //# sourceMappingURL=resend-quota.d.ts.map

@@ -43,10 +43,15 @@ export async function sendOutreachSendFailureEmail(
         ${escapeHtml(input.reason)}
       </p>
       <ul style="margin:0 0 16px;padding-left:20px;line-height:1.6;">
-        <li><strong>Sent:</strong> ${input.stats.sent}</li>
+        <li><strong>Accepted (provider):</strong> ${input.stats.accepted ?? input.stats.sent}</li>
+        <li><strong>Jobs created:</strong> ${input.stats.jobsCreated ?? 0}</li>
+        <li><strong>Jobs claimed:</strong> ${input.stats.jobsClaimed ?? 0}</li>
+        <li><strong>Retry scheduled:</strong> ${input.stats.retryScheduled ?? 0}</li>
+        <li><strong>Permanently failed:</strong> ${input.stats.permanentlyFailed ?? 0}</li>
         <li><strong>Errors:</strong> ${input.stats.errors}</li>
         <li><strong>Skipped:</strong> ${input.stats.skipped}</li>
-        <li><strong>Ready to send:</strong> ${input.readyToSend}</li>
+        <li><strong>Eligible / ready:</strong> ${input.readyToSend}</li>
+        <li><strong>Run id:</strong> ${escapeHtml(input.stats.runId)}</li>
       </ul>
       <p style="margin:0;color:#64748b;font-size:12px;">
         <a href="https://policestationrepuk.org/admin/firm-outreach">Open admin dashboard</a>
@@ -71,7 +76,7 @@ export async function sendOutreachSendFailureEmail(
   }
 }
 
-/** Notify when an auto-send cron had errors or sent zero while prospects are ready. */
+/** Notify when an auto-send cron had errors or accepted zero while prospects are eligible. */
 export async function maybeNotifyOutreachSendFailure(opts: {
   stats: OutreachRunStats;
   readyToSend: number;
@@ -95,11 +100,19 @@ export async function maybeNotifyOutreachSendFailure(opts: {
     });
     return;
   }
-  if (opts.stats.sent === 0 && opts.readyToSend > 0 && opts.stats.queued > 0) {
+  if (opts.stats.sent === 0 && opts.readyToSend > 0) {
     await sendOutreachSendFailureEmail({
       stats: opts.stats,
       readyToSend: opts.readyToSend,
-      reason: `No emails sent despite ${opts.readyToSend} ready prospect(s) and ${opts.stats.queued} queued.`,
+      reason: `No emails accepted despite ${opts.readyToSend} ready prospect(s) (queued=${opts.stats.queued}, jobsCreated=${opts.stats.jobsCreated ?? 0}, skipReasons=${JSON.stringify(opts.stats.skipReasons ?? {})}).`,
+    });
+    return;
+  }
+  if ((opts.stats.permanentlyFailed ?? 0) >= 3) {
+    await sendOutreachSendFailureEmail({
+      stats: opts.stats,
+      readyToSend: opts.readyToSend,
+      reason: `${opts.stats.permanentlyFailed} permanently failed send job(s) this run.`,
     });
   }
 }

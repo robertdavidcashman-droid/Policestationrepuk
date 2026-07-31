@@ -2,6 +2,8 @@
 
 Automated WhatsApp invitation emails to qualified criminal defence firms. Admin dashboard: `/admin/firm-outreach`.
 
+**Reliability architecture** (durable job queue, idempotency, retries, caps): see [firm-outreach-reliability.md](./firm-outreach-reliability.md).
+
 ## Cron schedule (UTC)
 
 | Time | Route | What runs |

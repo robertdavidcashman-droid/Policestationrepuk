@@ -1,23 +1,23 @@
-import { bumpSkipReason, createEmptySkipReasons } from '@robertcashman/firm-outreach-core';
-import { activeOutreachCampaignId, isCampaignProspect } from './campaign-scope';
+import {
+  bumpSkipReason,
+  createEmptySkipReasons,
+  nextOutreachStep,
+} from '@robertcashman/firm-outreach-core';
+import { activeOutreachCampaignId } from './campaign-scope';
 import { dailySendCap } from './constants';
-import { sortProspectsForSend } from './enrichment/scorer';
-import { validateEmailForSend } from './enrichment/validator';
+import { isPlausibleOutreachEmail, validateEmailForSend } from './enrichment/validator';
 import { qualifyProspectForOutreach } from './qualification';
+import {
+  firmRecentlyContacted,
+  selectOutreachCandidates,
+} from './outreach/candidate-selection';
 import {
   getDailySendCount,
   getGlobalResendQuotaRemaining,
   isDuplicateInitialSend,
   isSuppressed,
-  listProspectsByRecordStatus,
-  listProspectsForFirmKey,
 } from './storage';
-import type { FirmProspect } from './types';
 import { normalizeEmail } from './normalize';
-
-const FOLLOWUP_DAY_1 = 7;
-const FOLLOWUP_DAY_2 = 21;
-const FIRM_SEND_COOLDOWN_DAYS = 90;
 
 export interface DryRunPreviewRow {
   prospectId: string;
@@ -38,68 +38,53 @@ export interface DryRunPreviewResult {
   resendQuotaRemaining: number;
   preview: DryRunPreviewRow[];
   skipReasons: Partial<Record<string, number>>;
-}
-
-function daysSince(iso: string | undefined): number {
-  if (!iso) return Infinity;
-  return (Date.now() - Date.parse(iso)) / (1000 * 60 * 60 * 24);
-}
-
-function nextStep(prospect: FirmProspect): number | null {
-  if (prospect.status === 'ready_to_send' && prospect.sequenceStep === 0 && !prospect.lastEmailAt) {
-    return 0;
-  }
-  const days = daysSince(prospect.lastEmailAt);
-  if (prospect.status === 'sent' && prospect.sequenceStep === 0 && days >= FOLLOWUP_DAY_1) return 1;
-  if (prospect.status === 'sent' && prospect.sequenceStep === 1 && days >= FOLLOWUP_DAY_2 - FOLLOWUP_DAY_1) {
-    return 2;
-  }
-  return null;
-}
-
-async function firmRecentlyContacted(
-  prospect: FirmProspect,
-  campaignId: string,
-): Promise<boolean> {
-  const siblings = await listProspectsForFirmKey(prospect.firmKey);
-  for (const s of siblings) {
-    if (s.id === prospect.id || !isCampaignProspect(s, campaignId)) continue;
-    if (s.lastEmailAt && daysSince(s.lastEmailAt) < FIRM_SEND_COOLDOWN_DAYS) {
-      return true;
-    }
-  }
-  return false;
+  selection?: {
+    readyScanned: number;
+    sentScanned: number;
+    readyEligible: number;
+    followUpEligible: number;
+  };
 }
 
 export async function buildOutreachDryRunPreview(opts?: {
   campaignId?: string;
   limit?: number;
+  maxRows?: number;
+}): Promise<DryRunPreviewResult> {
+  return previewFirmOutreachDryRun(opts);
+}
+
+export async function previewFirmOutreachDryRun(opts?: {
+  campaignId?: string;
+  limit?: number;
+  maxRows?: number;
 }): Promise<DryRunPreviewResult> {
   const campaignId = opts?.campaignId ?? activeOutreachCampaignId();
-  const campaignOpts = { campaignId };
   const date = new Date().toISOString().slice(0, 10);
-  const cap = dailySendCap();
+  const dailyCap = dailySendCap();
   const sentToday = await getDailySendCount(date, campaignId);
-  const remaining = Math.max(0, cap - sentToday);
+  const remaining = Math.max(0, Math.min(opts?.limit ?? dailyCap, dailyCap - sentToday));
   const resendQuotaRemaining = await getGlobalResendQuotaRemaining(date);
+  const maxRows = opts?.maxRows ?? 50;
   const skipReasons = createEmptySkipReasons();
   const preview: DryRunPreviewRow[] = [];
-  const maxRows = opts?.limit ?? 25;
-
-  const ready = await listProspectsByRecordStatus('ready_to_send', 2000, campaignOpts);
-  const sent = await listProspectsByRecordStatus('sent', 2000, campaignOpts);
-  const candidates = sortProspectsForSend([...ready, ...sent]);
   const emailsSeen = new Set<string>();
   let wouldSend = 0;
 
-  for (const prospect of candidates) {
+  const selection = await selectOutreachCandidates({
+    campaignId,
+    readyLimit: 500,
+    sentLimit: 500,
+  });
+
+  for (const { prospect, step } of selection.candidates) {
     if (preview.length >= maxRows && wouldSend >= remaining) break;
 
-    const step = nextStep(prospect);
+    const email = prospect.email?.trim();
     const row: DryRunPreviewRow = {
       prospectId: prospect.id,
       firmName: prospect.firmName,
-      email: prospect.email,
+      email,
       status: prospect.status,
       step,
       wouldSend: false,
@@ -112,14 +97,6 @@ export async function buildOutreachDryRunPreview(opts?: {
       continue;
     }
 
-    if (step === null) {
-      row.skipReason = 'no_step';
-      bumpSkipReason(skipReasons, 'no_step');
-      preview.push(row);
-      continue;
-    }
-
-    const email = prospect.email?.trim();
     if (!email) {
       row.skipReason = 'no_email';
       bumpSkipReason(skipReasons, 'no_email');
@@ -127,8 +104,8 @@ export async function buildOutreachDryRunPreview(opts?: {
       continue;
     }
 
-    const qualification = qualifyProspectForOutreach(prospect);
-    if (!qualification.qualified) {
+    const normalizedEmail = normalizeEmail(email);
+    if (!qualifyProspectForOutreach(prospect).qualified) {
       row.skipReason = 'not_qualified';
       bumpSkipReason(skipReasons, 'not_qualified');
       preview.push(row);
@@ -142,10 +119,9 @@ export async function buildOutreachDryRunPreview(opts?: {
       continue;
     }
 
-    const normalized = normalizeEmail(email);
     if (
       step === 0 &&
-      (emailsSeen.has(normalized) ||
+      (emailsSeen.has(normalizedEmail) ||
         (await isDuplicateInitialSend(email, prospect.id, campaignId)))
     ) {
       row.skipReason = 'duplicate';
@@ -154,42 +130,54 @@ export async function buildOutreachDryRunPreview(opts?: {
       continue;
     }
 
-    if (prospect.prospectType === 'solicitor' && (await firmRecentlyContacted(prospect, campaignId))) {
+    if (
+      prospect.prospectType === 'solicitor' &&
+      (await firmRecentlyContacted(prospect, campaignId))
+    ) {
       row.skipReason = 'firm_cooldown';
       bumpSkipReason(skipReasons, 'firm_cooldown');
       preview.push(row);
       continue;
     }
 
-    const validation = await validateEmailForSend(email);
-    if (!validation.ok) {
-      row.skipReason = 'mx_invalid';
-      bumpSkipReason(skipReasons, 'mx_invalid');
-      preview.push(row);
-      continue;
+    if (!isPlausibleOutreachEmail(email)) {
+      const validation = await validateEmailForSend(email);
+      if (!validation.ok) {
+        row.skipReason = 'mx_invalid';
+        bumpSkipReason(skipReasons, 'mx_invalid');
+        preview.push(row);
+        continue;
+      }
     }
 
-    if (resendQuotaRemaining - wouldSend <= 0) {
-      row.skipReason = 'resend_quota';
-      bumpSkipReason(skipReasons, 'resend_quota');
+    // Confirm step still resolves (defensive).
+    if (nextOutreachStep(prospect) !== step) {
+      row.skipReason = 'no_step';
+      bumpSkipReason(skipReasons, 'no_step');
       preview.push(row);
       continue;
     }
 
     row.wouldSend = true;
-    emailsSeen.add(normalized);
     wouldSend++;
+    emailsSeen.add(normalizedEmail);
     preview.push(row);
   }
 
   return {
     campaignId,
     date,
-    dailyCap: cap,
+    dailyCap,
     sentToday,
     remaining,
     resendQuotaRemaining,
     preview,
     skipReasons,
+    selection: {
+      readyScanned: selection.readyScanned,
+      sentScanned: selection.sentScanned,
+      readyEligible: selection.readyEligible,
+      followUpEligible: selection.followUpEligible,
+    },
   };
 }

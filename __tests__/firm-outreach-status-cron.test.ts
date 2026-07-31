@@ -28,11 +28,60 @@ vi.mock('@/lib/firm-outreach/outreach/activity-report', () => ({
   }),
 }));
 
+vi.mock('@/lib/firm-outreach/email-jobs/storage', () => ({
+  countEmailJobsByStatus: vi.fn().mockResolvedValue({
+    pending: 0,
+    claimed: 0,
+    processing: 0,
+    accepted: 2,
+    retry_scheduled: 0,
+    permanently_failed: 0,
+  }),
+}));
+
+vi.mock('@/lib/firm-outreach/outreach/candidate-selection', () => ({
+  selectOutreachCandidates: vi.fn().mockResolvedValue({
+    candidates: [],
+    readyScanned: 10,
+    sentScanned: 5,
+    readyEligible: 8,
+    followUpEligible: 1,
+  }),
+}));
+
+vi.mock('@/lib/firm-outreach/storage', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/firm-outreach/storage')>();
+  return {
+    ...actual,
+    getLatestOutreachRunLog: vi.fn().mockResolvedValue(null),
+  };
+});
+
+vi.mock('@robertcashman/firm-outreach-core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@robertcashman/firm-outreach-core')>();
+  return {
+    ...actual,
+    validateOutreachEnv: () => ({
+      ok: true,
+      errors: [],
+      warnings: [],
+      dryRun: false,
+      sendingEnabled: true,
+    }),
+  };
+});
+
 const ENV = process.env;
 
 describe('firm-outreach-status cron route', () => {
   beforeEach(() => {
-    process.env = { ...ENV, CRON_SECRET: 'cron-test-secret' };
+    process.env = {
+      ...ENV,
+      CRON_SECRET: 'cron-test-secret',
+      RESEND_API_KEY: 're_test',
+      KV_REST_API_URL: 'http://localhost',
+      KV_REST_API_TOKEN: 'token',
+    };
   });
 
   afterEach(() => {

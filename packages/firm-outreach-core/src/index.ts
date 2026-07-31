@@ -4,6 +4,7 @@ export * from './shared-constants';
 export * from './normalize';
 export * from './qualification';
 export * from './merge-prospects';
+export * from './email-jobs';
 export * from './reconcile-ready-status';
 export * from './campaign-scope';
 export * from './enrichment/validator';
