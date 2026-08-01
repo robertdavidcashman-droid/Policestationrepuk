@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
-import { GuideEmailCapture } from '@/components/GuideEmailCapture';
 import { JsonLd } from '@/components/JsonLd';
 import { buildMetadata, faqPageSchema } from '@/lib/seo';
 
@@ -532,17 +531,7 @@ export default function DSCCRegistrationGuidePage() {
               ))}
             </div>
           </section>
-
-          <GuideEmailCapture
-            className="mb-12"
-            title="Get the DSCC duty call-flow guide by email"
-            description="A clear summary of the call flow, ADMIN forms, and PIN allocation — useful when training new reps. No spam."
-            source="dscc-guide"
-            leadMagnet="DSCC registration & call-flow guide"
-            buttonLabel="Email me the guide"
-          />
-
-          <ResolvedContentSources
+<ResolvedContentSources
             id="sources"
             title="Official sources"
             className="mb-12"
