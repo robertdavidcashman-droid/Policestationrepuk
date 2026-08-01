@@ -11,6 +11,8 @@ import {
 } from '@/components/admin/AdminWideTable';
 import { getCustodyPublicDisplay } from '@/lib/station-contacts/publish';
 import { isCustodyStation } from '@/lib/custody-station';
+import { phoneToTelHref } from '@/lib/phone';
+import { StationPhoneActions } from '@/components/stations/StationPhoneActions';
 import type { StationsViewMode } from '@/components/stations/stations-filter-types';
 
 export interface StationsResultsGridProps {
@@ -181,30 +183,34 @@ export function buildStationTableColumns(): AdminWideTableColumn<ScoredStation>[
       render: (s) => s.county ?? '—',
     },
     {
-      id: 'main',
-      header: 'Main',
-      render: (s) => <span className="font-mono text-xs">{s.phone ?? '—'}</span>,
-    },
-    {
-      id: 'custody',
-      header: 'Custody',
-      render: (s) => {
-        const pub = getCustodyPublicDisplay(s);
-        return pub.published ? (
-          <span className="font-mono text-xs">{pub.number ?? s.custodyPhone}</span>
-        ) : isCustodyStation(s) ? (
-          <span className="text-xs text-amber-800">Not published</span>
-        ) : (
-          '—'
-        );
-      },
+      id: 'contacts',
+      header: 'Contacts',
+      render: (s) => (
+        <div className="min-w-[220px]">
+          <StationPhoneActions station={s} compact />
+        </div>
+      ),
     },
     {
       id: 'status',
       header: 'Status',
       render: (s) => {
         const pub = getCustodyPublicDisplay(s);
-        if (pub.published) return <span className={adminBadgeClass('success')}>Custody published</span>;
+        if (pub.published) {
+          return (
+            <span className={adminBadgeClass('success')}>
+              Custody published
+              {pub.number ? (
+                <>
+                  {' '}
+                  <a href={phoneToTelHref(pub.number)} className="font-mono underline">
+                    {pub.number}
+                  </a>
+                </>
+              ) : null}
+            </span>
+          );
+        }
         if (isCustodyStation(s)) return <span className={adminBadgeClass('warning')}>Custody missing</span>;
         return <span className={adminBadgeClass('neutral')}>Standard</span>;
       },

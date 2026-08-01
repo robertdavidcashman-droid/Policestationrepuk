@@ -83,6 +83,24 @@ export function StationUpdateForm({ stations }: Props) {
     if (!stub) return;
     lastAppliedStationFromUrl.current = id;
     selectStation(stub);
+
+    const reason = searchParams.get('reason');
+    const field = searchParams.get('field');
+    const number = searchParams.get('number');
+    const notesParam = searchParams.get('notes');
+    if (notesParam) setNotes(notesParam);
+    else if (reason === 'not_custody_desk') {
+      setNotes(
+        `Reported: this is not the custody desk number${number ? ` (${number})` : ''}. Please replace with the correct custody suite line if known.`,
+      );
+    } else if (reason === 'wrong_number') {
+      setNotes(`Reported: this phone number is wrong or out of date${number ? ` (${number})` : ''}.`);
+    }
+
+    // Prefill the field being corrected so reviewers see the reported line.
+    if (field === 'custodyPhone' && number) setNewCustodyPhone('');
+    if (field === 'phone' && number) setNewPhone('');
+    if (field === 'nonEmergencyPhone' && number) setNewNonEmergencyPhone('');
   }, [searchParams, stations, selectStation]);
 
   useEffect(() => {

@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { phoneToTelHref } from '@/lib/phone';
+import { StationPhoneActions } from '@/components/stations/StationPhoneActions';
+import type { PoliceStation } from '@/lib/types';
 
 const StationMap = dynamic(
   () => import('@/components/StationMap').then((m) => m.StationMap),
@@ -24,10 +25,32 @@ interface StationPin {
   slug: string;
   county: string;
   address: string;
+  forceName?: string;
   phone?: string;
+  custodyPhone?: string;
+  custodyPhone2?: string;
+  nonEmergencyPhone?: string;
+  isCustodyStation?: boolean;
   custodySuite?: boolean;
   lat?: number;
   lng?: number;
+}
+
+function pinToStation(pin: StationPin): PoliceStation {
+  return {
+    id: pin.id,
+    slug: pin.slug,
+    name: pin.name,
+    address: pin.address,
+    county: pin.county,
+    forceName: pin.forceName || '',
+    phone: pin.phone || '',
+    custodyPhone: pin.custodyPhone || '',
+    custodyPhone2: pin.custodyPhone2 || '',
+    nonEmergencyPhone: pin.nonEmergencyPhone || '',
+    isCustodyStation: Boolean(pin.isCustodyStation || pin.custodySuite),
+    custodySuite: Boolean(pin.custodySuite || pin.isCustodyStation),
+  } as PoliceStation;
 }
 
 interface RepCoverage {
@@ -75,13 +98,22 @@ export default function MapPage() {
   }, []);
 
   const q = searchQuery.trim().toLowerCase();
+  const qDigits = searchQuery.replace(/\D/g, '');
   const filtered = q
-    ? stations.filter(
-        (s) =>
+    ? stations.filter((s) => {
+        if (
           s.name.toLowerCase().includes(q) ||
           s.county.toLowerCase().includes(q) ||
-          s.address.toLowerCase().includes(q),
-      )
+          s.address.toLowerCase().includes(q)
+        ) {
+          return true;
+        }
+        if (qDigits.length >= 6) {
+          const hay = `${s.phone || ''}${s.custodyPhone || ''}`.replace(/\D/g, '');
+          return hay.includes(qDigits);
+        }
+        return false;
+      })
     : stations;
 
   const geoCount = filtered.filter((s) => s.lat && s.lng).length;
@@ -116,7 +148,7 @@ export default function MapPage() {
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <input
               type="text"
-              placeholder="Search stations by name, county, or address..."
+              placeholder="Search by name, county, address, or phone number..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-[var(--radius-lg)] border border-[var(--card-border)] bg-white px-4 py-3.5 text-base text-[var(--navy)] shadow-[var(--card-shadow)] placeholder:text-[var(--muted)] focus:border-[var(--gold)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)]/20 sm:max-w-lg sm:text-sm"
@@ -218,16 +250,9 @@ export default function MapPage() {
                   </h2>
                   <p className="mt-1 text-sm text-[var(--gold-link)]">{selectedStation.county}</p>
                   <p className="mt-2 text-sm text-[var(--muted)]">{selectedStation.address}</p>
-                  {selectedStation.phone && (
-                    <p className="mt-2">
-                      <a
-                        href={phoneToTelHref(selectedStation.phone)}
-                        className="text-sm font-semibold text-[var(--gold-link)] no-underline hover:text-[var(--gold)]"
-                      >
-                        📞 {selectedStation.phone}
-                      </a>
-                    </p>
-                  )}
+                  <div className="mt-3 max-w-sm">
+                    <StationPhoneActions station={pinToStation(selectedStation)} compact />
+                  </div>
                 </div>
                 <button
                   onClick={() => setSelectedStation(null)}

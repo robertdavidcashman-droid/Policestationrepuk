@@ -24,6 +24,7 @@ import {
   savePhoneProvenance,
   stationProvenanceKey,
 } from '../lib/station-phone-provenance';
+import { normalizePhoneDigits } from '../lib/phone-format';
 import {
   isDialablePhone,
   loadStationVerification,
@@ -99,13 +100,54 @@ async function applyToStations(file: DevonCornwallCustodyFile): void {
   const provenance = loadPhoneProvenance();
   const verification = loadStationVerification();
   let updated = 0;
+  const conflicts: Array<{
+    slug: string;
+    name: string;
+    existing: string;
+    fetched: string;
+    sourceUrl: string;
+  }> = [];
 
   for (const station of stations) {
     if (station.forceName !== 'Devon and Cornwall Police') continue;
     const entry =
       file.stations[station.slug] ??
       (station.stationId ? file.stations[station.stationId] : undefined);
-    if (!entry?.custodyPhone || isDialablePhone(station.custodyPhone)) continue;
+    if (!entry?.custodyPhone) continue;
+
+    const src = entry.sourceUrl ?? file.source;
+    const fetchedDigits = normalizePhoneDigits(entry.custodyPhone);
+    const existingDigits = station.custodyPhone
+      ? normalizePhoneDigits(station.custodyPhone)
+      : '';
+
+    // Official page shows a different number than we publish — do not overwrite;
+    // leave seed JSON for discovery to open a conflict finding on ingest.
+    if (isDialablePhone(station.custodyPhone) && existingDigits && existingDigits !== fetchedDigits) {
+      conflicts.push({
+        slug: station.slug,
+        name: station.name,
+        existing: station.custodyPhone,
+        fetched: entry.custodyPhone,
+        sourceUrl: src,
+      });
+      const key = stationProvenanceKey(station);
+      const v = verification[key] ?? { fields: {} };
+      v.fields = {
+        ...v.fields,
+        custodyPhone: {
+          ...v.fields?.custodyPhone,
+          status: 'needs_review',
+          sourceUrl: src,
+          dateVerified: TODAY,
+          notes: `Official page now lists ${entry.custodyPhone}; published ${station.custodyPhone}. Human review required.`,
+        },
+      };
+      verification[key] = v;
+      continue;
+    }
+
+    if (isDialablePhone(station.custodyPhone)) continue;
 
     station.custodyPhone = entry.custodyPhone;
     if (station.isCustodyStation === false && /custody|charles cross|crownhill/i.test(station.name)) {
@@ -113,7 +155,6 @@ async function applyToStations(file: DevonCornwallCustodyFile): void {
     }
 
     const key = stationProvenanceKey(station);
-    const src = entry.sourceUrl ?? file.source;
     provenance[key] = {
       ...provenance[key],
       custodyPhone: {
@@ -146,6 +187,16 @@ async function applyToStations(file: DevonCornwallCustodyFile): void {
   savePhoneProvenance(provenance);
   saveStationVerification(verification);
   console.log(`Applied custodyPhone to ${updated} Devon & Cornwall stations.`);
+  if (conflicts.length) {
+    const conflictPath = resolve(ROOT, 'data/reports/devon-cornwall-custody-conflicts.json');
+    writeFileSync(
+      conflictPath,
+      JSON.stringify({ fetchedAt: new Date().toISOString(), conflicts }, null, 2) + '\n',
+    );
+    console.warn(
+      `Detected ${conflicts.length} number change(s) vs published — wrote ${conflictPath} (stations.json not overwritten; seed-json will open findings).`,
+    );
+  }
 }
 
 async function main(): Promise<void> {

@@ -1,4 +1,4 @@
 {
-  "install": "npm ci",
-  "start": "echo ready"
+  "install": "npm ci && npm install -g vercel@latest",
+  "start": "echo 'Cloud agent ready. For Vercel env access, set Cursor Secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID (Runtime Secret). Optional: CRON_SECRET for production cron kicks.'"
 }

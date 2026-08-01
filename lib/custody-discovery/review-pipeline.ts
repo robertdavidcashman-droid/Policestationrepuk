@@ -1,7 +1,7 @@
 import { formatAiReviewNotes, runAiReview } from './ai-review';
 import { applyAutoDecision } from './auto-decision';
 import { fetchSourceEvidence } from './source-evidence';
-import { getApprovedNumber, getFinding, saveFinding } from './storage';
+import { getApprovedNumber, getFinding, getFindingsForSuite, saveFinding } from './storage';
 import type { CustodyNumberFinding } from './types';
 
 export interface ReviewFindingResult {
@@ -37,9 +37,23 @@ export async function reviewFindingWithAi(
 
   const evidence = await fetchSourceEvidence(finding);
   const approved = await getApprovedNumber(finding.custodySuiteId);
+  const suiteFindings = await getFindingsForSuite(finding.custodySuiteId);
+  const siblingNumbers = suiteFindings
+    .filter(
+      (f) =>
+        f.id !== finding.id &&
+        f.status !== 'rejected' &&
+        f.status !== 'stale' &&
+        f.status !== 'duplicate',
+    )
+    .map((f) => f.possiblePhoneNumber)
+    .filter(Boolean)
+    .slice(0, 8);
   const review = await runAiReview(finding, evidence, {
     hasApprovedNumber: Boolean(approved?.publicVisible),
     approvedNumber: approved?.phoneNumber,
+    numberFlags: (finding.numberFlags ?? []).map(String),
+    siblingNumbers,
   });
 
   const notesPrefix = formatAiReviewNotes(review);

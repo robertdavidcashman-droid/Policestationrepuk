@@ -107,7 +107,7 @@ describe('stationPhoneNumbers', () => {
     );
     expect(entries).toHaveLength(2);
     expect(entries[0]).toMatchObject({ label: 'Custody desk', className: 'station' });
-    expect(entries[1]).toMatchObject({ label: 'Main line', className: 'generic' });
+    expect(entries[1]).toMatchObject({ label: 'Station main line', className: 'generic' });
   });
   it('dedupes numbers that differ only by formatting', () => {
     const entries = stationPhoneNumbers(

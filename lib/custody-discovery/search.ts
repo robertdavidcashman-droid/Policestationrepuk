@@ -63,13 +63,16 @@ export function buildSearchQueries(suite: import('./types').CustodySuite): strin
 
   const stationQueries = dedicated
     ? [
+        `"${name}" custody desk telephone`,
         `"${name}" custody telephone`,
         `"${name}" police custody phone number`,
         `"${name}" custody suite telephone site:.gov.uk`,
       ]
     : [
+        `"${name}" custody desk`,
         `"${name}" custody telephone number`,
         `"${name}" police station custody phone`,
+        `"${force}" "${shortName}" custody desk telephone`,
         `"${force}" "${shortName}" custody telephone`,
         `"${shortName}" custody suite contact`,
         `site:${domain} "${shortName}" custody`,
@@ -77,8 +80,10 @@ export function buildSearchQueries(suite: import('./types').CustodySuite): strin
 
   return [
     ...stationQueries,
+    `"${force}" custody desk telephone`,
     `"${force}" custody suite contact`,
     `"${force}" custody telephone number`,
+    `site:${domain} custody desk`,
     `site:${domain} custody telephone`,
     `site:${domain} custody suite`,
     `filetype:pdf "${force}" custody suite telephone number`,

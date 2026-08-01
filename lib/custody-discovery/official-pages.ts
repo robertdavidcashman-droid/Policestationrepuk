@@ -52,6 +52,16 @@ export const FORCE_CUSTODY_PAGES: Record<string, string[]> = {
   'humberside police': ['https://www.humberside.police.uk/contact/custody-information'],
   'north yorkshire police': ['https://www.northyorkshire.police.uk/contact/custody-information'],
   'city of london police': ['https://www.cityoflondon.police.uk/contact/'],
+  // Avon & Somerset do not publish direct desk lines (FOI: contact via 101) — keep official custody pages for crawl/corroboration.
+  'avon and somerset constabulary': [
+    'https://www.avonandsomerset.police.uk/victims-witnesses-and-offenders/contacting-people-in-custody/',
+    'https://www.avonandsomerset.police.uk/contact/',
+    'https://www.avonandsomerset.police.uk/about/freedom-of-information/previous-foi-requests/requests/open-custody-suites/',
+  ],
+  'avon and somerset police': [
+    'https://www.avonandsomerset.police.uk/victims-witnesses-and-offenders/contacting-people-in-custody/',
+    'https://www.avonandsomerset.police.uk/contact/',
+  ],
 };
 
 function htmlToText(html: string): string {
