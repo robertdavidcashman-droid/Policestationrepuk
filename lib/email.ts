@@ -220,37 +220,6 @@ export async function sendStationUpdateNotification(data: StationUpdateSubmissio
   }
 }
 
-export async function sendLeadMagnetNotification(data: {
-  email: string;
-  source?: string;
-  leadMagnet?: string;
-}): Promise<boolean> {
-  const client = getResend();
-  if (!client) {
-    console.info('[Lead magnet — no RESEND_API_KEY]', { email: data.email });
-    return false;
-  }
-
-  try {
-    await client.emails.send({
-      from: FROM_EMAIL,
-      to: ADMIN_EMAIL,
-      replyTo: data.email,
-      subject: `[Lead magnet] ${data.leadMagnet || 'Custody note template'} — ${data.email}`,
-      html: `
-        <h2>Lead magnet request</h2>
-        <p><strong>Email:</strong> <a href="mailto:${escapeHtml(data.email)}">${escapeHtml(data.email)}</a></p>
-        ${data.source ? `<p><strong>Source:</strong> ${escapeHtml(data.source)}</p>` : ''}
-        ${data.leadMagnet ? `<p><strong>Offer:</strong> ${escapeHtml(data.leadMagnet)}</p>` : ''}
-        <p style="margin-top:16px;color:#6b7280;font-size:12px;">Sent from PoliceStationRepUK conversion funnel.</p>
-      `,
-    });
-    return true;
-  } catch (err) {
-    console.error('[Lead magnet email failed]', err);
-    return false;
-  }
-}
 
 export async function sendMagicCode(email: string, code: string): Promise<boolean> {
   const client = getResend();

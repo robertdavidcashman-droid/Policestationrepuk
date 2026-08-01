@@ -3,7 +3,6 @@ import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { CustodyNotePagePromo } from '@/components/CustodyNotePagePromo';
 import { ContentReliabilityNotice } from '@/components/ContentReliabilityNotice';
 import { ResolvedContentSources } from '@/components/ContentSourcesFooter';
-import { GuideEmailCapture } from '@/components/GuideEmailCapture';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata = buildMetadata({
@@ -203,17 +202,7 @@ export default function PoliceStationRatesPage() {
           </div>
         </div>
       </section>
-
-      <GuideEmailCapture
-        className="mb-14"
-        title="Get the police station rates summary by email"
-        description="A one-page PDF of the 2025/26 fees, escape threshold, and multiple-fee rules — handy for billing. No spam."
-        source="rates-page"
-        leadMagnet="Police station Legal Aid rates summary 2025/26"
-        buttonLabel="Email me the summary"
-      />
-
-      {/* Resources */}
+{/* Resources */}
       <section>
         <h2 className="text-h2 mb-6 text-[var(--navy)]">Related Resources</h2>
         <div className="grid gap-4 sm:grid-cols-3">

@@ -1,247 +1,27 @@
-# Production deploy to Vercel.
+# DISABLED on the droid mirror.
 #
-# Auto: runs when "CI — Next.js build" or "Site audit" succeeds on a master/main
-# push, after verifying both `build` and `audit` checks passed for that SHA.
-# Manual: workflow_dispatch still available (type PRODUCTION + SHA).
+# Production for policestationrepuk.org is owned by
+# robertcashman-bit/Policestationrepuk (see docs/deploy.md there).
+# This mirror previously shared VERCEL_* secrets and promoted droid SHAs
+# over bit, restoring removed features (e.g. lead-magnet spam).
 #
-# Required repository secrets:
-#   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+# Do not re-enable. Deploy only from the bit repo.
 name: Deploy to Vercel (production)
 
 on:
-  workflow_run:
-    workflows:
-      - CI — Next.js build
-      - Site audit
-    types:
-      - completed
   workflow_dispatch:
     inputs:
-      sha:
-        description: 'Exact git commit SHA to promote to production'
+      confirm_disabled:
+        description: 'This workflow is disabled — production deploys from robertcashman-bit only'
         required: true
         type: string
-      confirm_production:
-        description: 'Type PRODUCTION to confirm promotion'
-        required: true
-        type: string
-
-permissions:
-  checks: read
-  contents: read
-  actions: read
-
-concurrency:
-  group: vercel-prod
-  cancel-in-progress: true
 
 jobs:
-  gate-checks:
-    # Auto path: CI or Site audit succeeded on a master/main push.
-    # Manual path: operator typed PRODUCTION.
-    if: >
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.event == 'push' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       (github.event.workflow_run.head_branch == 'master' ||
-        github.event.workflow_run.head_branch == 'main')) ||
-      (github.event_name == 'workflow_dispatch' &&
-       github.event.inputs.confirm_production == 'PRODUCTION')
+  disabled:
     runs-on: ubuntu-latest
-    # Site audit can take up to ~25 minutes; poll budget is ~30 minutes.
-    timeout-minutes: 35
-    outputs:
-      sha: ${{ steps.resolve.outputs.sha }}
-      ref: ${{ steps.resolve.outputs.ref }}
     steps:
-      - name: Resolve and validate SHA + branch ref
-        id: resolve
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Refuse deploy from droid mirror
         run: |
-          set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            SHA="${{ github.event.workflow_run.head_sha }}"
-            REF="${{ github.event.workflow_run.head_branch }}"
-          else
-            SHA="${{ github.event.inputs.sha }}"
-            REF=$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/${{ github.repository }}/commits/${SHA}/branches-where-head" \
-              | jq -r '[.[] | select(.name == "master" or .name == "main") | .name] | first // empty')
-            if [ -z "$REF" ]; then
-              REF=$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
-                "https://api.github.com/repos/${{ github.repository }}" \
-                | jq -r '.default_branch // "master"')
-            fi
-          fi
-          if ! echo "$SHA" | grep -qE '^[0-9a-f]{40}$'; then
-            echo "Invalid SHA format: $SHA (expected 40-char hex)"
-            exit 1
-          fi
-          if [ "$REF" != "master" ] && [ "$REF" != "main" ]; then
-            echo "Ref must be master or main, got: ${REF}"
-            exit 1
-          fi
-          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
-          echo "ref=${REF}" >> "$GITHUB_OUTPUT"
-          echo "Target SHA: ${SHA}"
-          echo "Target ref: ${REF}"
-          echo "Trigger: ${{ github.event_name }}"
-
-      - name: Verify CI and Site audit passed for SHA
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          SHA="${{ steps.resolve.outputs.sha }}"
-          API="https://api.github.com/repos/${{ github.repository }}/commits/${SHA}/check-runs?per_page=100"
-
-          # Cover Site audit's ~25m budget (120 × 15s = 30m) within the 35m job timeout.
-          for attempt in $(seq 1 120); do
-            RESP=$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$API")
-            echo "$RESP" | jq -r '.check_runs[] | "\(.name)\t\(.conclusion)\t\(.status)"' | sort
-
-            build_conclusion=$(echo "$RESP" | jq -r '.check_runs[] | select(.name == "build") | .conclusion' | head -1)
-            audit_conclusion=$(echo "$RESP" | jq -r '.check_runs[] | select(.name == "audit") | .conclusion' | head -1)
-            audit_status=$(echo "$RESP" | jq -r '.check_runs[] | select(.name == "audit") | .status' | head -1)
-
-            if [ "$build_conclusion" = "success" ] && [ "$audit_conclusion" = "success" ]; then
-              echo "OK: build → success"
-              echo "OK: audit → success"
-              exit 0
-            fi
-
-            if [ "$build_conclusion" != "success" ] && [ "$build_conclusion" != "null" ] && [ -n "$build_conclusion" ]; then
-              echo "Required check build conclusion=${build_conclusion} (expected success)"
-              exit 1
-            fi
-
-            if [ "$audit_conclusion" = "failure" ] || [ "$audit_conclusion" = "cancelled" ]; then
-              echo "Required check audit conclusion=${audit_conclusion} (expected success)"
-              exit 1
-            fi
-
-            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-              echo "Missing required successful build/audit checks for manual deploy"
-              exit 1
-            fi
-
-            echo "[$attempt/120] waiting for build/audit (audit status=${audit_status:-missing} conclusion=${audit_conclusion:-missing})"
-            sleep 15
-          done
-
-          echo "Timed out waiting for successful build + audit checks"
+          echo "Production deploys are disabled on robertdavidcashman-droid/Policestationrepuk."
+          echo "Use robertcashman-bit/Policestationrepuk (npm run deploy / Deploy to Vercel workflow)."
           exit 1
-
-  deploy:
-    needs: gate-checks
-    runs-on: ubuntu-latest
-    timeout-minutes: 40
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_SCOPE: robert-cashmans-projects
-    steps:
-      - name: Install Vercel CLI (pinned)
-        run: npm install -g vercel@41.4.0
-
-      - name: Trigger or locate git production deployment
-        id: deployment
-        run: |
-          set -euo pipefail
-          SHA="${{ needs.gate-checks.outputs.sha }}"
-          REF="${{ needs.gate-checks.outputs.ref }}"
-          REPO_ID="${{ github.repository_id }}"
-          API="https://api.vercel.com"
-          AUTH="Authorization: Bearer ${VERCEL_TOKEN}"
-
-          find_url() {
-            curl -sS "${API}/v6/deployments?projectId=${VERCEL_PROJECT_ID}&teamId=${VERCEL_ORG_ID}&limit=25" \
-              -H "${AUTH}" \
-              | jq -r --arg sha "$SHA" '.deployments[] | select(.meta.githubCommitSha == $sha) | .url' \
-              | head -1
-          }
-
-          URL="$(find_url || true)"
-          if [ -z "$URL" ]; then
-            echo "No deployment for ${SHA}; triggering git production build (repoId=${REPO_ID} ref=${REF})"
-            RESP=$(curl -sS -X POST "${API}/v13/deployments?teamId=${VERCEL_ORG_ID}" \
-              -H "${AUTH}" \
-              -H "Content-Type: application/json" \
-              -d "{\"name\":\"policestationrepuk-new\",\"project\":\"${VERCEL_PROJECT_ID}\",\"target\":\"production\",\"gitSource\":{\"type\":\"github\",\"repoId\":${REPO_ID},\"ref\":\"${REF}\",\"sha\":\"${SHA}\"}}")
-            echo "$RESP" | jq '{id, url, readyState}'
-            URL=$(echo "$RESP" | jq -r '.url // empty')
-            if [ -z "$URL" ]; then
-              echo "Failed to trigger deployment"
-              echo "$RESP"
-              exit 1
-            fi
-          fi
-
-          echo "url=https://${URL}" >> "$GITHUB_OUTPUT"
-          echo "Deployment URL: https://${URL}"
-
-      - name: Wait for deployment checks and promote
-        run: |
-          set -euo pipefail
-          DEPLOY_URL="${{ steps.deployment.outputs.url }}"
-          HOST="${DEPLOY_URL#https://}"
-          API="https://api.vercel.com"
-          AUTH="Authorization: Bearer ${VERCEL_TOKEN}"
-
-          for i in $(seq 1 60); do
-            STATE=$(curl -sS "${API}/v13/deployments/${HOST}?teamId=${VERCEL_ORG_ID}" \
-              -H "${AUTH}" | jq -r '.readyState // "UNKNOWN"')
-            echo "[$i/60] deployment state=${STATE}"
-            if [ "$STATE" = "READY" ]; then
-              echo "Deployment promoted"
-              exit 0
-            fi
-            if [ "$STATE" = "ERROR" ] || [ "$STATE" = "CANCELED" ]; then
-              echo "Deployment failed with state=${STATE}"
-              exit 1
-            fi
-            sleep 20
-          done
-
-          echo "Still blocked after wait — attempting explicit promote"
-          vercel promote "$DEPLOY_URL" --yes --scope="$VERCEL_SCOPE" --timeout=15m --token="$VERCEL_TOKEN"
-
-      - name: Wait for production health endpoints
-        run: |
-          set -euo pipefail
-          WANT="${{ needs.gate-checks.outputs.sha }}"
-          WANT_SHORT="${WANT:0:7}"
-          for i in $(seq 1 40); do
-            CODE=$(curl -sS -o /tmp/health.json -w "%{http_code}" "https://policestationrepuk.org/api/health" || echo "000")
-            VER=$(jq -r '.version // empty' /tmp/health.json 2>/dev/null || true)
-            echo "[$i/40] /api/health HTTP ${CODE} version=${VER} want=${WANT_SHORT}"
-            if [ "$CODE" = "200" ] && [ "$VER" = "$WANT_SHORT" ]; then
-              exit 0
-            fi
-            sleep 15
-          done
-          echo "Production health did not match target SHA in time"
-          exit 1
-
-      - name: Post-deploy smoke
-        run: |
-          set -e
-          check_path() {
-            path="$1"
-            expected="$2"
-            code=$(curl -sS -o /dev/null -w "%{http_code}" "https://policestationrepuk.org${path}")
-            echo "${path} → HTTP ${code} (expected ${expected})"
-            if [ "$code" != "$expected" ]; then
-              echo "Post-deploy smoke failed for ${path}"
-              exit 1
-            fi
-          }
-          # Prefer final routes (middleware 301s /Register → /register).
-          check_path /api/health 200
-          check_path /api/ready 200
-          check_path / 200
-          check_path /directory 200
-          check_path /register 200
-          check_path /admin/automation 200
