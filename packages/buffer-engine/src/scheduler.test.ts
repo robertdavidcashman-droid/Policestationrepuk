@@ -60,6 +60,24 @@ function installFetchMock() {
           },
         });
       }
+      if (/ListPosts|posts\(/.test(body.query ?? '')) {
+        // Reflect created posts so verify re-count (scheduled+sent) matches Buffer truth.
+        const edges = createdPosts.map((p, i) => ({
+          node: {
+            id: `id-${i + 1}`,
+            text: p.text,
+            status: 'scheduled',
+            dueAt: p.dueAt,
+            sentAt: null,
+            createdAt: '',
+            channelId: p.channelId,
+            channelService: 'twitter',
+          },
+        }));
+        return Response.json({
+          data: { posts: { edges, pageInfo: { hasNextPage: false, endCursor: null } } },
+        });
+      }
       return Response.json({ data: { posts: { edges: [], pageInfo: { hasNextPage: false, endCursor: null } } } });
     }
 
@@ -220,7 +238,10 @@ describe('verifySiteBufferSchedule', () => {
       gapFill: true,
     });
     expect(result.requiredCount).toBe(5);
+    expect(result.gapFilled).toBeGreaterThanOrEqual(5);
     expect(result.scheduledCount).toBeGreaterThanOrEqual(5);
+    expect(result.ok).toBe(true);
+    expect(createdPosts.length).toBeGreaterThanOrEqual(5);
   });
 });
 
