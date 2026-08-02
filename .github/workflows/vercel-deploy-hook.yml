@@ -273,8 +273,9 @@ jobs:
           # Reconcile today's quota (scheduled+sent) and gap-fill if short.
           CRON_SECRET="${CRON_SECRET_FALLBACK:-}"
           if [ -z "${CRON_SECRET}" ]; then
-            vercel env pull .env.production --environment=production --yes --token="${VERCEL_TOKEN}"
-            CRON_SECRET=$(python3 - <<'PY'
+            # Optional credential bootstrap — pull/parse failures must not fail deploy.
+            if vercel env pull .env.production --environment=production --yes --token="${VERCEL_TOKEN}"; then
+              CRON_SECRET=$(python3 - <<'PY'
           from pathlib import Path
           for line in Path(".env.production").read_text().splitlines():
               s = line.strip()
@@ -289,7 +290,8 @@ jobs:
                   print(val, end="")
                   break
           PY
-            )
+              ) || true
+            fi
           fi
           if [ -z "${CRON_SECRET}" ]; then
             echo "CRON_SECRET missing — skip buffer-verify (use /admin/automation gap-fill)."
