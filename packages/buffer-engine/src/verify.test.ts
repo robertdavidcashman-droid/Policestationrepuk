@@ -161,4 +161,30 @@ describe('verifySiteBufferSchedule day-window timezone offset', () => {
     // Only one ListPosts call — quota already met, so no gap-fill / re-count.
     expect(listPostsVariables).toHaveLength(1);
   });
+
+  it('sets ok false when count meets MIN_POSTS_PER_DAY but not postsPerDay', async () => {
+    process.env.BUFFER_SCHEDULER_POSTS_PER_FEED = '7';
+    const posts = Array.from({ length: 5 }, (_, i) => ({
+      id: `sent-${i}`,
+      text: `Post ${i} https://testsite.com/Blog/a-${i}`,
+      status: i < 4 ? 'sent' : 'scheduled',
+      dueAt: `2026-06-28T0${i + 8}:00:00+01:00`,
+      sentAt: i < 4 ? `2026-06-28T0${i + 8}:00:00+01:00` : null,
+      createdAt: '',
+      channelId: 'b'.repeat(24),
+      channelService: 'twitter',
+    }));
+    installFetchMock(posts);
+
+    const adapter = makeAdapter(makeKV());
+    const result = await verifySiteBufferSchedule(adapter, {
+      now: new Date('2026-06-28T16:00:00Z'),
+      gapFill: false,
+    });
+
+    expect(result.requiredCount).toBe(7);
+    expect(result.scheduledCount).toBe(5);
+    expect(result.ok).toBe(false);
+    expect(result.issues[0]).toMatch(/Only 5\/7/);
+  });
 });
