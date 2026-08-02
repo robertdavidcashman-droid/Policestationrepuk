@@ -158,11 +158,14 @@ export async function runAutomationWatchdog(
       const timezone = getSchedulerTimezone();
       const today = localDateInTimezone(now, timezone);
       const cronLog = await getCronRunLog('buffer-blog-posts');
+      // `partial` still means the morning cron ran (e.g. 1/5 posts); Buffer quota is the final gate.
       const successToday =
         (state?.lastSuccessfulAt &&
           localDateInTimezone(new Date(state.lastSuccessfulAt), timezone) === today) ||
         (cronLog &&
-          (cronLog.outcome === 'success' || cronLog.outcome === 'skipped') &&
+          (cronLog.outcome === 'success' ||
+            cronLog.outcome === 'skipped' ||
+            cronLog.outcome === 'partial') &&
           localDateInTimezone(new Date(cronLog.finishedAt), timezone) === today);
 
       if (!successToday) {

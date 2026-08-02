@@ -3,6 +3,7 @@ import {
   addDaysToLocalDate,
   localDateInTimezone,
 } from '@/lib/buffer/scheduler-core';
+import { verifyRepukBufferSchedule } from '@/lib/buffer/engine-run';
 import { getCronRunLog } from '@/lib/cron-run-log';
 import { getAutomationConfig } from './config';
 import { probeBufferCredentials } from './buffer-probe';
@@ -59,6 +60,22 @@ async function inspectSchedulerHealth(
   const failedJobs: string[] = [];
   let duplicatesPrevented = 0;
   const jobs = await ensureAllJobsRegistered();
+  let bufferDayQuotaMet: boolean | null = null;
+
+  async function isBufferDayQuotaMet(): Promise<boolean> {
+    if (bufferDayQuotaMet !== null) return bufferDayQuotaMet;
+    try {
+      const inspect = await verifyRepukBufferSchedule({ now, gapFill: false });
+      bufferDayQuotaMet =
+        Boolean(inspect.ok) &&
+        typeof inspect.scheduledCount === 'number' &&
+        typeof inspect.requiredCount === 'number' &&
+        inspect.scheduledCount >= inspect.requiredCount;
+    } catch {
+      bufferDayQuotaMet = false;
+    }
+    return bufferDayQuotaMet;
+  }
 
   for (const job of jobs) {
     if (job.name === 'automation-watchdog' || job.name === 'automation-daily-healthcheck') {
@@ -105,28 +122,41 @@ async function inspectSchedulerHealth(
         def.allowedWindowStartHourUtc,
       );
       if (!lastOk || lastOk < windowStart) {
+        // `partial` still means the cron window ran; Buffer quota is the final gate for critical jobs.
         const cronOk =
           cronLog &&
-          (cronLog.outcome === 'success' || cronLog.outcome === 'skipped') &&
+          (cronLog.outcome === 'success' ||
+            cronLog.outcome === 'skipped' ||
+            cronLog.outcome === 'partial') &&
           Date.parse(cronLog.finishedAt) >= windowStart;
         if (!cronOk) {
-          failedJobs.push(job.name);
-          issues.push({
-            id: `${job.name}-missed`,
-            fingerprint: buildIncidentFingerprint({
+          const isBufferCritical =
+            job.name === 'buffer-blog-posts' || job.name === 'buffer-verify';
+          if (isBufferCritical && (await isBufferDayQuotaMet())) {
+            logAutomationEvent('automation.job.missed', {
+              jobName: job.name,
+              suppressed: true,
+              reason: 'buffer_quota_met',
+            });
+          } else {
+            failedJobs.push(job.name);
+            issues.push({
+              id: `${job.name}-missed`,
+              fingerprint: buildIncidentFingerprint({
+                jobName: job.name,
+                category: 'scheduler',
+                scheduledDate: day,
+              }),
               jobName: job.name,
               category: 'scheduler',
-              scheduledDate: day,
-            }),
-            jobName: job.name,
-            category: 'scheduler',
-            severity: 'error',
-            summary: `${job.name} missed expected run window`,
-            details: cronLog?.errorMessage ?? job.lastError ?? undefined,
-            recoverable: job.name === 'buffer-blog-posts' || job.name === 'buffer-verify',
-            requiresHumanAction: false,
-          });
-          logAutomationEvent('automation.job.missed', { jobName: job.name });
+              severity: 'error',
+              summary: `${job.name} missed expected run window`,
+              details: cronLog?.errorMessage ?? job.lastError ?? undefined,
+              recoverable: isBufferCritical,
+              requiresHumanAction: false,
+            });
+            logAutomationEvent('automation.job.missed', { jobName: job.name });
+          }
         }
       }
     }

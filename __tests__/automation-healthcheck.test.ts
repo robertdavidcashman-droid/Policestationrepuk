@@ -60,6 +60,17 @@ vi.mock('@/lib/automation/repairs/cross-site', () => ({
   })),
 }));
 
+vi.mock('@/lib/buffer/engine-run', () => ({
+  verifyRepukBufferSchedule: vi.fn(async () => ({
+    ok: true,
+    date: '2026-07-19',
+    scheduledCount: 5,
+    requiredCount: 5,
+    gapFilled: 0,
+    issues: [],
+  })),
+}));
+
 vi.mock('@/lib/cron-run-log', () => ({
   getCronRunLog: vi.fn(async () => ({
     jobName: 'buffer-blog-posts',
@@ -79,6 +90,9 @@ vi.mock('resend', () => ({
 
 import { runDailyHealthcheck } from '@/lib/automation/healthcheck';
 import { probeBufferCredentials } from '@/lib/automation/buffer-probe';
+import { verifyRepukBufferSchedule } from '@/lib/buffer/engine-run';
+import { getCronRunLog } from '@/lib/cron-run-log';
+import { AUTOMATION_JOB_DEFINITIONS } from '@/lib/automation/job-registry';
 
 describe('daily healthcheck', () => {
   beforeEach(() => {
@@ -91,6 +105,14 @@ describe('daily healthcheck', () => {
     vi.stubEnv('CROSS_SITE_HEALTHCHECK_ENABLED', 'true');
     vi.stubEnv('DAILY_SUCCESS_EMAIL_ENABLED', 'true');
     vi.stubEnv('RESEND_API_KEY', '');
+    vi.mocked(getCronRunLog).mockImplementation(async (jobName: string) => ({
+      jobName,
+      startedAt: '2026-07-19T05:05:00.000Z',
+      finishedAt: '2026-07-19T05:10:00.000Z',
+      durationMs: 10,
+      outcome: 'success' as const,
+    }));
+    vi.mocked(verifyRepukBufferSchedule).mockClear();
   });
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -150,5 +172,95 @@ describe('daily healthcheck', () => {
     });
     expect(result.report.overallStatus).toBe('Action Required');
     expect(result.issues.some((i) => i.category === 'auth')).toBe(true);
+  });
+
+  it('treats partial cron as ran and does not emit buffer missed-window issues', async () => {
+    vi.mocked(getCronRunLog).mockImplementation(async (jobName: string) => ({
+      jobName,
+      startedAt: '2026-07-19T05:05:00.000Z',
+      finishedAt: '2026-07-19T05:10:00.000Z',
+      durationMs: 300_000,
+      outcome: 'partial' as const,
+      errorMessage: 'scheduled 1 of 5',
+    }));
+
+    // Seed history without a successful lastSuccessfulAt in today's window.
+    for (const def of AUTOMATION_JOB_DEFINITIONS) {
+      store.set(`automation:job:${def.name}`, {
+        ...def,
+        lastAttemptedAt: '2026-07-19T05:05:00.000Z',
+        lastSuccessfulAt: '2026-07-18T05:10:00.000Z',
+        lastFailureAt: null,
+        lastError: null,
+        consecutiveFailureCount: 0,
+        retryCount: 0,
+        healthStatus: 'degraded',
+        lockOwner: null,
+        lockExpiresAt: null,
+        lastHealthCheckAt: null,
+        lastRepairAction: null,
+        environment: 'production',
+        deploymentId: 'test',
+        updatedAt: '2026-07-19T05:10:00.000Z',
+      });
+    }
+
+    const result = await runDailyHealthcheck({
+      dryRun: true,
+      now: new Date('2026-07-19T08:00:00Z'),
+    });
+
+    expect(
+      result.issues.some(
+        (i) =>
+          i.id === 'buffer-blog-posts-missed' || i.id === 'buffer-verify-missed',
+      ),
+    ).toBe(false);
+  });
+
+  it('suppresses buffer missed-window when quota is already met', async () => {
+    vi.mocked(getCronRunLog).mockResolvedValue(null);
+    vi.mocked(verifyRepukBufferSchedule).mockResolvedValue({
+      ok: true,
+      date: '2026-07-19',
+      scheduledCount: 5,
+      requiredCount: 5,
+      gapFilled: 0,
+      issues: [],
+    });
+
+    for (const def of AUTOMATION_JOB_DEFINITIONS) {
+      if (def.name !== 'buffer-blog-posts' && def.name !== 'buffer-verify') continue;
+      store.set(`automation:job:${def.name}`, {
+        ...def,
+        lastAttemptedAt: '2026-07-18T05:05:00.000Z',
+        lastSuccessfulAt: '2026-07-18T05:10:00.000Z',
+        lastFailureAt: null,
+        lastError: null,
+        consecutiveFailureCount: 0,
+        retryCount: 0,
+        healthStatus: 'healthy',
+        lockOwner: null,
+        lockExpiresAt: null,
+        lastHealthCheckAt: null,
+        lastRepairAction: null,
+        environment: 'production',
+        deploymentId: 'test',
+        updatedAt: '2026-07-18T05:10:00.000Z',
+      });
+    }
+
+    const result = await runDailyHealthcheck({
+      dryRun: true,
+      now: new Date('2026-07-19T08:00:00Z'),
+    });
+
+    expect(
+      result.issues.some(
+        (i) =>
+          i.id === 'buffer-blog-posts-missed' || i.id === 'buffer-verify-missed',
+      ),
+    ).toBe(false);
+    expect(verifyRepukBufferSchedule).toHaveBeenCalled();
   });
 });
