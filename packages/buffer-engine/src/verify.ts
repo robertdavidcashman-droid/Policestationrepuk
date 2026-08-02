@@ -1,4 +1,4 @@
-import { getSiteBufferEnvConfig, MIN_POSTS_PER_DAY } from './config';
+import { getSiteBufferEnvConfig } from './config';
 import { countSitePostsInBufferForDay } from './reconcile';
 import { localDateInTimezone } from './scheduler-core';
 import type { BufferEngineAdapter, VerifyResult } from './types';
@@ -58,7 +58,7 @@ export async function verifySiteBufferSchedule(
   }
 
   return {
-    ok: scheduledCount >= MIN_POSTS_PER_DAY,
+    ok: scheduledCount >= env.postsPerDay,
     date: localDate,
     scheduledCount,
     requiredCount: env.postsPerDay,

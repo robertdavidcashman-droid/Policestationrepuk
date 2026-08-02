@@ -1,11 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifySiteBufferSchedule = verifySiteBufferSchedule;
-const client_1 = require("./client");
 const config_1 = require("./config");
+const reconcile_1 = require("./reconcile");
 const scheduler_core_1 = require("./scheduler-core");
 const scheduler_1 = require("./scheduler");
-const metrics_1 = require("./metrics");
 async function verifySiteBufferSchedule(adapter, options) {
     const env = (0, config_1.getSiteBufferEnvConfig)();
     const now = options?.now ?? new Date();
@@ -14,18 +13,9 @@ async function verifySiteBufferSchedule(adapter, options) {
     if (!env.apiKey) {
         return { ok: false, date: localDate, scheduledCount: 0, requiredCount: env.postsPerDay, gapFilled: 0, issues: ['BUFFER_API_KEY missing'] };
     }
-    const offset = (0, scheduler_core_1.timezoneOffsetForDate)(localDate, env.timezone);
-    const dayStart = `${localDate}T00:00:00${offset}`;
-    const dayEnd = `${(0, scheduler_core_1.addDaysToLocalDate)(localDate, 1)}T00:00:00${offset}`;
-    const hostname = (0, metrics_1.siteHostnameFromUrl)(adapter.siteUrl);
-    const scheduled = await (0, client_1.listPostsInWindow)(env.apiKey, env.organizationId, {
-        status: ['scheduled'],
-        dueAtStart: dayStart,
-        dueAtEnd: dayEnd,
-        channelIds: env.channels.map((c) => c.id),
-    });
-    const sitePosts = scheduled.filter((p) => p.text.includes(hostname));
-    let scheduledCount = sitePosts.length;
+    const channelIds = env.channels.map((c) => c.id);
+    const counted = await (0, reconcile_1.countSitePostsInBufferForDay)(env.apiKey, env.organizationId, adapter.siteUrl, localDate, env.timezone, channelIds);
+    let scheduledCount = counted.count;
     let gapFilled = 0;
     if (scheduledCount < env.postsPerDay) {
         issues.push(`Only ${scheduledCount}/${env.postsPerDay} posts scheduled for ${localDate}`);
@@ -38,14 +28,17 @@ async function verifySiteBufferSchedule(adapter, options) {
             });
             if (result.posts?.length) {
                 gapFilled = result.posts.length;
-                scheduledCount += gapFilled;
             }
+            // Re-count from Buffer (scheduled + sent) rather than trusting local increment —
+            // published slots become `sent` and must still count toward the day quota.
+            const recounted = await (0, reconcile_1.countSitePostsInBufferForDay)(env.apiKey, env.organizationId, adapter.siteUrl, localDate, env.timezone, channelIds);
+            scheduledCount = recounted.count;
             if (!result.ok && result.reason)
                 issues.push(`Gap-fill: ${result.reason}`);
         }
     }
     return {
-        ok: scheduledCount >= config_1.MIN_POSTS_PER_DAY,
+        ok: scheduledCount >= env.postsPerDay,
         date: localDate,
         scheduledCount,
         requiredCount: env.postsPerDay,
