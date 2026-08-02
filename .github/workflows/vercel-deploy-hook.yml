@@ -245,3 +245,71 @@ jobs:
           check_path /directory 200
           check_path /register 200
           check_path /admin/automation 200
+
+      - name: Checkout SHA (for buffer path gate)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate-checks.outputs.sha }}
+          fetch-depth: 2
+
+      - name: Force buffer-verify when buffer/automation changed
+        env:
+          CRON_SECRET_FALLBACK: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          SHA="${{ needs.gate-checks.outputs.sha }}"
+          if git rev-parse "${SHA}^" >/dev/null 2>&1; then
+            CHANGED=$(git diff --name-only "${SHA}^" "${SHA}" || true)
+          else
+            CHANGED=$(git show --name-only --pretty='' "${SHA}" || true)
+          fi
+          echo "Changed files:"
+          echo "${CHANGED}"
+          if ! echo "${CHANGED}" | grep -Eq '^(packages/buffer-engine/|lib/buffer/|lib/automation/|app/api/cron/buffer|app/api/admin/automation|\.github/workflows/ops-buffer|\.github/workflows/vercel-deploy-hook\.yml)'; then
+            echo "No buffer/automation paths in this SHA — skip buffer-verify"
+            exit 0
+          fi
+
+          # Reconcile today's quota (scheduled+sent) and gap-fill if short.
+          CRON_SECRET="${CRON_SECRET_FALLBACK:-}"
+          if [ -z "${CRON_SECRET}" ]; then
+            vercel env pull .env.production --environment=production --yes --token="${VERCEL_TOKEN}"
+            CRON_SECRET=$(python3 - <<'PY'
+          from pathlib import Path
+          for line in Path(".env.production").read_text().splitlines():
+              s = line.strip()
+              if not s or s.startswith("#"):
+                  continue
+              if s.startswith("export "):
+                  s = s[len("export "):]
+              if s.startswith("CRON_SECRET="):
+                  val = s.split("=", 1)[1]
+                  if len(val) >= 2 and val[0] == val[-1] and val[0] in ("'", '"'):
+                      val = val[1:-1]
+                  print(val, end="")
+                  break
+          PY
+            )
+          fi
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "CRON_SECRET missing — skip buffer-verify (use /admin/automation gap-fill)."
+            exit 0
+          fi
+          CODE=$(curl -sS -o /tmp/buffer-verify.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            --max-time 290 \
+            "https://policestationrepuk.org/api/cron/buffer-verify")
+          echo "buffer-verify HTTP ${CODE}"
+          cat /tmp/buffer-verify.json
+          echo
+          if [ "$CODE" != "200" ] && [ "$CODE" != "422" ]; then
+            echo "buffer-verify request failed"
+            exit 1
+          fi
+          if jq -e '.ok == true or .skipped == true' /tmp/buffer-verify.json >/dev/null; then
+            echo "buffer-verify OK"
+            exit 0
+          fi
+          # 422 under-quota after gap-fill attempt: surface but do not block deploy.
+          echo "buffer-verify reported under quota after gap-fill — check Buffer / admin automation"
+          exit 0
