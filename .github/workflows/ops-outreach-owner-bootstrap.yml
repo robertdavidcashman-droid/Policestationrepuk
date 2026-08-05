@@ -78,16 +78,30 @@ jobs:
           GH_CRON_SECRET: ${{ secrets.CRON_SECRET }}
           GH_BOOTSTRAP_SECRET: ${{ secrets.FIRM_OUTREACH_BOOTSTRAP_SECRET }}
           FIRM_OUTREACH_ALLOW_BOOTSTRAP_ROTATE: '1'
-          FIRM_OUTREACH_PREPARE_UNGATE: '1'
+          EVENT_NAME: ${{ github.event_name }}
+          CONFIRM_LIVE: ${{ github.event.inputs.confirm_live || 'SEND' }}
         run: |
           set -euo pipefail
           if [ -n "${GH_CRON_SECRET:-}" ]; then export CRON_SECRET="$GH_CRON_SECRET"; fi
           if [ -n "${GH_BOOTSTRAP_SECRET:-}" ]; then export FIRM_OUTREACH_BOOTSTRAP_SECRET="$GH_BOOTSTRAP_SECRET"; fi
           case "${CRON_SECRET:-}" in eyJ*) unset CRON_SECRET ;; esac
           case "${FIRM_OUTREACH_BOOTSTRAP_SECRET:-}" in eyJ*) unset FIRM_OUTREACH_BOOTSTRAP_SECRET ;; esac
+          # Only live SEND may mutate durable send policy (approval/cap).
+          # Push to owner-bootstrap-* is an explicit live-send request.
+          # workflow_dispatch still requires confirm_live=SEND.
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ] && [ "${CONFIRM_LIVE}" != "SEND" ]; then
+            echo "confirm_live!=SEND — skipping prepare ungate (status-only)"
+          else
+            export FIRM_OUTREACH_PREPARE_UNGATE=1
+          fi
           node scripts/firm-outreach-kick-prepare-auth.mjs | tee /tmp/prepare.log
           # prepare writes CRON_SECRET / BOOTSTRAP / RESEND_WEBHOOK_SECRET into GITHUB_ENV
-          # for subsequent steps. Report webhook health from that env.
+          # for subsequent steps.
+
+      - name: Report webhook secret health
+        run: |
+          set -euo pipefail
+          # GITHUB_ENV from prepare is available in this subsequent step.
           if [ -n "${RESEND_WEBHOOK_SECRET:-}" ] && [[ "${RESEND_WEBHOOK_SECRET}" == whsec_* ]]; then
             echo "RESEND_WEBHOOK_SECRET is usable whsec_…"
             echo "- Webhook secret: ok" >> "$GITHUB_STEP_SUMMARY"
@@ -152,6 +166,100 @@ jobs:
           echo "skip=false" >> "$GITHUB_OUTPUT"
           echo "- Bit sync: pushed ${SHA:0:7} + attempted guard disable" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Trigger or locate git production deployment
+        id: deployment
+        run: |
+          set -euo pipefail
+          SHA="$(git rev-parse HEAD)"
+          REF="${GITHUB_REF_NAME}"
+          REPO_ID="${{ github.repository_id }}"
+          API="https://api.vercel.com"
+          AUTH="Authorization: Bearer ${VERCEL_TOKEN}"
+          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "Deploying ${SHA} ref=${REF} repoId=${REPO_ID}"
+
+          find_url() {
+            curl -sS "${API}/v6/deployments?projectId=${VERCEL_PROJECT_ID}&teamId=${VERCEL_ORG_ID}&limit=40" \
+              -H "${AUTH}" \
+              | jq -r --arg sha "$SHA" '.deployments[] | select(.meta.githubCommitSha == $sha) | .url' \
+              | head -1
+          }
+
+          URL="$(find_url || true)"
+          if [ -z "$URL" ]; then
+            echo "No deployment for ${SHA}; triggering git production build"
+            RESP=$(curl -sS -X POST "${API}/v13/deployments?teamId=${VERCEL_ORG_ID}" \
+              -H "${AUTH}" \
+              -H "Content-Type: application/json" \
+              -d "{\"name\":\"policestationrepuk-new\",\"project\":\"${VERCEL_PROJECT_ID}\",\"target\":\"production\",\"gitSource\":{\"type\":\"github\",\"repoId\":${REPO_ID},\"ref\":\"${REF}\",\"sha\":\"${SHA}\"}}")
+            echo "$RESP" | jq '{id, url, readyState, error: .error}' || echo "$RESP"
+            URL=$(echo "$RESP" | jq -r '.url // empty')
+            if [ -z "$URL" ]; then
+              echo "Failed to trigger deployment"
+              echo "$RESP"
+              exit 1
+            fi
+          fi
+          echo "url=https://${URL}" >> "$GITHUB_OUTPUT"
+          echo "Deployment URL: https://${URL}"
+
+      - name: Wait for READY and promote
+        run: |
+          set -euo pipefail
+          DEPLOY_URL="${{ steps.deployment.outputs.url }}"
+          HOST="${DEPLOY_URL#https://}"
+          API="https://api.vercel.com"
+          AUTH="Authorization: Bearer ${VERCEL_TOKEN}"
+
+          promote_production() {
+            set +e
+            OUT=$(vercel promote "$DEPLOY_URL" --yes --scope="$VERCEL_SCOPE" --timeout=15m --token="$VERCEL_TOKEN" 2>&1)
+            RC=$?
+            set -e
+            echo "$OUT"
+            if [ "$RC" -eq 0 ]; then return 0; fi
+            if echo "$OUT" | grep -qiE 'already the current production deployment|is already production'; then
+              echo "Already current production — success"
+              return 0
+            fi
+            return "$RC"
+          }
+
+          for i in $(seq 1 60); do
+            STATE=$(curl -sS "${API}/v13/deployments/${HOST}?teamId=${VERCEL_ORG_ID}" \
+              -H "${AUTH}" | jq -r '.readyState // "UNKNOWN"')
+            echo "[$i/60] deployment state=${STATE}"
+            if [ "$STATE" = "READY" ]; then
+              promote_production
+              exit 0
+            fi
+            if [ "$STATE" = "ERROR" ] || [ "$STATE" = "CANCELED" ]; then
+              echo "Deployment failed state=${STATE}"
+              exit 1
+            fi
+            sleep 20
+          done
+          echo "Deployment did not become READY within timeout (last state=${STATE:-UNKNOWN})"
+          exit 1
+
+      - name: Wait for production health SHA
+        run: |
+          set -euo pipefail
+          WANT="${{ steps.deployment.outputs.sha }}"
+          WANT_SHORT="${WANT:0:7}"
+          for i in $(seq 1 40); do
+            CODE=$(curl -sS -o /tmp/health.json -w "%{http_code}" "https://policestationrepuk.org/api/health" || echo "000")
+            VER=$(jq -r '.version // empty' /tmp/health.json 2>/dev/null || true)
+            echo "[$i/40] health HTTP ${CODE} version=${VER} want=${WANT_SHORT}"
+            if [ "$CODE" = "200" ] && [ "$VER" = "$WANT_SHORT" ]; then
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Production health did not match ${WANT_SHORT} in time"
+          cat /tmp/health.json || true
+          exit 1
+
       - name: Live SEND verify (bounded)
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -175,7 +283,7 @@ jobs:
 
           export FIRM_OUTREACH_KICK_BASE_URL=https://policestationrepuk.org
           export FIRM_OUTREACH_KICK_REQUIRE_AUTH=1
-          export FIRM_OUTREACH_KICK_COMMIT_SHA="$(git rev-parse HEAD)"
+          export FIRM_OUTREACH_KICK_COMMIT_SHA="${{ steps.deployment.outputs.sha }}"
 
           node scripts/firm-outreach-production-kick.mjs 2>&1 | tee /tmp/outreach-kick.log
 
@@ -193,4 +301,5 @@ jobs:
           path: |
             /tmp/outreach-kick.log
             /tmp/prepare.log
+            /tmp/health.json
           if-no-files-found: ignore
